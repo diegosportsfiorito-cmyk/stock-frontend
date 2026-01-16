@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Consulta de Stock con IA</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    body { font-family: Arial, sans-serif; margin: 0; padding: 1rem; background: #f5f5f5; }
+    .container { max-width: 800px; margin: 0 auto; background: #fff; padding: 1rem; border-radius: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); }
+    h1 { font-size: 1.4rem; margin-bottom: 0.5rem; }
+    textarea { width: 100%; height: 80px; padding: 0.5rem; margin-bottom: 0.5rem; }
+    button { padding: 0.5rem 1rem; margin-right: 0.5rem; }
+    #respuesta { white-space: pre-wrap; background: #f0f0f0; padding: 0.5rem; border-radius: 4px; min-height: 60px; }
+    .small { font-size: 0.85rem; color: #555; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Consulta de Stock con IA</h1>
+    <p class="small">
+      Ejemplos: “stock del 01303-4 talle 28”, “precio del 100000089 talle 41”, “análisis del stock”.
+    </p>
+
+    <textarea id="input" placeholder="Escribí tu consulta..."></textarea>
+    <div>
+      <button onclick="enviarConsulta()">Consultar</button>
+      <button onclick="iniciarVoz()">🎤 Voz</button>
+      <!-- Placeholder para código de barras -->
+      <!-- Podés integrar librerías como QuaggaJS o Html5Qrcode aquí -->
+    </div>
+
+    <h3>Respuesta</h3>
+    <div id="respuesta"></div>
+
+    <h3>Análisis rápido</h3>
+    <button onclick="verAnalisis()">Ver análisis del Excel</button>
+    <div id="analisis" class="small"></div>
+  </div>
+
+  <script>
+    const API_BASE = "https://stock-backend-2oh3.onrender.com";
+
+    async function enviarConsulta() {
+      const q = document.getElementById("input").value.trim();
+      if (!q) return;
+      const resDiv = document.getElementById("respuesta");
+      resDiv.textContent = "Consultando...";
+      try {
+        const resp = await fetch(`${API_BASE}/api/query?q=` + encodeURIComponent(q));
+        const data = await resp.json();
+        resDiv.textContent = data.respuesta || "Sin respuesta.";
+      } catch (e) {
+        resDiv.textContent = "Error consultando la API.";
+      }
+    }
+
+    async function verAnalisis() {
+      const div = document.getElementById("analisis");
+      div.textContent = "Calculando análisis...";
+      try {
+        const resp = await fetch(`${API_BASE}/api/analysis`);
+        const data = await resp.json();
+        let txt = "";
+        if (data.total_unidades !== undefined) {
+          txt += `Total de unidades: ${data.total_unidades}\n`;
+        }
+        if (data.items_con_stock !== undefined) {
+          txt += `Items con stock: ${data.items_con_stock}\n`;
+        }
+        if (data.items_sin_stock !== undefined) {
+          txt += `Items sin stock: ${data.items_sin_stock}\n`;
+        }
+        if (data.items_stock_negativo !== undefined) {
+          txt += `Items con stock negativo: ${data.items_stock_negativo}\n`;
+        }
+        if (data.valorizado_total !== undefined) {
+          txt += `Valorizado total estimado: ${data.valorizado_total}\n`;
+        }
+        div.textContent = txt || "No se pudo generar el análisis.";
+      } catch (e) {
+        div.textContent = "Error obteniendo análisis.";
+      }
+    }
+
+    // Voz: Web Speech API (cuando esté disponible)
+    function iniciarVoz() {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SpeechRecognition) {
+        alert("El reconocimiento de voz no está soportado en este navegador.");
+        return;
+      }
+      const recog = new SpeechRecognition();
+      recog.lang = "es-AR";
+      recog.interimResults = false;
+      recog.maxAlternatives = 1;
+
+      recog.onresult = (event) => {
+        const texto = event.results[0][0].transcript;
+        document.getElementById("input").value = texto;
+        enviarConsulta();
+      };
+
+      recog.onerror = () => {
+        alert("Error en reconocimiento de voz.");
+      };
+
+      recog.start();
+    }
+  </script>
+</body>
+</html>
