@@ -1,111 +1,198 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <title>Consulta de Stock con IA</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <style>
-    body { font-family: Arial, sans-serif; margin: 0; padding: 1rem; background: #f5f5f5; }
-    .container { max-width: 800px; margin: 0 auto; background: #fff; padding: 1rem; border-radius: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); }
-    h1 { font-size: 1.4rem; margin-bottom: 0.5rem; }
-    textarea { width: 100%; height: 80px; padding: 0.5rem; margin-bottom: 0.5rem; }
-    button { padding: 0.5rem 1rem; margin-right: 0.5rem; }
-    #respuesta { white-space: pre-wrap; background: #f0f0f0; padding: 0.5rem; border-radius: 4px; min-height: 60px; }
-    .small { font-size: 0.85rem; color: #555; }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <h1>Consulta de Stock con IA</h1>
-    <p class="small">
-      Ejemplos: “stock del 01303-4 talle 28”, “precio del 100000089 talle 41”, “análisis del stock”.
-    </p>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Asistente de Stock con IA</title>
 
-    <textarea id="input" placeholder="Escribí tu consulta..."></textarea>
-    <div>
-      <button onclick="enviarConsulta()">Consultar</button>
-      <button onclick="iniciarVoz()">🎤 Voz</button>
-      <!-- Placeholder para código de barras -->
-      <!-- Podés integrar librerías como QuaggaJS o Html5Qrcode aquí -->
+    <style>
+        :root {
+            --primary: #4a90e2;
+            --bg: #f5f5f5;
+            --card: #ffffff;
+            --text: #333;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background: var(--bg);
+            font-family: Arial, sans-serif;
+            color: var(--text);
+        }
+
+        .container {
+            max-width: 700px;
+            margin: auto;
+            padding: 20px;
+        }
+
+        h1 {
+            text-align: center;
+            font-weight: 600;
+            margin-bottom: 20px;
+        }
+
+        .card {
+            background: var(--card);
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+
+        input {
+            width: 100%;
+            padding: 14px;
+            font-size: 16px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+            margin-bottom: 12px;
+        }
+
+        button {
+            width: 100%;
+            padding: 14px;
+            font-size: 16px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            background: #3a78c2;
+        }
+
+        #respuesta {
+            margin-top: 20px;
+            white-space: pre-wrap;
+            background: #f0f0f0;
+            padding: 15px;
+            border-radius: 8px;
+            min-height: 80px;
+            font-size: 15px;
+        }
+
+        .mic-btn {
+            background: #e24a4a;
+        }
+
+        .mic-btn.active {
+            background: #c0392b;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Asistente de Stock con IA</h1>
+
+        <div class="card">
+            <input id="pregunta" 
+                   type="text" 
+                   placeholder="Preguntale a la IA... (ej: stock del 100000089)" />
+
+            <button onclick="consultarIA()">Consultar IA</button>
+
+            <button class="mic-btn" id="micBtn" onclick="toggleMic()">🎤 Hablar</button>
+
+            <div id="respuesta"></div>
+        </div>
     </div>
 
-    <h3>Respuesta</h3>
-    <div id="respuesta"></div>
+    <script>
+        // -------------------------------
+        // 1) CONSULTA A LA IA
+        // -------------------------------
+        async function consultarIA() {
+            const pregunta = document.getElementById("pregunta").value;
+            const respuestaDiv = document.getElementById("respuesta");
 
-    <h3>Análisis rápido</h3>
-    <button onclick="verAnalisis()">Ver análisis del Excel</button>
-    <div id="analisis" class="small"></div>
-  </div>
+            if (!pregunta.trim()) {
+                respuestaDiv.textContent = "Por favor escribí una consulta.";
+                return;
+            }
 
-  <script>
-    const API_BASE = "https://stock-backend-2oh3.onrender.com";
+            respuestaDiv.textContent = "Consultando IA...";
 
-    async function enviarConsulta() {
-      const q = document.getElementById("input").value.trim();
-      if (!q) return;
-      const resDiv = document.getElementById("respuesta");
-      resDiv.textContent = "Consultando...";
-      try {
-        const resp = await fetch(`${API_BASE}/api/query?q=` + encodeURIComponent(q));
-        const data = await resp.json();
-        resDiv.textContent = data.respuesta || "Sin respuesta.";
-      } catch (e) {
-        resDiv.textContent = "Error consultando la API.";
-      }
-    }
+            try {
+                const resp = await fetch("https://stock-backend-2oh3.onrender.com/api/ia-query", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({ pregunta })
+                });
 
-    async function verAnalisis() {
-      const div = document.getElementById("analisis");
-      div.textContent = "Calculando análisis...";
-      try {
-        const resp = await fetch(`${API_BASE}/api/analysis`);
-        const data = await resp.json();
-        let txt = "";
-        if (data.total_unidades !== undefined) {
-          txt += `Total de unidades: ${data.total_unidades}\n`;
+                const data = await resp.json();
+                respuestaDiv.textContent = data.respuesta;
+
+                // Respuesta hablada
+                speak(data.respuesta);
+
+            } catch (error) {
+                respuestaDiv.textContent = "Error al consultar la IA: " + error;
+            }
         }
-        if (data.items_con_stock !== undefined) {
-          txt += `Items con stock: ${data.items_con_stock}\n`;
-        }
-        if (data.items_sin_stock !== undefined) {
-          txt += `Items sin stock: ${data.items_sin_stock}\n`;
-        }
-        if (data.items_stock_negativo !== undefined) {
-          txt += `Items con stock negativo: ${data.items_stock_negativo}\n`;
-        }
-        if (data.valorizado_total !== undefined) {
-          txt += `Valorizado total estimado: ${data.valorizado_total}\n`;
-        }
-        div.textContent = txt || "No se pudo generar el análisis.";
-      } catch (e) {
-        div.textContent = "Error obteniendo análisis.";
-      }
-    }
 
-    // Voz: Web Speech API (cuando esté disponible)
-    function iniciarVoz() {
-      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-      if (!SpeechRecognition) {
-        alert("El reconocimiento de voz no está soportado en este navegador.");
-        return;
-      }
-      const recog = new SpeechRecognition();
-      recog.lang = "es-AR";
-      recog.interimResults = false;
-      recog.maxAlternatives = 1;
+        // -------------------------------
+        // 2) SÍNTESIS DE VOZ (RESPUESTA)
+        // -------------------------------
+        function speak(text) {
+            const utter = new SpeechSynthesisUtterance(text);
+            utter.lang = "es-AR";
+            utter.rate = 1;
+            utter.pitch = 1;
+            speechSynthesis.speak(utter);
+        }
 
-      recog.onresult = (event) => {
-        const texto = event.results[0][0].transcript;
-        document.getElementById("input").value = texto;
-        enviarConsulta();
-      };
+        // -------------------------------
+        // 3) RECONOCIMIENTO DE VOZ
+        // -------------------------------
+        let recognition;
+        let isListening = false;
 
-      recog.onerror = () => {
-        alert("Error en reconocimiento de voz.");
-      };
+        if ("webkitSpeechRecognition" in window) {
+            recognition = new webkitSpeechRecognition();
+            recognition.lang = "es-AR";
+            recognition.continuous = false;
+            recognition.interimResults = false;
 
-      recog.start();
-    }
-  </script>
+            recognition.onresult = function(event) {
+                const texto = event.results[0][0].transcript;
+                document.getElementById("pregunta").value = texto;
+                consultarIA();
+            };
+
+            recognition.onerror = function(event) {
+                console.log("Error de voz:", event.error);
+            };
+
+            recognition.onend = function() {
+                isListening = false;
+                document.getElementById("micBtn").classList.remove("active");
+            };
+        }
+
+        function toggleMic() {
+            if (!recognition) {
+                alert("Tu navegador no soporta reconocimiento de voz.");
+                return;
+            }
+
+            if (!isListening) {
+                isListening = true;
+                document.getElementById("micBtn").classList.add("active");
+                recognition.start();
+            } else {
+                isListening = false;
+                document.getElementById("micBtn").classList.remove("active");
+                recognition.stop();
+            }
+        }
+    </script>
 </body>
 </html>
