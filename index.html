@@ -13,12 +13,19 @@
             --text: #333;
         }
 
+        .dark {
+            --bg: #1e1e1e;
+            --card: #2c2c2c;
+            --text: #f5f5f5;
+        }
+
         body {
             margin: 0;
             padding: 0;
             background: var(--bg);
             font-family: Arial, sans-serif;
             color: var(--text);
+            transition: background 0.3s, color 0.3s;
         }
 
         .container {
@@ -38,9 +45,10 @@
             padding: 20px;
             border-radius: 12px;
             box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            transition: background 0.3s;
         }
 
-        input {
+        input, select {
             width: 100%;
             padding: 14px;
             font-size: 16px;
@@ -60,6 +68,7 @@
             cursor: pointer;
             font-weight: bold;
             margin-top: 10px;
+            transition: background 0.3s;
         }
 
         button:hover {
@@ -83,6 +92,11 @@
         .mic-btn.active {
             background: #c0392b;
         }
+
+        .toggle-dark {
+            background: #555;
+            margin-top: 15px;
+        }
     </style>
 </head>
 
@@ -91,12 +105,23 @@
         <h1>Asistente de Stock con IA</h1>
 
         <div class="card">
+
+            <label style="font-weight: bold;">Color del tema:</label>
+            <select id="colorSelector" onchange="cambiarColor()">
+                <option value="#4a90e2">Azul</option>
+                <option value="#e24a4a">Rojo</option>
+                <option value="#27ae60">Verde</option>
+                <option value="#8e44ad">Violeta</option>
+                <option value="#f39c12">Naranja</option>
+            </select>
+
+            <button class="toggle-dark" onclick="toggleDarkMode()">🌙 / ☀️ Modo Oscuro</button>
+
             <input id="pregunta" 
                    type="text" 
                    placeholder="Preguntale a la IA... (ej: stock del 100000089)" />
 
             <button onclick="consultarIA()">Consultar IA</button>
-
             <button class="mic-btn" id="micBtn" onclick="toggleMic()">🎤 Hablar</button>
 
             <div id="respuesta"></div>
@@ -104,9 +129,8 @@
     </div>
 
     <script>
-        // -------------------------------
-        // 1) CONSULTA A LA IA
-        // -------------------------------
+        const BACKEND_URL = "https://stock-backend-2oh3.onrender.com/api/ia-query";
+
         async function consultarIA() {
             const pregunta = document.getElementById("pregunta").value;
             const respuestaDiv = document.getElementById("respuesta");
@@ -118,8 +142,11 @@
 
             respuestaDiv.textContent = "Consultando IA...";
 
+            console.log("📤 Enviando pregunta:", pregunta);
+            console.log("🌐 URL del backend:", BACKEND_URL);
+
             try {
-                const resp = await fetch("https://stock-backend-2oh3.onrender.com/api/ia-query", {
+                const resp = await fetch(BACKEND_URL, {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json"
@@ -127,20 +154,26 @@
                     body: JSON.stringify({ pregunta })
                 });
 
-                const data = await resp.json();
-                respuestaDiv.textContent = data.respuesta;
+                console.log("📥 Respuesta RAW del backend:", resp);
 
-                // Respuesta hablada
+                if (!resp.ok) {
+                    respuestaDiv.textContent = "Error del servidor: " + resp.status;
+                    console.error("❌ Error HTTP:", resp.status);
+                    return;
+                }
+
+                const data = await resp.json();
+                console.log("📦 JSON recibido:", data);
+
+                respuestaDiv.textContent = data.respuesta;
                 speak(data.respuesta);
 
             } catch (error) {
-                respuestaDiv.textContent = "Error al consultar la IA: " + error;
+                console.error("🔥 Error en fetch:", error);
+                respuestaDiv.textContent = "Error al conectar con el backend.";
             }
         }
 
-        // -------------------------------
-        // 2) SÍNTESIS DE VOZ (RESPUESTA)
-        // -------------------------------
         function speak(text) {
             const utter = new SpeechSynthesisUtterance(text);
             utter.lang = "es-AR";
@@ -149,9 +182,6 @@
             speechSynthesis.speak(utter);
         }
 
-        // -------------------------------
-        // 3) RECONOCIMIENTO DE VOZ
-        // -------------------------------
         let recognition;
         let isListening = false;
 
@@ -163,12 +193,13 @@
 
             recognition.onresult = function(event) {
                 const texto = event.results[0][0].transcript;
+                console.log("🎤 Texto reconocido:", texto);
                 document.getElementById("pregunta").value = texto;
                 consultarIA();
             };
 
             recognition.onerror = function(event) {
-                console.log("Error de voz:", event.error);
+                console.error("🎤 Error de voz:", event.error);
             };
 
             recognition.onend = function() {
@@ -193,6 +224,31 @@
                 recognition.stop();
             }
         }
+
+        function cambiarColor() {
+            const color = document.getElementById("colorSelector").value;
+            document.documentElement.style.setProperty("--primary", color);
+            localStorage.setItem("colorTema", color);
+        }
+
+        function toggleDarkMode() {
+            document.body.classList.toggle("dark");
+            const isDark = document.body.classList.contains("dark");
+            localStorage.setItem("modoOscuro", isDark ? "1" : "0");
+        }
+
+        window.onload = function() {
+            const savedColor = localStorage.getItem("colorTema");
+            if (savedColor) {
+                document.documentElement.style.setProperty("--primary", savedColor);
+                document.getElementById("colorSelector").value = savedColor;
+            }
+
+            const dark = localStorage.getItem("modoOscuro");
+            if (dark === "1") {
+                document.body.classList.add("dark");
+            }
+        };
     </script>
 </body>
 </html>
