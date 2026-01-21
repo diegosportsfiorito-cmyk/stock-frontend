@@ -7,18 +7,28 @@
     body { font-family: sans-serif; padding: 2rem; background: #f5f5f5; }
     input, button { font-size: 1rem; padding: 0.5rem; margin: 0.5rem 0; width: 100%; }
     #respuesta { margin-top: 1rem; white-space: pre-wrap; background: #fff; padding: 1rem; border-radius: 5px; }
+    button { cursor: pointer; }
   </style>
 </head>
 <body>
   <h1>Consulta de Stock</h1>
+
   <input id="pregunta" type="text" placeholder="Escribí tu consulta..." />
+
   <button onclick="consultar()">Consultar</button>
+  <button onclick="escuchar()" style="background:#ffcc00;">🎤 Hablar</button>
+
   <div id="respuesta"></div>
 
   <script>
     async function consultar() {
       const pregunta = document.getElementById("pregunta").value;
       const respuestaDiv = document.getElementById("respuesta");
+
+      if (!pregunta.trim()) {
+        respuestaDiv.textContent = "Escribí una consulta primero.";
+        return;
+      }
 
       respuestaDiv.textContent = "Consultando...";
 
@@ -32,13 +42,51 @@
         const data = await res.json();
 
         if (data.answer) {
-          respuestaDiv.textContent = data.answer + "\n\nFuente: " + data.fuente;
+          let fuenteTexto = "";
+
+          if (data.fuente && typeof data.fuente === "object") {
+            fuenteTexto =
+              "\n\nFuente:\n" +
+              "Archivo: " + (data.fuente.archivo || "desconocido") + "\n" +
+              "Fecha: " + (data.fuente.fecha || "desconocida");
+          }
+
+          respuestaDiv.textContent = data.answer + fuenteTexto;
         } else {
           respuestaDiv.textContent = "No se encontró información.";
         }
       } catch (err) {
         respuestaDiv.textContent = "Error al consultar el backend.";
       }
+    }
+
+    function escuchar() {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+      if (!SpeechRecognition) {
+        alert("Tu navegador no soporta reconocimiento de voz.");
+        return;
+      }
+
+      const recognition = new SpeechRecognition();
+      recognition.lang = "es-AR";
+      recognition.interimResults = false;
+      recognition.maxAlternatives = 1;
+
+      document.getElementById("respuesta").textContent = "Escuchando...";
+
+      recognition.start();
+
+      recognition.onresult = (event) => {
+        const texto = event.results[0][0].transcript;
+        document.getElementById("pregunta").value = texto;
+        consultar();
+      };
+
+      recognition.onerror = (event) => {
+        document.getElementById("respuesta").textContent =
+          "Error al escuchar: " + event.error;
+      };
     }
   </script>
 </body>
