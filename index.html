@@ -1,267 +1,188 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Asistente de Stock con IA</title>
+# indexer.py
+import io
+import pandas as pd
+import numpy as np
+from typing import List, Dict
+from datetime import datetime
 
-    <style>
-        :root {
-            --primary: #4a90e2;
-            --bg: #f5f5f5;
-            --card: #ffffff;
-            --text: #333;
-        }
+from drive import listar_archivos_en_carpeta, descargar_archivo_por_id
 
-        .dark {
-            --bg: #1e1e1e;
-            --card: #2c2c2c;
-            --text: #f5f5f5;
-        }
+CARPETA_STOCK_ID = "1F0FUEMJmeHgb3ZY7XBBdacCGB3SZK4O-"
 
-        body {
-            margin: 0;
-            padding: 0;
-            background: var(--bg);
-            font-family: Arial, sans-serif;
-            color: var(--text);
-            transition: background 0.3s, color 0.3s;
-        }
 
-        .container {
-            max-width: 700px;
-            margin: auto;
-            padding: 20px;
-        }
+# ============================================================
+# 1) DETECCIÓN AUTOMÁTICA DE ENCABEZADOS
+# ============================================================
 
-        h1 {
-            text-align: center;
-            font-weight: 600;
-            margin-bottom: 20px;
-        }
+def detectar_encabezados(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Si la primera fila contiene texto, se usa como encabezado.
+    Si contiene números, se generan encabezados genéricos.
+    """
+    primera_fila = df.iloc[0]
 
-        .card {
-            background: var(--card);
-            padding: 20px;
-            border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-            transition: background 0.3s;
-        }
+    # Si la primera fila tiene al menos 1 texto → es encabezado
+    if any(isinstance(x, str) for x in primera_fila):
+        df.columns = [str(c).strip() for c in primera_fila]
+        df = df[1:].reset_index(drop=True)
+    else:
+        # Generar encabezados genéricos
+        df.columns = [f"col_{i}" for i in range(len(df.columns))]
 
-        input, select {
-            width: 100%;
-            padding: 14px;
-            font-size: 16px;
-            border-radius: 8px;
-            border: 1px solid #ccc;
-            margin-bottom: 12px;
-        }
+    return df
 
-        button {
-            width: 100%;
-            padding: 14px;
-            font-size: 16px;
-            background: var(--primary);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: bold;
-            margin-top: 10px;
-            transition: background 0.3s;
-        }
 
-        button:hover {
-            background: #3a78c2;
-        }
+# ============================================================
+# 2) NORMALIZACIÓN DE COLUMNAS
+# ============================================================
 
-        #respuesta {
-            margin-top: 20px;
-            white-space: pre-wrap;
-            background: #f0f0f0;
-            padding: 15px;
-            border-radius: 8px;
-            min-height: 80px;
-            font-size: 15px;
-        }
+COLUMNAS_TEXTO = ["articulo", "descripcion", "color", "rubro", "base", "nombre"]
+COLUMNAS_TALLE = ["talle", "size", "tamaño"]
+COLUMNAS_PRECIO = ["precio", "lista1", "lista0", "valor", "valorizado"]
+COLUMNAS_STOCK = ["stock", "cantidad", "cant"]
 
-        .mic-btn {
-            background: #e24a4a;
-        }
+def normalizar_columnas(df: pd.DataFrame) -> pd.DataFrame:
+    df = df.copy()
+    df.columns = [str(c).strip().lower() for c in df.columns]
+    return df
 
-        .mic-btn.active {
-            background: #c0392b;
-        }
 
-        .toggle-dark {
-            background: #555;
-            margin-top: 15px;
-        }
-    </style>
-</head>
+# ============================================================
+# 3) DETECCIÓN AUTOMÁTICA DE COLUMNAS CLAVE
+# ============================================================
 
-<body>
-    <div class="container">
-        <h1>Asistente de Stock con IA</h1>
+def detectar_columnas(df: pd.DataFrame) -> Dict[str, str]:
+    columnas = {
+        "articulo": None,
+        "descripcion": None,
+        "talle": None,
+        "precio": None,
+        "stock": None
+    }
 
-        <div class="card">
+    for col in df.columns:
+        col_lower = col.lower()
 
-            <label style="font-weight: bold;">Color del tema:</label>
-            <select id="colorSelector" onchange="cambiarColor()">
-                <option value="#4a90e2">Azul</option>
-                <option value="#e24a4a">Rojo</option>
-                <option value="#27ae60">Verde</option>
-                <option value="#8e44ad">Violeta</option>
-                <option value="#f39c12">Naranja</option>
-            </select>
+        # ARTÍCULO
+        if any(k in col_lower for k in ["art", "cod", "item"]):
+            columnas["articulo"] = col
 
-            <button class="toggle-dark" onclick="toggleDarkMode()">🌙 / ☀️ Modo Oscuro</button>
+        # DESCRIPCIÓN
+        if any(k in col_lower for k in ["desc", "nombre", "color"]):
+            columnas["descripcion"] = col
 
-            <input id="pregunta" 
-                   type="text" 
-                   placeholder="Preguntale a la IA... (ej: stock del 100000089)" />
+        # TALLE
+        if any(k in col_lower for k in ["talle", "size", "tam"]):
+            columnas["talle"] = col
 
-            <button onclick="consultarIADesdeTexto()">Consultar IA</button>
-            <button class="mic-btn" id="micBtn" onclick="toggleMic()">🎤 Hablar</button>
+        # PRECIO
+        if any(k in col_lower for k in ["precio", "lista", "valor"]):
+            columnas["precio"] = col
 
-            <div id="respuesta"></div>
-        </div>
-    </div>
+        # STOCK
+        if any(k in col_lower for k in ["stock", "cant"]):
+            columnas["stock"] = col
 
-    <script>
-        const BACKEND_URL = "https://stock-backend-1-twzg.onrender.com/query";
+    return columnas
 
-        let recognition;
-        let isListening = false;
-        let ultimaEntradaFuePorVoz = false;
 
-        async function consultarIA() {
-            const pregunta = document.getElementById("pregunta").value;
-            const respuestaDiv = document.getElementById("respuesta");
+# ============================================================
+# 4) LIMPIEZA DE PRECIOS (coma, punto o sin separador)
+# ============================================================
 
-            if (!pregunta.trim()) {
-                respuestaDiv.textContent = "Por favor escribí una consulta.";
-                return;
-            }
+def limpiar_precio(valor):
+    if isinstance(valor, str):
+        valor = valor.replace(".", "").replace(",", ".")
+    try:
+        return float(valor)
+    except:
+        return np.nan
 
-            respuestaDiv.textContent = "Consultando IA...";
 
-            try {
-                const resp = await fetch(BACKEND_URL, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ pregunta })
-                });
+# ============================================================
+# 5) BÚSQUEDA SEMÁNTICA HÍBRIDA
+# ============================================================
 
-                if (!resp.ok) {
-                    respuestaDiv.textContent = "Error del servidor: " + resp.status;
-                    return;
-                }
+def buscar_semantico(df: pd.DataFrame, consulta: str, columnas: Dict[str, str]) -> pd.DataFrame:
+    consulta = consulta.lower().strip()
 
-                const data = await resp.json();
+    # Detectar si la consulta contiene un número
+    numeros = "".join([c for c in consulta if c.isdigit() or c == "."])
 
-                let html = `<div>${(data.answer || "").replace(/\n/g, "<br>")}</div>`;
+    # --------------------------------------------------------
+    # MODO 1: BÚSQUEDA POR CÓDIGO EXACTO
+    # --------------------------------------------------------
+    if numeros and len(numeros) >= 4:
+        coincidencias = df.apply(lambda row: row.astype(str).str.contains(numeros, case=False, regex=False).any(), axis=1)
+        return df[coincidencias]
 
-                if (data.fuente) {
-                    html += `
-                        <hr>
-                        <div style="font-size: 13px; color: #666;">
-                            📄 Archivo: <strong>${data.fuente.archivo}</strong><br>
-                            📅 Fecha: <strong>${data.fuente.fecha}</strong>
-                        </div>
-                    `;
-                }
+    # --------------------------------------------------------
+    # MODO 2: BÚSQUEDA POR TEXTO PARCIAL
+    # --------------------------------------------------------
+    coincidencias = df.apply(lambda row: row.astype(str).str.lower().str.contains(consulta).any(), axis=1)
+    return df[coincidencias]
 
-                respuestaDiv.innerHTML = html;
 
-                if (ultimaEntradaFuePorVoz) {
-                    speak(data.answer || "");
-                }
+# ============================================================
+# 6) GENERAR CONTEXTO PARA EL MODELO
+# ============================================================
 
-            } catch (error) {
-                console.error("🔥 Error en fetch:", error);
-                respuestaDiv.textContent = "Error al conectar con el backend.";
-            }
-        }
+def obtener_contexto_para_pregunta(pregunta: str) -> List[Dict]:
+    archivos = listar_archivos_en_carpeta(CARPETA_STOCK_ID)
+    contextos = []
 
-        function consultarIADesdeTexto() {
-            ultimaEntradaFuePorVoz = false;
-            consultarIA();
-        }
+    for archivo in archivos:
+        nombre = archivo["name"]
+        file_id = archivo["id"]
+        mod_time = archivo.get("modifiedTime")
 
-        function speak(text) {
-            if (!text) return;
-            const utter = new SpeechSynthesisUtterance(text);
-            utter.lang = "es-AR";
-            utter.rate = 1;
-            utter.pitch = 1;
-            speechSynthesis.speak(utter);
-        }
+        if not (nombre.lower().endswith(".xlsx") or nombre.lower().endswith(".xls")):
+            continue
 
-        if ("webkitSpeechRecognition" in window) {
-            recognition = new webkitSpeechRecognition();
-            recognition.lang = "es-AR";
-            recognition.continuous = false;
-            recognition.interimResults = false;
+        file_bytes = descargar_archivo_por_id(file_id)
+        excel_file = io.BytesIO(file_bytes)
 
-            recognition.onresult = function(event) {
-                const texto = event.results[0][0].transcript;
-                ultimaEntradaFuePorVoz = true;
-                document.getElementById("pregunta").value = texto;
-                consultarIA();
-            };
+        try:
+            xls = pd.ExcelFile(excel_file)
+        except:
+            continue
 
-            recognition.onerror = function(event) {
-                console.error("🎤 Error de voz:", event.error);
-            };
+        filas_encontradas = []
 
-            recognition.onend = function() {
-                isListening = false;
-                document.getElementById("micBtn").classList.remove("active");
-            };
-        }
+        for sheet in xls.sheet_names:
+            try:
+                df = xls.parse(sheet, header=None)
+                df = detectar_encabezados(df)
+                df = normalizar_columnas(df)
 
-        function toggleMic() {
-            if (!recognition) {
-                alert("Tu navegador no soporta reconocimiento de voz.");
-                return;
-            }
+                columnas = detectar_columnas(df)
+                df["precio_limpio"] = df[columnas["precio"]].apply(limpiar_precio) if columnas["precio"] else np.nan
 
-            if (!isListening) {
-                isListening = true;
-                document.getElementById("micBtn").classList.add("active");
-                recognition.start();
-            } else {
-                isListening = false;
-                document.getElementById("micBtn").classList.remove("active");
-                recognition.stop();
-            }
-        }
+                filtrado = buscar_semantico(df, pregunta, columnas)
 
-        function cambiarColor() {
-            const color = document.getElementById("colorSelector").value;
-            document.documentElement.style.setProperty("--primary", color);
-            localStorage.setItem("colorTema", color);
-        }
+                if not filtrado.empty:
+                    filas_encontradas.append(filtrado)
 
-        function toggleDarkMode() {
-            document.body.classList.toggle("dark");
-            const isDark = document.body.classList.contains("dark");
-            localStorage.setItem("modoOscuro", isDark ? "1" : "0");
-        }
+            except Exception:
+                pass
 
-        window.onload = function() {
-            const savedColor = localStorage.getItem("colorTema");
-            if (savedColor) {
-                document.documentElement.style.setProperty("--primary", savedColor);
-                document.getElementById("colorSelector").value = savedColor;
-            }
+        if not filas_encontradas:
+            continue
 
-            const dark = localStorage.getItem("modoOscuro");
-            if (dark === "1") {
-                document.body.classList.add("dark");
-            }
-        };
-    </script>
-</body>
-</html>
+        df_final = pd.concat(filas_encontradas, ignore_index=True)
+
+        fecha_str = None
+        if mod_time:
+            try:
+                dt = datetime.fromisoformat(mod_time.replace("Z", "+00:00"))
+                fecha_str = dt.strftime("%Y-%m-%d")
+            except:
+                fecha_str = mod_time
+
+        contextos.append({
+            "archivo": nombre,
+            "fecha": fecha_str or "Fecha desconocida",
+            "contenido": df_final.to_string(index=False)
+        })
+
+    return contextos
