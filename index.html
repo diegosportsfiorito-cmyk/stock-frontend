@@ -51,12 +51,19 @@
               "Fecha: " + (data.fuente.fecha || "desconocida");
           }
 
-          respuestaDiv.textContent = data.answer + fuenteTexto;
+          const textoFinal = data.answer + fuenteTexto;
+          respuestaDiv.textContent = textoFinal;
+
+          // 🔊 HABLAR RESPUESTA
+          hablar(data.answer);
+
         } else {
           respuestaDiv.textContent = "No se encontró información.";
+          hablar("No se encontró información.");
         }
       } catch (err) {
         respuestaDiv.textContent = "Error al consultar el backend.";
+        hablar("Hubo un error al consultar el sistema.");
       }
     }
 
@@ -87,6 +94,15 @@
         document.getElementById("respuesta").textContent =
           "Error al escuchar: " + event.error;
       };
+    }
+
+    // 🔊 NUEVA FUNCIÓN: SÍNTESIS DE VOZ
+    function hablar(texto) {
+      const utter = new SpeechSynthesisUtterance(texto);
+      utter.lang = "es-AR";
+      utter.rate = 1;
+      utter.pitch = 1;
+      speechSynthesis.speak(utter);
     }
   </script>
 </body>
