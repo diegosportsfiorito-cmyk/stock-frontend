@@ -121,7 +121,7 @@
                    type="text" 
                    placeholder="Preguntale a la IA... (ej: stock del 100000089)" />
 
-            <button onclick="consultarIA()">Consultar IA</button>
+            <button onclick="consultarIADesdeTexto()">Consultar IA</button>
             <button class="mic-btn" id="micBtn" onclick="toggleMic()">🎤 Hablar</button>
 
             <div id="respuesta"></div>
@@ -129,7 +129,11 @@
     </div>
 
     <script>
-        const BACKEND_URL = "https://stock-backend-2oh3.onrender.com/api/ia-query";
+        const BACKEND_URL = "https://stock-backend-1-twzg.onrender.com/query";
+
+        let recognition;
+        let isListening = false;
+        let ultimaEntradaFuePorVoz = false;
 
         async function consultarIA() {
             const pregunta = document.getElementById("pregunta").value;
@@ -142,31 +146,37 @@
 
             respuestaDiv.textContent = "Consultando IA...";
 
-            console.log("📤 Enviando pregunta:", pregunta);
-            console.log("🌐 URL del backend:", BACKEND_URL);
-
             try {
                 const resp = await fetch(BACKEND_URL, {
                     method: "POST",
-                    headers: {
-                        "Content-Type": "application/json"
-                    },
+                    headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ pregunta })
                 });
 
-                console.log("📥 Respuesta RAW del backend:", resp);
-
                 if (!resp.ok) {
                     respuestaDiv.textContent = "Error del servidor: " + resp.status;
-                    console.error("❌ Error HTTP:", resp.status);
                     return;
                 }
 
                 const data = await resp.json();
-                console.log("📦 JSON recibido:", data);
 
-                respuestaDiv.textContent = data.respuesta;
-                speak(data.respuesta);
+                let html = `<div>${(data.answer || "").replace(/\n/g, "<br>")}</div>`;
+
+                if (data.fuente) {
+                    html += `
+                        <hr>
+                        <div style="font-size: 13px; color: #666;">
+                            📄 Archivo: <strong>${data.fuente.archivo}</strong><br>
+                            📅 Fecha: <strong>${data.fuente.fecha}</strong>
+                        </div>
+                    `;
+                }
+
+                respuestaDiv.innerHTML = html;
+
+                if (ultimaEntradaFuePorVoz) {
+                    speak(data.answer || "");
+                }
 
             } catch (error) {
                 console.error("🔥 Error en fetch:", error);
@@ -174,16 +184,19 @@
             }
         }
 
+        function consultarIADesdeTexto() {
+            ultimaEntradaFuePorVoz = false;
+            consultarIA();
+        }
+
         function speak(text) {
+            if (!text) return;
             const utter = new SpeechSynthesisUtterance(text);
             utter.lang = "es-AR";
             utter.rate = 1;
             utter.pitch = 1;
             speechSynthesis.speak(utter);
         }
-
-        let recognition;
-        let isListening = false;
 
         if ("webkitSpeechRecognition" in window) {
             recognition = new webkitSpeechRecognition();
@@ -193,7 +206,7 @@
 
             recognition.onresult = function(event) {
                 const texto = event.results[0][0].transcript;
-                console.log("🎤 Texto reconocido:", texto);
+                ultimaEntradaFuePorVoz = true;
                 document.getElementById("pregunta").value = texto;
                 consultarIA();
             };
