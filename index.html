@@ -36,12 +36,13 @@
         const res = await fetch("https://stock-backend-1-twzg.onrender.com/query", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ pregunta })
+          // 🔥 CAMBIO CRÍTICO: ahora enviamos { question: ... }
+          body: JSON.stringify({ question: pregunta })
         });
 
         const data = await res.json();
 
-        if (data.answer) {
+        if (data.respuesta) {
           let fuenteTexto = "";
 
           if (data.fuente && typeof data.fuente === "object") {
@@ -51,11 +52,11 @@
               "Fecha: " + (data.fuente.fecha || "desconocida");
           }
 
-          const textoFinal = data.answer + fuenteTexto;
+          const textoFinal = data.respuesta + fuenteTexto;
           respuestaDiv.textContent = textoFinal;
 
           // 🔊 HABLAR RESPUESTA
-          hablar(data.answer);
+          hablar(data.respuesta);
 
         } else {
           respuestaDiv.textContent = "No se encontró información.";
@@ -96,7 +97,7 @@
       };
     }
 
-    // 🔊 NUEVA FUNCIÓN: SÍNTESIS DE VOZ
+    // 🔊 SÍNTESIS DE VOZ
     function hablar(texto) {
       const utter = new SpeechSynthesisUtterance(texto);
       utter.lang = "es-AR";
