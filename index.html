@@ -3,24 +3,87 @@
 <head>
   <meta charset="UTF-8" />
   <title>Consulta de Stock</title>
+
   <style>
-    body { font-family: sans-serif; padding: 2rem; background: #f5f5f5; }
-    input, button { font-size: 1rem; padding: 0.5rem; margin: 0.5rem 0; width: 100%; }
-    #respuesta { margin-top: 1rem; white-space: pre-wrap; background: #fff; padding: 1rem; border-radius: 5px; }
-    button { cursor: pointer; }
+    body {
+      font-family: Arial, sans-serif;
+      padding: 2rem;
+      background: #f0f2f5;
+      color: #222;
+      max-width: 600px;
+      margin: auto;
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 1.5rem;
+    }
+
+    input {
+      width: 100%;
+      padding: 0.8rem;
+      font-size: 1rem;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      margin-bottom: 1rem;
+    }
+
+    button {
+      width: 100%;
+      padding: 0.8rem;
+      font-size: 1rem;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      margin-bottom: 0.5rem;
+    }
+
+    #consultarBtn {
+      background: #007bff;
+      color: white;
+    }
+
+    #hablarBtn {
+      background: #ffcc00;
+    }
+
+    #respuesta {
+      margin-top: 1.5rem;
+      padding: 1rem;
+      background: white;
+      border-radius: 6px;
+      white-space: pre-wrap;
+      border: 1px solid #ddd;
+      font-size: 1.1rem;
+    }
   </style>
 </head>
+
 <body>
   <h1>Consulta de Stock</h1>
 
   <input id="pregunta" type="text" placeholder="Escribí tu consulta..." />
 
-  <button onclick="consultar()">Consultar</button>
-  <button onclick="escuchar()" style="background:#ffcc00;">🎤 Hablar</button>
+  <button id="consultarBtn" onclick="consultar()">Consultar</button>
+  <button id="hablarBtn" onclick="escuchar()">🎤 Hablar</button>
 
   <div id="respuesta"></div>
 
   <script>
+    // Formatear números como pesos argentinos
+    function formatearARS(texto) {
+      return texto.replace(/\$([0-9.,]+)/g, (match, num) => {
+        let limpio = num.replace(/,/g, "");
+        let valor = parseFloat(limpio);
+        if (isNaN(valor)) return match;
+
+        return "ARS $" + valor.toLocaleString("es-AR", {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2
+        });
+      });
+    }
+
     async function consultar() {
       const pregunta = document.getElementById("pregunta").value;
       const respuestaDiv = document.getElementById("respuesta");
@@ -36,32 +99,25 @@
         const res = await fetch("https://stock-backend-1-twzg.onrender.com/query", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          // 🔥 CAMBIO CRÍTICO: ahora enviamos { question: ... }
           body: JSON.stringify({ question: pregunta })
         });
 
         const data = await res.json();
 
         if (data.respuesta) {
-          let fuenteTexto = "";
+          let texto = formatearARS(data.respuesta);
 
-          if (data.fuente && typeof data.fuente === "object") {
-            fuenteTexto =
-              "\n\nFuente:\n" +
-              "Archivo: " + (data.fuente.archivo || "desconocido") + "\n" +
-              "Fecha: " + (data.fuente.fecha || "desconocida");
+          if (data.fuente) {
+            texto += `\n\nFuente:\nArchivo: ${data.fuente.archivo}\nFecha: ${data.fuente.fecha}`;
           }
 
-          const textoFinal = data.respuesta + fuenteTexto;
-          respuestaDiv.textContent = textoFinal;
-
-          // 🔊 HABLAR RESPUESTA
-          hablar(data.respuesta);
-
+          respuestaDiv.textContent = texto;
+          hablar(texto);
         } else {
           respuestaDiv.textContent = "No se encontró información.";
           hablar("No se encontró información.");
         }
+
       } catch (err) {
         respuestaDiv.textContent = "Error al consultar el backend.";
         hablar("Hubo un error al consultar el sistema.");
@@ -97,7 +153,6 @@
       };
     }
 
-    // 🔊 SÍNTESIS DE VOZ
     function hablar(texto) {
       const utter = new SpeechSynthesisUtterance(texto);
       utter.lang = "es-AR";
