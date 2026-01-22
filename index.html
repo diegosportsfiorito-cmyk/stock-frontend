@@ -1,238 +1,189 @@
-import io
-import re
-from typing import List, Dict, Tuple, Optional
-import pandas as pd
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Consulta de Stock</title>
 
-from drive import listar_archivos_en_carpeta, descargar_archivo_por_id
+  <style>
+    :root {
+      --color-primario: #007bff;
+      --color-fondo: #f0f2f5;
+    }
 
-CARPETA_STOCK_ID = "1F0FUEMJmeHgb3ZY7XBBdacCGB3SZK4O-"
+    body {
+      font-family: Arial, sans-serif;
+      padding: 2rem;
+      background: var(--color-fondo);
+      color: #222;
+      max-width: 600px;
+      margin: auto;
+    }
 
-# ============================================================
-# NORMALIZACIÓN DE ENCABEZADOS
-# ============================================================
+    h1 {
+      text-align: center;
+      margin-bottom: 1.5rem;
+    }
 
-def normalizar_encabezados(df: pd.DataFrame) -> pd.DataFrame:
-    df.columns = (
-        df.columns
-        .map(lambda x: str(x))
-        .str.strip()
-        .str.lower()
-        .str.replace(" ", "_")
-        .str.replace(".", "", regex=False)
-        .str.normalize("NFKD")
-        .str.encode("ascii", errors="ignore")
-        .str.decode("utf-8")
-    )
-    return df
+    input {
+      width: 100%;
+      padding: 0.8rem;
+      font-size: 1rem;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      margin-bottom: 1rem;
+    }
 
-def obtener_columna(df, posibles):
-    for col in df.columns:
-        c = str(col).strip().lower().replace(" ", "").replace("_", "")
-        for p in posibles:
-            p_norm = p.strip().lower().replace(" ", "").replace("_", "")
-            if c == p_norm:
-                return col
-    return None
+    button {
+      width: 100%;
+      padding: 0.8rem;
+      font-size: 1rem;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      margin-bottom: 0.5rem;
+    }
 
-# ============================================================
-# DETECCIÓN DE COLUMNAS
-# ============================================================
+    #consultarBtn {
+      background: var(--color-primario);
+      color: white;
+    }
 
-def detectar_columna_codigo(df: pd.DataFrame) -> Optional[str]:
-    posibles = ["articulo", "artículo", "codigo", "cod", "sku", "id"]
-    for col in df.columns:
-        if str(col).strip().lower().replace(" ", "") in posibles:
-            return col
+    #hablarBtn {
+      background: #ffcc00;
+    }
 
-    mejor_col = None
-    mejor_score = 0
+    #respuesta {
+      margin-top: 1.5rem;
+      padding: 1rem;
+      background: white;
+      border-radius: 6px;
+      white-space: pre-wrap;
+      border: 1px solid #ddd;
+      font-size: 1.1rem;
+    }
+  </style>
+</head>
 
-    for col in df.columns:
-        score = 0
-        for val in df[col].head(20):
-            s = str(val).strip()
-            if 2 <= len(s) <= 20 and re.match(r"^[A-Za-z0-9\-]+$", s):
-                score += 1
-        if score > mejor_score:
-            mejor_score = score
-            mejor_col = col
+<body>
+  <h1>Consulta de Stock</h1>
 
-    return mejor_col
+  <input id="pregunta" type="text" placeholder="Escribí tu consulta..." />
 
-def detectar_columnas_precio(df: pd.DataFrame) -> Tuple[Optional[str], Optional[str]]:
-    col_publico = None
-    col_costo = None
+  <button id="consultarBtn" onclick="consultar()">Consultar</button>
+  <button id="hablarBtn" onclick="escuchar()">🎤 Hablar</button>
 
-    for col in df.columns:
-        c = str(col).strip().lower().replace(" ", "").replace("_", "")
-        if c in ["lista1", "precio1", "publico"]:
-            col_publico = col
-        if c in ["lista0", "precio0", "costo"]:
-            col_costo = col
+  <div id="respuesta"></div>
 
-    return col_publico, col_costo
+  <script>
+    // ============================
+    // FORMATEAR PESOS ARGENTINOS
+    // ============================
+    function formatearARS(texto) {
+      return texto.replace(/\$([0-9.,]+)/g, (match, num) => {
+        let limpio = num.replace(/,/g, "");
+        let valor = parseFloat(limpio);
+        if (isNaN(valor)) return match;
 
-def detectar_columna_stock(df: pd.DataFrame) -> Optional[str]:
-    posibles = ["stock", "stockal", "stocka/l", "stocka_l", "stock_a_l"]
-    for col in df.columns:
-        c = str(col).strip().lower().replace(" ", "").replace("_", "").replace("/", "")
-        if c in posibles:
-            return col
-    return None
+        return "$" + valor.toLocaleString("es-AR", {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2
+        });
+      });
+    }
 
-# ============================================================
-# NORMALIZACIÓN DE VALORES
-# ============================================================
+    // ============================
+    // CONSULTAR BACKEND
+    // ============================
+    async function consultar() {
+      const pregunta = document.getElementById("pregunta").value;
+      const respuestaDiv = document.getElementById("respuesta");
 
-def parse_numero(valor):
-    if valor is None:
-        return 0.0
-    s = str(valor).strip()
-    if s == "":
-        return 0.0
-    s = s.replace(".", "").replace(",", ".")
-    try:
-        return float(s)
-    except:
-        return 0.0
+      if (!pregunta.trim()) {
+        respuestaDiv.textContent = "Escribí una consulta primero.";
+        return;
+      }
 
-def normalizar_talle(valor: str) -> str:
-    if isinstance(valor, str) and "/" in valor:
-        partes = valor.split("/")
-        if len(partes) == 2:
-            return f"{partes[0]}/{partes[1]}"
-    return str(valor).strip()
+      respuestaDiv.textContent = "Consultando...";
 
-def normalizar_descripcion(valor: str) -> str:
-    if not isinstance(valor, str):
-        return ""
-    return " ".join(valor.strip().split()).title()
+      try {
+        const res = await fetch("https://stock-backend-1-twzg.onrender.com/query", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ question: pregunta })
+        });
 
-# ============================================================
-# DETECCIÓN DE CÓDIGO EN LA PREGUNTA
-# ============================================================
+        const data = await res.json();
 
-def detectar_codigo_en_pregunta(pregunta: str, codigos_existentes: List[str]) -> str:
-    tokens = re.findall(r"[A-Za-z0-9\-]{2,}", pregunta, flags=re.IGNORECASE)
-    codigos_set = {str(c).strip().upper() for c in codigos_existentes}
+        if (data.respuesta) {
+          let texto = formatearARS(data.respuesta);
 
-    candidatos = []
-    for t in tokens:
-        if any(ch.isdigit() for ch in t):
-            candidatos.append(t)
+          // Mostrar en pantalla
+          let textoPantalla = texto;
 
-    for t in reversed(candidatos):
-        if t.upper() in codigos_set:
-            return t
+          if (data.fuente) {
+            textoPantalla += `\n\nFuente:\nArchivo: ${data.fuente.archivo}\nFecha: ${data.fuente.fecha}`;
+          }
 
-    return candidatos[-1] if candidatos else ""
+          respuestaDiv.textContent = textoPantalla;
 
-# ============================================================
-# LECTURA DEL EXCEL COMPLETO
-# ============================================================
+          // Usar texto limpio para voz
+          if (data.voz) {
+            hablar(data.voz);
+          }
 
-def cargar_excel_completo(file_bytes) -> pd.DataFrame:
-    excel_file = io.BytesIO(file_bytes)
-    xls = pd.ExcelFile(excel_file)
+        } else {
+          respuestaDiv.textContent = "No se encontró información.";
+          hablar("No se encontró información.");
+        }
 
-    df_total = []
+      } catch (err) {
+        respuestaDiv.textContent = "Error al consultar el backend.";
+        hablar("Hubo un error al consultar el sistema.");
+      }
+    }
 
-    for sheet in xls.sheet_names:
-        df = xls.parse(sheet, dtype=str).fillna("")
-        df = normalizar_encabezados(df)
-        df_total.append(df)
+    // ============================
+    // RECONOCIMIENTO DE VOZ
+    // ============================
+    function escuchar() {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 
-    if not df_total:
-        return pd.DataFrame()
+      if (!SpeechRecognition) {
+        alert("Tu navegador no soporta reconocimiento de voz.");
+        return;
+      }
 
-    return pd.concat(df_total, ignore_index=True)
+      const recognition = new SpeechRecognition();
+      recognition.lang = "es-AR";
+      recognition.interimResults = false;
+      recognition.maxAlternatives = 1;
 
-# ============================================================
-# BÚSQUEDA PRINCIPAL (CÓDIGO + DESCRIPCIÓN)
-# ============================================================
+      document.getElementById("respuesta").textContent = "Escuchando...";
 
-def buscar_articulo_en_archivos(pregunta: str) -> Tuple[Optional[Dict], Optional[Dict]]:
-    archivos = listar_archivos_en_carpeta(CARPETA_STOCK_ID)
+      recognition.start();
 
-    archivos_ordenados = sorted(
-        archivos,
-        key=lambda a: a.get("modifiedTime", ""),
-        reverse=True
-    )
+      recognition.onresult = (event) => {
+        const texto = event.results[0][0].transcript;
+        document.getElementById("pregunta").value = texto;
+        consultar();
+      };
 
-    for archivo in archivos_ordenados:
-        nombre = archivo["name"]
-        file_id = archivo["id"]
-        mod_time = archivo.get("modifiedTime")
+      recognition.onerror = (event) => {
+        document.getElementById("respuesta").textContent =
+          "Error al escuchar: " + event.error;
+      };
+    }
 
-        if not nombre.lower().endswith(".xlsx"):
-            continue
-
-        try:
-            file_bytes = descargar_archivo_por_id(file_id)
-            df = cargar_excel_completo(file_bytes)
-
-            if df.empty:
-                continue
-
-            col_codigo = detectar_columna_codigo(df)
-            col_publico, col_costo = detectar_columnas_precio(df)
-            col_stock = detectar_columna_stock(df)
-            col_desc = obtener_columna(df, ["descripcion_color", "descripcion_original", "descripcion"])
-
-            if not col_codigo:
-                continue
-
-            codigos_existentes = df[col_codigo].astype(str).tolist()
-            codigo = detectar_codigo_en_pregunta(pregunta, codigos_existentes)
-
-            # ============================
-            # 1) BÚSQUEDA POR CÓDIGO
-            # ============================
-            df_art = df[df[col_codigo].astype(str).str.upper() == codigo.upper()]
-
-            # ============================
-            # 2) SI NO HAY CÓDIGO → BÚSQUEDA POR DESCRIPCIÓN
-            # ============================
-            if df_art.empty and col_desc:
-                df_art = df[df[col_desc].str.lower().str.contains(pregunta.lower())]
-
-            if df_art.empty:
-                continue
-
-            fila = df_art.iloc[0]
-
-            precio_publico = parse_numero(fila.get(col_publico)) if col_publico else None
-            precio_costo = parse_numero(fila.get(col_costo)) if col_costo else None
-
-            stock_total = None
-            if col_stock:
-                stock_total = int(sum(parse_numero(v) for v in df_art[col_stock]))
-
-            descripcion = normalizar_descripcion(fila.get(col_desc, "")) if col_desc else ""
-
-            talles = []
-            if "talle" in df_art.columns:
-                talles = sorted({normalizar_talle(t) for t in df_art["talle"]})
-
-            info_articulo = {
-                "codigo": codigo.upper(),
-                "descripcion": descripcion,
-                "precio_publico": precio_publico,
-                "precio_costo": precio_costo,
-                "stock_total": stock_total,
-                "talles": talles,
-            }
-
-            fuente = {
-                "archivo": nombre,
-                "fecha": mod_time or "Fecha desconocida",
-            }
-
-            return info_articulo, fuente
-
-        except Exception as e:
-            print(f"ERROR procesando archivo {nombre}: {e}")
-            continue
-
-    return None, None
+    // ============================
+    // SÍNTESIS DE VOZ (SIN DÓLARES)
+    // ============================
+    function hablar(texto) {
+      const utter = new SpeechSynthesisUtterance(texto);
+      utter.lang = "es-AR";
+      utter.rate = 1;
+      utter.pitch = 1;
+      speechSynthesis.speak(utter);
+    }
+  </script>
+</body>
+</html>
