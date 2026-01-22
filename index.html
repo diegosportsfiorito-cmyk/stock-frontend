@@ -5,10 +5,15 @@
   <title>Consulta de Stock</title>
 
   <style>
+    :root {
+      --color-primario: #007bff;
+      --color-fondo: #f0f2f5;
+    }
+
     body {
       font-family: Arial, sans-serif;
       padding: 2rem;
-      background: #f0f2f5;
+      background: var(--color-fondo);
       color: #222;
       max-width: 600px;
       margin: auto;
@@ -19,7 +24,7 @@
       margin-bottom: 1.5rem;
     }
 
-    input {
+    input, select {
       width: 100%;
       padding: 0.8rem;
       font-size: 1rem;
@@ -39,7 +44,7 @@
     }
 
     #consultarBtn {
-      background: #007bff;
+      background: var(--color-primario);
       color: white;
     }
 
@@ -56,6 +61,14 @@
       border: 1px solid #ddd;
       font-size: 1.1rem;
     }
+
+    .config-box {
+      margin-top: 2rem;
+      padding: 1rem;
+      background: white;
+      border-radius: 6px;
+      border: 1px solid #ddd;
+    }
   </style>
 </head>
 
@@ -69,8 +82,23 @@
 
   <div id="respuesta"></div>
 
+  <!-- CONFIGURACIÓN DE COLORES -->
+  <div class="config-box">
+    <h3>Personalizar colores</h3>
+
+    <label>Color primario:</label>
+    <input type="color" id="colorPrimario" />
+
+    <label>Color de fondo:</label>
+    <input type="color" id="colorFondo" />
+
+    <button onclick="aplicarTema()">Aplicar tema</button>
+  </div>
+
   <script>
-    // Formatear números como pesos argentinos
+    // ============================
+    // FORMATEAR PESOS ARGENTINOS
+    // ============================
     function formatearARS(texto) {
       return texto.replace(/\$([0-9.,]+)/g, (match, num) => {
         let limpio = num.replace(/,/g, "");
@@ -84,6 +112,9 @@
       });
     }
 
+    // ============================
+    // CONSULTAR BACKEND
+    // ============================
     async function consultar() {
       const pregunta = document.getElementById("pregunta").value;
       const respuestaDiv = document.getElementById("respuesta");
@@ -124,6 +155,9 @@
       }
     }
 
+    // ============================
+    // RECONOCIMIENTO DE VOZ
+    // ============================
     function escuchar() {
       const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 
@@ -153,13 +187,46 @@
       };
     }
 
+    // ============================
+    // SÍNTESIS DE VOZ (DECIR PESOS)
+    // ============================
     function hablar(texto) {
-      const utter = new SpeechSynthesisUtterance(texto);
+      const textoPesos = texto.replace(/\$/g, " pesos ");
+
+      const utter = new SpeechSynthesisUtterance(textoPesos);
       utter.lang = "es-AR";
       utter.rate = 1;
       utter.pitch = 1;
       speechSynthesis.speak(utter);
     }
+
+    // ============================
+    // TEMA PERSONALIZADO
+    // ============================
+    function aplicarTema() {
+      const primario = document.getElementById("colorPrimario").value;
+      const fondo = document.getElementById("colorFondo").value;
+
+      document.documentElement.style.setProperty("--color-primario", primario);
+      document.documentElement.style.setProperty("--color-fondo", fondo);
+
+      localStorage.setItem("tema", JSON.stringify({ primario, fondo }));
+    }
+
+    function cargarTema() {
+      const tema = localStorage.getItem("tema");
+      if (!tema) return;
+
+      const { primario, fondo } = JSON.parse(tema);
+
+      document.documentElement.style.setProperty("--color-primario", primario);
+      document.documentElement.style.setProperty("--color-fondo", fondo);
+
+      document.getElementById("colorPrimario").value = primario;
+      document.getElementById("colorFondo").value = fondo;
+    }
+
+    cargarTema();
   </script>
 </body>
 </html>
