@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Stock IA</title>
@@ -247,7 +246,6 @@
             const details = document.createElement("div");
             details.className = "card-details";
 
-            // Chips (mobile)
             const chips = document.createElement("div");
             chips.className = "chips";
             p.talles.forEach(t => {
@@ -257,7 +255,6 @@
                 chips.appendChild(chip);
             });
 
-            // Tabla (desktop)
             const table = document.createElement("table");
             table.className = "table-desktop";
             table.innerHTML = `
@@ -296,57 +293,37 @@
         }
 
         // ============================================================
-        // LECTOR DE CÓDIGOS (HÍBRIDO)
+        // SCANNER DE CÓDIGOS DE BARRA
         // ============================================================
 
-        scanBtn.onclick = iniciarScanner;
-        closeScanner.onclick = detenerScanner;
+        scanBtn.onclick = () => iniciarScanner();
+        closeScanner.onclick = () => detenerScanner();
 
-        async function iniciarScanner() {
+        function iniciarScanner() {
             scannerContainer.classList.remove("hidden");
 
-            // Intento 1: BarcodeDetector nativo
-            if ("BarcodeDetector" in window) {
-                try {
-                    const detector = new BarcodeDetector({formats: ["ean_13", "code_128", "code_39"]});
-                    const stream = await navigator.mediaDevices.getUserMedia({video: {facingMode: "environment"}});
-                    scannerVideo.srcObject = stream;
-
-                    scanning = true;
-
-                    const loop = async () => {
-                        if (!scanning) return;
-                        const barcodes = await detector.detect(scannerVideo);
-                        if (barcodes.length > 0) {
-                            const code = barcodes[0].rawValue;
-                            input.value = code;
-                            detenerScanner();
-                            enviarConsulta();
-                            return;
-                        }
-                        requestAnimationFrame(loop);
-                    };
-                    loop();
-                    return;
-                } catch (e) {
-                    console.warn("BarcodeDetector no disponible, usando QuaggaJS");
-                }
-            }
-
-            // Intento 2: QuaggaJS
             Quagga.init({
                 inputStream: {
+                    name: "Live",
                     type: "LiveStream",
-                    target: scannerVideo,
-                    constraints: {facingMode: "environment"}
+                    target: scannerVideo
                 },
-                decoder: {readers: ["ean_reader", "code_128_reader", "code_39_reader"]}
-            }, err => {
-                if (err) return console.error(err);
+                decoder: {
+                    readers: ["ean_reader", "ean_8_reader", "code128_reader"]
+                }
+            }, function(err) {
+                if (err) {
+                    console.error(err);
+                    return;
+                }
                 Quagga.start();
+                scanning = true;
             });
 
             Quagga.onDetected(data => {
+                if (!scanning) return;
+                scanning = false;
+
                 const code = data.codeResult.code;
                 input.value = code;
                 detenerScanner();
@@ -355,33 +332,13 @@
         }
 
         function detenerScanner() {
-            scanning = false;
             scannerContainer.classList.add("hidden");
-
-            if (scannerVideo.srcObject) {
-                scannerVideo.srcObject.getTracks().forEach(t => t.stop());
-            }
-
-            if (Quagga.running) {
+            if (scanning) {
                 Quagga.stop();
+                scanning = false;
             }
         }
-
-        // ============================================================
-        // MICRÓFONO
-        // ============================================================
-
-        micBtn.onclick = () => {
-            const rec = new webkitSpeechRecognition();
-            rec.lang = "es-AR";
-            rec.onresult = (e) => {
-                input.value = e.results[0][0].transcript;
-                enviarConsulta();
-            };
-            rec.start();
-        };
     </script>
 
 </body>
 </html>
-
