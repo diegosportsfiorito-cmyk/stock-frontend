@@ -112,7 +112,8 @@
             font-size: 14px;
         }
 
-        #scannerContainer {
+        /* RENOMBRADO PARA ROMPER CACHÉ */
+        #scannerOverlayV2 {
             position: fixed;
             top: 0;
             left: 0;
@@ -125,14 +126,15 @@
             justify-content: center;
         }
 
-        #scannerVideo {
+        #scannerVideoV2 {
             width: 80%;
             border-radius: 10px;
             border: 2px solid #fff;
         }
 
-        .hidden {
-            display: none;
+        /* NUEVA CLASE PARA FORZAR CACHE-BREAK */
+        .ocultoV2 {
+            display: none !important;
         }
     </style>
 </head>
@@ -141,7 +143,7 @@
 
     <header>
         <h1>Stock IA</h1>
-        <span class="version">v1.0.0</span>
+        <span class="version">v1.0.1</span>
     </header>
 
     <main>
@@ -154,9 +156,10 @@
             <button id="micBtn">🎤</button>
         </div>
 
-        <div id="scannerContainer" class="hidden">
-            <video id="scannerVideo" autoplay></video>
-            <button id="closeScanner">Cerrar</button>
+        <!-- RENOMBRADO PARA ROMPER CACHÉ -->
+        <div id="scannerOverlayV2" class="ocultoV2">
+            <video id="scannerVideoV2" autoplay></video>
+            <button id="closeScannerV2">Cerrar</button>
         </div>
 
         <div id="responseContainer"></div>
@@ -172,9 +175,9 @@
         const micBtn = document.getElementById("micBtn");
         const responseContainer = document.getElementById("responseContainer");
 
-        const scannerContainer = document.getElementById("scannerContainer");
-        const scannerVideo = document.getElementById("scannerVideo");
-        const closeScanner = document.getElementById("closeScanner");
+        const scannerOverlay = document.getElementById("scannerOverlayV2");
+        const scannerVideo = document.getElementById("scannerVideoV2");
+        const closeScanner = document.getElementById("closeScannerV2");
 
         let scanning = false;
 
@@ -293,14 +296,14 @@
         }
 
         // ============================================================
-        // SCANNER DE CÓDIGOS DE BARRA
+        // SCANNER DE CÓDIGOS DE BARRA (RENOMBRADO)
         // ============================================================
 
         scanBtn.onclick = () => iniciarScanner();
         closeScanner.onclick = () => detenerScanner();
 
         function iniciarScanner() {
-            scannerContainer.classList.remove("hidden");
+            scannerOverlay.classList.remove("ocultoV2");
 
             Quagga.init({
                 inputStream: {
@@ -332,7 +335,7 @@
         }
 
         function detenerScanner() {
-            scannerContainer.classList.add("hidden");
+            scannerOverlay.classList.add("ocultoV2");
             if (scanning) {
                 Quagga.stop();
                 scanning = false;
