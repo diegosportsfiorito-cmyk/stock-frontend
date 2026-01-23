@@ -3,311 +3,383 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
-    <!-- PWA -->
-    <link rel="manifest" href="manifest.json" />
-    <meta name="theme-color" content="#111111" />
-
     <title>Stock IA</title>
 
     <style>
-        :root {
-            --bg-dark: #111;
-            --bg-light: #f5f5f5;
-            --text-dark: #fff;
-            --text-light: #111;
-            --card-dark: #1b1b1b;
-            --card-light: #ffffff;
-            --accent: #4ea1ff;
-        }
-
-        body.dark {
-            background: var(--bg-dark);
-            color: var(--text-dark);
-        }
-
-        body.light {
-            background: var(--bg-light);
-            color: var(--text-light);
-        }
-
         body {
             margin: 0;
-            font-family: "Inter", sans-serif;
-            transition: background 0.3s, color 0.3s;
+            background: #111;
+            color: #eee;
+            font-family: Arial, sans-serif;
         }
 
         header {
-            padding: 15px 20px;
-            display: flex;
-            align-items: center;
-            gap: 15px;
+            background: #1e1e1e;
+            padding: 15px;
+            text-align: center;
             border-bottom: 1px solid #333;
         }
 
-        #logo {
-            width: 45px;
-            height: 45px;
-            background: #444;
-            border-radius: 8px;
+        .version {
+            font-size: 12px;
+            opacity: 0.6;
         }
 
-        #title {
-            font-size: 1.4rem;
-            font-weight: 600;
-        }
-
-        #themeToggle {
-            margin-left: auto;
-            cursor: pointer;
-            padding: 8px 14px;
-            border-radius: 6px;
-            background: var(--accent);
-            color: #fff;
-            border: none;
-        }
-
-        #container {
+        main {
             padding: 20px;
-            max-width: 700px;
-            margin: auto;
         }
 
-        #inputBox {
+        .input-container {
             display: flex;
             gap: 10px;
+            margin-bottom: 20px;
         }
 
-        #question {
+        input {
             flex: 1;
             padding: 12px;
-            border-radius: 8px;
+            border-radius: 6px;
             border: none;
-            font-size: 1rem;
+            background: #222;
+            color: #fff;
+            font-size: 16px;
         }
 
         button {
             padding: 12px 16px;
-            border-radius: 8px;
             border: none;
-            cursor: pointer;
-            background: var(--accent);
+            border-radius: 6px;
+            background: #444;
             color: #fff;
-            font-size: 1rem;
+            cursor: pointer;
         }
 
-        #status {
-            margin-top: 10px;
-            font-size: 0.9rem;
-            opacity: 0.8;
+        button:hover {
+            background: #666;
         }
 
-        #results {
-            margin-top: 25px;
+        #responseContainer {
+            margin-top: 20px;
         }
 
         .card {
-            background: var(--card-dark);
+            background: #1b1b1b;
             padding: 15px;
             border-radius: 10px;
             margin-bottom: 15px;
             border: 1px solid #333;
         }
 
-        body.light .card {
-            background: var(--card-light);
-            border: 1px solid #ddd;
-        }
-
-        #history {
-            margin-top: 30px;
-            opacity: 0.7;
-            font-size: 0.9rem;
-        }
-
-        footer {
-            margin-top: 40px;
-            text-align: center;
-            opacity: 0.5;
-            font-size: 0.8rem;
-        }
-
-        #voiceControls {
-            margin-top: 15px;
+        .card-header {
             display: flex;
-            gap: 10px;
+            justify-content: space-between;
+            cursor: pointer;
         }
 
-        select {
-            padding: 10px;
-            border-radius: 8px;
-            border: none;
+        .card-title {
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .card-details {
+            margin-top: 10px;
+            display: none;
+        }
+
+        .table-desktop {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        .table-desktop th, .table-desktop td {
+            border: 1px solid #333;
+            padding: 6px;
+            text-align: center;
+        }
+
+        .chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 10px;
+        }
+
+        .chip {
+            background: #333;
+            padding: 6px 10px;
+            border-radius: 20px;
+            font-size: 14px;
+        }
+
+        #scannerContainer {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.85);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #scannerVideo {
+            width: 80%;
+            border-radius: 10px;
+            border: 2px solid #fff;
+        }
+
+        .hidden {
+            display: none;
         }
     </style>
 </head>
 
-<body class="dark">
+<body>
 
-<header>
-    <div id="logo"></div>
-    <div id="title">Stock IA</div>
-    <button id="themeToggle">Modo Claro</button>
-</header>
+    <header>
+        <h1>Stock IA</h1>
+        <span class="version">v1.0.0</span>
+    </header>
 
-<div id="container">
+    <main>
 
-    <div id="inputBox">
-        <input id="question" placeholder="Preguntá por código o descripción..." />
-        <button id="sendBtn">Enviar</button>
-        <button id="micBtn">🎤</button>
-    </div>
+        <div class="input-container">
+            <input id="questionInput" type="text" placeholder="Escribe o escanea un código..." autofocus />
 
-    <div id="voiceControls">
-        <button id="repeatBtn">🔁 Repetir</button>
-        <button id="muteBtn">🔇 Mute</button>
-        <select id="voiceSelect"></select>
-    </div>
+            <button id="sendBtn">Enviar</button>
+            <button id="scanBtn">📷</button>
+            <button id="micBtn">🎤</button>
+        </div>
 
-    <div id="status">Listo.</div>
+        <div id="scannerContainer" class="hidden">
+            <video id="scannerVideo" autoplay></video>
+            <button id="closeScanner">Cerrar</button>
+        </div>
 
-    <div id="results"></div>
+        <div id="responseContainer"></div>
 
-    <div id="history"></div>
+    </main>
 
-    <footer>
-        Stock IA — v1.0.0
-    </footer>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/quagga/0.12.1/quagga.min.js"></script>
 
-</div>
+    <script>
+        const input = document.getElementById("questionInput");
+        const sendBtn = document.getElementById("sendBtn");
+        const scanBtn = document.getElementById("scanBtn");
+        const micBtn = document.getElementById("micBtn");
+        const responseContainer = document.getElementById("responseContainer");
 
-<script>
-    const API_URL = "https://stock-backend-1-twzg.onrender.com/query";
+        const scannerContainer = document.getElementById("scannerContainer");
+        const scannerVideo = document.getElementById("scannerVideo");
+        const closeScanner = document.getElementById("closeScanner");
 
-    let muted = false;
-    let lastResponse = "";
-    let voices = [];
+        let scanning = false;
 
-    // ============================
-    // MODO OSCURO / CLARO
-    // ============================
+        // ============================================================
+        // ENVIAR CONSULTA
+        // ============================================================
 
-    const themeToggle = document.getElementById("themeToggle");
-    themeToggle.onclick = () => {
-        document.body.classList.toggle("light");
-        document.body.classList.toggle("dark");
-
-        themeToggle.textContent =
-            document.body.classList.contains("light")
-                ? "Modo Oscuro"
-                : "Modo Claro";
-    };
-
-    // ============================
-    // TEXT TO SPEECH
-    // ============================
-
-    function loadVoices() {
-        voices = speechSynthesis.getVoices();
-        const select = document.getElementById("voiceSelect");
-        select.innerHTML = "";
-        voices.forEach((v, i) => {
-            const opt = document.createElement("option");
-            opt.value = i;
-            opt.textContent = `${v.name} (${v.lang})`;
-            select.appendChild(opt);
-        });
-    }
-
-    speechSynthesis.onvoiceschanged = loadVoices;
-
-    function speak(text) {
-        if (muted) return;
-        const msg = new SpeechSynthesisUtterance(text);
-        const idx = document.getElementById("voiceSelect").value;
-        msg.voice = voices[idx];
-        speechSynthesis.speak(msg);
-    }
-
-    document.getElementById("repeatBtn").onclick = () => speak(lastResponse);
-    document.getElementById("muteBtn").onclick = () => {
-        muted = !muted;
-        document.getElementById("muteBtn").textContent = muted ? "🔊 Unmute" : "🔇 Mute";
-    };
-
-    // ============================
-    // SPEECH TO TEXT (MIC)
-    // ============================
-
-    const micBtn = document.getElementById("micBtn");
-    let recognition;
-
-    if ("webkitSpeechRecognition" in window) {
-        recognition = new webkitSpeechRecognition();
-        recognition.lang = "es-AR";
-        recognition.continuous = false;
-
-        micBtn.onclick = () => recognition.start();
-
-        recognition.onresult = (e) => {
-            document.getElementById("question").value =
-                e.results[0][0].transcript;
-        };
-    } else {
-        micBtn.disabled = true;
-    }
-
-    // ============================
-    // CONSULTA AL BACKEND
-    // ============================
-
-    async function sendQuery() {
-        const q = document.getElementById("question").value.trim();
-        if (!q) return;
-
-        document.getElementById("status").textContent = "Buscando...";
-        document.getElementById("results").innerHTML = "";
-
-        const t0 = performance.now();
-
-        const res = await fetch(API_URL, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ question: q }),
+        sendBtn.onclick = () => enviarConsulta();
+        input.addEventListener("keydown", (e) => {
+            if (e.key === "Enter") enviarConsulta();
         });
 
-        const data = await res.json();
-        const t1 = performance.now();
+        function enviarConsulta() {
+            const question = input.value.trim();
+            if (!question) return;
 
-        lastResponse = data.respuesta;
-        speak(lastResponse);
-
-        // Mostrar resultados
-        const resultsDiv = document.getElementById("results");
-        resultsDiv.innerHTML = "";
-
-        if (data.respuesta) {
-            const card = document.createElement("div");
-            card.className = "card";
-            card.textContent = data.respuesta;
-            resultsDiv.appendChild(card);
+            fetch("https://stock-backend-1-twzg.onrender.com/query", {
+                method: "POST",
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify({question})
+            })
+            .then(r => r.json())
+            .then(data => renderRespuesta(data))
+            .catch(err => console.error(err));
         }
 
-        // Logging
-        const history = document.getElementById("history");
-        const entry = document.createElement("div");
-        entry.textContent = `> ${q} (${Math.round(t1 - t0)} ms)`;
-        history.prepend(entry);
+        // ============================================================
+        // RENDER DE RESPUESTA
+        // ============================================================
 
-        document.getElementById("status").textContent = "Listo.";
-    }
+        function renderRespuesta(data) {
+            responseContainer.innerHTML = "";
 
-    document.getElementById("sendBtn").onclick = sendQuery;
-    document.getElementById("question").onkeydown = (e) => {
-        if (e.key === "Enter") sendQuery();
-    };
+            if (data.tipo === "producto") {
+                responseContainer.appendChild(renderProducto(data.data));
+            }
 
-    loadVoices();
-</script>
+            if (data.tipo === "lista") {
+                data.lista.forEach(item => {
+                    responseContainer.appendChild(renderProducto(item));
+                });
+            }
+
+            if (data.tipo === "marca_resumen" || data.tipo === "rubro_resumen") {
+                responseContainer.appendChild(renderResumen(data.data));
+            }
+        }
+
+        // ============================================================
+        // TARJETA DE PRODUCTO
+        // ============================================================
+
+        function renderProducto(p) {
+            const card = document.createElement("div");
+            card.className = "card";
+
+            const header = document.createElement("div");
+            header.className = "card-header";
+
+            header.innerHTML = `
+                <div>
+                    <div class="card-title">${p.descripcion}</div>
+                    <div>${p.marca} — ${p.rubro}</div>
+                    <div>Stock total: ${p.stock_total}</div>
+                </div>
+                <button class="toggleBtn">Detalles</button>
+            `;
+
+            const details = document.createElement("div");
+            details.className = "card-details";
+
+            // Chips (mobile)
+            const chips = document.createElement("div");
+            chips.className = "chips";
+            p.talles.forEach(t => {
+                const chip = document.createElement("div");
+                chip.className = "chip";
+                chip.textContent = `${t.talle} (${t.stock})`;
+                chips.appendChild(chip);
+            });
+
+            // Tabla (desktop)
+            const table = document.createElement("table");
+            table.className = "table-desktop";
+            table.innerHTML = `
+                <tr><th>Talle</th><th>Stock</th></tr>
+                ${p.talles.map(t => `<tr><td>${t.talle}</td><td>${t.stock}</td></tr>`).join("")}
+            `;
+
+            details.appendChild(chips);
+            details.appendChild(table);
+
+            header.querySelector(".toggleBtn").onclick = () => {
+                details.style.display = details.style.display === "none" ? "block" : "none";
+            };
+
+            card.appendChild(header);
+            card.appendChild(details);
+
+            return card;
+        }
+
+        // ============================================================
+        // RESUMEN POR MARCA / RUBRO
+        // ============================================================
+
+        function renderResumen(r) {
+            const card = document.createElement("div");
+            card.className = "card";
+
+            card.innerHTML = `
+                <div class="card-title">${r.marca || r.rubro}</div>
+                <div>Stock total: ${r.stock_total}</div>
+                <div>Valorizado total: ${r.valorizado_total}</div>
+            `;
+
+            return card;
+        }
+
+        // ============================================================
+        // LECTOR DE CÓDIGOS (HÍBRIDO)
+        // ============================================================
+
+        scanBtn.onclick = iniciarScanner;
+        closeScanner.onclick = detenerScanner;
+
+        async function iniciarScanner() {
+            scannerContainer.classList.remove("hidden");
+
+            // Intento 1: BarcodeDetector nativo
+            if ("BarcodeDetector" in window) {
+                try {
+                    const detector = new BarcodeDetector({formats: ["ean_13", "code_128", "code_39"]});
+                    const stream = await navigator.mediaDevices.getUserMedia({video: {facingMode: "environment"}});
+                    scannerVideo.srcObject = stream;
+
+                    scanning = true;
+
+                    const loop = async () => {
+                        if (!scanning) return;
+                        const barcodes = await detector.detect(scannerVideo);
+                        if (barcodes.length > 0) {
+                            const code = barcodes[0].rawValue;
+                            input.value = code;
+                            detenerScanner();
+                            enviarConsulta();
+                            return;
+                        }
+                        requestAnimationFrame(loop);
+                    };
+                    loop();
+                    return;
+                } catch (e) {
+                    console.warn("BarcodeDetector no disponible, usando QuaggaJS");
+                }
+            }
+
+            // Intento 2: QuaggaJS
+            Quagga.init({
+                inputStream: {
+                    type: "LiveStream",
+                    target: scannerVideo,
+                    constraints: {facingMode: "environment"}
+                },
+                decoder: {readers: ["ean_reader", "code_128_reader", "code_39_reader"]}
+            }, err => {
+                if (err) return console.error(err);
+                Quagga.start();
+            });
+
+            Quagga.onDetected(data => {
+                const code = data.codeResult.code;
+                input.value = code;
+                detenerScanner();
+                enviarConsulta();
+            });
+        }
+
+        function detenerScanner() {
+            scanning = false;
+            scannerContainer.classList.add("hidden");
+
+            if (scannerVideo.srcObject) {
+                scannerVideo.srcObject.getTracks().forEach(t => t.stop());
+            }
+
+            if (Quagga.running) {
+                Quagga.stop();
+            }
+        }
+
+        // ============================================================
+        // MICRÓFONO
+        // ============================================================
+
+        micBtn.onclick = () => {
+            const rec = new webkitSpeechRecognition();
+            rec.lang = "es-AR";
+            rec.onresult = (e) => {
+                input.value = e.results[0][0].transcript;
+                enviarConsulta();
+            };
+            rec.start();
+        };
+    </script>
 
 </body>
 </html>
