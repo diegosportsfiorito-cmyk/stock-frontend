@@ -436,6 +436,7 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 </script>
 
+<!-- FIN PARTE 1 -->
 <script>
 document.addEventListener("DOMContentLoaded", () => {
 
@@ -585,16 +586,26 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
         }
 
+        if (data.tipo === "lista" && data.items.length === 0) {
+            const card = document.createElement("div");
+            card.className = "card";
+            card.innerHTML = `<div class="card-title">No encontré resultados para tu búsqueda.</div>`;
+            responseContainer.appendChild(card);
+            lastResponseText = data.voz;
+            return;
+        }
+
         if (data.tipo === "producto") {
             renderProducto(data.data, data.fuente);
+            lastResponseText = data.voz;
+            return;
         }
 
         if (data.tipo === "lista") {
-            renderLista(data.items
-        );
+            renderLista(data.items, data.fuente);
+            lastResponseText = data.voz;
+            return;
         }
-
-        lastResponseText = data.voz || "";
     }
 
     function renderProducto(p, fuente) {
