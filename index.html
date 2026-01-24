@@ -643,7 +643,7 @@ document.addEventListener("DOMContentLoaded", () => {
             const res = await fetch("https://stock-ia.onrender.com/query", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ pregunta: text })
+                body: JSON.stringify({ question: text })
             });
 
             const data = await res.json();
@@ -937,6 +937,7 @@ document.addEventListener("DOMContentLoaded", () => {
 </script>
 </body>
 </html>
+
 
 
 
