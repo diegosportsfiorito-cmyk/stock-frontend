@@ -140,8 +140,6 @@
     </style>
 </head>
 
-<!-- BUILD 2026-01-24 11:23 -->
-
 <body data-theme="dark">
 
 <header>
@@ -230,6 +228,10 @@
 <script>
 document.addEventListener("DOMContentLoaded", () => {
 
+    /* ============================
+       REFERENCIAS DEL DOM
+    ============================ */
+
     const body = document.body;
 
     const questionInput = document.getElementById("questionInput");
@@ -254,32 +256,23 @@ document.addEventListener("DOMContentLoaded", () => {
     const capabilitiesPanel = document.getElementById("capabilitiesPanel");
     const capClose = document.getElementById("capClose");
 
+    const scannerOverlayV2 = document.getElementById("scannerOverlayV2");
+    const scannerVideoV2 = document.getElementById("scannerVideoV2");
+    const closeScannerV2 = document.getElementById("closeScannerV2");
+
+    /* ============================
+       VARIABLES DE ESTADO
+    ============================ */
+
     let lastResponseText = "";
     let isMuted = false;
     let freeMode = false;
     let recognition = null;
+    let scannerStream = null;
 
-    themeToggle.addEventListener("click", () => {
-        const current = body.getAttribute("data-theme");
-        const next = current === "dark" ? "light" : "dark";
-        body.setAttribute("data-theme", next);
-        themeToggle.textContent = next === "dark" ? "🌙 Noche" : "☀️ Día";
-    });
-
-    accentSelect.addEventListener("change", () => {
-        const color = accentSelect.value;
-        document.documentElement.style.setProperty("--accent-color", color);
-    });
-
-    function openCapabilities() {
-        capabilitiesPanel.style.display = "flex";
-    }
-
-    function closeCapabilities() {
-        capabilitiesPanel.style.display = "none";
-    }
-
-    capClose.addEventListener("click", closeCapabilities);
+    /* ============================
+       UTILIDADES
+    ============================ */
 
     function setStatus(msg) {
         statusBar.textContent = msg;
@@ -293,45 +286,141 @@ document.addEventListener("DOMContentLoaded", () => {
         skeletonContainer.classList.add("ocultoV2");
     }
 
-    function clearResponses() {
-        responseContainer.innerHTML = "";
-        setStatus("Pantalla limpia.");
+    function speak(text) {
+        if (isMuted) return;
+        if (!text) return;
+
+        const utter = new SpeechSynthesisUtterance(text);
+        utter.lang = "es-AR";
+        utter.rate = 1;
+        speechSynthesis.speak(utter);
+    }
+        /* ============================
+       TEMA Y COLOR
+    ============================ */
+
+    themeToggle.addEventListener("click", () => {
+        const current = body.getAttribute("data-theme");
+        const next = current === "dark" ? "light" : "dark";
+        body.setAttribute("data-theme", next);
+        themeToggle.textContent = next === "dark" ? "🌙 Noche" : "☀️ Día";
+    });
+
+    accentSelect.addEventListener("change", () => {
+        const color = accentSelect.value;
+        document.documentElement.style.setProperty("--accent-color", color);
+    });
+
+    /* ============================
+       PANEL DE CAPACIDADES
+    ============================ */
+
+    function openCapabilities() {
+        capabilitiesPanel.style.display = "flex";
     }
 
-    clearBtn.addEventListener("click", clearResponses);
+    function closeCapabilities() {
+        capabilitiesPanel.style.display = "none";
+    }
 
-    shareBtn.addEventListener("click", async () => {
-        if (!lastResponseText) {
-            alert("No hay nada para compartir.");
+    capClose.addEventListener("click", closeCapabilities);
+
+    /* ============================
+       RECONOCIMIENTO DE VOZ
+    ============================ */
+
+    function startRecognition() {
+        if (!("webkitSpeechRecognition" in window)) {
+            alert("Tu navegador no soporta reconocimiento de voz.");
             return;
         }
 
-        if (navigator.share) {
-            try {
-                await navigator.share({
-                    title: "Consulta de Stock",
-                    text: lastResponseText
-                });
-            } catch (e) {}
-        } else {
-            navigator.clipboard.writeText(lastResponseText);
-            alert("Copiado al portapapeles.");
-        }
-    });
+        if (recognition) recognition.stop();
 
-    sendBtn.addEventListener("click", () => {
-        const text = questionInput.value.trim();
-        if (!text) return;
-        processQuery(text);
-    });
+        recognition = new webkitSpeechRecognition();
+        recognition.lang = "es-AR";
+        recognition.continuous = false;
+        recognition.interimResults = false;
 
-    questionInput.addEventListener("keydown", (e) => {
-        if (e.key === "Enter") {
-            const text = questionInput.value.trim();
-            if (!text) return;
+        recognition.onstart = () => {
+            micBtn.classList.add("active");
+            setStatus("Escuchando...");
+        };
+
+        recognition.onend = () => {
+            micBtn.classList.remove("active");
+            setStatus("Listo.");
+        };
+
+        recognition.onerror = () => {
+            setStatus("Error en reconocimiento.");
+        };
+
+        recognition.onresult = (event) => {
+            const text = event.results[0][0].transcript;
             processQuery(text);
+        };
+
+        recognition.start();
+    }
+
+    function stopRecognition() {
+        if (recognition) recognition.stop();
+    }
+
+    micBtn.addEventListener("click", startRecognition);
+
+    freeModeBtn.addEventListener("click", () => {
+        freeMode = !freeMode;
+        freeModeBtn.classList.toggle("active", freeMode);
+        freeModeBtn.textContent = freeMode ? "🎧 Manos libres ON" : "🎧 Manos libres";
+
+        if (freeMode) {
+            speak("Modo manos libres activado.");
+            startRecognition();
+        } else {
+            speak("Modo manos libres desactivado.");
+            stopRecognition();
         }
     });
+        /* ============================
+       SCANNER
+    ============================ */
+
+    async function openScanner() {
+        scannerOverlayV2.style.display = "flex";
+        setStatus("Abriendo cámara...");
+
+        try {
+            scannerStream = await navigator.mediaDevices.getUserMedia({
+                video: { facingMode: "environment" }
+            });
+
+            scannerVideoV2.srcObject = scannerStream;
+
+            setTimeout(() => {
+                setStatus("Escaneando...");
+            }, 500);
+
+        } catch (err) {
+            alert("No se pudo acceder a la cámara.");
+            console.error(err);
+        }
+    }
+
+    function closeScanner() {
+        scannerOverlayV2.style.display = "none";
+        if (scannerStream) {
+            scannerStream.getTracks().forEach(t => t.stop());
+        }
+    }
+
+    scanBtn.addEventListener("click", openScanner);
+    closeScannerV2.addEventListener("click", closeScanner);
+
+    /* ============================
+       CONSULTA AL BACKEND
+    ============================ */
 
     function isMetaQuery(text) {
         const t = text.toLowerCase();
@@ -389,157 +478,48 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
-    window._stockIA = {
-        processQuery,
-        setStatus,
-        speak,
-        startRecognition,
-        stopRecognition,
-        renderResponse,
-        openCapabilities
-    };
-});
-</script>
-
-<!-- FIN PARTE 1 -->
-
-<script>
-document.addEventListener("DOMContentLoaded", () => {
-
-    const {
-        processQuery,
-        setStatus,
-        speak,
-        startRecognition,
-        stopRecognition,
-        renderResponse,
-        openCapabilities
-    } = window._stockIA;
-
-    const micBtn = document.getElementById("micBtn");
-    const muteBtn = document.getElementById("muteBtn");
-    const speakBtn = document.getElementById("speakBtn");
-    const freeModeBtn = document.getElementById("freeModeBtn");
-
-    const scanBtn = document.getElementById("scanBtn");
-    const closeScannerV2 = document.getElementById("closeScannerV2");
-    const scannerOverlayV2 = document.getElementById("scannerOverlayV2");
-    const scannerVideoV2 = document.getElementById("scannerVideoV2");
-
-    const responseContainer = document.getElementById("responseContainer");
-
-    let recognition = null;
-    let isMuted = false;
-    let freeMode = false;
-    let lastResponseText = "";
-
-    function speak(text) {
-        if (isMuted) return;
+    sendBtn.addEventListener("click", () => {
+        const text = questionInput.value.trim();
         if (!text) return;
-
-        const utter = new SpeechSynthesisUtterance(text);
-        utter.lang = "es-AR";
-        utter.rate = 1;
-        speechSynthesis.speak(utter);
-    }
-
-    speakBtn.addEventListener("click", () => {
-        if (lastResponseText) speak(lastResponseText);
+        processQuery(text);
     });
 
-    muteBtn.addEventListener("click", () => {
-        isMuted = !isMuted;
-        muteBtn.textContent = isMuted ? "🔈 Activar sonido" : "🔇 Silenciar";
+    questionInput.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+            const text = questionInput.value.trim();
+            if (!text) return;
+            processQuery(text);
+        }
     });
 
-    function startRecognition() {
-        if (!("webkitSpeechRecognition" in window)) {
-            alert("Tu navegador no soporta reconocimiento de voz.");
+    clearBtn.addEventListener("click", () => {
+        responseContainer.innerHTML = "";
+        setStatus("Pantalla limpia.");
+    });
+
+    shareBtn.addEventListener("click", async () => {
+        if (!lastResponseText) {
+            alert("No hay nada para compartir.");
             return;
         }
 
-        if (recognition) recognition.stop();
-
-        recognition = new webkitSpeechRecognition();
-        recognition.lang = "es-AR";
-        recognition.continuous = false;
-        recognition.interimResults = false;
-
-        recognition.onstart = () => {
-            micBtn.classList.add("active");
-            setStatus("Escuchando...");
-        };
-
-        recognition.onend = () => {
-            micBtn.classList.remove("active");
-            setStatus("Listo.");
-        };
-
-        recognition.onerror = () => {
-            setStatus("Error en reconocimiento.");
-        };
-
-        recognition.onresult = (event) => {
-            const text = event.results[0][0].transcript;
-            processQuery(text);
-        };
-
-        recognition.start();
-    }
-
-    function stopRecognition() {
-        if (recognition) recognition.stop();
-    }
-
-    micBtn.addEventListener("click", startRecognition);
-
-    freeModeBtn.addEventListener("click", () => {
-        freeMode = !freeMode;
-        freeModeBtn.classList.toggle("active", freeMode);
-        freeModeBtn.textContent = freeMode ? "🎧 Manos libres ON" : "🎧 Manos libres";
-
-        if (freeMode) {
-            speak("Modo manos libres activado.");
-            startRecognition();
+        if (navigator.share) {
+            try {
+                await navigator.share({
+                    title: "Consulta de Stock",
+                    text: lastResponseText
+                });
+            } catch (e) {}
         } else {
-            speak("Modo manos libres desactivado.");
-            stopRecognition();
+            navigator.clipboard.writeText(lastResponseText);
+            alert("Copiado al portapapeles.");
         }
     });
+        /* ============================
+       RENDERIZADO DE RESPUESTAS
+    ============================ */
 
-    let scannerStream = null;
-
-    async function openScanner() {
-        scannerOverlayV2.style.display = "flex";
-        setStatus("Abriendo cámara...");
-
-        try {
-            scannerStream = await navigator.mediaDevices.getUserMedia({
-                video: { facingMode: "environment" }
-            });
-
-            scannerVideoV2.srcObject = scannerStream;
-
-            setTimeout(() => {
-                setStatus("Escaneando...");
-            }, 500);
-
-        } catch (err) {
-            alert("No se pudo acceder a la cámara.");
-            console.error(err);
-        }
-    }
-
-    function closeScanner() {
-        scannerOverlayV2.style.display = "none";
-        if (scannerStream) {
-            scannerStream.getTracks().forEach(t => t.stop());
-        }
-    }
-
-    scanBtn.addEventListener("click", openScanner);
-    closeScannerV2.addEventListener("click", closeScanner);
-        function renderResponse(data) {
+    function renderResponse(data) {
         responseContainer.innerHTML = "";
 
         if (data.tipo === "mensaje") {
@@ -621,12 +601,14 @@ document.addEventListener("DOMContentLoaded", () => {
         items.forEach(p => renderProducto(p, fuente));
     }
 
+    /* ============================
+       ESTADO INICIAL
+    ============================ */
+
     setStatus("Listo para consultar.");
+
 });
 </script>
 
 </body>
 </html>
-
-    
-
