@@ -355,12 +355,12 @@ document.addEventListener("DOMContentLoaded", () => {
         recognition.onerror = () => {
             setStatus("Error en reconocimiento.");
         };
-
         recognition.onresult = (event) => {
             const text = event.results[0][0].transcript;
+            questionInput.value = text;   // <-- vuelve a cargar el texto en el input
             processQuery(text);
         };
-
+        
         recognition.start();
     }
 
@@ -612,3 +612,4 @@ document.addEventListener("DOMContentLoaded", () => {
 
 </body>
 </html>
+
