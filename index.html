@@ -6,79 +6,195 @@
     <title>Stock IA</title>
 
     <style>
+        :root {
+            --bg-color: #111;
+            --bg-alt: #1b1b1b;
+            --text-color: #eee;
+            --border-color: #333;
+            --accent-color: #4caf50;
+        }
+
+        [data-theme="light"] {
+            --bg-color: #f5f5f5;
+            --bg-alt: #ffffff;
+            --text-color: #111;
+            --border-color: #ddd;
+        }
+
         body {
             margin: 0;
-            background: #111;
-            color: #eee;
-            font-family: Arial, sans-serif;
+            background: var(--bg-color);
+            color: var(--text-color);
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
         }
 
         header {
             background: #1e1e1e;
-            padding: 15px;
-            text-align: center;
+            color: #fff;
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
             border-bottom: 1px solid #333;
         }
 
+        [data-theme="light"] header {
+            background: #222;
+        }
+
+        .title-block {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .title-block h1 {
+            margin: 0;
+            font-size: 20px;
+        }
+
         .version {
+            font-size: 11px;
+            opacity: 0.7;
+        }
+
+        .controls-top {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .controls-top button,
+        .controls-top select {
+            border-radius: 999px;
+            border: none;
+            padding: 6px 10px;
             font-size: 12px;
-            opacity: 0.6;
+            cursor: pointer;
+            background: #333;
+            color: #fff;
+        }
+
+        [data-theme="light"] .controls-top button,
+        [data-theme="light"] .controls-top select {
+            background: #444;
+            color: #fff;
         }
 
         main {
-            padding: 20px;
+            padding: 16px;
+            max-width: 900px;
+            margin: 0 auto;
         }
 
         .input-container {
             display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
+            gap: 8px;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
         }
 
-        input {
-            flex: 1;
-            padding: 12px;
-            border-radius: 6px;
-            border: none;
+        .input-container input {
+            flex: 1 1 220px;
+            padding: 10px 12px;
+            border-radius: 999px;
+            border: 1px solid var(--border-color);
             background: #222;
             color: #fff;
-            font-size: 16px;
+            font-size: 15px;
         }
 
-        button {
-            padding: 12px 16px;
+        [data-theme="light"] .input-container input {
+            background: #fff;
+            color: #111;
+        }
+
+        .input-container button {
+            padding: 10px 12px;
+            border-radius: 999px;
             border: none;
-            border-radius: 6px;
-            background: #444;
+            background: var(--accent-color);
             color: #fff;
             cursor: pointer;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            white-space: nowrap;
         }
 
-        button:hover {
-            background: #666;
+        .input-container button.secondary {
+            background: #444;
+        }
+
+        [data-theme="light"] .input-container button.secondary {
+            background: #555;
+        }
+
+        .input-container button:hover {
+            filter: brightness(1.1);
+        }
+
+        .voice-controls {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+        }
+
+        .voice-controls button {
+            padding: 8px 10px;
+            border-radius: 999px;
+            border: none;
+            background: #333;
+            color: #fff;
+            cursor: pointer;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        [data-theme="light"] .voice-controls button {
+            background: #444;
+        }
+
+        .voice-controls button.active {
+            background: var(--accent-color);
+        }
+
+        #statusBar {
+            font-size: 12px;
+            opacity: 0.8;
+            margin-bottom: 10px;
         }
 
         #responseContainer {
-            margin-top: 20px;
+            margin-top: 10px;
         }
 
         .card {
-            background: #1b1b1b;
-            padding: 15px;
-            border-radius: 10px;
-            margin-bottom: 15px;
-            border: 1px solid #333;
+            background: var(--bg-alt);
+            padding: 14px;
+            border-radius: 12px;
+            margin-bottom: 12px;
+            border: 1px solid var(--border-color);
         }
 
         .card-header {
             display: flex;
             justify-content: space-between;
-            cursor: pointer;
+            align-items: center;
+            gap: 8px;
         }
 
         .card-title {
-            font-size: 18px;
-            font-weight: bold;
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .card-sub {
+            font-size: 13px;
+            opacity: 0.8;
         }
 
         .card-details {
@@ -89,12 +205,14 @@
         .table-desktop {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 10px;
+            margin-top: 8px;
+            font-size: 13px;
         }
 
-        .table-desktop th, .table-desktop td {
-            border: 1px solid #333;
-            padding: 6px;
+        .table-desktop th,
+        .table-desktop td {
+            border: 1px solid var(--border-color);
+            padding: 4px 6px;
             text-align: center;
         }
 
@@ -102,68 +220,146 @@
             display: flex;
             flex-wrap: wrap;
             gap: 6px;
-            margin-top: 10px;
+            margin-top: 6px;
         }
 
         .chip {
             background: #333;
-            padding: 6px 10px;
-            border-radius: 20px;
-            font-size: 14px;
+            padding: 4px 8px;
+            border-radius: 999px;
+            font-size: 12px;
         }
 
-        /* RENOMBRADO PARA ROMPER CACHÉ */
+        [data-theme="light"] .chip {
+            background: #ddd;
+            color: #111;
+        }
+
+        /* Scanner overlay */
         #scannerOverlayV2 {
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.85);
+            inset: 0;
+            background: rgba(0,0,0,0.9);
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
+            z-index: 9999;
         }
 
         #scannerVideoV2 {
-            width: 80%;
-            border-radius: 10px;
+            width: 90%;
+            max-width: 480px;
+            border-radius: 12px;
             border: 2px solid #fff;
+            background: #000;
         }
 
-        /* NUEVA CLASE PARA FORZAR CACHE-BREAK */
         .ocultoV2 {
             display: none !important;
+        }
+
+        #closeScannerV2 {
+            margin-top: 10px;
+            padding: 8px 14px;
+            border-radius: 999px;
+            border: none;
+            background: #444;
+            color: #fff;
+            cursor: pointer;
+        }
+
+        /* Fuente / detalle */
+        .source-badge {
+            font-size: 11px;
+            opacity: 0.8;
+            margin-top: 6px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .source-detail {
+            margin-top: 6px;
+            font-size: 12px;
+            opacity: 0.9;
+        }
+
+        .pill {
+            padding: 2px 8px;
+            border-radius: 999px;
+            border: 1px solid var(--border-color);
+        }
+
+        /* Responsive */
+        @media (max-width: 600px) {
+            header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 6px;
+            }
+
+            .input-container {
+                flex-direction: column;
+            }
+
+            .input-container button {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .voice-controls {
+                flex-direction: row;
+            }
+
+            #scannerVideoV2 {
+                width: 95%;
+            }
         }
     </style>
 </head>
 
-<body>
+<body data-theme="dark">
 
     <header>
-        <h1>Stock IA</h1>
-        <span class="version">v1.0.1</span>
+        <div class="title-block">
+            <h1>Stock IA</h1>
+            <span class="version">v1.1.0</span>
+        </div>
+        <div class="controls-top">
+            <button id="themeToggle">🌙 Noche</button>
+            <select id="accentSelect" title="Color de acento">
+                <option value="#4caf50">Verde</option>
+                <option value="#2196f3">Azul</option>
+                <option value="#ff9800">Naranja</option>
+                <option value="#e91e63">Rosa</option>
+            </select>
+        </div>
     </header>
 
     <main>
-
         <div class="input-container">
             <input id="questionInput" type="text" placeholder="Escribe o escanea un código..." autofocus />
-
             <button id="sendBtn">Enviar</button>
-            <button id="scanBtn">📷</button>
-            <button id="micBtn">🎤</button>
+            <button id="scanBtn" class="secondary">📷 Scanner</button>
         </div>
 
-        <!-- RENOMBRADO PARA ROMPER CACHÉ -->
+        <div class="voice-controls">
+            <button id="micBtn" class="secondary">🎤 Hablar</button>
+            <button id="speakBtn" class="secondary">🔊 Leer respuesta</button>
+            <button id="muteBtn" class="secondary">🔇 Silenciar</button>
+        </div>
+
+        <div id="statusBar">Listo para consultar.</div>
+
+        <!-- Scanner overlay -->
         <div id="scannerOverlayV2" class="ocultoV2">
-            <video id="scannerVideoV2" autoplay></video>
+            <video id="scannerVideoV2" autoplay playsinline></video>
             <button id="closeScannerV2">Cerrar</button>
         </div>
 
         <div id="responseContainer"></div>
-
     </main>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/quagga/0.12.1/quagga.min.js"></script>
@@ -173,26 +369,73 @@
         const sendBtn = document.getElementById("sendBtn");
         const scanBtn = document.getElementById("scanBtn");
         const micBtn = document.getElementById("micBtn");
+        const speakBtn = document.getElementById("speakBtn");
+        const muteBtn = document.getElementById("muteBtn");
         const responseContainer = document.getElementById("responseContainer");
+        const statusBar = document.getElementById("statusBar");
 
         const scannerOverlay = document.getElementById("scannerOverlayV2");
         const scannerVideo = document.getElementById("scannerVideoV2");
         const closeScanner = document.getElementById("closeScannerV2");
 
+        const themeToggle = document.getElementById("themeToggle");
+        const accentSelect = document.getElementById("accentSelect");
+
         let scanning = false;
+        let lastVoiceText = "";
+        let muted = false;
 
-        // ============================================================
+        // ==========================
+        // THEME + COLOR
+        // ==========================
+        function applyTheme(theme) {
+            document.body.setAttribute("data-theme", theme);
+            themeToggle.textContent = theme === "dark" ? "🌙 Noche" : "☀️ Día";
+        }
+
+        function applyAccent(color) {
+            document.documentElement.style.setProperty("--accent-color", color);
+        }
+
+        themeToggle.onclick = () => {
+            const current = document.body.getAttribute("data-theme") || "dark";
+            const next = current === "dark" ? "light" : "dark";
+            applyTheme(next);
+            localStorage.setItem("stockia_theme", next);
+        };
+
+        accentSelect.onchange = () => {
+            applyAccent(accentSelect.value);
+            localStorage.setItem("stockia_accent", accentSelect.value);
+        };
+
+        // Cargar preferencias
+        (function initTheme() {
+            const savedTheme = localStorage.getItem("stockia_theme") || "dark";
+            const savedAccent = localStorage.getItem("stockia_accent") || "#4caf50";
+            applyTheme(savedTheme);
+            applyAccent(savedAccent);
+            accentSelect.value = savedAccent;
+        })();
+
+        // ==========================
         // ENVIAR CONSULTA
-        // ============================================================
-
+        // ==========================
         sendBtn.onclick = () => enviarConsulta();
         input.addEventListener("keydown", (e) => {
             if (e.key === "Enter") enviarConsulta();
         });
 
+        function setStatus(msg) {
+            statusBar.textContent = msg;
+        }
+
         function enviarConsulta() {
             const question = input.value.trim();
             if (!question) return;
+
+            setStatus("Consultando...");
+            responseContainer.innerHTML = "";
 
             fetch("https://stock-backend-1-twzg.onrender.com/query", {
                 method: "POST",
@@ -200,116 +443,258 @@
                 body: JSON.stringify({question})
             })
             .then(r => r.json())
-            .then(data => renderRespuesta(data))
-            .catch(err => console.error(err));
+            .then(data => {
+                setStatus("Respuesta recibida.");
+                renderRespuesta(data);
+                if (data.voz) {
+                    lastVoiceText = data.voz;
+                    if (!muted) speakText(data.voz);
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                setStatus("Error al consultar.");
+            });
         }
 
-        // ============================================================
-        // RENDER DE RESPUESTA
-        // ============================================================
-
+        // ==========================
+        // RENDER RESPUESTA
+        // ==========================
         function renderRespuesta(data) {
             responseContainer.innerHTML = "";
 
+            // Fallback simple
+            if (!data.tipo) {
+                const card = document.createElement("div");
+                card.className = "card";
+                card.innerHTML = `
+                    <div class="card-title">Respuesta</div>
+                    <div>${data.respuesta || "No pude interpretar la respuesta."}</div>
+                `;
+                if (data.fuente) {
+                    card.appendChild(renderFuente(data.fuente));
+                }
+                responseContainer.appendChild(card);
+                return;
+            }
+
             if (data.tipo === "producto") {
-                responseContainer.appendChild(renderProducto(data.data));
+                responseContainer.appendChild(renderProducto(data.data, data.fuente));
             }
 
             if (data.tipo === "lista") {
-                data.lista.forEach(item => {
-                    responseContainer.appendChild(renderProducto(item));
+                const lista = data.lista || [];
+                lista.forEach(item => {
+                    responseContainer.appendChild(renderProducto(item, data.fuente));
                 });
             }
 
             if (data.tipo === "marca_resumen" || data.tipo === "rubro_resumen") {
-                responseContainer.appendChild(renderResumen(data.data));
+                responseContainer.appendChild(renderResumen(data.data, data.fuente));
             }
         }
 
-        // ============================================================
-        // TARJETA DE PRODUCTO
-        // ============================================================
+        function renderFuente(fuente) {
+            const wrapper = document.createElement("div");
 
-        function renderProducto(p) {
+            const badge = document.createElement("div");
+            badge.className = "source-badge";
+            badge.innerHTML = `
+                <span class="pill">Fuente</span>
+                <span>${fuente || "No especificada"}</span>
+            `;
+
+            const detail = document.createElement("div");
+            detail.className = "source-detail";
+            detail.textContent = `Detalle de fuente: ${fuente}`;
+            detail.style.display = "none";
+
+            badge.onclick = () => {
+                detail.style.display = detail.style.display === "none" ? "block" : "none";
+            };
+
+            wrapper.appendChild(badge);
+            wrapper.appendChild(detail);
+            return wrapper;
+        }
+
+        function renderProducto(p, fuente) {
             const card = document.createElement("div");
             card.className = "card";
 
             const header = document.createElement("div");
             header.className = "card-header";
 
+            const desc = p.descripcion || "";
+            const marca = p.marca || "";
+            const rubro = p.rubro || "";
+            const stock_total = p.stock_total ?? 0;
+
             header.innerHTML = `
                 <div>
-                    <div class="card-title">${p.descripcion}</div>
-                    <div>${p.marca} — ${p.rubro}</div>
-                    <div>Stock total: ${p.stock_total}</div>
+                    <div class="card-title">${desc}</div>
+                    <div class="card-sub">${rubro} — ${marca}</div>
+                    <div class="card-sub">Stock total: ${stock_total}</div>
                 </div>
-                <button class="toggleBtn">Detalles</button>
+                <button class="toggleBtn secondary">Detalles</button>
             `;
 
             const details = document.createElement("div");
             details.className = "card-details";
 
-            const chips = document.createElement("div");
-            chips.className = "chips";
-            p.talles.forEach(t => {
-                const chip = document.createElement("div");
-                chip.className = "chip";
-                chip.textContent = `${t.talle} (${t.stock})`;
-                chips.appendChild(chip);
-            });
+            const talles = p.talles || [];
+            if (talles.length > 0) {
+                const chips = document.createElement("div");
+                chips.className = "chips";
+                talles.forEach(t => {
+                    const chip = document.createElement("div");
+                    chip.className = "chip";
+                    chip.textContent = `${t.talle} (${t.stock})`;
+                    chips.appendChild(chip);
+                });
 
-            const table = document.createElement("table");
-            table.className = "table-desktop";
-            table.innerHTML = `
-                <tr><th>Talle</th><th>Stock</th></tr>
-                ${p.talles.map(t => `<tr><td>${t.talle}</td><td>${t.stock}</td></tr>`).join("")}
-            `;
+                const table = document.createElement("table");
+                table.className = "table-desktop";
+                table.innerHTML = `
+                    <tr><th>Talle</th><th>Stock</th></tr>
+                    ${talles.map(t => `<tr><td>${t.talle}</td><td>${t.stock}</td></tr>`).join("")}
+                `;
 
-            details.appendChild(chips);
-            details.appendChild(table);
+                details.appendChild(chips);
+                details.appendChild(table);
+            } else {
+                details.innerHTML = `<div class="card-sub">Sin detalle de talles.</div>`;
+            }
 
             header.querySelector(".toggleBtn").onclick = () => {
-                details.style.display = details.style.display === "none" ? "block" : "none";
+                details.style.display = details.style.display === "none" || details.style.display === "" ? "block" : "none";
             };
 
             card.appendChild(header);
             card.appendChild(details);
 
+            if (fuente) {
+                card.appendChild(renderFuente(fuente));
+            }
+
             return card;
         }
 
-        // ============================================================
-        // RESUMEN POR MARCA / RUBRO
-        // ============================================================
-
-        function renderResumen(r) {
+        function renderResumen(r, fuente) {
             const card = document.createElement("div");
             card.className = "card";
 
+            const titulo = r.marca || r.rubro || "Resumen";
+            const stock_total = r.stock_total ?? 0;
+            const valorizado_total = r.valorizado_total ?? 0;
+
             card.innerHTML = `
-                <div class="card-title">${r.marca || r.rubro}</div>
-                <div>Stock total: ${r.stock_total}</div>
-                <div>Valorizado total: ${r.valorizado_total}</div>
+                <div class="card-title">${titulo}</div>
+                <div class="card-sub">Stock total: ${stock_total}</div>
+                <div class="card-sub">Valorizado total: ${valorizado_total}</div>
             `;
+
+            if (fuente) {
+                card.appendChild(renderFuente(fuente));
+            }
 
             return card;
         }
 
-        // ============================================================
-        // SCANNER DE CÓDIGOS DE BARRA (RENOMBRADO)
-        // ============================================================
+        // ==========================
+        // VOZ (Web Speech API)
+        // ==========================
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        const synth = window.speechSynthesis || null;
+        let recognition = null;
+        let listening = false;
 
+        if (SpeechRecognition) {
+            recognition = new SpeechRecognition();
+            recognition.lang = "es-AR";
+            recognition.interimResults = false;
+            recognition.maxAlternatives = 1;
+
+            recognition.onresult = (event) => {
+                const text = event.results[0][0].transcript;
+                input.value = text;
+                setStatus(`Escuchado: "${text}"`);
+            };
+
+            recognition.onstart = () => {
+                listening = true;
+                micBtn.classList.add("active");
+                setStatus("Escuchando...");
+            };
+
+            recognition.onend = () => {
+                listening = false;
+                micBtn.classList.remove("active");
+                setStatus("Listo para consultar.");
+            };
+
+            recognition.onerror = (e) => {
+                console.error(e);
+                setStatus("Error en reconocimiento de voz.");
+            };
+        } else {
+            setStatus("Voz no soportada en este navegador.");
+        }
+
+        micBtn.onclick = () => {
+            if (!recognition) return;
+            if (listening) {
+                recognition.stop();
+            } else {
+                recognition.start();
+            }
+        };
+
+        function speakText(text) {
+            if (!synth || !text) return;
+            if (muted) return;
+
+            synth.cancel();
+            const utter = new SpeechSynthesisUtterance(text);
+            utter.lang = "es-AR";
+            synth.speak(utter);
+        }
+
+        speakBtn.onclick = () => {
+            if (!lastVoiceText) return;
+            speakText(lastVoiceText);
+        };
+
+        muteBtn.onclick = () => {
+            muted = !muted;
+            if (muted) {
+                muteBtn.classList.add("active");
+                muteBtn.textContent = "🔇 Silenciado";
+                if (synth) synth.cancel();
+            } else {
+                muteBtn.classList.remove("active");
+                muteBtn.textContent = "🔇 Silenciar";
+            }
+        };
+
+        // ==========================
+        // SCANNER (Quagga)
+        // ==========================
         scanBtn.onclick = () => iniciarScanner();
         closeScanner.onclick = () => detenerScanner();
 
         function iniciarScanner() {
             scannerOverlay.classList.remove("ocultoV2");
+            setStatus("Iniciando cámara...");
 
             Quagga.init({
                 inputStream: {
                     name: "Live",
                     type: "LiveStream",
-                    target: scannerVideo
+                    target: scannerVideo,
+                    constraints: {
+                        facingMode: "environment"
+                    }
                 },
                 decoder: {
                     readers: ["ean_reader", "ean_8_reader", "code128_reader"]
@@ -317,21 +702,26 @@
             }, function(err) {
                 if (err) {
                     console.error(err);
+                    setStatus("Error al iniciar cámara.");
                     return;
                 }
                 Quagga.start();
                 scanning = true;
+                setStatus("Escaneando código de barras...");
             });
 
-            Quagga.onDetected(data => {
-                if (!scanning) return;
-                scanning = false;
+            Quagga.onDetected(onBarcodeDetected);
+        }
 
-                const code = data.codeResult.code;
-                input.value = code;
-                detenerScanner();
-                enviarConsulta();
-            });
+        function onBarcodeDetected(data) {
+            if (!scanning) return;
+            scanning = false;
+
+            const code = data.codeResult.code;
+            input.value = code;
+            setStatus(`Código detectado: ${code}`);
+            detenerScanner();
+            enviarConsulta();
         }
 
         function detenerScanner() {
@@ -339,7 +729,10 @@
             if (scanning) {
                 Quagga.stop();
                 scanning = false;
+            } else {
+                Quagga.stop();
             }
+            setStatus("Scanner cerrado.");
         }
     </script>
 
