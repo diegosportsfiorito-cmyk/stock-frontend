@@ -537,8 +537,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     scanBtn.addEventListener("click", openScanner);
     closeScannerV2.addEventListener("click", closeScanner);
-
-    function renderResponse(data) {
+        function renderResponse(data) {
         responseContainer.innerHTML = "";
 
         if (data.tipo === "mensaje") {
@@ -552,4 +551,79 @@ document.addEventListener("DOMContentLoaded", () => {
 
         if (data.tipo === "lista" && data.items.length === 0) {
             const card = document.createElement("div");
-            card.className
+            card.className = "card";
+            card.innerHTML = `<div class="card-title">No encontré resultados para tu búsqueda.</div>`;
+            responseContainer.appendChild(card);
+            lastResponseText = data.voz;
+            return;
+        }
+
+        if (data.tipo === "producto") {
+            renderProducto(data.data, data.fuente);
+            lastResponseText = data.voz;
+            return;
+        }
+
+        if (data.tipo === "lista") {
+            renderLista(data.items, data.fuente);
+            lastResponseText = data.voz;
+            return;
+        }
+    }
+
+    function renderProducto(p, fuente) {
+        const card = document.createElement("div");
+        card.className = "card";
+
+        const precio = p.precio ? `$${p.precio}` : "No informado";
+
+        card.innerHTML = `
+            <div class="card-header">
+                <div>
+                    <div class="card-title">${p.descripcion}</div>
+                    <div class="card-sub">${p.rubro} — ${p.marca}</div>
+                    <div class="card-sub">Stock total: ${p.stock_total}</div>
+                    <div class="card-sub">Precio: ${precio}</div>
+                </div>
+                <button class="toggleBtn secondary">Detalles</button>
+            </div>
+
+            <div class="card-details">
+                <table class="table-desktop">
+                    <tr><th>Talle</th><th>Stock</th></tr>
+                    ${p.talles.map(t => `
+                        <tr>
+                            <td>${t.talle}</td>
+                            <td>${t.stock}</td>
+                        </tr>
+                    `).join("")}
+                </table>
+
+                <div class="chips">
+                    <div class="chip">Fuente</div>
+                </div>
+
+                <pre style="font-size:12px; opacity:0.8;">${JSON.stringify(fuente, null, 2)}</pre>
+            </div>
+        `;
+
+        card.querySelector(".toggleBtn").addEventListener("click", () => {
+            const det = card.querySelector(".card-details");
+            det.style.display = det.style.display === "block" ? "none" : "block";
+        });
+
+        responseContainer.appendChild(card);
+    }
+
+    function renderLista(items, fuente) {
+        items.forEach(p => renderProducto(p, fuente));
+    }
+
+    setStatus("Listo para consultar.");
+});
+</script>
+
+</body>
+</html>
+
+    
