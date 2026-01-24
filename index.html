@@ -6,24 +6,12 @@
     <title>Stock IA v1.2.2 PRO</title>
 
     <style>
-        :root {
-            --accent-color: #4caf50;
-        }
+        :root { --accent-color: #4caf50; }
 
-        body[data-theme="dark"] {
-            background: #111;
-            color: #eee;
-        }
+        body[data-theme="dark"] { background: #111; color: #eee; }
+        body[data-theme="light"] { background: #f5f5f5; color: #222; }
 
-        body[data-theme="light"] {
-            background: #f5f5f5;
-            color: #222;
-        }
-
-        body {
-            margin: 0;
-            font-family: Arial, sans-serif;
-        }
+        body { margin: 0; font-family: Arial, sans-serif; }
 
         header {
             padding: 15px;
@@ -34,14 +22,10 @@
             color: white;
         }
 
-        .title-block h1 {
-            margin: 0;
-        }
+        .title-block h1 { margin: 0; }
 
         .controls-top button,
-        .controls-top select {
-            margin-left: 10px;
-        }
+        .controls-top select { margin-left: 10px; }
 
         .input-container,
         .voice-controls {
@@ -50,10 +34,7 @@
             padding: 15px;
         }
 
-        #questionInput {
-            flex: 1;
-            padding: 10px;
-        }
+        #questionInput { flex: 1; padding: 10px; }
 
         button {
             padding: 10px 15px;
@@ -64,9 +45,7 @@
             border-radius: 6px;
         }
 
-        button.secondary {
-            background: #444;
-        }
+        button.secondary { background: #444; }
 
         #statusBar {
             padding: 10px;
@@ -82,20 +61,11 @@
             border-radius: 8px;
         }
 
-        .card-header {
-            display: flex;
-            justify-content: space-between;
-        }
+        .card-header { display: flex; justify-content: space-between; }
 
-        .card-details {
-            display: none;
-            margin-top: 10px;
-        }
+        .card-details { display: none; margin-top: 10px; }
 
-        .table-desktop {
-            width: 100%;
-            border-collapse: collapse;
-        }
+        .table-desktop { width: 100%; border-collapse: collapse; }
 
         .table-desktop th,
         .table-desktop td {
@@ -103,9 +73,7 @@
             padding: 5px;
         }
 
-        .chips {
-            margin-top: 10px;
-        }
+        .chips { margin-top: 10px; }
 
         .chip {
             display: inline-block;
@@ -118,10 +86,7 @@
 
         #capabilitiesPanel {
             position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
+            inset: 0;
             background: rgba(0,0,0,0.8);
             display: none;
             justify-content: center;
@@ -157,9 +122,7 @@
             border-radius: 10px;
         }
 
-        .ocultoV2 {
-            display: none !important;
-        }
+        .ocultoV2 { display: none !important; }
 
         .skeleton {
             background: #333;
@@ -437,6 +400,7 @@ document.addEventListener("DOMContentLoaded", () => {
 </script>
 
 <!-- FIN PARTE 1 -->
+
 <script>
 document.addEventListener("DOMContentLoaded", () => {
 
@@ -588,77 +552,4 @@ document.addEventListener("DOMContentLoaded", () => {
 
         if (data.tipo === "lista" && data.items.length === 0) {
             const card = document.createElement("div");
-            card.className = "card";
-            card.innerHTML = `<div class="card-title">No encontré resultados para tu búsqueda.</div>`;
-            responseContainer.appendChild(card);
-            lastResponseText = data.voz;
-            return;
-        }
-
-        if (data.tipo === "producto") {
-            renderProducto(data.data, data.fuente);
-            lastResponseText = data.voz;
-            return;
-        }
-
-        if (data.tipo === "lista") {
-            renderLista(data.items, data.fuente);
-            lastResponseText = data.voz;
-            return;
-        }
-    }
-
-    function renderProducto(p, fuente) {
-        const card = document.createElement("div");
-        card.className = "card";
-
-        const precio = p.precio ? `$${p.precio}` : "No informado";
-
-        card.innerHTML = `
-            <div class="card-header">
-                <div>
-                    <div class="card-title">${p.descripcion}</div>
-                    <div class="card-sub">${p.rubro} — ${p.marca}</div>
-                    <div class="card-sub">Stock total: ${p.stock_total}</div>
-                    <div class="card-sub">Precio: ${precio}</div>
-                </div>
-                <button class="toggleBtn secondary">Detalles</button>
-            </div>
-
-            <div class="card-details">
-                <table class="table-desktop">
-                    <tr><th>Talle</th><th>Stock</th></tr>
-                    ${p.talles.map(t => `
-                        <tr>
-                            <td>${t.talle}</td>
-                            <td>${t.stock}</td>
-                        </tr>
-                    `).join("")}
-                </table>
-
-                <div class="chips">
-                    <div class="chip">Fuente</div>
-                </div>
-
-                <pre style="font-size:12px; opacity:0.8;">${JSON.stringify(fuente, null, 2)}</pre>
-            </div>
-        `;
-
-        card.querySelector(".toggleBtn").addEventListener("click", () => {
-            const det = card.querySelector(".card-details");
-            det.style.display = det.style.display === "block" ? "none" : "block";
-        });
-
-        responseContainer.appendChild(card);
-    }
-
-    function renderLista(items, fuente) {
-        items.forEach(p => renderProducto(p, fuente));
-    }
-
-    setStatus("Listo para consultar.");
-});
-</script>
-
-</body>
-</html>
+            card.className
