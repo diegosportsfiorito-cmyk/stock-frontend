@@ -1,3 +1,4 @@
+<!-- ===== INICIO BLOQUE 1 — HEAD + ESTILOS + HEADER ===== -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -137,10 +138,21 @@
             50% { opacity: 1; }
             100% { opacity: 0.4; }
         }
+
+        #offlineBanner {
+            display:none;
+            background:#c62828;
+            color:white;
+            padding:10px;
+            text-align:center;
+            font-weight:bold;
+        }
     </style>
 </head>
 
 <body data-theme="dark">
+
+<div id="offlineBanner">⚠ Sin conexión a Internet. La aplicación no puede consultar el servidor.</div>
 
 <header>
     <div class="title-block">
@@ -161,6 +173,8 @@
         <button id="freeModeBtn" class="secondary">🎧 Manos libres</button>
     </div>
 </header>
+<!-- ===== FIN BLOQUE 1 ===== -->
+<!-- ===== INICIO BLOQUE 2 — MAIN + INPUTS + SCANNER + CAPABILITIES ===== -->
 
 <main>
 
@@ -225,6 +239,9 @@
     </div>
 </div>
 
+<!-- ===== FIN BLOQUE 2 ===== -->
+<!-- ===== INICIO BLOQUE 3 — VARIABLES + ESTADOS + UTILIDADES + ONLINE/OFFLINE + TEMA + CAPACIDADES ===== -->
+
 <script>
 document.addEventListener("DOMContentLoaded", () => {
 
@@ -259,6 +276,8 @@ document.addEventListener("DOMContentLoaded", () => {
     const scannerOverlayV2 = document.getElementById("scannerOverlayV2");
     const scannerVideoV2 = document.getElementById("scannerVideoV2");
     const closeScannerV2 = document.getElementById("closeScannerV2");
+
+    const offlineBanner = document.getElementById("offlineBanner");
 
     /* ============================
        VARIABLES DE ESTADO
@@ -295,7 +314,28 @@ document.addEventListener("DOMContentLoaded", () => {
         utter.rate = 1;
         speechSynthesis.speak(utter);
     }
-        /* ============================
+
+    /* ============================
+       DETECCIÓN ONLINE / OFFLINE
+    ============================ */
+
+    function updateConnectionStatus() {
+        if (navigator.onLine) {
+            offlineBanner.style.display = "none";
+            setStatus("Conectado.");
+        } else {
+            offlineBanner.style.display = "block";
+            setStatus("Sin conexión.");
+            speak("No hay conexión a Internet. La aplicación no puede consultar el servidor.");
+        }
+    }
+
+    window.addEventListener("online", updateConnectionStatus);
+    window.addEventListener("offline", updateConnectionStatus);
+
+    updateConnectionStatus();
+
+    /* ============================
        TEMA Y COLOR
     ============================ */
 
@@ -324,6 +364,9 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     capClose.addEventListener("click", closeCapabilities);
+
+<!-- ===== FIN BLOQUE 3 ===== -->
+<!-- ===== INICIO BLOQUE 4 — RECONOCIMIENTO DE VOZ + MANOS LIBRES + AUDIO ===== -->
 
     /* ============================
        RECONOCIMIENTO DE VOZ
@@ -355,12 +398,13 @@ document.addEventListener("DOMContentLoaded", () => {
         recognition.onerror = () => {
             setStatus("Error en reconocimiento.");
         };
+
         recognition.onresult = (event) => {
             const text = event.results[0][0].transcript;
             questionInput.value = text;   // <-- vuelve a cargar el texto en el input
             processQuery(text);
         };
-        
+
         recognition.start();
     }
 
@@ -369,6 +413,10 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     micBtn.addEventListener("click", startRecognition);
+
+    /* ============================
+       MODO MANOS LIBRES
+    ============================ */
 
     freeModeBtn.addEventListener("click", () => {
         freeMode = !freeMode;
@@ -383,7 +431,24 @@ document.addEventListener("DOMContentLoaded", () => {
             stopRecognition();
         }
     });
-        /* ============================
+
+    /* ============================
+       BOTONES DE AUDIO
+    ============================ */
+
+    speakBtn.addEventListener("click", () => {
+        if (lastResponseText && !isMuted) speak(lastResponseText);
+    });
+
+    muteBtn.addEventListener("click", () => {
+        isMuted = !isMuted;
+        muteBtn.textContent = isMuted ? "🔈 Activar sonido" : "🔇 Silenciar";
+    });
+
+<!-- ===== FIN BLOQUE 4 ===== -->
+<!-- ===== INICIO BLOQUE 5 — SCANNER + CONSULTA AL BACKEND + INPUTS ===== -->
+
+    /* ============================
        SCANNER
     ============================ */
 
@@ -451,11 +516,25 @@ document.addEventListener("DOMContentLoaded", () => {
         setStatus("Consultando servidor...");
 
         try {
+            const controller = new AbortController();
+            const timeout = setTimeout(() => controller.abort(), 8000);
+
             const res = await fetch("https://stock-backend-1-twzg.onrender.com/query", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ question: text })
+                body: JSON.stringify({ question: text }),
+                signal: controller.signal
             });
+
+            clearTimeout(timeout);
+
+            if (!navigator.onLine) {
+                throw new Error("offline");
+            }
+
+            if (!res.ok) {
+                throw new Error("server");
+            }
 
             const data = await res.json();
             hideSkeleton();
@@ -473,8 +552,22 @@ document.addEventListener("DOMContentLoaded", () => {
 
         } catch (err) {
             hideSkeleton();
+
+            if (!navigator.onLine || err.message === "offline") {
+                offlineBanner.style.display = "block";
+                setStatus("Sin conexión a Internet.");
+                speak("No hay conexión a Internet. Intentá nuevamente cuando vuelva la señal.");
+                return;
+            }
+
+            if (err.name === "AbortError") {
+                setStatus("Tiempo de espera agotado.");
+                speak("El servidor tardó demasiado en responder.");
+                return;
+            }
+
             setStatus("Error al consultar el servidor.");
-            console.error(err);
+            speak("Hubo un problema con el servidor.");
         }
     }
 
@@ -515,7 +608,11 @@ document.addEventListener("DOMContentLoaded", () => {
             alert("Copiado al portapapeles.");
         }
     });
-        /* ============================
+
+<!-- ===== FIN BLOQUE 5 ===== -->
+<!-- ===== INICIO BLOQUE 6 — RENDERIZADO + ESTADO INICIAL + CIERRE ===== -->
+
+    /* ============================
        RENDERIZADO DE RESPUESTAS
     ============================ */
 
@@ -613,3 +710,4 @@ document.addEventListener("DOMContentLoaded", () => {
 </body>
 </html>
 
+<!-- ===== FIN BLOQUE 6 ===== -->
