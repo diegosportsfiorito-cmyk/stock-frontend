@@ -3,484 +3,270 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Stock IA — v1.2.2 PRO</title>
+    <title>Stock IA v1.2.2 PRO</title>
 
     <style>
-        /* ============================================================
-           PALETA Y VARIABLES
-           ============================================================ */
         :root {
-            --bg-color: #111;
-            --bg-alt: #1b1b1b;
-            --text-color: #eee;
-            --border-color: #333;
             --accent-color: #4caf50;
-            --panel-bg: rgba(255, 255, 255, 0.92);
-            --panel-text: #111;
         }
 
-        [data-theme="light"] {
-            --bg-color: #f5f5f5;
-            --bg-alt: #ffffff;
-            --text-color: #111;
-            --border-color: #ddd;
-            --panel-bg: rgba(255, 255, 255, 0.92);
-            --panel-text: #111;
+        body[data-theme="dark"] {
+            background: #111;
+            color: #eee;
         }
 
-        /* ============================================================
-           BASE
-           ============================================================ */
+        body[data-theme="light"] {
+            background: #f5f5f5;
+            color: #222;
+        }
+
         body {
             margin: 0;
-            background: var(--bg-color);
-            color: var(--text-color);
-            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-            transition: background 0.3s ease, color 0.3s ease;
+            font-family: Arial, sans-serif;
         }
 
         header {
-            background: #1e1e1e;
-            color: #fff;
-            padding: 12px 16px;
+            padding: 15px;
             display: flex;
-            align-items: center;
             justify-content: space-between;
-            border-bottom: 1px solid #333;
-        }
-
-        [data-theme="light"] header {
-            background: #222;
+            align-items: center;
+            background: var(--accent-color);
+            color: white;
         }
 
         .title-block h1 {
             margin: 0;
-            font-size: 20px;
-        }
-
-        .version {
-            font-size: 11px;
-            opacity: 0.7;
-        }
-
-        /* ============================================================
-           CONTROLES SUPERIORES
-           ============================================================ */
-        .controls-top {
-            display: flex;
-            gap: 8px;
-            align-items: center;
         }
 
         .controls-top button,
         .controls-top select {
-            border-radius: 999px;
-            border: none;
-            padding: 6px 10px;
-            font-size: 12px;
-            cursor: pointer;
-            background: #333;
-            color: #fff;
-            transition: 0.2s ease;
+            margin-left: 10px;
         }
 
-        .controls-top button:hover,
-        .controls-top select:hover {
-            filter: brightness(1.15);
-        }
-
-        [data-theme="light"] .controls-top button,
-        [data-theme="light"] .controls-top select {
-            background: #444;
-        }
-
-        /* ============================================================
-           INPUTS Y BOTONES
-           ============================================================ */
-        .input-container {
-            display: flex;
-            gap: 8px;
-            margin-bottom: 12px;
-            flex-wrap: wrap;
-        }
-
-        .input-container input {
-            flex: 1 1 220px;
-            padding: 10px 12px;
-            border-radius: 999px;
-            border: 1px solid var(--border-color);
-            background: #222;
-            color: #fff;
-            font-size: 15px;
-        }
-
-        [data-theme="light"] .input-container input {
-            background: #fff;
-            color: #111;
-        }
-
-        .input-container button {
-            padding: 10px 12px;
-            border-radius: 999px;
-            border: none;
-            background: var(--accent-color);
-            color: #fff;
-            cursor: pointer;
-            font-size: 14px;
-            display: flex;
-            align-items: center;
-            gap: 4px;
-            white-space: nowrap;
-            transition: 0.2s ease;
-        }
-
-        .input-container button.secondary {
-            background: #444;
-        }
-
-        .input-container button:hover {
-            filter: brightness(1.1);
-        }
-
-        /* ============================================================
-           CONTROLES DE VOZ
-           ============================================================ */
+        .input-container,
         .voice-controls {
             display: flex;
-            gap: 8px;
-            margin-bottom: 12px;
-            flex-wrap: wrap;
+            gap: 10px;
+            padding: 15px;
         }
 
-        .voice-controls button {
-            padding: 8px 10px;
-            border-radius: 999px;
+        #questionInput {
+            flex: 1;
+            padding: 10px;
+        }
+
+        button {
+            padding: 10px 15px;
             border: none;
-            background: #333;
-            color: #fff;
             cursor: pointer;
-            font-size: 13px;
-            display: flex;
-            align-items: center;
-            gap: 4px;
-            transition: 0.2s ease;
-        }
-
-        .voice-controls button.active {
             background: var(--accent-color);
+            color: white;
+            border-radius: 6px;
         }
 
-        /* ============================================================
-           TARJETAS
-           ============================================================ */
+        button.secondary {
+            background: #444;
+        }
+
+        #statusBar {
+            padding: 10px;
+            font-size: 14px;
+            opacity: 0.8;
+        }
+
         .card {
-            background: var(--bg-alt);
-            padding: 14px;
-            border-radius: 12px;
-            margin-bottom: 12px;
-            border: 1px solid var(--border-color);
-            animation: fadeIn 0.25s ease;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            padding: 15px;
+            margin: 10px;
+            border-radius: 8px;
         }
 
         .card-header {
             display: flex;
             justify-content: space-between;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .card-title {
-            font-size: 16px;
-            font-weight: 600;
-        }
-
-        .card-sub {
-            font-size: 13px;
-            opacity: 0.85;
         }
 
         .card-details {
-            margin-top: 10px;
             display: none;
-        }
-
-        /* ============================================================
-           CHIPS Y TABLAS
-           ============================================================ */
-        .chips {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 6px;
-            margin-top: 6px;
-        }
-
-        .chip {
-            background: #333;
-            padding: 4px 8px;
-            border-radius: 999px;
-            font-size: 12px;
-        }
-
-        [data-theme="light"] .chip {
-            background: #ddd;
-            color: #111;
+            margin-top: 10px;
         }
 
         .table-desktop {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 8px;
-            font-size: 13px;
         }
 
         .table-desktop th,
         .table-desktop td {
-            border: 1px solid var(--border-color);
-            padding: 4px 6px;
-            text-align: center;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            padding: 5px;
         }
 
-        /* ============================================================
-           PANEL DE CAPACIDADES
-           ============================================================ */
+        .chips {
+            margin-top: 10px;
+        }
+
+        .chip {
+            display: inline-block;
+            padding: 5px 10px;
+            background: var(--accent-color);
+            border-radius: 20px;
+            font-size: 12px;
+            margin-right: 5px;
+        }
+
         #capabilitiesPanel {
             position: fixed;
-            inset: 0;
-            background: rgba(0,0,0,0.45);
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.8);
             display: none;
-            align-items: center;
             justify-content: center;
-            z-index: 99999;
+            align-items: center;
         }
 
         #capabilitiesContent {
-            background: var(--panel-bg);
-            color: var(--panel-text);
-            padding: 28px;
-            border-radius: 16px;
+            background: #222;
+            padding: 20px;
+            border-radius: 10px;
             width: 90%;
-            max-width: 420px;
-            box-shadow: 0 8px 25px rgba(0,0,0,0.25);
-            animation: scaleIn 0.25s ease;
+            max-width: 400px;
         }
 
         .cap-item {
-            font-size: 15px;
-            margin: 8px 0;
-            display: flex;
-            align-items: center;
-            gap: 8px;
+            padding: 8px 0;
+            border-bottom: 1px solid #444;
         }
 
-        #capClose {
-            margin-top: 18px;
-            width: 100%;
-            padding: 10px;
-            border-radius: 999px;
-            border: none;
-            background: var(--accent-color);
-            color: #fff;
-            cursor: pointer;
-            font-size: 15px;
-        }
-
-        /* ============================================================
-           SKELETON LOADING
-           ============================================================ */
-        .skeleton {
-            background: linear-gradient(90deg, #444, #555, #444);
-            background-size: 200% 100%;
-            animation: skeletonAnim 1.2s infinite;
-            border-radius: 6px;
-        }
-
-        .skel-line {
-            height: 12px;
-            margin: 6px 0;
-        }
-
-        @keyframes skeletonAnim {
-            0% { background-position: 200% 0; }
-            100% { background-position: -200% 0; }
-        }
-
-        /* ============================================================
-           SCANNER PRO
-           ============================================================ */
         #scannerOverlayV2 {
             position: fixed;
             inset: 0;
             background: rgba(0,0,0,0.9);
-            display: flex;
+            display: none;
             flex-direction: column;
-            align-items: center;
             justify-content: center;
-            z-index: 9999;
+            align-items: center;
         }
 
         #scannerVideoV2 {
             width: 90%;
-            max-width: 480px;
-            min-height: 220px;
-            border-radius: 12px;
-            border: 2px solid #fff;
-            background: #000;
+            max-width: 400px;
+            border-radius: 10px;
         }
 
         .ocultoV2 {
             display: none !important;
         }
 
-        #closeScannerV2 {
-            margin-top: 10px;
-            padding: 8px 14px;
-            border-radius: 999px;
-            border: none;
-            background: #444;
-            color: #fff;
-            cursor: pointer;
+        .skeleton {
+            background: #333;
+            height: 12px;
+            margin: 6px 0;
+            border-radius: 4px;
+            animation: pulse 1.5s infinite;
         }
 
-        /* ============================================================
-           ANIMACIONES
-           ============================================================ */
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(6px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        @keyframes scaleIn {
-            from { opacity: 0; transform: scale(0.92); }
-            to { opacity: 1; transform: scale(1); }
-        }
-
-        /* ============================================================
-           RESPONSIVE
-           ============================================================ */
-        @media (max-width: 600px) {
-            header {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 6px;
-            }
-
-            .input-container {
-                flex-direction: column;
-            }
-
-            .input-container button {
-                width: 100%;
-                justify-content: center;
-            }
-
-            #scannerVideoV2 {
-                width: 95%;
-            }
+        @keyframes pulse {
+            0% { opacity: 0.4; }
+            50% { opacity: 1; }
+            100% { opacity: 0.4; }
         }
     </style>
 </head>
+
 <body data-theme="dark">
 
-    <header>
-        <div class="title-block">
-            <h1>Stock IA</h1>
-            <span class="version">v1.2.2 PRO</span>
-        </div>
-
-        <div class="controls-top">
-            <button id="themeToggle">🌙 Noche</button>
-
-            <select id="accentSelect" title="Color de acento">
-                <option value="#4caf50">Verde</option>
-                <option value="#2196f3">Azul</option>
-                <option value="#ff9800">Naranja</option>
-                <option value="#e91e63">Rosa</option>
-            </select>
-
-            <button id="freeModeBtn" class="secondary">🎧 Manos libres</button>
-        </div>
-    </header>
-
-    <main>
-
-        <!-- INPUT PRINCIPAL -->
-        <div class="input-container">
-            <input id="questionInput" type="text" placeholder="Escribe o escanea un código..." autofocus />
-            <button id="sendBtn">Enviar</button>
-            <button id="scanBtn" class="secondary">📷 Scanner</button>
-            <button id="clearBtn" class="secondary">🧹 Limpiar</button>
-            <button id="shareBtn" class="secondary">📤 Compartir</button>
-        </div>
-
-        <!-- CONTROLES DE VOZ -->
-        <div class="voice-controls">
-            <button id="micBtn" class="secondary">🎤 Hablar</button>
-            <button id="speakBtn" class="secondary">🔊 Leer respuesta</button>
-            <button id="muteBtn" class="secondary">🔇 Silenciar</button>
-        </div>
-
-        <!-- ESTADO -->
-        <div id="statusBar">Listo para consultar.</div>
-
-        <!-- SKELETON LOADING -->
-        <div id="skeletonContainer" class="ocultoV2">
-            <div class="card">
-                <div class="skeleton skel-line" style="width: 60%"></div>
-                <div class="skeleton skel-line" style="width: 40%"></div>
-                <div class="skeleton skel-line" style="width: 80%"></div>
-            </div>
-            <div class="card">
-                <div class="skeleton skel-line" style="width: 55%"></div>
-                <div class="skeleton skel-line" style="width: 35%"></div>
-                <div class="skeleton skel-line" style="width: 75%"></div>
-            </div>
-        </div>
-
-        <!-- RESPUESTAS -->
-        <div id="responseContainer"></div>
-
-    </main>
-
-    <!-- SCANNER OVERLAY -->
-    <div id="scannerOverlayV2" class="ocultoV2">
-        <video id="scannerVideoV2" autoplay playsinline></video>
-        <button id="closeScannerV2">Cerrar</button>
+<header>
+    <div class="title-block">
+        <h1>Stock IA</h1>
+        <span class="version">v1.2.2 PRO</span>
     </div>
 
-    <!-- PANEL DE CAPACIDADES -->
-    <div id="capabilitiesPanel">
-        <div id="capabilitiesContent">
-            <h2 style="margin-top:0; text-align:center;">🧠 ¿Qué puedo hacer por vos?</h2>
+    <div class="controls-top">
+        <button id="themeToggle">🌙 Noche</button>
 
-            <div class="cap-item">🧦 Consultar stock y talles</div>
-            <div class="cap-item">💲 Consultar precios</div>
-            <div class="cap-item">🏷️ Buscar por marca o rubro</div>
-            <div class="cap-item">📷 Escanear códigos de barras</div>
-            <div class="cap-item">🔊 Leer resultados en voz alta</div>
-            <div class="cap-item">🎤 Escuchar tus consultas</div>
-            <div class="cap-item">🎧 Activar modo manos libres</div>
-            <div class="cap-item">🎨 Cambiar tema y color</div>
-            <div class="cap-item">📤 Compartir resultados</div>
-            <div class="cap-item">🧹 Limpiar pantalla</div>
-            <div class="cap-item">🔁 Repetir última respuesta</div>
-            <div class="cap-item">📄 Mostrar fuente de datos</div>
-            <div class="cap-item">🧩 Interpretar comandos de voz</div>
-            <div class="cap-item">⚡ Detectar intención automáticamente</div>
+        <select id="accentSelect">
+            <option value="#4caf50">Verde</option>
+            <option value="#2196f3">Azul</option>
+            <option value="#ff9800">Naranja</option>
+            <option value="#e91e63">Rosa</option>
+        </select>
 
-            <button id="capClose">Cerrar</button>
+        <button id="freeModeBtn" class="secondary">🎧 Manos libres</button>
+    </div>
+</header>
+
+<main>
+
+    <div class="input-container">
+        <input id="questionInput" type="text" placeholder="Escribe o escanea un código..." autofocus />
+        <button id="sendBtn">Enviar</button>
+        <button id="scanBtn" class="secondary">📷 Scanner</button>
+        <button id="clearBtn" class="secondary">🧹 Limpiar</button>
+        <button id="shareBtn" class="secondary">📤 Compartir</button>
+    </div>
+
+    <div class="voice-controls">
+        <button id="micBtn" class="secondary">🎤 Hablar</button>
+        <button id="speakBtn" class="secondary">🔊 Leer respuesta</button>
+        <button id="muteBtn" class="secondary">🔇 Silenciar</button>
+    </div>
+
+    <div id="statusBar">Listo para consultar.</div>
+
+    <div id="skeletonContainer" class="ocultoV2">
+        <div class="card">
+            <div class="skeleton" style="width: 60%"></div>
+            <div class="skeleton" style="width: 40%"></div>
+            <div class="skeleton" style="width: 80%"></div>
+        </div>
+        <div class="card">
+            <div class="skeleton" style="width: 55%"></div>
+            <div class="skeleton" style="width: 35%"></div>
+            <div class="skeleton" style="width: 75%"></div>
         </div>
     </div>
+
+    <div id="responseContainer"></div>
+
+</main>
+
+<div id="scannerOverlayV2">
+    <video id="scannerVideoV2" autoplay playsinline></video>
+    <button id="closeScannerV2">Cerrar</button>
+</div>
+
+<div id="capabilitiesPanel">
+    <div id="capabilitiesContent">
+        <h2 style="text-align:center;">🧠 ¿Qué puedo hacer por vos?</h2>
+
+        <div class="cap-item">🧦 Consultar stock y talles</div>
+        <div class="cap-item">💲 Consultar precios</div>
+        <div class="cap-item">🏷️ Buscar por marca o rubro</div>
+        <div class="cap-item">📷 Escanear códigos de barras</div>
+        <div class="cap-item">🔊 Leer resultados en voz alta</div>
+        <div class="cap-item">🎤 Escuchar tus consultas</div>
+        <div class="cap-item">🎧 Activar modo manos libres</div>
+        <div class="cap-item">🎨 Cambiar tema y color</div>
+        <div class="cap-item">📤 Compartir resultados</div>
+        <div class="cap-item">🧹 Limpiar pantalla</div>
+        <div class="cap-item">🔁 Repetir última respuesta</div>
+        <div class="cap-item">📄 Mostrar fuente de datos</div>
+        <div class="cap-item">🧩 Interpretar comandos de voz</div>
+        <div class="cap-item">⚡ Detectar intención automáticamente</div>
+
+        <button id="capClose">Cerrar</button>
+    </div>
+</div>
+
 <script>
-/* ============================================================
-   INICIALIZACIÓN GENERAL
-   ============================================================ */
-
 document.addEventListener("DOMContentLoaded", () => {
+
     const body = document.body;
 
-    /* ============================
-       ELEMENTOS DEL DOM
-       ============================ */
     const questionInput = document.getElementById("questionInput");
     const sendBtn = document.getElementById("sendBtn");
     const scanBtn = document.getElementById("scanBtn");
@@ -503,17 +289,11 @@ document.addEventListener("DOMContentLoaded", () => {
     const capabilitiesPanel = document.getElementById("capabilitiesPanel");
     const capClose = document.getElementById("capClose");
 
-    /* ============================
-       VARIABLES DE ESTADO
-       ============================ */
     let lastResponseText = "";
     let isMuted = false;
     let freeMode = false;
     let recognition = null;
 
-    /* ============================================================
-       TEMA DÍA / NOCHE
-       ============================================================ */
     themeToggle.addEventListener("click", () => {
         const current = body.getAttribute("data-theme");
         const next = current === "dark" ? "light" : "dark";
@@ -521,17 +301,11 @@ document.addEventListener("DOMContentLoaded", () => {
         themeToggle.textContent = next === "dark" ? "🌙 Noche" : "☀️ Día";
     });
 
-    /* ============================================================
-       COLOR DE ACENTO
-       ============================================================ */
     accentSelect.addEventListener("change", () => {
         const color = accentSelect.value;
         document.documentElement.style.setProperty("--accent-color", color);
     });
 
-    /* ============================================================
-       PANEL DE CAPACIDADES
-       ============================================================ */
     function openCapabilities() {
         capabilitiesPanel.style.display = "flex";
     }
@@ -541,10 +315,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     capClose.addEventListener("click", closeCapabilities);
-
-    /* ============================================================
-       HELPERS
-       ============================================================ */
 
     function setStatus(msg) {
         statusBar.textContent = msg;
@@ -565,9 +335,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
     clearBtn.addEventListener("click", clearResponses);
 
-    /* ============================================================
-       COMPARTIR RESULTADOS (MÓVIL)
-       ============================================================ */
     shareBtn.addEventListener("click", async () => {
         if (!lastResponseText) {
             alert("No hay nada para compartir.");
@@ -580,18 +347,13 @@ document.addEventListener("DOMContentLoaded", () => {
                     title: "Consulta de Stock",
                     text: lastResponseText
                 });
-            } catch (e) {
-                console.log("Compartir cancelado.");
-            }
+            } catch (e) {}
         } else {
             navigator.clipboard.writeText(lastResponseText);
             alert("Copiado al portapapeles.");
         }
     });
 
-    /* ============================================================
-       ENVÍO DE CONSULTA
-       ============================================================ */
     sendBtn.addEventListener("click", () => {
         const text = questionInput.value.trim();
         if (!text) return;
@@ -606,9 +368,6 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 
-    /* ============================================================
-       DETECCIÓN DE INTENCIÓN META (¿Qué puedo pedirte?)
-       ============================================================ */
     function isMetaQuery(text) {
         const t = text.toLowerCase();
         return (
@@ -627,10 +386,8 @@ document.addEventListener("DOMContentLoaded", () => {
         speak("Puedo ayudarte a consultar stock, precios, talles, marcas, rubros, escanear códigos, leer resultados en voz alta, escuchar tus consultas, activar modo manos libres, cambiar tema y color, compartir resultados y mucho más.");
     }
 
-    /* ============================================================
-       PROCESAR CONSULTA PRINCIPAL
-       ============================================================ */
     async function processQuery(text) {
+
         if (isMetaQuery(text)) {
             handleMetaQuery();
             return;
@@ -640,7 +397,7 @@ document.addEventListener("DOMContentLoaded", () => {
         setStatus("Consultando servidor...");
 
         try {
-            const res = await fetch("https://stock-ia.onrender.com/query", {
+            const res = await fetch("https://stock-backend-1-twzg.onrender.com/query", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ question: text })
@@ -650,7 +407,7 @@ document.addEventListener("DOMContentLoaded", () => {
             hideSkeleton();
             renderResponse(data);
 
-            lastResponseText = data.voz || "";
+            lastResponseText = data.voz || data.mensaje || "";
             if (!isMuted) speak(lastResponseText);
 
             if (freeMode) {
@@ -667,9 +424,6 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
-    /* ============================================================
-       EXPONER FUNCIONES PARA EL TRAMO 4
-       ============================================================ */
     window._stockIA = {
         processQuery,
         setStatus,
@@ -681,17 +435,10 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 });
 </script>
-    
-<script>
-/* ============================================================
-   TRAMO 4 — LÓGICA AVANZADA
-   ============================================================ */
 
+<script>
 document.addEventListener("DOMContentLoaded", () => {
 
-    /* ============================================================
-       IMPORTAR FUNCIONES DEL TRAMO 3
-       ============================================================ */
     const {
         processQuery,
         setStatus,
@@ -702,9 +449,6 @@ document.addEventListener("DOMContentLoaded", () => {
         openCapabilities
     } = window._stockIA;
 
-    /* ============================================================
-       ELEMENTOS DEL DOM
-       ============================================================ */
     const micBtn = document.getElementById("micBtn");
     const muteBtn = document.getElementById("muteBtn");
     const speakBtn = document.getElementById("speakBtn");
@@ -717,17 +461,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const responseContainer = document.getElementById("responseContainer");
 
-    /* ============================================================
-       VARIABLES DE ESTADO
-       ============================================================ */
     let recognition = null;
     let isMuted = false;
     let freeMode = false;
     let lastResponseText = "";
 
-    /* ============================================================
-       VOZ — SÍNTESIS
-       ============================================================ */
     function speak(text) {
         if (isMuted) return;
         if (!text) return;
@@ -747,9 +485,6 @@ document.addEventListener("DOMContentLoaded", () => {
         muteBtn.textContent = isMuted ? "🔈 Activar sonido" : "🔇 Silenciar";
     });
 
-    /* ============================================================
-       VOZ — RECONOCIMIENTO
-       ============================================================ */
     function startRecognition() {
         if (!("webkitSpeechRecognition" in window)) {
             alert("Tu navegador no soporta reconocimiento de voz.");
@@ -791,9 +526,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
     micBtn.addEventListener("click", startRecognition);
 
-    /* ============================================================
-       MODO MANOS LIBRES
-       ============================================================ */
     freeModeBtn.addEventListener("click", () => {
         freeMode = !freeMode;
         freeModeBtn.classList.toggle("active", freeMode);
@@ -808,33 +540,10 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 
-    /* ============================================================
-       DETECCIÓN DE INTENCIÓN AVANZADA
-       ============================================================ */
-    function detectIntent(text) {
-        const t = text.toLowerCase();
-
-        if (t.includes("escanea") || t.includes("scanner")) return "scanner";
-        if (t.includes("limpia") || t.includes("borrar pantalla")) return "limpiar";
-        if (t.includes("modo noche")) return "noche";
-        if (t.includes("modo día") || t.includes("modo dia")) return "dia";
-        if (t.includes("silencia")) return "silenciar";
-        if (t.includes("activar sonido")) return "activar-sonido";
-        if (t.includes("leer detalles")) return "leer-detalles";
-        if (t.includes("leer todo")) return "leer-todo";
-        if (t.includes("compartir")) return "compartir";
-        if (t.includes("ayuda")) return "ayuda";
-
-        return null;
-    }
-
-    /* ============================================================
-       SCANNER PRO
-       ============================================================ */
     let scannerStream = null;
 
     async function openScanner() {
-        scannerOverlayV2.classList.remove("ocultoV2");
+        scannerOverlayV2.style.display = "flex";
         setStatus("Abriendo cámara...");
 
         try {
@@ -855,7 +564,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function closeScanner() {
-        scannerOverlayV2.classList.add("ocultoV2");
+        scannerOverlayV2.style.display = "none";
         if (scannerStream) {
             scannerStream.getTracks().forEach(t => t.stop());
         }
@@ -864,18 +573,25 @@ document.addEventListener("DOMContentLoaded", () => {
     scanBtn.addEventListener("click", openScanner);
     closeScannerV2.addEventListener("click", closeScanner);
 
-    /* ============================================================
-       RENDERIZADO DE RESPUESTAS
-       ============================================================ */
     function renderResponse(data) {
         responseContainer.innerHTML = "";
+
+        if (data.tipo === "mensaje") {
+            const card = document.createElement("div");
+            card.className = "card";
+            card.innerHTML = `<div class="card-title">${data.mensaje}</div>`;
+            responseContainer.appendChild(card);
+            lastResponseText = data.voz || data.mensaje;
+            return;
+        }
 
         if (data.tipo === "producto") {
             renderProducto(data.data, data.fuente);
         }
 
         if (data.tipo === "lista") {
-            renderLista(data.items, data.fuente);
+            renderLista(data.items
+        );
         }
 
         lastResponseText = data.voz || "";
@@ -885,7 +601,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const card = document.createElement("div");
         card.className = "card";
 
-        const precio = p.precio ? `$${p.precio}` : "No informado en la fuente";
+        const precio = p.precio ? `$${p.precio}` : "No informado";
 
         card.innerHTML = `
             <div class="card-header">
@@ -929,15 +645,9 @@ document.addEventListener("DOMContentLoaded", () => {
         items.forEach(p => renderProducto(p, fuente));
     }
 
-    /* ============================================================
-       INTEGRACIÓN FINAL
-       ============================================================ */
     setStatus("Listo para consultar.");
 });
 </script>
+
 </body>
 </html>
-
-
-
-
