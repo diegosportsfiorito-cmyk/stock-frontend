@@ -704,10 +704,153 @@ document.addEventListener("DOMContentLoaded", () => {
 
     setStatus("Listo para consultar.");
 
+}); <!-- cierre de DOMContentLoaded -->
+<!-- ===== FIN BLOQUE 6 ===== -->
+
+<!-- ===== INICIO BLOQUE 7 — LECTOR DE CÓDIGOS ZXING (AUTO/MANUAL) ===== -->
+
+<!-- ZXing library -->
+<script src="https://unpkg.com/@zxing/library@latest"></script>
+
+<script>
+/* ============================================================
+   SCANNER INTELIGENTE (ZXing)
+============================================================ */
+
+let smartScannerStream = null;
+let smartScannerActive = false;
+let smartScannerMode = "auto"; // "auto" o "manual"
+let smartCodeDetected = null;
+
+const smartScannerOverlay = document.createElement("div");
+smartScannerOverlay.id = "smartScannerOverlay";
+smartScannerOverlay.style = `
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.9);
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 99999;
+    color: white;
+    text-align: center;
+`;
+
+smartScannerOverlay.innerHTML = `
+    <video id="smartScannerVideo" autoplay playsinline style="width:90%;max-width:400px;border-radius:10px;"></video>
+
+    <div style="margin-top:15px;">
+        <label><input type="radio" name="smartMode" value="auto" checked> Auto</label>
+        <label style="margin-left:20px;"><input type="radio" name="smartMode" value="manual"> Manual</label>
+    </div>
+
+    <div id="smartManualBox" style="margin-top:15px; display:none;">
+        <div id="smartDetectedCode" style="font-size:18px;margin-bottom:10px;"></div>
+        <button id="smartConfirmBtn" style="padding:10px 20px;">Aceptar</button>
+    </div>
+
+    <button id="smartCloseBtn" style="margin-top:20px;padding:10px 20px;">Cerrar</button>
+`;
+
+document.body.appendChild(smartScannerOverlay);
+
+const smartScannerVideo = document.getElementById("smartScannerVideo");
+const smartManualBox = document.getElementById("smartManualBox");
+const smartDetectedCode = document.getElementById("smartDetectedCode");
+const smartConfirmBtn = document.getElementById("smartConfirmBtn");
+const smartCloseBtn = document.getElementById("smartCloseBtn");
+
+/* BOTÓN NUEVO: 📡 Lector */
+const smartScanBtn = document.createElement("button");
+smartScanBtn.textContent = "📡 Lector";
+smartScanBtn.className = "secondary";
+smartScanBtn.style.marginLeft = "10px";
+
+document.querySelector(".input-container").appendChild(smartScanBtn);
+
+/* Cambio de modo AUTO/MANUAL */
+document.querySelectorAll("input[name='smartMode']").forEach(radio => {
+    radio.addEventListener("change", (e) => {
+        smartScannerMode = e.target.value;
+        smartManualBox.style.display = smartScannerMode === "manual" ? "block" : "none";
+    });
 });
+
+/* Abrir scanner inteligente */
+smartScanBtn.addEventListener("click", async () => {
+    smartScannerOverlay.style.display = "flex";
+    smartScannerActive = true;
+    smartCodeDetected = null;
+
+    try {
+        smartScannerStream = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode: "environment" }
+        });
+
+        smartScannerVideo.srcObject = smartScannerStream;
+
+        startSmartScanner();
+
+    } catch (err) {
+        alert("No se pudo acceder a la cámara.");
+        console.error(err);
+    }
+});
+
+/* Cerrar scanner inteligente */
+smartCloseBtn.addEventListener("click", closeSmartScanner);
+
+function closeSmartScanner() {
+    smartScannerOverlay.style.display = "none";
+    smartScannerActive = false;
+    if (smartScannerStream) {
+        smartScannerStream.getTracks().forEach(t => t.stop());
+    }
+}
+
+/* Lector ZXing */
+const codeReader = new ZXing.BrowserMultiFormatReader();
+
+async function startSmartScanner() {
+    try {
+        await codeReader.decodeFromVideoDevice(null, "smartScannerVideo", (result, err) => {
+            if (!smartScannerActive) return;
+
+            if (result) {
+                const code = result.text;
+                smartCodeDetected = code;
+
+                if (smartScannerMode === "auto") {
+                    closeSmartScanner();
+                    questionInput.value = code;
+                    processQuery(code);
+                    speak("Código detectado: " + code);
+                } else {
+                    smartDetectedCode.textContent = "Código detectado: " + code;
+                }
+            }
+        });
+    } catch (err) {
+        console.error(err);
+    }
+}
+
+/* Confirmación en modo MANUAL */
+smartConfirmBtn.addEventListener("click", () => {
+    if (!smartCodeDetected) return;
+
+    closeSmartScanner();
+    questionInput.value = smartCodeDetected;
+    processQuery(smartCodeDetected);
+    speak("Código confirmado: " + smartCodeDetected);
+});
+
 </script>
+<!-- ===== FIN BLOQUE 7 ===== -->
 
 </body>
 </html>
 
-<!-- ===== FIN BLOQUE 6 ===== -->
+
+
