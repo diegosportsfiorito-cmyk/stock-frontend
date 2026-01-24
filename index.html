@@ -3,15 +3,20 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Stock IA</title>
+    <title>Stock IA — v1.2.2 PRO</title>
 
     <style>
+        /* ============================================================
+           PALETA Y VARIABLES
+           ============================================================ */
         :root {
             --bg-color: #111;
             --bg-alt: #1b1b1b;
             --text-color: #eee;
             --border-color: #333;
             --accent-color: #4caf50;
+            --panel-bg: rgba(255, 255, 255, 0.92);
+            --panel-text: #111;
         }
 
         [data-theme="light"] {
@@ -19,13 +24,19 @@
             --bg-alt: #ffffff;
             --text-color: #111;
             --border-color: #ddd;
+            --panel-bg: rgba(255, 255, 255, 0.92);
+            --panel-text: #111;
         }
 
+        /* ============================================================
+           BASE
+           ============================================================ */
         body {
             margin: 0;
             background: var(--bg-color);
             color: var(--text-color);
             font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            transition: background 0.3s ease, color 0.3s ease;
         }
 
         header {
@@ -42,11 +53,6 @@
             background: #222;
         }
 
-        .title-block {
-            display: flex;
-            flex-direction: column;
-        }
-
         .title-block h1 {
             margin: 0;
             font-size: 20px;
@@ -57,6 +63,9 @@
             opacity: 0.7;
         }
 
+        /* ============================================================
+           CONTROLES SUPERIORES
+           ============================================================ */
         .controls-top {
             display: flex;
             gap: 8px;
@@ -72,20 +81,22 @@
             cursor: pointer;
             background: #333;
             color: #fff;
+            transition: 0.2s ease;
+        }
+
+        .controls-top button:hover,
+        .controls-top select:hover {
+            filter: brightness(1.15);
         }
 
         [data-theme="light"] .controls-top button,
         [data-theme="light"] .controls-top select {
             background: #444;
-            color: #fff;
         }
 
-        main {
-            padding: 16px;
-            max-width: 900px;
-            margin: 0 auto;
-        }
-
+        /* ============================================================
+           INPUTS Y BOTONES
+           ============================================================ */
         .input-container {
             display: flex;
             gap: 8px;
@@ -120,20 +131,20 @@
             align-items: center;
             gap: 4px;
             white-space: nowrap;
+            transition: 0.2s ease;
         }
 
         .input-container button.secondary {
             background: #444;
         }
 
-        [data-theme="light"] .input-container button.secondary {
-            background: #555;
-        }
-
         .input-container button:hover {
             filter: brightness(1.1);
         }
 
+        /* ============================================================
+           CONTROLES DE VOZ
+           ============================================================ */
         .voice-controls {
             display: flex;
             gap: 8px;
@@ -152,32 +163,23 @@
             display: flex;
             align-items: center;
             gap: 4px;
-        }
-
-        [data-theme="light"] .voice-controls button {
-            background: #444;
+            transition: 0.2s ease;
         }
 
         .voice-controls button.active {
             background: var(--accent-color);
         }
 
-        #statusBar {
-            font-size: 12px;
-            opacity: 0.8;
-            margin-bottom: 10px;
-        }
-
-        #responseContainer {
-            margin-top: 10px;
-        }
-
+        /* ============================================================
+           TARJETAS
+           ============================================================ */
         .card {
             background: var(--bg-alt);
             padding: 14px;
             border-radius: 12px;
             margin-bottom: 12px;
             border: 1px solid var(--border-color);
+            animation: fadeIn 0.25s ease;
         }
 
         .card-header {
@@ -194,7 +196,7 @@
 
         .card-sub {
             font-size: 13px;
-            opacity: 0.8;
+            opacity: 0.85;
         }
 
         .card-details {
@@ -202,20 +204,9 @@
             display: none;
         }
 
-        .table-desktop {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 8px;
-            font-size: 13px;
-        }
-
-        .table-desktop th,
-        .table-desktop td {
-            border: 1px solid var(--border-color);
-            padding: 4px 6px;
-            text-align: center;
-        }
-
+        /* ============================================================
+           CHIPS Y TABLAS
+           ============================================================ */
         .chips {
             display: flex;
             flex-wrap: wrap;
@@ -235,7 +226,87 @@
             color: #111;
         }
 
-        /* Scanner overlay */
+        .table-desktop {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 8px;
+            font-size: 13px;
+        }
+
+        .table-desktop th,
+        .table-desktop td {
+            border: 1px solid var(--border-color);
+            padding: 4px 6px;
+            text-align: center;
+        }
+
+        /* ============================================================
+           PANEL DE CAPACIDADES
+           ============================================================ */
+        #capabilitiesPanel {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.45);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 99999;
+        }
+
+        #capabilitiesContent {
+            background: var(--panel-bg);
+            color: var(--panel-text);
+            padding: 28px;
+            border-radius: 16px;
+            width: 90%;
+            max-width: 420px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.25);
+            animation: scaleIn 0.25s ease;
+        }
+
+        .cap-item {
+            font-size: 15px;
+            margin: 8px 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        #capClose {
+            margin-top: 18px;
+            width: 100%;
+            padding: 10px;
+            border-radius: 999px;
+            border: none;
+            background: var(--accent-color);
+            color: #fff;
+            cursor: pointer;
+            font-size: 15px;
+        }
+
+        /* ============================================================
+           SKELETON LOADING
+           ============================================================ */
+        .skeleton {
+            background: linear-gradient(90deg, #444, #555, #444);
+            background-size: 200% 100%;
+            animation: skeletonAnim 1.2s infinite;
+            border-radius: 6px;
+        }
+
+        .skel-line {
+            height: 12px;
+            margin: 6px 0;
+        }
+
+        @keyframes skeletonAnim {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
+        /* ============================================================
+           SCANNER PRO
+           ============================================================ */
         #scannerOverlayV2 {
             position: fixed;
             inset: 0;
@@ -250,6 +321,7 @@
         #scannerVideoV2 {
             width: 90%;
             max-width: 480px;
+            min-height: 220px;
             border-radius: 12px;
             border: 2px solid #fff;
             background: #000;
@@ -269,30 +341,22 @@
             cursor: pointer;
         }
 
-        /* Fuente / detalle */
-        .source-badge {
-            font-size: 11px;
-            opacity: 0.8;
-            margin-top: 6px;
-            cursor: pointer;
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
+        /* ============================================================
+           ANIMACIONES
+           ============================================================ */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
-        .source-detail {
-            margin-top: 6px;
-            font-size: 12px;
-            opacity: 0.9;
+        @keyframes scaleIn {
+            from { opacity: 0; transform: scale(0.92); }
+            to { opacity: 1; transform: scale(1); }
         }
 
-        .pill {
-            padding: 2px 8px;
-            border-radius: 999px;
-            border: 1px solid var(--border-color);
-        }
-
-        /* Responsive */
+        /* ============================================================
+           RESPONSIVE
+           ============================================================ */
         @media (max-width: 600px) {
             header {
                 flex-direction: column;
@@ -309,432 +373,567 @@
                 justify-content: center;
             }
 
-            .voice-controls {
-                flex-direction: row;
-            }
-
             #scannerVideoV2 {
                 width: 95%;
             }
         }
     </style>
 </head>
-
 <body data-theme="dark">
 
     <header>
         <div class="title-block">
             <h1>Stock IA</h1>
-            <span class="version">v1.1.0</span>
+            <span class="version">v1.2.2 PRO</span>
         </div>
+
         <div class="controls-top">
             <button id="themeToggle">🌙 Noche</button>
+
             <select id="accentSelect" title="Color de acento">
                 <option value="#4caf50">Verde</option>
                 <option value="#2196f3">Azul</option>
                 <option value="#ff9800">Naranja</option>
                 <option value="#e91e63">Rosa</option>
             </select>
+
+            <button id="freeModeBtn" class="secondary">🎧 Manos libres</button>
         </div>
     </header>
 
     <main>
+
+        <!-- INPUT PRINCIPAL -->
         <div class="input-container">
             <input id="questionInput" type="text" placeholder="Escribe o escanea un código..." autofocus />
             <button id="sendBtn">Enviar</button>
             <button id="scanBtn" class="secondary">📷 Scanner</button>
+            <button id="clearBtn" class="secondary">🧹 Limpiar</button>
+            <button id="shareBtn" class="secondary">📤 Compartir</button>
         </div>
 
+        <!-- CONTROLES DE VOZ -->
         <div class="voice-controls">
             <button id="micBtn" class="secondary">🎤 Hablar</button>
             <button id="speakBtn" class="secondary">🔊 Leer respuesta</button>
             <button id="muteBtn" class="secondary">🔇 Silenciar</button>
         </div>
 
+        <!-- ESTADO -->
         <div id="statusBar">Listo para consultar.</div>
 
-        <!-- Scanner overlay -->
-        <div id="scannerOverlayV2" class="ocultoV2">
-            <video id="scannerVideoV2" autoplay playsinline></video>
-            <button id="closeScannerV2">Cerrar</button>
+        <!-- SKELETON LOADING -->
+        <div id="skeletonContainer" class="ocultoV2">
+            <div class="card">
+                <div class="skeleton skel-line" style="width: 60%"></div>
+                <div class="skeleton skel-line" style="width: 40%"></div>
+                <div class="skeleton skel-line" style="width: 80%"></div>
+            </div>
+            <div class="card">
+                <div class="skeleton skel-line" style="width: 55%"></div>
+                <div class="skeleton skel-line" style="width: 35%"></div>
+                <div class="skeleton skel-line" style="width: 75%"></div>
+            </div>
         </div>
 
+        <!-- RESPUESTAS -->
         <div id="responseContainer"></div>
+
     </main>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/quagga/0.12.1/quagga.min.js"></script>
+    <!-- SCANNER OVERLAY -->
+    <div id="scannerOverlayV2" class="ocultoV2">
+        <video id="scannerVideoV2" autoplay playsinline></video>
+        <button id="closeScannerV2">Cerrar</button>
+    </div>
 
-    <script>
-        const input = document.getElementById("questionInput");
-        const sendBtn = document.getElementById("sendBtn");
-        const scanBtn = document.getElementById("scanBtn");
-        const micBtn = document.getElementById("micBtn");
-        const speakBtn = document.getElementById("speakBtn");
-        const muteBtn = document.getElementById("muteBtn");
-        const responseContainer = document.getElementById("responseContainer");
-        const statusBar = document.getElementById("statusBar");
+    <!-- PANEL DE CAPACIDADES -->
+    <div id="capabilitiesPanel">
+        <div id="capabilitiesContent">
+            <h2 style="margin-top:0; text-align:center;">🧠 ¿Qué puedo hacer por vos?</h2>
 
-        const scannerOverlay = document.getElementById("scannerOverlayV2");
-        const scannerVideo = document.getElementById("scannerVideoV2");
-        const closeScanner = document.getElementById("closeScannerV2");
+            <div class="cap-item">🧦 Consultar stock y talles</div>
+            <div class="cap-item">💲 Consultar precios</div>
+            <div class="cap-item">🏷️ Buscar por marca o rubro</div>
+            <div class="cap-item">📷 Escanear códigos de barras</div>
+            <div class="cap-item">🔊 Leer resultados en voz alta</div>
+            <div class="cap-item">🎤 Escuchar tus consultas</div>
+            <div class="cap-item">🎧 Activar modo manos libres</div>
+            <div class="cap-item">🎨 Cambiar tema y color</div>
+            <div class="cap-item">📤 Compartir resultados</div>
+            <div class="cap-item">🧹 Limpiar pantalla</div>
+            <div class="cap-item">🔁 Repetir última respuesta</div>
+            <div class="cap-item">📄 Mostrar fuente de datos</div>
+            <div class="cap-item">🧩 Interpretar comandos de voz</div>
+            <div class="cap-item">⚡ Detectar intención automáticamente</div>
 
-        const themeToggle = document.getElementById("themeToggle");
-        const accentSelect = document.getElementById("accentSelect");
+            <button id="capClose">Cerrar</button>
+        </div>
+    </div>
+<script>
+/* ============================================================
+   INICIALIZACIÓN GENERAL
+   ============================================================ */
 
-        let scanning = false;
-        let lastVoiceText = "";
-        let muted = false;
+document.addEventListener("DOMContentLoaded", () => {
+    const body = document.body;
 
-        // ==========================
-        // THEME + COLOR
-        // ==========================
-        function applyTheme(theme) {
-            document.body.setAttribute("data-theme", theme);
-            themeToggle.textContent = theme === "dark" ? "🌙 Noche" : "☀️ Día";
+    /* ============================
+       ELEMENTOS DEL DOM
+       ============================ */
+    const questionInput = document.getElementById("questionInput");
+    const sendBtn = document.getElementById("sendBtn");
+    const scanBtn = document.getElementById("scanBtn");
+    const clearBtn = document.getElementById("clearBtn");
+    const shareBtn = document.getElementById("shareBtn");
+
+    const micBtn = document.getElementById("micBtn");
+    const speakBtn = document.getElementById("speakBtn");
+    const muteBtn = document.getElementById("muteBtn");
+
+    const freeModeBtn = document.getElementById("freeModeBtn");
+
+    const themeToggle = document.getElementById("themeToggle");
+    const accentSelect = document.getElementById("accentSelect");
+
+    const statusBar = document.getElementById("statusBar");
+    const responseContainer = document.getElementById("responseContainer");
+    const skeletonContainer = document.getElementById("skeletonContainer");
+
+    const capabilitiesPanel = document.getElementById("capabilitiesPanel");
+    const capClose = document.getElementById("capClose");
+
+    /* ============================
+       VARIABLES DE ESTADO
+       ============================ */
+    let lastResponseText = "";
+    let isMuted = false;
+    let freeMode = false;
+    let recognition = null;
+
+    /* ============================================================
+       TEMA DÍA / NOCHE
+       ============================================================ */
+    themeToggle.addEventListener("click", () => {
+        const current = body.getAttribute("data-theme");
+        const next = current === "dark" ? "light" : "dark";
+        body.setAttribute("data-theme", next);
+        themeToggle.textContent = next === "dark" ? "🌙 Noche" : "☀️ Día";
+    });
+
+    /* ============================================================
+       COLOR DE ACENTO
+       ============================================================ */
+    accentSelect.addEventListener("change", () => {
+        const color = accentSelect.value;
+        document.documentElement.style.setProperty("--accent-color", color);
+    });
+
+    /* ============================================================
+       PANEL DE CAPACIDADES
+       ============================================================ */
+    function openCapabilities() {
+        capabilitiesPanel.style.display = "flex";
+    }
+
+    function closeCapabilities() {
+        capabilitiesPanel.style.display = "none";
+    }
+
+    capClose.addEventListener("click", closeCapabilities);
+
+    /* ============================================================
+       HELPERS
+       ============================================================ */
+
+    function setStatus(msg) {
+        statusBar.textContent = msg;
+    }
+
+    function showSkeleton() {
+        skeletonContainer.classList.remove("ocultoV2");
+    }
+
+    function hideSkeleton() {
+        skeletonContainer.classList.add("ocultoV2");
+    }
+
+    function clearResponses() {
+        responseContainer.innerHTML = "";
+        setStatus("Pantalla limpia.");
+    }
+
+    clearBtn.addEventListener("click", clearResponses);
+
+    /* ============================================================
+       COMPARTIR RESULTADOS (MÓVIL)
+       ============================================================ */
+    shareBtn.addEventListener("click", async () => {
+        if (!lastResponseText) {
+            alert("No hay nada para compartir.");
+            return;
         }
 
-        function applyAccent(color) {
-            document.documentElement.style.setProperty("--accent-color", color);
-        }
-
-        themeToggle.onclick = () => {
-            const current = document.body.getAttribute("data-theme") || "dark";
-            const next = current === "dark" ? "light" : "dark";
-            applyTheme(next);
-            localStorage.setItem("stockia_theme", next);
-        };
-
-        accentSelect.onchange = () => {
-            applyAccent(accentSelect.value);
-            localStorage.setItem("stockia_accent", accentSelect.value);
-        };
-
-        // Cargar preferencias
-        (function initTheme() {
-            const savedTheme = localStorage.getItem("stockia_theme") || "dark";
-            const savedAccent = localStorage.getItem("stockia_accent") || "#4caf50";
-            applyTheme(savedTheme);
-            applyAccent(savedAccent);
-            accentSelect.value = savedAccent;
-        })();
-
-        // ==========================
-        // ENVIAR CONSULTA
-        // ==========================
-        sendBtn.onclick = () => enviarConsulta();
-        input.addEventListener("keydown", (e) => {
-            if (e.key === "Enter") enviarConsulta();
-        });
-
-        function setStatus(msg) {
-            statusBar.textContent = msg;
-        }
-
-        function enviarConsulta() {
-            const question = input.value.trim();
-            if (!question) return;
-
-            setStatus("Consultando...");
-            responseContainer.innerHTML = "";
-
-            fetch("https://stock-backend-1-twzg.onrender.com/query", {
-                method: "POST",
-                headers: {"Content-Type": "application/json"},
-                body: JSON.stringify({question})
-            })
-            .then(r => r.json())
-            .then(data => {
-                setStatus("Respuesta recibida.");
-                renderRespuesta(data);
-                if (data.voz) {
-                    lastVoiceText = data.voz;
-                    if (!muted) speakText(data.voz);
-                }
-            })
-            .catch(err => {
-                console.error(err);
-                setStatus("Error al consultar.");
-            });
-        }
-
-        // ==========================
-        // RENDER RESPUESTA
-        // ==========================
-        function renderRespuesta(data) {
-            responseContainer.innerHTML = "";
-
-            // Fallback simple
-            if (!data.tipo) {
-                const card = document.createElement("div");
-                card.className = "card";
-                card.innerHTML = `
-                    <div class="card-title">Respuesta</div>
-                    <div>${data.respuesta || "No pude interpretar la respuesta."}</div>
-                `;
-                if (data.fuente) {
-                    card.appendChild(renderFuente(data.fuente));
-                }
-                responseContainer.appendChild(card);
-                return;
-            }
-
-            if (data.tipo === "producto") {
-                responseContainer.appendChild(renderProducto(data.data, data.fuente));
-            }
-
-            if (data.tipo === "lista") {
-                const lista = data.lista || [];
-                lista.forEach(item => {
-                    responseContainer.appendChild(renderProducto(item, data.fuente));
+        if (navigator.share) {
+            try {
+                await navigator.share({
+                    title: "Consulta de Stock",
+                    text: lastResponseText
                 });
+            } catch (e) {
+                console.log("Compartir cancelado.");
             }
+        } else {
+            navigator.clipboard.writeText(lastResponseText);
+            alert("Copiado al portapapeles.");
+        }
+    });
 
-            if (data.tipo === "marca_resumen" || data.tipo === "rubro_resumen") {
-                responseContainer.appendChild(renderResumen(data.data, data.fuente));
-            }
+    /* ============================================================
+       ENVÍO DE CONSULTA
+       ============================================================ */
+    sendBtn.addEventListener("click", () => {
+        const text = questionInput.value.trim();
+        if (!text) return;
+        processQuery(text);
+    });
+
+    questionInput.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+            const text = questionInput.value.trim();
+            if (!text) return;
+            processQuery(text);
+        }
+    });
+
+    /* ============================================================
+       DETECCIÓN DE INTENCIÓN META (¿Qué puedo pedirte?)
+       ============================================================ */
+    function isMetaQuery(text) {
+        const t = text.toLowerCase();
+        return (
+            t.includes("que podes hacer") ||
+            t.includes("que puedes hacer") ||
+            t.includes("que puedo pedirte") ||
+            t.includes("que sabes hacer") ||
+            t.includes("como funcionas") ||
+            t.includes("ayuda") ||
+            t.includes("help")
+        );
+    }
+
+    function handleMetaQuery() {
+        openCapabilities();
+        speak("Puedo ayudarte a consultar stock, precios, talles, marcas, rubros, escanear códigos, leer resultados en voz alta, escuchar tus consultas, activar modo manos libres, cambiar tema y color, compartir resultados y mucho más.");
+    }
+
+    /* ============================================================
+       PROCESAR CONSULTA PRINCIPAL
+       ============================================================ */
+    async function processQuery(text) {
+        if (isMetaQuery(text)) {
+            handleMetaQuery();
+            return;
         }
 
-        function renderFuente(fuente) {
-            const wrapper = document.createElement("div");
+        showSkeleton();
+        setStatus("Consultando servidor...");
 
-            const badge = document.createElement("div");
-            badge.className = "source-badge";
-            badge.innerHTML = `
-                <span class="pill">Fuente</span>
-                <span>${fuente || "No especificada"}</span>
-            `;
+        try {
+            const res = await fetch("https://stock-ia.onrender.com/consulta", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ pregunta: text })
+            });
 
-            const detail = document.createElement("div");
-            detail.className = "source-detail";
-            detail.textContent = `Detalle de fuente: ${fuente}`;
-            detail.style.display = "none";
+            const data = await res.json();
+            hideSkeleton();
+            renderResponse(data);
 
-            badge.onclick = () => {
-                detail.style.display = detail.style.display === "none" ? "block" : "none";
-            };
+            lastResponseText = data.voz || "";
+            if (!isMuted) speak(lastResponseText);
 
-            wrapper.appendChild(badge);
-            wrapper.appendChild(detail);
-            return wrapper;
+            if (freeMode) {
+                setTimeout(() => {
+                    speak("¿Querés consultar otra cosa?");
+                    startRecognition();
+                }, 800);
+            }
+
+        } catch (err) {
+            hideSkeleton();
+            setStatus("Error al consultar el servidor.");
+            console.error(err);
+        }
+    }
+
+    /* ============================================================
+       EXPONER FUNCIONES PARA EL TRAMO 4
+       ============================================================ */
+    window._stockIA = {
+        processQuery,
+        setStatus,
+        speak,
+        startRecognition,
+        stopRecognition,
+        renderResponse,
+        openCapabilities
+    };
+});
+</script>
+<script>
+/* ============================================================
+   TRAMO 4 — LÓGICA AVANZADA
+   ============================================================ */
+
+document.addEventListener("DOMContentLoaded", () => {
+
+    /* ============================================================
+       IMPORTAR FUNCIONES DEL TRAMO 3
+       ============================================================ */
+    const {
+        processQuery,
+        setStatus,
+        speak,
+        startRecognition,
+        stopRecognition,
+        renderResponse,
+        openCapabilities
+    } = window._stockIA;
+
+    /* ============================================================
+       ELEMENTOS DEL DOM
+       ============================================================ */
+    const micBtn = document.getElementById("micBtn");
+    const muteBtn = document.getElementById("muteBtn");
+    const speakBtn = document.getElementById("speakBtn");
+    const freeModeBtn = document.getElementById("freeModeBtn");
+
+    const scanBtn = document.getElementById("scanBtn");
+    const closeScannerV2 = document.getElementById("closeScannerV2");
+    const scannerOverlayV2 = document.getElementById("scannerOverlayV2");
+    const scannerVideoV2 = document.getElementById("scannerVideoV2");
+
+    const responseContainer = document.getElementById("responseContainer");
+
+    /* ============================================================
+       VARIABLES DE ESTADO
+       ============================================================ */
+    let recognition = null;
+    let isMuted = false;
+    let freeMode = false;
+    let lastResponseText = "";
+
+    /* ============================================================
+       VOZ — SÍNTESIS
+       ============================================================ */
+    function speak(text) {
+        if (isMuted) return;
+        if (!text) return;
+
+        const utter = new SpeechSynthesisUtterance(text);
+        utter.lang = "es-AR";
+        utter.rate = 1;
+        speechSynthesis.speak(utter);
+    }
+
+    speakBtn.addEventListener("click", () => {
+        if (lastResponseText) speak(lastResponseText);
+    });
+
+    muteBtn.addEventListener("click", () => {
+        isMuted = !isMuted;
+        muteBtn.textContent = isMuted ? "🔈 Activar sonido" : "🔇 Silenciar";
+    });
+
+    /* ============================================================
+       VOZ — RECONOCIMIENTO
+       ============================================================ */
+    function startRecognition() {
+        if (!("webkitSpeechRecognition" in window)) {
+            alert("Tu navegador no soporta reconocimiento de voz.");
+            return;
         }
 
-        function renderProducto(p, fuente) {
-            const card = document.createElement("div");
-            card.className = "card";
+        if (recognition) recognition.stop();
 
-            const header = document.createElement("div");
-            header.className = "card-header";
+        recognition = new webkitSpeechRecognition();
+        recognition.lang = "es-AR";
+        recognition.continuous = false;
+        recognition.interimResults = false;
 
-            const desc = p.descripcion || "";
-            const marca = p.marca || "";
-            const rubro = p.rubro || "";
-            const stock_total = p.stock_total ?? 0;
+        recognition.onstart = () => {
+            micBtn.classList.add("active");
+            setStatus("Escuchando...");
+        };
 
-            header.innerHTML = `
+        recognition.onend = () => {
+            micBtn.classList.remove("active");
+            setStatus("Listo.");
+        };
+
+        recognition.onerror = () => {
+            setStatus("Error en reconocimiento.");
+        };
+
+        recognition.onresult = (event) => {
+            const text = event.results[0][0].transcript;
+            processQuery(text);
+        };
+
+        recognition.start();
+    }
+
+    function stopRecognition() {
+        if (recognition) recognition.stop();
+    }
+
+    micBtn.addEventListener("click", startRecognition);
+
+    /* ============================================================
+       MODO MANOS LIBRES
+       ============================================================ */
+    freeModeBtn.addEventListener("click", () => {
+        freeMode = !freeMode;
+        freeModeBtn.classList.toggle("active", freeMode);
+        freeModeBtn.textContent = freeMode ? "🎧 Manos libres ON" : "🎧 Manos libres";
+
+        if (freeMode) {
+            speak("Modo manos libres activado.");
+            startRecognition();
+        } else {
+            speak("Modo manos libres desactivado.");
+            stopRecognition();
+        }
+    });
+
+    /* ============================================================
+       DETECCIÓN DE INTENCIÓN AVANZADA
+       ============================================================ */
+    function detectIntent(text) {
+        const t = text.toLowerCase();
+
+        if (t.includes("escanea") || t.includes("scanner")) return "scanner";
+        if (t.includes("limpia") || t.includes("borrar pantalla")) return "limpiar";
+        if (t.includes("modo noche")) return "noche";
+        if (t.includes("modo día") || t.includes("modo dia")) return "dia";
+        if (t.includes("silencia")) return "silenciar";
+        if (t.includes("activar sonido")) return "activar-sonido";
+        if (t.includes("leer detalles")) return "leer-detalles";
+        if (t.includes("leer todo")) return "leer-todo";
+        if (t.includes("compartir")) return "compartir";
+        if (t.includes("ayuda")) return "ayuda";
+
+        return null;
+    }
+
+    /* ============================================================
+       SCANNER PRO
+       ============================================================ */
+    let scannerStream = null;
+
+    async function openScanner() {
+        scannerOverlayV2.classList.remove("ocultoV2");
+        setStatus("Abriendo cámara...");
+
+        try {
+            scannerStream = await navigator.mediaDevices.getUserMedia({
+                video: { facingMode: "environment" }
+            });
+
+            scannerVideoV2.srcObject = scannerStream;
+
+            setTimeout(() => {
+                setStatus("Escaneando...");
+            }, 500);
+
+        } catch (err) {
+            alert("No se pudo acceder a la cámara.");
+            console.error(err);
+        }
+    }
+
+    function closeScanner() {
+        scannerOverlayV2.classList.add("ocultoV2");
+        if (scannerStream) {
+            scannerStream.getTracks().forEach(t => t.stop());
+        }
+    }
+
+    scanBtn.addEventListener("click", openScanner);
+    closeScannerV2.addEventListener("click", closeScanner);
+
+    /* ============================================================
+       RENDERIZADO DE RESPUESTAS
+       ============================================================ */
+    function renderResponse(data) {
+        responseContainer.innerHTML = "";
+
+        if (data.tipo === "producto") {
+            renderProducto(data.data, data.fuente);
+        }
+
+        if (data.tipo === "lista") {
+            renderLista(data.items, data.fuente);
+        }
+
+        lastResponseText = data.voz || "";
+    }
+
+    function renderProducto(p, fuente) {
+        const card = document.createElement("div");
+        card.className = "card";
+
+        const precio = p.precio ? `$${p.precio}` : "No informado en la fuente";
+
+        card.innerHTML = `
+            <div class="card-header">
                 <div>
-                    <div class="card-title">${desc}</div>
-                    <div class="card-sub">${rubro} — ${marca}</div>
-                    <div class="card-sub">Stock total: ${stock_total}</div>
+                    <div class="card-title">${p.descripcion}</div>
+                    <div class="card-sub">${p.rubro} — ${p.marca}</div>
+                    <div class="card-sub">Stock total: ${p.stock_total}</div>
+                    <div class="card-sub">Precio: ${precio}</div>
                 </div>
                 <button class="toggleBtn secondary">Detalles</button>
-            `;
+            </div>
 
-            const details = document.createElement("div");
-            details.className = "card-details";
-
-            const talles = p.talles || [];
-            if (talles.length > 0) {
-                const chips = document.createElement("div");
-                chips.className = "chips";
-                talles.forEach(t => {
-                    const chip = document.createElement("div");
-                    chip.className = "chip";
-                    chip.textContent = `${t.talle} (${t.stock})`;
-                    chips.appendChild(chip);
-                });
-
-                const table = document.createElement("table");
-                table.className = "table-desktop";
-                table.innerHTML = `
+            <div class="card-details">
+                <table class="table-desktop">
                     <tr><th>Talle</th><th>Stock</th></tr>
-                    ${talles.map(t => `<tr><td>${t.talle}</td><td>${t.stock}</td></tr>`).join("")}
-                `;
+                    ${p.talles.map(t => `
+                        <tr>
+                            <td>${t.talle}</td>
+                            <td>${t.stock}</td>
+                        </tr>
+                    `).join("")}
+                </table>
 
-                details.appendChild(chips);
-                details.appendChild(table);
-            } else {
-                details.innerHTML = `<div class="card-sub">Sin detalle de talles.</div>`;
-            }
+                <div class="chips">
+                    <div class="chip">Fuente</div>
+                </div>
 
-            header.querySelector(".toggleBtn").onclick = () => {
-                details.style.display = details.style.display === "none" || details.style.display === "" ? "block" : "none";
-            };
+                <pre style="font-size:12px; opacity:0.8;">${JSON.stringify(fuente, null, 2)}</pre>
+            </div>
+        `;
 
-            card.appendChild(header);
-            card.appendChild(details);
+        card.querySelector(".toggleBtn").addEventListener("click", () => {
+            const det = card.querySelector(".card-details");
+            det.style.display = det.style.display === "block" ? "none" : "block";
+        });
 
-            if (fuente) {
-                card.appendChild(renderFuente(fuente));
-            }
+        responseContainer.appendChild(card);
+    }
 
-            return card;
-        }
+    function renderLista(items, fuente) {
+        items.forEach(p => renderProducto(p, fuente));
+    }
 
-        function renderResumen(r, fuente) {
-            const card = document.createElement("div");
-            card.className = "card";
-
-            const titulo = r.marca || r.rubro || "Resumen";
-            const stock_total = r.stock_total ?? 0;
-            const valorizado_total = r.valorizado_total ?? 0;
-
-            card.innerHTML = `
-                <div class="card-title">${titulo}</div>
-                <div class="card-sub">Stock total: ${stock_total}</div>
-                <div class="card-sub">Valorizado total: ${valorizado_total}</div>
-            `;
-
-            if (fuente) {
-                card.appendChild(renderFuente(fuente));
-            }
-
-            return card;
-        }
-
-        // ==========================
-        // VOZ (Web Speech API)
-        // ==========================
-        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-        const synth = window.speechSynthesis || null;
-        let recognition = null;
-        let listening = false;
-
-        if (SpeechRecognition) {
-            recognition = new SpeechRecognition();
-            recognition.lang = "es-AR";
-            recognition.interimResults = false;
-            recognition.maxAlternatives = 1;
-
-            recognition.onresult = (event) => {
-                const text = event.results[0][0].transcript;
-                input.value = text;
-                setStatus(`Escuchado: "${text}"`);
-            };
-
-            recognition.onstart = () => {
-                listening = true;
-                micBtn.classList.add("active");
-                setStatus("Escuchando...");
-            };
-
-            recognition.onend = () => {
-                listening = false;
-                micBtn.classList.remove("active");
-                setStatus("Listo para consultar.");
-            };
-
-            recognition.onerror = (e) => {
-                console.error(e);
-                setStatus("Error en reconocimiento de voz.");
-            };
-        } else {
-            setStatus("Voz no soportada en este navegador.");
-        }
-
-        micBtn.onclick = () => {
-            if (!recognition) return;
-            if (listening) {
-                recognition.stop();
-            } else {
-                recognition.start();
-            }
-        };
-
-        function speakText(text) {
-            if (!synth || !text) return;
-            if (muted) return;
-
-            synth.cancel();
-            const utter = new SpeechSynthesisUtterance(text);
-            utter.lang = "es-AR";
-            synth.speak(utter);
-        }
-
-        speakBtn.onclick = () => {
-            if (!lastVoiceText) return;
-            speakText(lastVoiceText);
-        };
-
-        muteBtn.onclick = () => {
-            muted = !muted;
-            if (muted) {
-                muteBtn.classList.add("active");
-                muteBtn.textContent = "🔇 Silenciado";
-                if (synth) synth.cancel();
-            } else {
-                muteBtn.classList.remove("active");
-                muteBtn.textContent = "🔇 Silenciar";
-            }
-        };
-
-        // ==========================
-        // SCANNER (Quagga)
-        // ==========================
-        scanBtn.onclick = () => iniciarScanner();
-        closeScanner.onclick = () => detenerScanner();
-
-        function iniciarScanner() {
-            scannerOverlay.classList.remove("ocultoV2");
-            setStatus("Iniciando cámara...");
-
-            Quagga.init({
-                inputStream: {
-                    name: "Live",
-                    type: "LiveStream",
-                    target: scannerVideo,
-                    constraints: {
-                        facingMode: "environment"
-                    }
-                },
-                decoder: {
-                    readers: ["ean_reader", "ean_8_reader", "code128_reader"]
-                }
-            }, function(err) {
-                if (err) {
-                    console.error(err);
-                    setStatus("Error al iniciar cámara.");
-                    return;
-                }
-                Quagga.start();
-                scanning = true;
-                setStatus("Escaneando código de barras...");
-            });
-
-            Quagga.onDetected(onBarcodeDetected);
-        }
-
-        function onBarcodeDetected(data) {
-            if (!scanning) return;
-            scanning = false;
-
-            const code = data.codeResult.code;
-            input.value = code;
-            setStatus(`Código detectado: ${code}`);
-            detenerScanner();
-            enviarConsulta();
-        }
-
-        function detenerScanner() {
-            scannerOverlay.classList.add("ocultoV2");
-            if (scanning) {
-                Quagga.stop();
-                scanning = false;
-            } else {
-                Quagga.stop();
-            }
-            setStatus("Scanner cerrado.");
-        }
-    </script>
-
+    /* ============================================================
+       INTEGRACIÓN FINAL
+       ============================================================ */
+    setStatus("Listo para consultar.");
+});
+</script>
 </body>
 </html>
+
