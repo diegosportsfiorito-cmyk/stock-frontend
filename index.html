@@ -3,12 +3,9 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Stock IA v1.4 PRO</title>
+    <title>Stock IA v1.4.1 PRO</title>
 
     <style>
-        /* ===========================
-           PALETA Y VARIABLES
-        ============================ */
         :root {
             --bg: #f4f6f9;
             --card-bg: #ffffff;
@@ -30,9 +27,6 @@
             --shadow: rgba(255,255,255,0.05);
         }
 
-        /* ===========================
-           BASE
-        ============================ */
         body {
             font-family: "Inter", Arial, sans-serif;
             background: var(--bg);
@@ -53,9 +47,6 @@
             position: relative;
         }
 
-        /* ===========================
-           INDICADOR DE VERSIÓN
-        ============================ */
         #version {
             position: absolute;
             bottom: 8px;
@@ -65,9 +56,6 @@
             pointer-events: none;
         }
 
-        /* ===========================
-           INPUT
-        ============================ */
         input {
             width: 100%;
             padding: 14px;
@@ -85,9 +73,6 @@
             box-shadow: 0 0 0 3px rgba(0,102,255,0.15);
         }
 
-        /* ===========================
-           BOTONES PREMIUM
-        ============================ */
         button {
             padding: 12px 18px;
             border-radius: var(--radius);
@@ -107,9 +92,6 @@
             box-shadow: 0 4px 10px rgba(0,102,255,0.35);
         }
 
-        /* ===========================
-           TARJETAS
-        ============================ */
         .card {
             background: var(--card-bg);
             padding: 20px;
@@ -135,9 +117,6 @@
             color: white;
         }
 
-        /* ===========================
-           AUTOCOMPLETADO GOOGLE
-        ============================ */
         #autocomplete-box {
             position: absolute;
             background: var(--card-bg);
@@ -160,9 +139,28 @@
             background: rgba(0,102,255,0.08);
         }
 
-        /* ===========================
-           HISTORIAL
-        ============================ */
+        #stockFilterLabel {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: var(--card-bg);
+            padding: 12px 16px;
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+            box-shadow: 0 2px 6px var(--shadow);
+            margin-bottom: 15px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        #stockFilterLabel:hover {
+            box-shadow: 0 4px 12px var(--shadow);
+        }
+
+        #chkStock {
+            transform: scale(1.4);
+        }
+
         #historial {
             margin-top: 20px;
             padding: 10px;
@@ -197,8 +195,9 @@
 
     <br><br>
 
-    <label>
-        <input type="checkbox" id="chkStock"> Mostrar solo talles con stock disponible
+    <label id="stockFilterLabel">
+        <input type="checkbox" id="chkStock">
+        <span>Mostrar solo productos con stock disponible</span>
     </label>
 
     <div id="respuesta"></div>
@@ -208,16 +207,13 @@
 
     <video id="preview" style="width:100%; display:none;"></video>
 
-    <div id="version">v1.4 PRO</div>
+    <div id="version">v1.4.1 PRO</div>
 </div>
 
 <script>
 const backendURL = "https://stock-backend-1-twzg.onrender.com/query";
 const autocompleteURL = "https://stock-backend-1-twzg.onrender.com/autocomplete";
 
-/* ===========================
-   AUTOCOMPLETADO GOOGLE
-=========================== */
 const input = document.getElementById("pregunta");
 const box = document.getElementById("autocomplete-box");
 
@@ -255,9 +251,6 @@ document.addEventListener("click", (e) => {
     if (e.target !== input) box.style.display = "none";
 });
 
-/* ===========================
-   CONSULTA
-=========================== */
 document.getElementById("btnEnviar").addEventListener("click", async () => {
     const pregunta = input.value.trim();
     if (!pregunta) return;
@@ -279,9 +272,6 @@ document.getElementById("btnEnviar").addEventListener("click", async () => {
     }
 });
 
-/* ===========================
-   RENDER RESULTADOS
-=========================== */
 function renderResultados(data) {
     const cont = document.getElementById("respuesta");
     cont.innerHTML = "";
@@ -292,15 +282,17 @@ function renderResultados(data) {
     }
 
     data.items.forEach((item, index) => {
+        let talles = item.talles;
+
+        if (document.getElementById("chkStock").checked) {
+            talles = talles.filter(t => t.stock > 0);
+            if (talles.length === 0) return;
+        }
+
         const card = document.createElement("div");
         card.className = "card";
 
-        const stockTotal = item.talles.reduce((acc, t) => acc + t.stock, 0);
-
-        let talles = item.talles;
-        if (document.getElementById("chkStock").checked) {
-            talles = talles.filter(t => t.stock > 0);
-        }
+        const stockTotal = talles.reduce((acc, t) => acc + t.stock, 0);
 
         const tallesHTML = talles
             .map(t => `<li>${t.talle} → Stock: ${t.stock}</li>`)
@@ -357,9 +349,6 @@ function renderResultados(data) {
     });
 }
 
-/* ===========================
-   UTILIDADES
-=========================== */
 document.getElementById("btnLimpiar").onclick = () => {
     input.value = "";
     document.getElementById("respuesta").innerHTML = "";
@@ -379,9 +368,6 @@ document.getElementById("btnWhatsApp").onclick = () => {
     window.open(`https://wa.me/?text=${texto}`);
 };
 
-/* ===========================
-   SCANNER EXTERNO
-=========================== */
 document.getElementById("btnScannerExterno").onclick = () => {
     const callback = encodeURIComponent(
         "https://diegosportsfiorito-cmyk.github.io/stock-frontend/?code={CODE}"
@@ -399,10 +385,6 @@ if (params.has("code")) {
     input.value = params.get("code");
     document.getElementById("btnEnviar").click();
 }
-
-/* ===========================
-   SCANNER INTERNO
-=========================== */
 </script>
 
 <script src="https://unpkg.com/@zxing/library@latest"></script>
