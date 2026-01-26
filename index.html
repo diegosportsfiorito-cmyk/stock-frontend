@@ -3,17 +3,21 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Stock IA v1.3 PRO</title>
+    <title>Stock IA v1.4 PRO</title>
 
     <style>
+        /* ===========================
+           PALETA Y VARIABLES
+        ============================ */
         :root {
-            --bg: #f5f7fa;
+            --bg: #f4f6f9;
             --card-bg: #ffffff;
-            --text: #222;
+            --text: #1a1a1a;
             --primary: #0066ff;
-            --primary-hover: #0050cc;
+            --primary-hover: #004ecc;
             --border: #e0e0e0;
             --shadow: rgba(0,0,0,0.08);
+            --radius: 14px;
         }
 
         body.dark {
@@ -26,6 +30,9 @@
             --shadow: rgba(255,255,255,0.05);
         }
 
+        /* ===========================
+           BASE
+        ============================ */
         body {
             font-family: "Inter", Arial, sans-serif;
             background: var(--bg);
@@ -40,29 +47,50 @@
             margin: auto;
             background: var(--card-bg);
             padding: 25px;
-            border-radius: 16px;
+            border-radius: var(--radius);
             box-shadow: 0 4px 20px var(--shadow);
             transition: 0.3s ease;
+            position: relative;
         }
 
-        h2 {
-            margin-top: 0;
-            font-weight: 600;
+        /* ===========================
+           INDICADOR DE VERSIÓN
+        ============================ */
+        #version {
+            position: absolute;
+            bottom: 8px;
+            right: 12px;
+            font-size: 11px;
+            opacity: 0.45;
+            pointer-events: none;
         }
 
+        /* ===========================
+           INPUT
+        ============================ */
         input {
             width: 100%;
             padding: 14px;
-            border-radius: 10px;
+            border-radius: var(--radius);
             border: 1px solid var(--border);
             font-size: 16px;
             background: var(--card-bg);
             color: var(--text);
+            outline: none;
+            transition: 0.2s;
         }
 
+        input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(0,102,255,0.15);
+        }
+
+        /* ===========================
+           BOTONES PREMIUM
+        ============================ */
         button {
             padding: 12px 18px;
-            border-radius: 10px;
+            border-radius: var(--radius);
             border: none;
             background: var(--primary);
             color: white;
@@ -70,16 +98,22 @@
             cursor: pointer;
             margin: 4px;
             transition: 0.2s ease;
+            box-shadow: 0 2px 6px rgba(0,102,255,0.25);
         }
 
         button:hover {
             background: var(--primary-hover);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 10px rgba(0,102,255,0.35);
         }
 
+        /* ===========================
+           TARJETAS
+        ============================ */
         .card {
             background: var(--card-bg);
             padding: 20px;
-            border-radius: 14px;
+            border-radius: var(--radius);
             margin-top: 15px;
             box-shadow: 0 2px 12px var(--shadow);
             border: 1px solid var(--border);
@@ -91,7 +125,7 @@
             color: var(--primary);
             border: 1px solid var(--primary);
             padding: 8px 14px;
-            border-radius: 8px;
+            border-radius: var(--radius);
             cursor: pointer;
             margin-top: 10px;
         }
@@ -101,6 +135,34 @@
             color: white;
         }
 
+        /* ===========================
+           AUTOCOMPLETADO GOOGLE
+        ============================ */
+        #autocomplete-box {
+            position: absolute;
+            background: var(--card-bg);
+            width: calc(100% - 50px);
+            margin-top: 4px;
+            border-radius: var(--radius);
+            box-shadow: 0 4px 20px var(--shadow);
+            border: 1px solid var(--border);
+            display: none;
+            z-index: 999;
+        }
+
+        .suggestion {
+            padding: 12px 16px;
+            cursor: pointer;
+            transition: 0.15s;
+        }
+
+        .suggestion:hover {
+            background: rgba(0,102,255,0.08);
+        }
+
+        /* ===========================
+           HISTORIAL
+        ============================ */
         #historial {
             margin-top: 20px;
             padding: 10px;
@@ -108,7 +170,7 @@
         }
 
         #preview {
-            border-radius: 12px;
+            border-radius: var(--radius);
             margin-top: 20px;
             box-shadow: 0 2px 12px var(--shadow);
         }
@@ -117,14 +179,15 @@
 
 <body>
 <div id="app">
-    <h2>Stock IA v1.3 PRO</h2>
+    <h2>Stock IA PRO</h2>
 
-    <input id="pregunta" type="text" placeholder="Escribe tu consulta..." />
+    <input id="pregunta" type="text" placeholder="Escribe tu consulta..." autocomplete="off" />
+    <div id="autocomplete-box"></div>
 
     <br><br>
 
     <button id="btnEnviar">Enviar</button>
-    <button id="btnScannerExterno">Scanner externo (recomendado)</button>
+    <button id="btnScannerExterno">Scanner externo</button>
     <button id="btnScanner">Scanner interno</button>
     <button id="btnHablar">Hablar</button>
     <button id="btnLimpiar">Limpiar</button>
@@ -144,25 +207,81 @@
     <div id="historial"></div>
 
     <video id="preview" style="width:100%; display:none;"></video>
+
+    <div id="version">v1.4 PRO</div>
 </div>
 
-<!-- ===== BLOQUE 2 — LÓGICA PRINCIPAL ===== -->
 <script>
 const backendURL = "https://stock-backend-1-twzg.onrender.com/query";
+const autocompleteURL = "https://stock-backend-1-twzg.onrender.com/autocomplete";
 
-function hablar(texto) {
-    const msg = new SpeechSynthesisUtterance(texto);
-    msg.lang = "es-AR";
-    speechSynthesis.speak(msg);
-}
+/* ===========================
+   AUTOCOMPLETADO GOOGLE
+=========================== */
+const input = document.getElementById("pregunta");
+const box = document.getElementById("autocomplete-box");
 
-function agregarHistorial(pregunta) {
-    const h = document.getElementById("historial");
-    const item = document.createElement("div");
-    item.innerHTML = `• ${pregunta}`;
-    h.appendChild(item);
-}
+input.addEventListener("input", async () => {
+    const q = input.value.trim();
+    if (q.length < 2) {
+        box.style.display = "none";
+        return;
+    }
 
+    const res = await fetch(`${autocompleteURL}?q=${q}`);
+    const data = await res.json();
+
+    if (!data.sugerencias || data.sugerencias.length === 0) {
+        box.style.display = "none";
+        return;
+    }
+
+    box.innerHTML = "";
+    data.sugerencias.forEach(s => {
+        const div = document.createElement("div");
+        div.className = "suggestion";
+        div.textContent = s;
+        div.onclick = () => {
+            input.value = s;
+            box.style.display = "none";
+        };
+        box.appendChild(div);
+    });
+
+    box.style.display = "block";
+});
+
+document.addEventListener("click", (e) => {
+    if (e.target !== input) box.style.display = "none";
+});
+
+/* ===========================
+   CONSULTA
+=========================== */
+document.getElementById("btnEnviar").addEventListener("click", async () => {
+    const pregunta = input.value.trim();
+    if (!pregunta) return;
+
+    document.getElementById("respuesta").innerHTML = "<p>Consultando...</p>";
+
+    try {
+        const res = await fetch(backendURL, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ question: pregunta })
+        });
+
+        const data = await res.json();
+        renderResultados(data);
+
+    } catch (e) {
+        document.getElementById("respuesta").innerHTML = "<p>Error consultando backend.</p>";
+    }
+});
+
+/* ===========================
+   RENDER RESULTADOS
+=========================== */
 function renderResultados(data) {
     const cont = document.getElementById("respuesta");
     cont.innerHTML = "";
@@ -238,87 +357,54 @@ function renderResultados(data) {
     });
 }
 
-document.getElementById("btnEnviar").addEventListener("click", async () => {
-    const pregunta = document.getElementById("pregunta").value.trim();
-    if (!pregunta) return;
-
-    document.getElementById("respuesta").innerHTML = "<p>Consultando...</p>";
-
-    try {
-        const res = await fetch(backendURL, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ question: pregunta })
-        });
-
-        const data = await res.json();
-
-        agregarHistorial(pregunta);
-        renderResultados(data);
-        hablar(data.voz);
-
-    } catch (e) {
-        document.getElementById("respuesta").innerHTML = "<p>Error consultando backend.</p>";
-        console.error(e);
-    }
-});
-
-document.getElementById("btnLimpiar").addEventListener("click", () => {
-    document.getElementById("pregunta").value = "";
+/* ===========================
+   UTILIDADES
+=========================== */
+document.getElementById("btnLimpiar").onclick = () => {
+    input.value = "";
     document.getElementById("respuesta").innerHTML = "";
-});
+};
 
-document.getElementById("btnCopiar").addEventListener("click", () => {
-    const texto = document.getElementById("respuesta").innerText;
-    navigator.clipboard.writeText(texto);
+document.getElementById("btnCopiar").onclick = () => {
+    navigator.clipboard.writeText(document.getElementById("respuesta").innerText);
     alert("Respuesta copiada");
-});
+};
 
-document.getElementById("btnDark").addEventListener("click", () => {
+document.getElementById("btnDark").onclick = () => {
     document.body.classList.toggle("dark");
-});
+};
 
-document.getElementById("btnWhatsApp").addEventListener("click", () => {
+document.getElementById("btnWhatsApp").onclick = () => {
     const texto = encodeURIComponent(document.getElementById("respuesta").innerText);
     window.open(`https://wa.me/?text=${texto}`);
-});
+};
 
-document.getElementById("btnHablar").addEventListener("click", () => {
-    const rec = new webkitSpeechRecognition();
-    rec.lang = "es-AR";
-    rec.onresult = e => {
-        document.getElementById("pregunta").value = e.results[0][0].transcript;
-    };
-    rec.start();
-});
-</script>
-
-<!-- ===== BLOQUE 3 — SCANNER EXTERNO (RECOMENDADO) ===== -->
-<script>
-document.getElementById("btnScannerExterno").addEventListener("click", () => {
+/* ===========================
+   SCANNER EXTERNO
+=========================== */
+document.getElementById("btnScannerExterno").onclick = () => {
     const callback = encodeURIComponent(
         "https://diegosportsfiorito-cmyk.github.io/stock-frontend/?code={CODE}"
     );
-
     const intentURL = `zxing://scan/?ret=${callback}`;
-
     window.location.href = intentURL;
 
     setTimeout(() => {
         window.location.href = "https://play.google.com/store/apps/details?id=com.google.zxing.client.android";
     }, 1500);
-});
+};
 
-// Detectar retorno desde app externa
 const params = new URLSearchParams(window.location.search);
 if (params.has("code")) {
-    const codigo = params.get("code");
-    document.getElementById("pregunta").value = codigo;
+    input.value = params.get("code");
     document.getElementById("btnEnviar").click();
 }
+
+/* ===========================
+   SCANNER INTERNO
+=========================== */
 </script>
 
-<!-- ===== BLOQUE 4 — SCANNER INTERNO (ZXING) ===== -->
 <script src="https://unpkg.com/@zxing/library@latest"></script>
 
 <script>
@@ -365,7 +451,7 @@ document.getElementById("btnScanner").addEventListener("click", async () => {
                 "preview",
                 (result, err) => {
                     if (result) {
-                        document.getElementById("pregunta").value = result.text;
+                        input.value = result.text;
                         document.getElementById("respuesta").innerHTML =
                             "<p>Código detectado: " + result.text + "</p>";
                     }
@@ -381,7 +467,6 @@ document.getElementById("btnScanner").addEventListener("click", async () => {
             );
 
         } catch (e) {
-            console.error(e);
             document.getElementById("respuesta").innerHTML =
                 "<p>Error iniciando scanner.</p>";
         }
