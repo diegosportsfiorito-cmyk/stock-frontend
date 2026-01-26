@@ -1,65 +1,126 @@
-<!-- ===== BLOQUE 1 — HEAD + ESTILOS + UI BASE ===== -->
+<!-- ===== BLOQUE 1 — HEAD + ESTILOS + UI BASE (PROFESIONAL) ===== -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Stock IA v1.2.2 PRO</title>
+    <title>Stock IA v1.3 PRO</title>
 
     <style>
+        :root {
+            --bg: #f5f7fa;
+            --card-bg: #ffffff;
+            --text: #222;
+            --primary: #0066ff;
+            --primary-hover: #0050cc;
+            --border: #e0e0e0;
+            --shadow: rgba(0,0,0,0.08);
+        }
+
+        body.dark {
+            --bg: #0f0f0f;
+            --card-bg: #1a1a1a;
+            --text: #f1f1f1;
+            --primary: #4d8dff;
+            --primary-hover: #3c6dcc;
+            --border: #333;
+            --shadow: rgba(255,255,255,0.05);
+        }
+
         body {
-            font-family: Arial, sans-serif;
-            background: #f4f4f4;
+            font-family: "Inter", Arial, sans-serif;
+            background: var(--bg);
+            color: var(--text);
             margin: 0;
             padding: 20px;
-            transition: background 0.3s, color 0.3s;
+            transition: 0.3s ease;
         }
+
         #app {
-            max-width: 800px;
+            max-width: 900px;
             margin: auto;
-            background: white;
-            padding: 20px;
-            border-radius: 12px;
-            box-shadow: 0 0 12px rgba(0,0,0,0.1);
-            transition: background 0.3s;
+            background: var(--card-bg);
+            padding: 25px;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px var(--shadow);
+            transition: 0.3s ease;
         }
-        input, button {
-            padding: 12px;
+
+        h2 {
+            margin-top: 0;
+            font-weight: 600;
+        }
+
+        input {
+            width: 100%;
+            padding: 14px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
             font-size: 16px;
+            background: var(--card-bg);
+            color: var(--text);
         }
+
         button {
-            margin-right: 5px;
+            padding: 12px 18px;
+            border-radius: 10px;
+            border: none;
+            background: var(--primary);
+            color: white;
+            font-size: 15px;
             cursor: pointer;
+            margin: 4px;
+            transition: 0.2s ease;
         }
-        #respuesta {
-            margin-top: 20px;
+
+        button:hover {
+            background: var(--primary-hover);
         }
+
         .card {
-            background:#fff;
-            padding:15px;
-            margin-bottom:15px;
-            border-radius:10px;
-            box-shadow:0 0 8px rgba(0,0,0,0.1);
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 14px;
+            margin-top: 15px;
+            box-shadow: 0 2px 12px var(--shadow);
+            border: 1px solid var(--border);
+            transition: 0.3s ease;
         }
-        .dark {
-            background:#111 !important;
-            color:white !important;
+
+        .btnVerMas, .btnVerMenos {
+            background: transparent;
+            color: var(--primary);
+            border: 1px solid var(--primary);
+            padding: 8px 14px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-top: 10px;
         }
-        .dark #app {
-            background:#222 !important;
+
+        .btnVerMas:hover, .btnVerMenos:hover {
+            background: var(--primary);
+            color: white;
         }
-        .dark .card {
-            background:#333 !important;
-            color:white !important;
+
+        #historial {
+            margin-top: 20px;
+            padding: 10px;
+            border-left: 4px solid var(--primary);
+        }
+
+        #preview {
+            border-radius: 12px;
+            margin-top: 20px;
+            box-shadow: 0 2px 12px var(--shadow);
         }
     </style>
 </head>
 
 <body>
 <div id="app">
-    <h2>Stock IA v1.2.2 PRO</h2>
+    <h2>Stock IA v1.3 PRO</h2>
 
-    <input id="pregunta" type="text" placeholder="Escribe tu consulta..." style="width:100%;" />
+    <input id="pregunta" type="text" placeholder="Escribe tu consulta..." />
 
     <br><br>
 
@@ -82,9 +143,9 @@
     <h3>Historial</h3>
     <div id="historial"></div>
 
-    <video id="preview" style="width:100%; margin-top:20px; display:none;"></video>
+    <video id="preview" style="width:100%; display:none;"></video>
 </div>
-<!-- ===== BLOQUE 2 — LÓGICA PRINCIPAL ===== -->
+<!-- ===== BLOQUE 2 — LÓGICA PRINCIPAL (PROFESIONAL) ===== -->
 <script>
 const backendURL = "https://stock-backend-1-twzg.onrender.com/query";
 
@@ -105,34 +166,74 @@ function renderResultados(data) {
     const cont = document.getElementById("respuesta");
     cont.innerHTML = "";
 
-    if (data.items.length === 0) {
+    if (!data.items || data.items.length === 0) {
         cont.innerHTML = "<p>No se encontraron resultados.</p>";
         return;
     }
 
-    data.items.forEach(item => {
+    data.items.forEach((item, index) => {
         const card = document.createElement("div");
         card.className = "card";
 
-        let talles = item.talles;
+        const stockTotal = item.talles.reduce((acc, t) => acc + t.stock, 0);
 
+        let talles = item.talles;
         if (document.getElementById("chkStock").checked) {
             talles = talles.filter(t => t.stock > 0);
         }
 
-        let tallesHTML = talles
+        const tallesHTML = talles
             .map(t => `<li>${t.talle} → Stock: ${t.stock}</li>`)
             .join("");
+
+        const detalleID = `detalle_${index}`;
 
         card.innerHTML = `
             <h3>${item.descripcion}</h3>
             <p><b>Precio:</b> $${item.precio}</p>
-            <p><b>Código:</b> ${item.codigo}</p>
-            <p><b>Talles:</b></p>
-            <ul>${tallesHTML}</ul>
+            <p><b>Stock total:</b> ${stockTotal}</p>
+
+            <button class="btnVerMas" data-target="${detalleID}">
+                Ver más
+            </button>
+
+            <div id="${detalleID}" style="display:none; margin-top:10px;">
+                <p><b>Código:</b> ${item.codigo}</p>
+                <p><b>Marca:</b> ${item.marca || "-"}</p>
+                <p><b>Rubro:</b> ${item.rubro || "-"}</p>
+                <p><b>Color:</b> ${item.color || "-"}</p>
+
+                <p><b>Talles:</b></p>
+                <ul>${tallesHTML}</ul>
+
+                <button class="btnVerMenos" data-target="${detalleID}">
+                    Ver menos
+                </button>
+
+                <p style="font-size:12px; opacity:0.7; margin-top:10px;">
+                    Fuente: ${data.fuente?.name || "Desconocida"}
+                </p>
+            </div>
         `;
 
         cont.appendChild(card);
+    });
+
+    document.querySelectorAll(".btnVerMas").forEach(btn => {
+        btn.addEventListener("click", () => {
+            const id = btn.getAttribute("data-target");
+            document.getElementById(id).style.display = "block";
+            btn.style.display = "none";
+        });
+    });
+
+    document.querySelectorAll(".btnVerMenos").forEach(btn => {
+        btn.addEventListener("click", () => {
+            const id = btn.getAttribute("data-target");
+            document.getElementById(id).style.display = "none";
+            const btnMas = document.querySelector(`.btnVerMas[data-target="${id}"]`);
+            if (btnMas) btnMas.style.display = "inline-block";
+        });
     });
 }
 
@@ -205,7 +306,6 @@ document.getElementById("btnScanner").addEventListener("click", async () => {
 
         const codeReader = new ZXing.BrowserMultiFormatReader();
 
-        // Hints para forzar lectura de códigos de barra reales
         const hints = new Map();
         hints.set(ZXing.DecodeHintType.POSSIBLE_FORMATS, [
             ZXing.BarcodeFormat.EAN_13,
@@ -227,16 +327,13 @@ document.getElementById("btnScanner").addEventListener("click", async () => {
                 return;
             }
 
-            // Buscar cámara trasera
             let cam = devices.find(d =>
                 d.label.toLowerCase().includes("back") ||
                 d.label.toLowerCase().includes("rear")
             );
 
-            // Si no la encuentra, usar la última (suele ser la trasera)
             if (!cam) cam = devices[devices.length - 1];
 
-            // Iniciar lectura con alta resolución
             codeReader.decodeFromVideoDevice(
                 cam.deviceId,
                 "preview",
