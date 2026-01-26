@@ -208,18 +208,44 @@ document.getElementById("btnScanner").addEventListener("click", async () => {
 
         try {
             const devices = await codeReader.listVideoInputDevices();
-            const cam = devices[0].deviceId;
 
-            codeReader.decodeFromVideoDevice(cam, "preview", (result, err) => {
-                if (result) {
-                    document.getElementById("pregunta").value = result.text;
-                    document.getElementById("respuesta").innerHTML = "<p>Código detectado: " + result.text + "</p>";
+            if (!devices || devices.length === 0) {
+                document.getElementById("respuesta").innerHTML = "<p>No se encontraron cámaras.</p>";
+                return;
+            }
+
+            // Buscar cámara trasera
+            let cam = devices.find(d =>
+                d.label.toLowerCase().includes("back") ||
+                d.label.toLowerCase().includes("rear")
+            );
+
+            // Si no la encuentra, usar la última (suele ser la trasera)
+            if (!cam) cam = devices[devices.length - 1];
+
+            codeReader.decodeFromVideoDevice(
+                cam.deviceId,
+                "preview",
+                (result, err) => {
+                    if (result) {
+                        document.getElementById("pregunta").value = result.text;
+                        document.getElementById("respuesta").innerHTML =
+                            "<p>Código detectado: " + result.text + "</p>";
+                    }
+                },
+                {
+                    video: {
+                        facingMode: "environment",
+                        width: { ideal: 1280 },
+                        height: { ideal: 720 }
+                    }
                 }
-            });
+            );
 
         } catch (e) {
             console.error(e);
-            document.getElementById("respuesta").innerHTML = "<p>Error iniciando scanner.</p>";
+            document.getElementById("respuesta").innerHTML =
+                "<p>Error iniciando scanner.</p>";
         }
 
     } else {
