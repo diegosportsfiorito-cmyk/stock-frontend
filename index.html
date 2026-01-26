@@ -1,4 +1,4 @@
-<!-- ===== INICIO BLOQUE 1 — HEAD + ESTILOS + HEADER ===== -->
+<!-- ===== BLOQUE 1 — HEAD Y ESTILOS ===== -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -7,849 +7,118 @@
     <title>Stock IA v1.2.2 PRO</title>
 
     <style>
-        :root { --accent-color: #4caf50; }
-
-        body[data-theme="dark"] { background: #111; color: #eee; }
-        body[data-theme="light"] { background: #f5f5f5; color: #222; }
-
-        body { margin: 0; font-family: Arial, sans-serif; }
-
-        header {
-            padding: 15px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: var(--accent-color);
-            color: white;
-        }
-
-        .title-block h1 { margin: 0; }
-
-        .controls-top button,
-        .controls-top select { margin-left: 10px; }
-
-        .input-container,
-        .voice-controls {
-            display: flex;
-            gap: 10px;
-            padding: 15px;
-        }
-
-        #questionInput { flex: 1; padding: 10px; }
-
-        button {
-            padding: 10px 15px;
-            border: none;
-            cursor: pointer;
-            background: var(--accent-color);
-            color: white;
-            border-radius: 6px;
-        }
-
-        button.secondary { background: #444; }
-
-        #statusBar {
-            padding: 10px;
-            font-size: 14px;
-            opacity: 0.8;
-        }
-
-        .card {
-            background: rgba(255,255,255,0.05);
-            border: 1px solid rgba(255,255,255,0.1);
-            padding: 15px;
-            margin: 10px;
-            border-radius: 8px;
-        }
-
-        .card-header { display: flex; justify-content: space-between; }
-
-        .card-details { display: none; margin-top: 10px; }
-
-        .table-desktop { width: 100%; border-collapse: collapse; }
-
-        .table-desktop th,
-        .table-desktop td {
-            border-bottom: 1px solid rgba(255,255,255,0.1);
-            padding: 5px;
-        }
-
-        .chips { margin-top: 10px; }
-
-        .chip {
-            display: inline-block;
-            padding: 5px 10px;
-            background: var(--accent-color);
-            border-radius: 20px;
-            font-size: 12px;
-            margin-right: 5px;
-        }
-
-        #capabilitiesPanel {
-            position: fixed;
-            inset: 0;
-            background: rgba(0,0,0,0.8);
-            display: none;
-            justify-content: center;
-            align-items: center;
-        }
-
-        #capabilitiesContent {
-            background: #222;
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f4f4;
+            margin: 0;
             padding: 20px;
-            border-radius: 10px;
-            width: 90%;
-            max-width: 400px;
         }
-
-        .cap-item {
-            padding: 8px 0;
-            border-bottom: 1px solid #444;
+        #app {
+            max-width: 700px;
+            margin: auto;
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 0 12px rgba(0,0,0,0.1);
         }
-
-        #scannerOverlayV2 {
-            position: fixed;
-            inset: 0;
-            background: rgba(0,0,0,0.9);
-            display: none;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
+        input, button {
+            padding: 12px;
+            font-size: 16px;
         }
-
-        #scannerVideoV2 {
-            width: 90%;
-            max-width: 400px;
-            border-radius: 10px;
-        }
-
-        .ocultoV2 { display: none !important; }
-
-        .skeleton {
-            background: #333;
-            height: 12px;
-            margin: 6px 0;
-            border-radius: 4px;
-            animation: pulse 1.5s infinite;
-        }
-
-        @keyframes pulse {
-            0% { opacity: 0.4; }
-            50% { opacity: 1; }
-            100% { opacity: 0.4; }
-        }
-
-        #offlineBanner {
-            display:none;
-            background:#c62828;
-            color:white;
-            padding:10px;
-            text-align:center;
-            font-weight:bold;
+        #respuesta {
+            margin-top: 20px;
+            white-space: pre-wrap;
         }
     </style>
 </head>
 
-<body data-theme="dark">
+<body>
+<div id="app">
+    <h2>Stock IA v1.2.2 PRO</h2>
 
-<div id="offlineBanner">⚠ Sin conexión a Internet. La aplicación no puede consultar el servidor.</div>
+    <input id="pregunta" type="text" placeholder="Escribe tu consulta..." style="width:100%;" />
 
-<header>
-    <div class="title-block">
-        <h1>Stock IA</h1>
-        <span class="version">v1.2.2 PRO</span>
-    </div>
+    <br><br>
 
-    <div class="controls-top">
-        <button id="themeToggle">🌙 Noche</button>
+    <button id="btnEnviar">Enviar</button>
+    <button id="btnScanner">Scanner</button>
+    <button id="btnLimpiar">Limpiar</button>
 
-        <select id="accentSelect">
-            <option value="#4caf50">Verde</option>
-            <option value="#2196f3">Azul</option>
-            <option value="#ff9800">Naranja</option>
-            <option value="#e91e63">Rosa</option>
-        </select>
+    <div id="respuesta"></div>
 
-        <button id="freeModeBtn" class="secondary">🎧 Manos libres</button>
-    </div>
-</header>
-<!-- ===== FIN BLOQUE 1 ===== -->
-<!-- ===== INICIO BLOQUE 2 — MAIN + INPUTS + SCANNER + CAPABILITIES ===== -->
-
-<main>
-
-    <div class="input-container">
-        <input id="questionInput" type="text" placeholder="Escribe o escanea un código..." autofocus />
-        <button id="sendBtn">Enviar</button>
-        <button id="scanBtn" class="secondary">📷 Scanner</button>
-        <button id="clearBtn" class="secondary">🧹 Limpiar</button>
-        <button id="shareBtn" class="secondary">📤 Compartir</button>
-    </div>
-
-    <div class="voice-controls">
-        <button id="micBtn" class="secondary">🎤 Hablar</button>
-        <button id="speakBtn" class="secondary">🔊 Leer respuesta</button>
-        <button id="muteBtn" class="secondary">🔇 Silenciar</button>
-    </div>
-
-    <div id="statusBar">Listo para consultar.</div>
-
-    <div id="skeletonContainer" class="ocultoV2">
-        <div class="card">
-            <div class="skeleton" style="width: 60%"></div>
-            <div class="skeleton" style="width: 40%"></div>
-            <div class="skeleton" style="width: 80%"></div>
-        </div>
-        <div class="card">
-            <div class="skeleton" style="width: 55%"></div>
-            <div class="skeleton" style="width: 35%"></div>
-            <div class="skeleton" style="width: 75%"></div>
-        </div>
-    </div>
-
-    <div id="responseContainer"></div>
-
-</main>
-
-<div id="scannerOverlayV2">
-    <video id="scannerVideoV2" autoplay playsinline></video>
-    <button id="closeScannerV2">Cerrar</button>
+    <video id="preview" style="width:100%; margin-top:20px; display:none;"></video>
 </div>
-
-<div id="capabilitiesPanel">
-    <div id="capabilitiesContent">
-        <h2 style="text-align:center;">🧠 ¿Qué puedo hacer por vos?</h2>
-
-        <div class="cap-item">🧦 Consultar stock y talles</div>
-        <div class="cap-item">💲 Consultar precios</div>
-        <div class="cap-item">🏷️ Buscar por marca o rubro</div>
-        <div class="cap-item">📷 Escanear códigos de barras</div>
-        <div class="cap-item">🔊 Leer resultados en voz alta</div>
-        <div class="cap-item">🎤 Escuchar tus consultas</div>
-        <div class="cap-item">🎧 Activar modo manos libres</div>
-        <div class="cap-item">🎨 Cambiar tema y color</div>
-        <div class="cap-item">📤 Compartir resultados</div>
-        <div class="cap-item">🧹 Limpiar pantalla</div>
-        <div class="cap-item">🔁 Repetir última respuesta</div>
-        <div class="cap-item">📄 Mostrar fuente de datos</div>
-        <div class="cap-item">🧩 Interpretar comandos de voz</div>
-        <div class="cap-item">⚡ Detectar intención automáticamente</div>
-
-        <button id="capClose">Cerrar</button>
-    </div>
-</div>
-
-<!-- ===== FIN BLOQUE 2 ===== -->
-<!-- ===== INICIO BLOQUE 3 — VARIABLES + ESTADOS + UTILIDADES + ONLINE/OFFLINE + TEMA + CAPACIDADES ===== -->
-
+<!-- ===== BLOQUE 2 — LÓGICA PRINCIPAL ===== -->
 <script>
-document.addEventListener("DOMContentLoaded", () => {
-
-    /* ============================
-       REFERENCIAS DEL DOM
-    ============================ */
-
-    const body = document.body;
-
-    const questionInput = document.getElementById("questionInput");
-    const sendBtn = document.getElementById("sendBtn");
-    const scanBtn = document.getElementById("scanBtn");
-    const clearBtn = document.getElementById("clearBtn");
-    const shareBtn = document.getElementById("shareBtn");
-
-    const micBtn = document.getElementById("micBtn");
-    const speakBtn = document.getElementById("speakBtn");
-    const muteBtn = document.getElementById("muteBtn");
-
-    const freeModeBtn = document.getElementById("freeModeBtn");
-
-    const themeToggle = document.getElementById("themeToggle");
-    const accentSelect = document.getElementById("accentSelect");
-
-    const statusBar = document.getElementById("statusBar");
-    const responseContainer = document.getElementById("responseContainer");
-    const skeletonContainer = document.getElementById("skeletonContainer");
-
-    const capabilitiesPanel = document.getElementById("capabilitiesPanel");
-    const capClose = document.getElementById("capClose");
-
-    const scannerOverlayV2 = document.getElementById("scannerOverlayV2");
-    const scannerVideoV2 = document.getElementById("scannerVideoV2");
-    const closeScannerV2 = document.getElementById("closeScannerV2");
-
-    const offlineBanner = document.getElementById("offlineBanner");
-
-    /* ============================
-       VARIABLES DE ESTADO
-    ============================ */
-
-    let lastResponseText = "";
-    let isMuted = false;
-    let freeMode = false;
-    let recognition = null;
-    let scannerStream = null;
-
-    /* ============================
-       UTILIDADES
-    ============================ */
-
-    function setStatus(msg) {
-        statusBar.textContent = msg;
-    }
-
-    function showSkeleton() {
-        skeletonContainer.classList.remove("ocultoV2");
-    }
-
-    function hideSkeleton() {
-        skeletonContainer.classList.add("ocultoV2");
-    }
-
-    function speak(text) {
-        if (isMuted) return;
-        if (!text) return;
-
-        const utter = new SpeechSynthesisUtterance(text);
-        utter.lang = "es-AR";
-        utter.rate = 1;
-        speechSynthesis.speak(utter);
-    }
-
-    /* ============================
-       DETECCIÓN ONLINE / OFFLINE
-    ============================ */
-
-    function updateConnectionStatus() {
-        if (navigator.onLine) {
-            offlineBanner.style.display = "none";
-            setStatus("Conectado.");
-        } else {
-            offlineBanner.style.display = "block";
-            setStatus("Sin conexión.");
-            speak("No hay conexión a Internet. La aplicación no puede consultar el servidor.");
-        }
-    }
-
-    window.addEventListener("online", updateConnectionStatus);
-    window.addEventListener("offline", updateConnectionStatus);
-
-    updateConnectionStatus();
-
-    /* ============================
-       TEMA Y COLOR
-    ============================ */
-
-    themeToggle.addEventListener("click", () => {
-        const current = body.getAttribute("data-theme");
-        const next = current === "dark" ? "light" : "dark";
-        body.setAttribute("data-theme", next);
-        themeToggle.textContent = next === "dark" ? "🌙 Noche" : "☀️ Día";
-    });
-
-    accentSelect.addEventListener("change", () => {
-        const color = accentSelect.value;
-        document.documentElement.style.setProperty("--accent-color", color);
-    });
-
-    /* ============================
-       PANEL DE CAPACIDADES
-    ============================ */
-
-    function openCapabilities() {
-        capabilitiesPanel.style.display = "flex";
-    }
-
-    function closeCapabilities() {
-        capabilitiesPanel.style.display = "none";
-    }
-
-    capClose.addEventListener("click", closeCapabilities);
-
-<!-- ===== FIN BLOQUE 3 ===== -->
-<!-- ===== INICIO BLOQUE 4 — RECONOCIMIENTO DE VOZ + MANOS LIBRES + AUDIO ===== -->
-
-    /* ============================
-       RECONOCIMIENTO DE VOZ
-    ============================ */
-
-    function startRecognition() {
-        if (!("webkitSpeechRecognition" in window)) {
-            alert("Tu navegador no soporta reconocimiento de voz.");
-            return;
-        }
-
-        if (recognition) recognition.stop();
-
-        recognition = new webkitSpeechRecognition();
-        recognition.lang = "es-AR";
-        recognition.continuous = false;
-        recognition.interimResults = false;
-
-        recognition.onstart = () => {
-            micBtn.classList.add("active");
-            setStatus("Escuchando...");
-        };
-
-        recognition.onend = () => {
-            micBtn.classList.remove("active");
-            setStatus("Listo.");
-        };
-
-        recognition.onerror = () => {
-            setStatus("Error en reconocimiento.");
-        };
-
-        recognition.onresult = (event) => {
-            const text = event.results[0][0].transcript;
-            questionInput.value = text;   // <-- vuelve a cargar el texto en el input
-            processQuery(text);
-        };
-
-        recognition.start();
-    }
-
-    function stopRecognition() {
-        if (recognition) recognition.stop();
-    }
-
-    micBtn.addEventListener("click", startRecognition);
-
-    /* ============================
-       MODO MANOS LIBRES
-    ============================ */
-
-    freeModeBtn.addEventListener("click", () => {
-        freeMode = !freeMode;
-        freeModeBtn.classList.toggle("active", freeMode);
-        freeModeBtn.textContent = freeMode ? "🎧 Manos libres ON" : "🎧 Manos libres";
-
-        if (freeMode) {
-            speak("Modo manos libres activado.");
-            startRecognition();
-        } else {
-            speak("Modo manos libres desactivado.");
-            stopRecognition();
-        }
-    });
-
-    /* ============================
-       BOTONES DE AUDIO
-    ============================ */
-
-    speakBtn.addEventListener("click", () => {
-        if (lastResponseText && !isMuted) speak(lastResponseText);
-    });
-
-    muteBtn.addEventListener("click", () => {
-        isMuted = !isMuted;
-        muteBtn.textContent = isMuted ? "🔈 Activar sonido" : "🔇 Silenciar";
-    });
-
-<!-- ===== FIN BLOQUE 4 ===== -->
-<!-- ===== INICIO BLOQUE 5 — SCANNER + CONSULTA AL BACKEND + INPUTS ===== -->
-
-    /* ============================
-       SCANNER
-    ============================ */
-
-    async function openScanner() {
-        scannerOverlayV2.style.display = "flex";
-        setStatus("Abriendo cámara...");
-
-        try {
-            scannerStream = await navigator.mediaDevices.getUserMedia({
-                video: { facingMode: "environment" }
-            });
-
-            scannerVideoV2.srcObject = scannerStream;
-
-            setTimeout(() => {
-                setStatus("Escaneando...");
-            }, 500);
-
-        } catch (err) {
-            alert("No se pudo acceder a la cámara.");
-            console.error(err);
-        }
-    }
-
-    function closeScanner() {
-        scannerOverlayV2.style.display = "none";
-        if (scannerStream) {
-            scannerStream.getTracks().forEach(t => t.stop());
-        }
-    }
-
-    scanBtn.addEventListener("click", openScanner);
-    closeScannerV2.addEventListener("click", closeScanner);
-
-    /* ============================
-       CONSULTA AL BACKEND
-    ============================ */
-
-    function isMetaQuery(text) {
-        const t = text.toLowerCase();
-        return (
-            t.includes("que podes hacer") ||
-            t.includes("que puedes hacer") ||
-            t.includes("que puedo pedirte") ||
-            t.includes("que sabes hacer") ||
-            t.includes("como funcionas") ||
-            t.includes("ayuda") ||
-            t.includes("help")
-        );
-    }
-
-    function handleMetaQuery() {
-        openCapabilities();
-        speak("Puedo ayudarte a consultar stock, precios, talles, marcas, rubros, escanear códigos, leer resultados en voz alta, escuchar tus consultas, activar modo manos libres, cambiar tema y color, compartir resultados y mucho más.");
-    }
-
-    async function processQuery(text) {
-
-        if (isMetaQuery(text)) {
-            handleMetaQuery();
-            return;
-        }
-
-        showSkeleton();
-        setStatus("Consultando servidor...");
-
-        try {
-            const controller = new AbortController();
-            const timeout = setTimeout(() => controller.abort(), 8000);
-
-            const res = await fetch("https://stock-backend-1-twzg.onrender.com/query", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ question: text }),
-                signal: controller.signal
-            });
-
-            clearTimeout(timeout);
-
-            if (!navigator.onLine) {
-                throw new Error("offline");
-            }
-
-            if (!res.ok) {
-                throw new Error("server");
-            }
-
-            const data = await res.json();
-            hideSkeleton();
-            renderResponse(data);
-
-            lastResponseText = data.voz || data.mensaje || "";
-            if (!isMuted) speak(lastResponseText);
-
-            if (freeMode) {
-                setTimeout(() => {
-                    speak("¿Querés consultar otra cosa?");
-                    startRecognition();
-                }, 800);
-            }
-
-        } catch (err) {
-            hideSkeleton();
-
-            if (!navigator.onLine || err.message === "offline") {
-                offlineBanner.style.display = "block";
-                setStatus("Sin conexión a Internet.");
-                speak("No hay conexión a Internet. Intentá nuevamente cuando vuelva la señal.");
-                return;
-            }
-
-            if (err.name === "AbortError") {
-                setStatus("Tiempo de espera agotado.");
-                speak("El servidor tardó demasiado en responder.");
-                return;
-            }
-
-            setStatus("Error al consultar el servidor.");
-            speak("Hubo un problema con el servidor.");
-        }
-    }
-
-    sendBtn.addEventListener("click", () => {
-        const text = questionInput.value.trim();
-        if (!text) return;
-        processQuery(text);
-    });
-
-    questionInput.addEventListener("keydown", (e) => {
-        if (e.key === "Enter") {
-            const text = questionInput.value.trim();
-            if (!text) return;
-            processQuery(text);
-        }
-    });
-
-    clearBtn.addEventListener("click", () => {
-        responseContainer.innerHTML = "";
-        setStatus("Pantalla limpia.");
-    });
-
-    shareBtn.addEventListener("click", async () => {
-        if (!lastResponseText) {
-            alert("No hay nada para compartir.");
-            return;
-        }
-
-        if (navigator.share) {
-            try {
-                await navigator.share({
-                    title: "Consulta de Stock",
-                    text: lastResponseText
-                });
-            } catch (e) {}
-        } else {
-            navigator.clipboard.writeText(lastResponseText);
-            alert("Copiado al portapapeles.");
-        }
-    });
-
-<!-- ===== FIN BLOQUE 5 ===== -->
-<!-- ===== INICIO BLOQUE 6 — RENDERIZADO + ESTADO INICIAL + CIERRE ===== -->
-
-    /* ============================
-       RENDERIZADO DE RESPUESTAS
-    ============================ */
-
-    function renderResponse(data) {
-        responseContainer.innerHTML = "";
-
-        if (data.tipo === "mensaje") {
-            const card = document.createElement("div");
-            card.className = "card";
-            card.innerHTML = `<div class="card-title">${data.mensaje}</div>`;
-            responseContainer.appendChild(card);
-            lastResponseText = data.voz || data.mensaje;
-            return;
-        }
-
-        if (data.tipo === "lista" && data.items.length === 0) {
-            const card = document.createElement("div");
-            card.className = "card";
-            card.innerHTML = `<div class="card-title">No encontré resultados para tu búsqueda.</div>`;
-            responseContainer.appendChild(card);
-            lastResponseText = data.voz;
-            return;
-        }
-
-        if (data.tipo === "producto") {
-            renderProducto(data.data, data.fuente);
-            lastResponseText = data.voz;
-            return;
-        }
-
-        if (data.tipo === "lista") {
-            renderLista(data.items, data.fuente);
-            lastResponseText = data.voz;
-            return;
-        }
-    }
-
-    function renderProducto(p, fuente) {
-        const card = document.createElement("div");
-        card.className = "card";
-
-        const precio = p.precio ? `$${p.precio}` : "No informado";
-
-        card.innerHTML = `
-            <div class="card-header">
-                <div>
-                    <div class="card-title">${p.descripcion}</div>
-                    <div class="card-sub">${p.rubro} — ${p.marca}</div>
-                    <div class="card-sub">Stock total: ${p.stock_total}</div>
-                    <div class="card-sub">Precio: ${precio}</div>
-                </div>
-                <button class="toggleBtn secondary">Detalles</button>
-            </div>
-
-            <div class="card-details">
-                <table class="table-desktop">
-                    <tr><th>Talle</th><th>Stock</th></tr>
-                    ${p.talles.map(t => `
-                        <tr>
-                            <td>${t.talle}</td>
-                            <td>${t.stock}</td>
-                        </tr>
-                    `).join("")}
-                </table>
-
-                <div class="chips">
-                    <div class="chip">Fuente</div>
-                </div>
-
-                <pre style="font-size:12px; opacity:0.8;">${JSON.stringify(fuente, null, 2)}</pre>
-            </div>
-        `;
-
-        card.querySelector(".toggleBtn").addEventListener("click", () => {
-            const det = card.querySelector(".card-details");
-            det.style.display = det.style.display === "block" ? "none" : "block";
+const backendURL = "https://stock-backend-1-twzg.onrender.com/query";
+
+document.getElementById("btnEnviar").addEventListener("click", async () => {
+    const pregunta = document.getElementById("pregunta").value.trim();
+    if (!pregunta) return;
+
+    document.getElementById("respuesta").innerText = "Consultando...";
+
+    try {
+        const res = await fetch(backendURL, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ question: pregunta })
         });
 
-        responseContainer.appendChild(card);
+        const data = await res.json();
+        document.getElementById("respuesta").innerText = JSON.stringify(data, null, 2);
+
+    } catch (e) {
+        document.getElementById("respuesta").innerText = "Error consultando backend.";
+        console.error(e);
     }
+});
 
-    function renderLista(items, fuente) {
-        items.forEach(p => renderProducto(p, fuente));
-    }
+document.getElementById("btnLimpiar").addEventListener("click", () => {
+    document.getElementById("pregunta").value = "";
+    document.getElementById("respuesta").innerText = "";
+});
+</script>
+<!-- ===== BLOQUE 3 — SCANNER ZXING ===== -->
 
-    /* ============================
-       ESTADO INICIAL
-    ============================ */
-
-    setStatus("Listo para consultar.");
-
-}); <!-- cierre de DOMContentLoaded -->
-<!-- ===== FIN BLOQUE 6 ===== -->
-
-<!-- ===== INICIO BLOQUE 7 — LECTOR DE CÓDIGOS ZXING (AUTO/MANUAL) ===== -->
-
-<!-- ZXing library -->
+<!-- Librería ZXing -->
 <script src="https://unpkg.com/@zxing/library@latest"></script>
 
 <script>
-/* ============================================================
-   SCANNER INTELIGENTE (ZXing)
-============================================================ */
+let scannerActivo = false;
 
-let smartScannerStream = null;
-let smartScannerActive = false;
-let smartScannerMode = "auto"; // "auto" o "manual"
-let smartCodeDetected = null;
+document.getElementById("btnScanner").addEventListener("click", async () => {
+    const preview = document.getElementById("preview");
 
-const smartScannerOverlay = document.createElement("div");
-smartScannerOverlay.id = "smartScannerOverlay";
-smartScannerOverlay.style = `
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.9);
-    display: none;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    z-index: 99999;
-    color: white;
-    text-align: center;
-`;
+    if (!scannerActivo) {
+        preview.style.display = "block";
 
-smartScannerOverlay.innerHTML = `
-    <video id="smartScannerVideo" autoplay playsinline style="width:90%;max-width:400px;border-radius:10px;"></video>
+        const codeReader = new ZXing.BrowserMultiFormatReader();
+        scannerActivo = true;
 
-    <div style="margin-top:15px;">
-        <label><input type="radio" name="smartMode" value="auto" checked> Auto</label>
-        <label style="margin-left:20px;"><input type="radio" name="smartMode" value="manual"> Manual</label>
-    </div>
+        try {
+            const devices = await codeReader.listVideoInputDevices();
+            const cam = devices[0].deviceId;
 
-    <div id="smartManualBox" style="margin-top:15px; display:none;">
-        <div id="smartDetectedCode" style="font-size:18px;margin-bottom:10px;"></div>
-        <button id="smartConfirmBtn" style="padding:10px 20px;">Aceptar</button>
-    </div>
-
-    <button id="smartCloseBtn" style="margin-top:20px;padding:10px 20px;">Cerrar</button>
-`;
-
-document.body.appendChild(smartScannerOverlay);
-
-const smartScannerVideo = document.getElementById("smartScannerVideo");
-const smartManualBox = document.getElementById("smartManualBox");
-const smartDetectedCode = document.getElementById("smartDetectedCode");
-const smartConfirmBtn = document.getElementById("smartConfirmBtn");
-const smartCloseBtn = document.getElementById("smartCloseBtn");
-
-/* BOTÓN NUEVO: 📡 Lector */
-const smartScanBtn = document.createElement("button");
-smartScanBtn.textContent = "📡 Lector";
-smartScanBtn.className = "secondary";
-smartScanBtn.style.marginLeft = "10px";
-
-document.querySelector(".input-container").appendChild(smartScanBtn);
-
-/* Cambio de modo AUTO/MANUAL */
-document.querySelectorAll("input[name='smartMode']").forEach(radio => {
-    radio.addEventListener("change", (e) => {
-        smartScannerMode = e.target.value;
-        smartManualBox.style.display = smartScannerMode === "manual" ? "block" : "none";
-    });
-});
-
-/* Abrir scanner inteligente */
-smartScanBtn.addEventListener("click", async () => {
-    smartScannerOverlay.style.display = "flex";
-    smartScannerActive = true;
-    smartCodeDetected = null;
-
-    try {
-        smartScannerStream = await navigator.mediaDevices.getUserMedia({
-            video: { facingMode: "environment" }
-        });
-
-        smartScannerVideo.srcObject = smartScannerStream;
-
-        startSmartScanner();
-
-    } catch (err) {
-        alert("No se pudo acceder a la cámara.");
-        console.error(err);
-    }
-});
-
-/* Cerrar scanner inteligente */
-smartCloseBtn.addEventListener("click", closeSmartScanner);
-
-function closeSmartScanner() {
-    smartScannerOverlay.style.display = "none";
-    smartScannerActive = false;
-    if (smartScannerStream) {
-        smartScannerStream.getTracks().forEach(t => t.stop());
-    }
-}
-
-/* Lector ZXing */
-const codeReader = new ZXing.BrowserMultiFormatReader();
-
-async function startSmartScanner() {
-    try {
-        await codeReader.decodeFromVideoDevice(null, "smartScannerVideo", (result, err) => {
-            if (!smartScannerActive) return;
-
-            if (result) {
-                const code = result.text;
-                smartCodeDetected = code;
-
-                if (smartScannerMode === "auto") {
-                    closeSmartScanner();
-                    questionInput.value = code;
-                    processQuery(code);
-                    speak("Código detectado: " + code);
-                } else {
-                    smartDetectedCode.textContent = "Código detectado: " + code;
+            codeReader.decodeFromVideoDevice(cam, "preview", (result, err) => {
+                if (result) {
+                    document.getElementById("pregunta").value = result.text;
+                    document.getElementById("respuesta").innerText = "Código detectado: " + result.text;
                 }
-            }
-        });
-    } catch (err) {
-        console.error(err);
+            });
+
+        } catch (e) {
+            console.error(e);
+            document.getElementById("respuesta").innerText = "Error iniciando scanner.";
+        }
+
+    } else {
+        preview.style.display = "none";
+        scannerActivo = false;
+        location.reload();
     }
-}
-
-/* Confirmación en modo MANUAL */
-smartConfirmBtn.addEventListener("click", () => {
-    if (!smartCodeDetected) return;
-
-    closeSmartScanner();
-    questionInput.value = smartCodeDetected;
-    processQuery(smartCodeDetected);
-    speak("Código confirmado: " + smartCodeDetected);
 });
 </script>
-<!-- ===== FIN BLOQUE 7 ===== -->
+
 </body>
 </html>
-
-
-
-
