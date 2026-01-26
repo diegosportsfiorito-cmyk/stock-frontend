@@ -190,7 +190,7 @@ document.getElementById("btnHablar").addEventListener("click", () => {
     rec.start();
 });
 </script>
-<!-- ===== BLOQUE 3 — SCANNER ZXING ===== -->
+<!-- ===== BLOQUE 3 — SCANNER ZXING (FINAL) ===== -->
 
 <script src="https://unpkg.com/@zxing/library@latest"></script>
 
@@ -204,13 +204,26 @@ document.getElementById("btnScanner").addEventListener("click", async () => {
         preview.style.display = "block";
 
         const codeReader = new ZXing.BrowserMultiFormatReader();
+
+        // Hints para forzar lectura de códigos de barra reales
+        const hints = new Map();
+        hints.set(ZXing.DecodeHintType.POSSIBLE_FORMATS, [
+            ZXing.BarcodeFormat.EAN_13,
+            ZXing.BarcodeFormat.EAN_8,
+            ZXing.BarcodeFormat.CODE_128,
+            ZXing.BarcodeFormat.CODE_39,
+            ZXing.BarcodeFormat.UPC_A
+        ]);
+        codeReader.defaultOptions = { hints: hints };
+
         scannerActivo = true;
 
         try {
             const devices = await codeReader.listVideoInputDevices();
 
             if (!devices || devices.length === 0) {
-                document.getElementById("respuesta").innerHTML = "<p>No se encontraron cámaras.</p>";
+                document.getElementById("respuesta").innerHTML =
+                    "<p>No se encontraron cámaras.</p>";
                 return;
             }
 
@@ -223,6 +236,7 @@ document.getElementById("btnScanner").addEventListener("click", async () => {
             // Si no la encuentra, usar la última (suele ser la trasera)
             if (!cam) cam = devices[devices.length - 1];
 
+            // Iniciar lectura con alta resolución
             codeReader.decodeFromVideoDevice(
                 cam.deviceId,
                 "preview",
@@ -236,8 +250,9 @@ document.getElementById("btnScanner").addEventListener("click", async () => {
                 {
                     video: {
                         facingMode: "environment",
-                        width: { ideal: 1280 },
-                        height: { ideal: 720 }
+                        width: { ideal: 1920 },
+                        height: { ideal: 1080 },
+                        focusMode: "continuous"
                     }
                 }
             );
