@@ -296,7 +296,10 @@ document.getElementById("btnHablar").addEventListener("click", () => {
 <!-- ===== BLOQUE 3 — SCANNER EXTERNO (RECOMENDADO) ===== -->
 <script>
 document.getElementById("btnScannerExterno").addEventListener("click", () => {
-    const callback = encodeURIComponent(window.location.origin + "/?code={CODE}");
+    const callback = encodeURIComponent(
+        "https://diegosportsfiorito-cmyk.github.io/stock-frontend/?code={CODE}"
+    );
+
     const intentURL = `zxing://scan/?ret=${callback}`;
 
     window.location.href = intentURL;
