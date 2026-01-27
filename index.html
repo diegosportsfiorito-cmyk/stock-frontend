@@ -36,53 +36,8 @@
             background: #4a90e2;
         }
 
-        .tab:hover {
-            background: #333;
-        }
-
         #vistaDashboard {
             display: none;
-        }
-
-        .dashboard-selector {
-            margin-bottom: 20px;
-            font-size: 16px;
-            color: #ddd;
-        }
-
-        .dashboard-selector label {
-            margin-right: 20px;
-            cursor: pointer;
-        }
-
-        .dashboard-cards {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 15px;
-            margin-bottom: 30px;
-        }
-
-        .card {
-            background: #1e1e1e;
-            padding: 20px;
-            border-radius: 10px;
-            color: #fff;
-            flex: 1;
-            min-width: 180px;
-            box-shadow: 0 0 10px #0004;
-            font-size: 18px;
-        }
-
-        .charts-container {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 25px;
-        }
-
-        canvas {
-            background: #111;
-            padding: 20px;
-            border-radius: 10px;
         }
 
         #app {
@@ -122,7 +77,6 @@
             cursor: pointer;
             margin: 4px;
             transition: 0.2s ease;
-            box-shadow: 0 2px 6px rgba(77,141,255,0.35);
             display: inline-flex;
             align-items: center;
             gap: 8px;
@@ -135,7 +89,6 @@
 
         #btnStop {
             background: #ff3b3b;
-            box-shadow: 0 2px 6px rgba(255,59,59,0.35);
         }
 
         #btnStop:hover {
@@ -157,32 +110,10 @@
         .suggestion {
             padding: 12px 16px;
             cursor: pointer;
-            transition: 0.15s;
         }
 
         .suggestion:hover {
             background: rgba(77,141,255,0.15);
-        }
-
-        #voiceOrb {
-            width: 55px;
-            height: 55px;
-            border-radius: 50%;
-            background: radial-gradient(circle at 30% 30%, #ffffff, #4d8dff);
-            box-shadow: 0 0 20px rgba(77,141,255,0.6);
-            transition: 0.3s;
-            margin-left: auto;
-            margin-right: 0;
-        }
-
-        #voiceOrb.activo {
-            animation: orbPulse 0.8s infinite ease-in-out;
-        }
-
-        @keyframes orbPulse {
-            0% { transform: scale(1); box-shadow: 0 0 20px rgba(77,141,255,0.6); }
-            50% { transform: scale(1.18); box-shadow: 0 0 35px rgba(77,141,255,0.9); }
-            100% { transform: scale(1); box-shadow: 0 0 20px rgba(77,141,255,0.6); }
         }
 
         #stockFilterLabel {
@@ -196,10 +127,6 @@
             margin-bottom: 15px;
             cursor: pointer;
             font-weight: 600;
-        }
-
-        #chkStock {
-            transform: scale(1.4);
         }
 
         #version {
@@ -222,7 +149,6 @@
 <div id="vistaBuscar">
     <div id="app">
         <h2>Stock IA PRO v2.0</h2>
-        <div id="voiceOrb"></div>
 
         <input id="pregunta" type="text" placeholder="Decime qué buscás..." autocomplete="off" />
         <div id="autocomplete-box"></div>
@@ -441,7 +367,14 @@ const autocompleteURL = "https://stock-backend-1-twzg.onrender.com/autocomplete"
 
 const input = document.getElementById("pregunta");
 const box = document.getElementById("autocomplete-box");
-const orb = document.getElementById("voiceOrb");
+
+/* === FIX ENTER === */
+input.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+        e.preventDefault();
+        enviarConsulta();
+    }
+});
 
 let autoTimer = null;
 
@@ -507,20 +440,15 @@ function agregarHistorial(texto) {
     div.style.padding = "6px 0";
     h.prepend(div);
 }
+</script>
+<script>
 /* ============================================================
    LECTURA POR VOZ
 ============================================================ */
 function leerTexto(texto) {
-    if (!("speechSynthesis" in window)) {
-        alert("Tu navegador no soporta síntesis de voz.");
-        return;
-    }
+    if (!("speechSynthesis" in window)) return;
     const u = new SpeechSynthesisUtterance(texto);
     u.lang = "es-AR";
-
-    u.onstart = () => orb.classList.add("activo");
-    u.onend = () => orb.classList.remove("activo");
-
     speechSynthesis.speak(u);
 }
 
@@ -533,10 +461,8 @@ let manosLibres = false;
 
 function initVoz() {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SpeechRecognition) {
-        alert("Tu navegador no soporta reconocimiento de voz.");
-        return null;
-    }
+    if (!SpeechRecognition) return null;
+
     const rec = new SpeechRecognition();
     rec.lang = "es-AR";
     rec.continuous = false;
@@ -555,9 +481,7 @@ document.getElementById("btnHablar").addEventListener("click", () => {
             enviarConsulta();
         };
 
-        reconocimiento.onstart = () => orb.classList.add("activo");
         reconocimiento.onend = () => {
-            orb.classList.remove("activo");
             escuchando = false;
         };
     }
@@ -585,9 +509,7 @@ document.getElementById("btnManosLibres").addEventListener("click", () => {
             enviarConsulta();
         };
 
-        reconocimiento.onstart = () => orb.classList.add("activo");
         reconocimiento.onend = () => {
-            orb.classList.remove("activo");
             if (manosLibres) reconocimiento.start();
         };
     }
@@ -607,7 +529,6 @@ document.getElementById("btnStop").addEventListener("click", () => {
 
     if (reconocimiento) reconocimiento.stop();
     speechSynthesis.cancel();
-    orb.classList.remove("activo");
 });
 
 /* ============================================================
@@ -688,7 +609,7 @@ function escanearFrame(video) {
 }
 
 /* ============================================================
-   SCANNER EXTERNO (PRIORITARIO)
+   SCANNER EXTERNO (ZXing)
 ============================================================ */
 document.getElementById("btnScannerExterno").onclick = () => {
     const callback = encodeURIComponent(
