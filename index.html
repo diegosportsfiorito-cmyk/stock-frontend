@@ -1,665 +1,306 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Stock IA PRO v2.0</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stock IA</title>
 
-<!-- ICONOS -->
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <!-- ============================
+         CSS PREMIUM
+    ============================= -->
+    <style>
+        body {
+            background: #121212;
+            color: #fff;
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
 
-<!-- jsQR para scanner interno -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jsqr/1.4.0/jsQR.min.js"></script>
+        /* ============================
+           TABS
+        ============================= */
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
 
-<style>
-/* ============================================================
-   PALETA OSCURA PREMIUM
-   ============================================================ */
-:root {
-    --bg: #0d0f12;
-    --card-bg: #161a20;
-    --text: #e6e6e6;
-    --primary: #4d8dff;
-    --primary-hover: #3c6dcc;
-    --border: #2a2f36;
-    --shadow: rgba(0,0,0,0.45);
-    --radius: 14px;
-}
+        .tab {
+            padding: 10px 20px;
+            background: #222;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+            border-radius: 6px;
+            transition: 0.2s;
+        }
 
-/* ============================================================
-   BASE
-   ============================================================ */
-body {
-    font-family: "Inter", Arial, sans-serif;
-    background: var(--bg);
-    color: var(--text);
-    margin: 0;
-    padding: 20px;
-    transition: 0.3s ease;
-}
+        .tab.active {
+            background: #4a90e2;
+        }
 
-#app {
-    max-width: 900px;
-    margin: auto;
-    background: var(--card-bg);
-    padding: 25px;
-    border-radius: var(--radius);
-    box-shadow: 0 4px 20px var(--shadow);
-    position: relative;
-}
+        .tab:hover {
+            background: #333;
+        }
 
-/* ============================================================
-   INPUT
-   ============================================================ */
-input {
-    width: 100%;
-    padding: 14px;
-    border-radius: var(--radius);
-    border: 1px solid var(--border);
-    font-size: 16px;
-    background: #0f1115;
-    color: var(--text);
-    outline: none;
-    transition: 0.2s;
-}
+        /* ============================
+           DASHBOARD SELECTOR
+        ============================= */
+        .dashboard-selector {
+            margin-bottom: 20px;
+            font-size: 16px;
+            color: #ddd;
+        }
 
-input:focus {
-    border-color: var(--primary);
-    box-shadow: 0 0 0 3px rgba(77,141,255,0.25);
-}
+        .dashboard-selector label {
+            margin-right: 20px;
+            cursor: pointer;
+        }
 
-/* ============================================================
-   BOTONES PREMIUM
-   ============================================================ */
-button {
-    padding: 12px 16px;
-    border-radius: var(--radius);
-    border: none;
-    background: var(--primary);
-    color: white;
-    font-size: 15px;
-    cursor: pointer;
-    margin: 4px;
-    transition: 0.2s ease;
-    box-shadow: 0 2px 6px rgba(77,141,255,0.35);
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-}
+        /* ============================
+           TARJETAS
+        ============================= */
+        .dashboard-cards {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
 
-button:hover {
-    background: var(--primary-hover);
-    transform: translateY(-1px);
-}
+        .card {
+            background: #1e1e1e;
+            padding: 20px;
+            border-radius: 10px;
+            color: #fff;
+            flex: 1;
+            min-width: 180px;
+            box-shadow: 0 0 10px #0004;
+            font-size: 18px;
+        }
 
-/* Botón STOP */
-#btnStop {
-    background: #ff3b3b;
-    box-shadow: 0 2px 6px rgba(255,59,59,0.35);
-}
-#btnStop:hover {
-    background: #d62828;
-}
+        /* ============================
+           GRÁFICOS
+        ============================= */
+        .charts-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+        }
 
-/* ============================================================
-   AUTOCOMPLETADO
-   ============================================================ */
-#autocomplete-box {
-    position: absolute;
-    background: var(--card-bg);
-    width: calc(100% - 50px);
-    margin-top: 4px;
-    border-radius: var(--radius);
-    box-shadow: 0 4px 20px var(--shadow);
-    border: 1px solid var(--border);
-    display: none;
-    z-index: 999;
-}
-
-.suggestion {
-    padding: 12px 16px;
-    cursor: pointer;
-    transition: 0.15s;
-}
-
-.suggestion:hover {
-    background: rgba(77,141,255,0.15);
-}
-
-/* ============================================================
-   TARJETAS PREMIUM
-   ============================================================ */
-.card {
-    background: var(--card-bg);
-    padding: 20px;
-    border-radius: var(--radius);
-    margin-top: 15px;
-    box-shadow: 0 2px 12px var(--shadow);
-    border: 1px solid var(--border);
-}
-
-/* ============================================================
-   ORB DE VOZ
-   ============================================================ */
-#voiceOrb {
-    width: 55px;
-    height: 55px;
-    border-radius: 50%;
-    background: radial-gradient(circle at 30% 30%, #ffffff, #4d8dff);
-    box-shadow: 0 0 20px rgba(77,141,255,0.6);
-    transition: 0.3s;
-    margin-left: auto;
-    margin-right: 0;
-}
-
-#voiceOrb.activo {
-    animation: orbPulse 0.8s infinite ease-in-out;
-}
-
-@keyframes orbPulse {
-    0% { transform: scale(1); box-shadow: 0 0 20px rgba(77,141,255,0.6); }
-    50% { transform: scale(1.18); box-shadow: 0 0 35px rgba(77,141,255,0.9); }
-    100% { transform: scale(1); box-shadow: 0 0 20px rgba(77,141,255,0.6); }
-}
-
-/* ============================================================
-   FILTRO STOCK
-   ============================================================ */
-#stockFilterLabel {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    background: #0f1115;
-    padding: 12px 16px;
-    border-radius: var(--radius);
-    border: 1px solid var(--border);
-    margin-bottom: 15px;
-    cursor: pointer;
-    font-weight: 600;
-}
-
-#chkStock {
-    transform: scale(1.4);
-}
-
-/* ============================================================
-   VERSION
-   ============================================================ */
-#version {
-    position: absolute;
-    bottom: 8px;
-    right: 12px;
-    font-size: 11px;
-    opacity: 0.45;
-}
-</style>
+        canvas {
+            background: #111;
+            padding: 20px;
+            border-radius: 10px;
+        }
+    </style>
 </head>
 
 <body>
-<div id="app">
 
-<h2>Stock IA PRO v2.0</h2>
+<!-- ============================
+     TABS (BUSCAR / DASHBOARD)
+============================= -->
+<div class="tabs">
+    <button id="tabBuscar" class="tab active">Buscar</button>
+    <button id="tabDashboard" class="tab">Dashboard</button>
+</div>
 
-<!-- ORB DE VOZ -->
-<div id="voiceOrb"></div>
+<!-- ============================
+     VISTA BUSCAR (PEGÁ AQUÍ TU BUSCADOR)
+============================= -->
+<div id="vistaBuscar">
 
-<!-- INPUT -->
-<input id="pregunta" type="text" placeholder="Decime qué buscás..." autocomplete="off" />
-<div id="autocomplete-box"></div>
-
-<br><br>
-
-<!-- BOTONES PREMIUM -->
-<button id="btnHablar"><i class="fa-solid fa-microphone"></i> Hablar</button>
-<button id="btnManosLibres"><i class="fa-solid fa-headset"></i> Manos libres</button>
-<button id="btnStop"><i class="fa-solid fa-stop"></i> Stop</button>
-
-<!-- Scanner externo primero (más importante) -->
-<button id="btnScannerExterno"><i class="fa-solid fa-qrcode"></i> Scanner externo</button>
-
-<!-- Scanner interno como alternativa -->
-<button id="btnScanner"><i class="fa-solid fa-camera"></i> Scanner interno</button>
-
-<button id="btnLimpiar"><i class="fa-solid fa-eraser"></i> Limpiar</button>
-<button id="btnCopiar"><i class="fa-solid fa-copy"></i> Copiar</button>
-<button id="btnWhatsApp"><i class="fa-brands fa-whatsapp"></i> WhatsApp</button>
-
-<br><br>
-
-<!-- FILTRO STOCK -->
-<label id="stockFilterLabel">
-    <input type="checkbox" id="chkStock">
-    <span>Mostrar solo productos con stock disponible</span>
-</label>
-
-<!-- RESPUESTA -->
-<div id="respuesta"></div>
-
-<!-- HISTORIAL -->
-<h3>Historial</h3>
-<div id="historial"></div>
-
-<!-- SCANNER -->
-<video id="preview" style="width:100%; display:none;"></video>
-
-<div id="version">v2.0 PRO</div>
+    <!-- 🔵 PEGÁ AQUÍ TODO TU BUSCADOR ANTERIOR -->
+    <!-- Input, botones, scanner, voz, historial, resultados, etc. -->
 
 </div>
 
-<!-- ============================================================
-     INICIO DEL SCRIPT
-     ============================================================ -->
+<!-- ============================
+     VISTA DASHBOARD
+============================= -->
+<div id="vistaDashboard" style="display:none;">
+
+    <!-- Selector Global / Última búsqueda -->
+    <div class="dashboard-selector">
+        <label><input type="radio" name="modoDashboard" value="global" checked> Métricas globales</label>
+        <label><input type="radio" name="modoDashboard" value="busqueda"> Métricas de la búsqueda actual</label>
+    </div>
+
+    <!-- Tarjetas -->
+    <div class="dashboard-cards">
+        <div class="card" id="cardStockTotal"></div>
+        <div class="card" id="cardArticulos"></div>
+        <div class="card" id="cardRubro"></div>
+        <div class="card" id="cardMarca"></div>
+        <div class="card" id="cardTalle"></div>
+    </div>
+
+    <!-- Gráficos -->
+    <div class="charts-container">
+        <canvas id="chartRubros"></canvas>
+        <canvas id="chartMarcas"></canvas>
+        <canvas id="chartTalles"></canvas>
+    </div>
+
+</div>
+
+<!-- ============================
+     SCRIPTS
+============================= -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 <script>
-const backendURL = "https://stock-backend-1-twzg.onrender.com/query";
-const autocompleteURL = "https://stock-backend-1-twzg.onrender.com/autocomplete";
+/* ============================
+   TABS
+============================= */
+const tabBuscar = document.getElementById("tabBuscar");
+const tabDashboard = document.getElementById("tabDashboard");
+const vistaBuscar = document.getElementById("vistaBuscar");
+const vistaDashboard = document.getElementById("vistaDashboard");
 
-const input = document.getElementById("pregunta");
-const box = document.getElementById("autocomplete-box");
-const orb = document.getElementById("voiceOrb");
+tabBuscar.onclick = () => {
+    tabBuscar.classList.add("active");
+    tabDashboard.classList.remove("active");
+    vistaBuscar.style.display = "block";
+    vistaDashboard.style.display = "none";
+};
 
-/* ============================================================
-   AUTOCOMPLETADO INSTANTÁNEO
-   ============================================================ */
-let autoTimer = null;
+tabDashboard.onclick = () => {
+    tabDashboard.classList.add("active");
+    tabBuscar.classList.remove("active");
+    vistaBuscar.style.display = "none";
+    vistaDashboard.style.display = "block";
+    cargarDashboardGlobal();
+};
 
-input.addEventListener("input", () => {
-    clearTimeout(autoTimer);
-    autoTimer = setTimeout(buscarSugerencias, 120);
-});
+/* ============================
+   VARIABLES GLOBALES
+============================= */
+let ultimaBusqueda = null;
+let chartRubros, chartMarcas, chartTalles;
 
-async function buscarSugerencias() {
-    const q = input.value.trim();
-    if (q.length < 1) {
-        box.style.display = "none";
-        return;
-    }
+/* ============================
+   ACTUALIZAR TARJETAS
+============================= */
+function actualizarTarjetas(data) {
+    document.getElementById("cardStockTotal").innerHTML = `<b>Stock total:</b> ${data.stock_total}`;
+    document.getElementById("cardArticulos").innerHTML = `<b>Artículos:</b> ${data.articulos}`;
 
-    const res = await fetch(`${autocompleteURL}?q=${encodeURIComponent(q)}`);
-    const data = await res.json();
+    const rubroTop = Object.entries(data.rubros)[0]?.[0] || "-";
+    const marcaTop = Object.entries(data.marcas)[0]?.[0] || "-";
+    const talleTop = Object.entries(data.talles)[0]?.[0] || "-";
 
-    if (!data.sugerencias || data.sugerencias.length === 0) {
-        box.style.display = "none";
-        return;
-    }
+    document.getElementById("cardRubro").innerHTML = `<b>Rubro dominante:</b> ${rubroTop}`;
+    document.getElementById("cardMarca").innerHTML = `<b>Marca dominante:</b> ${marcaTop}`;
+    document.getElementById("cardTalle").innerHTML = `<b>Talle dominante:</b> ${talleTop}`;
+}
 
-    box.innerHTML = "";
-    data.sugerencias.forEach(s => {
-        const div = document.createElement("div");
-        div.className = "suggestion";
-        div.textContent = s;
-        div.onclick = () => {
-            input.value = s;
-            box.style.display = "none";
-            enviarConsulta();
-        };
-        box.appendChild(div);
+/* ============================
+   DIBUJAR GRÁFICOS
+============================= */
+function dibujarGraficos(data) {
+    if (chartRubros) chartRubros.destroy();
+    if (chartMarcas) chartMarcas.destroy();
+    if (chartTalles) chartTalles.destroy();
+
+    chartRubros = new Chart(document.getElementById("chartRubros"), {
+        type: "doughnut",
+        data: {
+            labels: Object.keys(data.rubros),
+            datasets: [{
+                data: Object.values(data.rubros),
+                backgroundColor: ["#4a90e2", "#50e3c2", "#f5a623", "#d0021b", "#9013fe"]
+            }]
+        }
     });
 
-    box.style.display = "block";
-}
-
-/* ============================================================
-   ENVÍO AUTOMÁTICO
-   ============================================================ */
-async function enviarConsulta() {
-    const pregunta = input.value.trim();
-    if (!pregunta) return;
-
-    document.getElementById("respuesta").innerHTML = "<p>Consultando...</p>";
-
-    const res = await fetch(backendURL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ question: pregunta })
+    chartMarcas = new Chart(document.getElementById("chartMarcas"), {
+        type: "bar",
+        data: {
+            labels: Object.keys(data.marcas),
+            datasets: [{
+                label: "Stock por marca",
+                data: Object.values(data.marcas),
+                backgroundColor: "#4a90e2"
+            }]
+        }
     });
 
+    chartTalles = new Chart(document.getElementById("chartTalles"), {
+        type: "bar",
+        data: {
+            labels: Object.keys(data.talles),
+            datasets: [{
+                label: "Stock por talle",
+                data: Object.values(data.talles),
+                backgroundColor: "#50e3c2"
+            }]
+        }
+    });
+}
+
+/* ============================
+   CARGAR DASHBOARD GLOBAL
+============================= */
+async function cargarDashboardGlobal() {
+    const res = await fetch("https://diegosportsfiorito-cmyk.github.io/stock-frontend/dashboard/global");
     const data = await res.json();
-    renderResultados(data);
-    agregarHistorial(pregunta);
+
+    actualizarTarjetas(data);
+    dibujarGraficos(data);
 }
 
-/* ============================================================
-   HISTORIAL
-   ============================================================ */
-function agregarHistorial(texto) {
-    const h = document.getElementById("historial");
-    const div = document.createElement("div");
-    div.textContent = texto;
-    div.style.padding = "6px 0";
-    h.prepend(div);
-}
-
-/* ============================================================
-   RENDERIZAR RESULTADOS
-   ============================================================ */
-function renderResultados(data) {
-    const cont = document.getElementById("respuesta");
-    cont.innerHTML = "";
-
-    /* RESUMEN INTELIGENTE */
-    if (data.tipo === "resumen") {
-        const r = data.resumen;
-
-        const card = document.createElement("div");
-        card.className = "card";
-
-        const textoVoz = `
-            Resumen de tu consulta.
-            Artículos: ${r.cant_articulos}.
-            Unidades totales: ${r.unidades_totales}.
-            Valorizado total: ${r.valorizado_total}.
-        `;
-
-        card.innerHTML = `
-            <h3>Resumen</h3>
-            <p><b>Artículos:</b> ${r.cant_articulos}</p>
-            <p><b>Unidades totales:</b> ${r.unidades_totales}</p>
-            <p><b>Valorizado total:</b> $${r.valorizado_total}</p>
-            <p><b>Rango de precios:</b> $${r.precio_min} a $${r.precio_max}</p>
-
-            <button id="btnLeerResumen"><i class="fa-solid fa-volume-high"></i> Leer resumen</button>
-            <button id="btnVerDetalle"><i class="fa-solid fa-list"></i> Ver detalle</button>
-
-            <div id="detalleResumen" style="display:none; margin-top:15px;"></div>
-        `;
-
-        cont.appendChild(card);
-
-        document.getElementById("btnLeerResumen").onclick = () => leerTexto(textoVoz);
-
-        document.getElementById("btnVerDetalle").onclick = () => {
-            const d = document.getElementById("detalleResumen");
-            if (d.style.display === "none") {
-                d.style.display = "block";
-                renderListaEnContenedor(data.items, d, data);
-            } else {
-                d.style.display = "none";
+/* ============================
+   SELECTOR GLOBAL / BÚSQUEDA
+============================= */
+document.querySelectorAll("input[name='modoDashboard']").forEach(radio => {
+    radio.addEventListener("change", () => {
+        if (radio.value === "global") {
+            cargarDashboardGlobal();
+        } else {
+            if (!ultimaBusqueda) {
+                alert("Realizá una búsqueda primero.");
+                return;
             }
+            actualizarTarjetas(ultimaBusqueda);
+            dibujarGraficos(ultimaBusqueda);
+        }
+    });
+});
+
+/* ============================
+   GUARDAR RESULTADO DE BÚSQUEDA
+============================= */
+function guardarResultadoBusqueda(data) {
+    if (data.tipo === "resumen") {
+        ultimaBusqueda = {
+            stock_total: data.resumen.unidades_totales || 0,
+            articulos: data.resumen.cant_articulos || 0,
+            rubros: contar(data.items, "rubro"),
+            marcas: contar(data.items, "marca"),
+            talles: contarTalles(data.items)
         };
-
-        return;
     }
-
-    /* LISTA NORMAL */
-    if (!data.items || data.items.length === 0) {
-        cont.innerHTML = "<p>No se encontraron resultados.</p>";
-        return;
-    }
-
-    renderListaEnContenedor(data.items, cont, data);
 }
 
-function renderListaEnContenedor(items, cont, data) {
-    cont.innerHTML = "";
-
-    items.forEach((item, index) => {
-        let talles = item.talles;
-
-        if (document.getElementById("chkStock").checked) {
-            talles = talles.filter(t => t.stock > 0);
-            if (talles.length === 0) return;
-        }
-
-        const card = document.createElement("div");
-        card.className = "card";
-
-        const stockTotal = talles.reduce((acc, t) => acc + t.stock, 0);
-
-        const tallesHTML = talles
-            .map(t => `<li>${t.talle} → Stock: ${t.stock}</li>`)
-            .join("");
-
-        const detalleID = `detalle_${index}`;
-
-        card.innerHTML = `
-            <h3>${item.descripcion}</h3>
-            <p><b>Precio:</b> $${item.precio}</p>
-            <p><b>Stock total:</b> ${stockTotal}</p>
-
-            <button class="btnVerMas" data-target="${detalleID}">
-                <i class="fa-solid fa-chevron-down"></i> Ver más
-            </button>
-
-            <div id="${detalleID}" style="display:none; margin-top:10px;">
-                <p><b>Código:</b> ${item.codigo}</p>
-                <p><b>Marca:</b> ${item.marca || "-"}</p>
-                <p><b>Rubro:</b> ${item.rubro || "-"}</p>
-                <p><b>Color:</b> ${item.color || "-"}</p>
-
-                <p><b>Talles:</b></p>
-                <ul>${tallesHTML}</ul>
-
-                <button class="btnVerMenos" data-target="${detalleID}">
-                    <i class="fa-solid fa-chevron-up"></i> Ver menos
-                </button>
-            </div>
-        `;
-
-        cont.appendChild(card);
+function contar(items, campo) {
+    const mapa = {};
+    items.forEach(i => {
+        const key = i[campo] || "Sin dato";
+        mapa[key] = (mapa[key] || 0) + (i.stock_total || 1);
     });
+    return mapa;
+}
 
-    document.querySelectorAll(".btnVerMas").forEach(btn => {
-        btn.addEventListener("click", () => {
-            const id = btn.getAttribute("data-target");
-            document.getElementById(id).style.display = "block";
-            btn.style.display = "none";
+function contarTalles(items) {
+    const mapa = {};
+    items.forEach(i => {
+        i.talles.forEach(t => {
+            mapa[t.talle] = (mapa[t.talle] || 0) + t.stock;
         });
     });
-
-    document.querySelectorAll(".btnVerMenos").forEach(btn => {
-        btn.addEventListener("click", () => {
-            const id = btn.getAttribute("data-target");
-            document.getElementById(id).style.display = "none";
-            const btnMas = document.querySelector(`.btnVerMas[data-target="${id}"]`);
-            if (btnMas) btnMas.style.display = "inline-flex";
-        });
-    });
+    return mapa;
 }
-
-/* ============================================================
-   LECTURA POR VOZ
-   ============================================================ */
-function leerTexto(texto) {
-    if (!("speechSynthesis" in window)) {
-        alert("Tu navegador no soporta síntesis de voz.");
-        return;
-    }
-    const u = new SpeechSynthesisUtterance(texto);
-    u.lang = "es-AR";
-
-    u.onstart = () => orb.classList.add("activo");
-    u.onend = () => orb.classList.remove("activo");
-
-    speechSynthesis.speak(u);
-}
-
-/* ============================================================
-   RECONOCIMIENTO DE VOZ
-   ============================================================ */
-let reconocimiento = null;
-let escuchando = false;
-let manosLibres = false;
-
-function initVoz() {
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SpeechRecognition) {
-        alert("Tu navegador no soporta reconocimiento de voz.");
-        return null;
-    }
-    const rec = new SpeechRecognition();
-    rec.lang = "es-AR";
-    rec.continuous = false;
-    rec.interimResults = false;
-    return rec;
-}
-
-document.getElementById("btnHablar").addEventListener("click", () => {
-    if (!reconocimiento) {
-        reconocimiento = initVoz();
-        if (!reconocimiento) return;
-
-        reconocimiento.onresult = (event) => {
-            const texto = event.results[0][0].transcript;
-            input.value = texto;
-            enviarConsulta();
-        };
-
-        reconocimiento.onstart = () => orb.classList.add("activo");
-        reconocimiento.onend = () => {
-            orb.classList.remove("activo");
-            escuchando = false;
-        };
-    }
-
-    if (!escuchando) {
-        escuchando = true;
-        reconocimiento.start();
-    } else {
-        escuchando = false;
-        reconocimiento.stop();
-    }
-});
-
-/* ============================================================
-   MANOS LIBRES
-   ============================================================ */
-document.getElementById("btnManosLibres").addEventListener("click", () => {
-    if (!reconocimiento) {
-        reconocimiento = initVoz();
-        if (!reconocimiento) return;
-
-        reconocimiento.onresult = (event) => {
-            const texto = event.results[0][0].transcript;
-            input.value = texto;
-            enviarConsulta();
-        };
-
-        reconocimiento.onstart = () => orb.classList.add("activo");
-        reconocimiento.onend = () => {
-            orb.classList.remove("activo");
-            if (manosLibres) reconocimiento.start();
-        };
-    }
-
-    manosLibres = !manosLibres;
-
-    if (manosLibres) reconocimiento.start();
-    else reconocimiento.stop();
-});
-
-/* ============================================================
-   BOTÓN STOP GLOBAL
-   ============================================================ */
-document.getElementById("btnStop").addEventListener("click", () => {
-    manosLibres = false;
-    escuchando = false;
-
-    if (reconocimiento) reconocimiento.stop();
-    speechSynthesis.cancel();
-    orb.classList.remove("activo");
-});
-
-/* ============================================================
-   BOTONES VARIOS
-   ============================================================ */
-document.getElementById("btnLimpiar").onclick = () => {
-    input.value = "";
-    document.getElementById("respuesta").innerHTML = "";
-};
-
-document.getElementById("btnCopiar").onclick = () => {
-    navigator.clipboard.writeText(document.getElementById("respuesta").innerText);
-};
-
-document.getElementById("btnWhatsApp").onclick = () => {
-    const texto = encodeURIComponent(document.getElementById("respuesta").innerText);
-    window.open(`https://wa.me/?text=${texto}`);
-};
-
-/* ============================================================
-   SCANNER INTERNO (CÁMARA)
-   ============================================================ */
-let scannerActivo = false;
-
-document.getElementById("btnScanner").onclick = async () => {
-    const video = document.getElementById("preview");
-
-    if (scannerActivo) {
-        video.style.display = "none";
-        scannerActivo = false;
-        if (window.stream) {
-            window.stream.getTracks().forEach(t => t.stop());
-        }
-        return;
-    }
-
-    try {
-        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
-        window.stream = stream;
-        video.srcObject = stream;
-        video.setAttribute("playsinline", true);
-        video.style.display = "block";
-        video.play();
-        scannerActivo = true;
-
-        escanearFrame(video);
-    } catch (e) {
-        alert("No se pudo acceder a la cámara.");
-    }
-};
-
-function escanearFrame(video) {
-    if (!scannerActivo) return;
-
-    const canvas = document.createElement("canvas");
-    const ctx = canvas.getContext("2d");
-
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-
-    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-    try {
-        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-        const code = jsQR(imageData.data, canvas.width, canvas.height);
-
-        if (code) {
-            input.value = code.data;
-            enviarConsulta();
-            scannerActivo = false;
-            video.style.display = "none";
-            window.stream.getTracks().forEach(t => t.stop());
-            return;
-        }
-    } catch (e) {}
-
-    requestAnimationFrame(() => escanearFrame(video));
-}
-
-/* ============================================================
-   SCANNER EXTERNO (PRIORITARIO)
-   ============================================================ */
-document.getElementById("btnScannerExterno").onclick = () => {
-    const callback = encodeURIComponent(
-        "https://diegosportsfiorito-cmyk.github.io/stock-frontend/?code={CODE}"
-    );
-
-    window.location.href = `zxing://scan/?ret=${callback}`;
-};
-
-/* ============================================================
-   CALLBACK DEL SCANNER EXTERNO
-   ============================================================ */
-const params = new URLSearchParams(window.location.search);
-if (params.has("code")) {
-    const codigo = params.get("code");
-    input.value = codigo;
-    enviarConsulta();
-}
-
-/* ============================================================
-   FIN DEL SCRIPT
-   ============================================================ */
 </script>
 
 </body>
