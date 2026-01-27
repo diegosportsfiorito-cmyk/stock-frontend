@@ -8,6 +8,9 @@
 <!-- ICONOS -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
+<!-- jsQR para scanner interno -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jsqr/1.4.0/jsQR.min.js"></script>
+
 <style>
 /* ============================================================
    PALETA OSCURA PREMIUM
@@ -210,8 +213,13 @@ button:hover {
 <button id="btnHablar"><i class="fa-solid fa-microphone"></i> Hablar</button>
 <button id="btnManosLibres"><i class="fa-solid fa-headset"></i> Manos libres</button>
 <button id="btnStop"><i class="fa-solid fa-stop"></i> Stop</button>
-<button id="btnScanner"><i class="fa-solid fa-camera"></i> Scanner interno</button>
+
+<!-- Scanner externo primero (más importante) -->
 <button id="btnScannerExterno"><i class="fa-solid fa-qrcode"></i> Scanner externo</button>
+
+<!-- Scanner interno como alternativa -->
+<button id="btnScanner"><i class="fa-solid fa-camera"></i> Scanner interno</button>
+
 <button id="btnLimpiar"><i class="fa-solid fa-eraser"></i> Limpiar</button>
 <button id="btnCopiar"><i class="fa-solid fa-copy"></i> Copiar</button>
 <button id="btnWhatsApp"><i class="fa-brands fa-whatsapp"></i> WhatsApp</button>
@@ -238,7 +246,17 @@ button:hover {
 
 </div>
 
+<!-- ============================================================
+     INICIO DEL SCRIPT
+     ============================================================ -->
 <script>
+const backendURL = "https://stock-backend-1-twzg.onrender.com/query";
+const autocompleteURL = "https://stock-backend-1-twzg.onrender.com/autocomplete";
+
+const input = document.getElementById("pregunta");
+const box = document.getElementById("autocomplete-box");
+const orb = document.getElementById("voiceOrb");
+
 /* ============================================================
    AUTOCOMPLETADO INSTANTÁNEO
    ============================================================ */
@@ -297,6 +315,18 @@ async function enviarConsulta() {
 
     const data = await res.json();
     renderResultados(data);
+    agregarHistorial(pregunta);
+}
+
+/* ============================================================
+   HISTORIAL
+   ============================================================ */
+function agregarHistorial(texto) {
+    const h = document.getElementById("historial");
+    const div = document.createElement("div");
+    div.textContent = texto;
+    div.style.padding = "6px 0";
+    h.prepend(div);
 }
 
 /* ============================================================
@@ -545,8 +575,9 @@ document.getElementById("btnWhatsApp").onclick = () => {
     const texto = encodeURIComponent(document.getElementById("respuesta").innerText);
     window.open(`https://wa.me/?text=${texto}`);
 };
+
 /* ============================================================
-   SCANNER INTERNO (CÁMARA DEL DISPOSITIVO)
+   SCANNER INTERNO (CÁMARA)
    ============================================================ */
 let scannerActivo = false;
 
@@ -606,18 +637,18 @@ function escanearFrame(video) {
 }
 
 /* ============================================================
-   SCANNER EXTERNO (APP DE TERCEROS)
+   SCANNER EXTERNO (PRIORITARIO)
    ============================================================ */
 document.getElementById("btnScannerExterno").onclick = () => {
     const callback = encodeURIComponent(
-        "https://diegomonti.github.io/stock/?code={CODE}"
+        "https://diegosportsfiorito-cmyk.github.io/stock-frontend/?code={CODE}"
     );
 
     window.location.href = `zxing://scan/?ret=${callback}`;
 };
 
 /* ============================================================
-   CARGA AUTOMÁTICA DESDE CALLBACK DEL SCANNER EXTERNO
+   CALLBACK DEL SCANNER EXTERNO
    ============================================================ */
 const params = new URLSearchParams(window.location.search);
 if (params.has("code")) {
@@ -627,7 +658,7 @@ if (params.has("code")) {
 }
 
 /* ============================================================
-   CIERRE DEL SCRIPT
+   FIN DEL SCRIPT
    ============================================================ */
 </script>
 
