@@ -418,7 +418,7 @@ function contar(items, campo) {
     const mapa = {};
     items.forEach(i => {
         const key = i[campo] || "Sin dato";
-        mapa[key] = (mapa[key] || 0) + (i.stock_total || 1);
+        mapa[key] = (mapa[key] || 0) + (i.talles?.reduce((a, t) => a + t.stock, 0) || 0);
     });
     return mapa;
 }
@@ -709,7 +709,7 @@ if (params.has("code")) {
 }
 
 /* ============================================================
-   RENDERIZADO DE RESULTADOS
+   RENDERIZADO DE RESULTADOS (CORREGIDO)
 ============================================================ */
 function renderResultados(data) {
     const cont = document.getElementById("respuesta");
@@ -726,12 +726,14 @@ function renderResultados(data) {
         html += `</div>`;
 
         data.items.forEach(item => {
+            const totalStock = item.talles.reduce((acc, t) => acc + t.stock, 0);
+
             html += `
                 <div class="card">
                     <b>${item.descripcion}</b><br>
                     Marca: ${item.marca}<br>
                     Rubro: ${item.rubro}<br>
-                    Stock total: ${item.stock_total}<br>
+                    Stock total: ${totalStock}<br>
                 </div>
             `;
         });
