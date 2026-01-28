@@ -1,447 +1,397 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8" />
-    <title>Stock IA PRO v2.0</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta charset="UTF-8" />
+<title>Stock IA PRO v2.0</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-    <!-- Fuente y estilos básicos -->
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+/* ============================================================
+   VARIABLES
+============================================================ */
+:root {
+    --bg: #050816;
+    --bg-elevated: #0b1020;
+    --accent: #4f46e5;
+    --accent-soft: rgba(79, 70, 229, 0.18);
+    --accent-strong: #6366f1;
+    --text: #e5e7eb;
+    --text-soft: #9ca3af;
+    --danger: #ef4444;
+    --success: #22c55e;
+    --border-subtle: rgba(148, 163, 184, 0.25);
+    --radius-lg: 18px;
+    --radius-md: 12px;
+    --radius-pill: 999px;
+    --shadow-soft: 0 18px 45px rgba(15, 23, 42, 0.75);
+}
 
-    <style>
-        :root {
-            --bg: #050816;
-            --bg-elevated: #0b1020;
-            --accent: #4f46e5;
-            --accent-soft: rgba(79, 70, 229, 0.18);
-            --accent-strong: #6366f1;
-            --text: #e5e7eb;
-            --text-soft: #9ca3af;
-            --danger: #ef4444;
-            --success: #22c55e;
-            --border-subtle: rgba(148, 163, 184, 0.25);
-            --radius-lg: 18px;
-            --radius-md: 12px;
-            --radius-pill: 999px;
-            --shadow-soft: 0 18px 45px rgba(15, 23, 42, 0.75);
-        }
+/* ============================================================
+   RESET
+============================================================ */
+* { box-sizing: border-box; }
+body {
+    margin: 0;
+    min-height: 100vh;
+    font-family: "Inter", sans-serif;
+    background: radial-gradient(circle at top, #111827 0, #020617 45%, #000 100%);
+    color: var(--text);
+    display: flex;
+    justify-content: center;
+}
 
-        * {
-            box-sizing: border-box;
-        }
+/* ============================================================
+   LAYOUT
+============================================================ */
+.app-shell {
+    width: 100%;
+    max-width: 1200px;
+    margin: 24px;
+    display: grid;
+    grid-template-rows: auto 1fr;
+    gap: 18px;
+}
 
-        body {
-            margin: 0;
-            min-height: 100vh;
-            font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-            background: radial-gradient(circle at top, #111827 0, #020617 45%, #000 100%);
-            color: var(--text);
-            display: flex;
-            align-items: stretch;
-            justify-content: center;
-        }
+.app-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
 
-        .app-shell {
-            width: 100%;
-            max-width: 1200px;
-            margin: 24px;
-            display: grid;
-            grid-template-rows: auto 1fr;
-            gap: 18px;
-        }
+.brand {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
 
-        /* HEADER */
+.brand-logo {
+    width: 52px;
+    height: 52px;
+    border-radius: 18px;
+    background: radial-gradient(circle at 30% 20%, #a855f7, #4f46e5 45%, #0ea5e9 100%);
+    box-shadow: 0 0 35px rgba(79, 70, 229, 0.7);
+}
 
-        .app-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 16px;
-        }
+.brand-text-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
 
-        .brand {
-            display: flex;
-            align-items: center;
-            gap: 14px;
-        }
+.brand-text-sub {
+    font-size: 0.8rem;
+    color: var(--text-soft);
+}
 
-        .brand-logo {
-            width: 52px;
-            height: 52px;
-            border-radius: 18px;
-            background: radial-gradient(circle at 30% 20%, #a855f7, #4f46e5 45%, #0ea5e9 100%);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 0 35px rgba(79, 70, 229, 0.7);
-            overflow: hidden;
-        }
+.pill {
+    padding: 6px 12px;
+    border-radius: var(--radius-pill);
+    border: 1px solid rgba(148, 163, 184, 0.35);
+    background: rgba(15, 23, 42, 0.8);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
 
-        .brand-logo img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            display: block;
-        }
+.pill-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 999px;
+    background: var(--success);
+    box-shadow: 0 0 12px rgba(34, 197, 94, 0.9);
+}
 
-        .brand-text-title {
-            font-size: 1.1rem;
-            font-weight: 600;
-            letter-spacing: 0.06em;
-            text-transform: uppercase;
-            color: #e5e7eb;
-        }
+.app-main {
+    display: grid;
+    grid-template-columns: 1.4fr 1fr;
+    gap: 18px;
+}
 
-        .brand-text-sub {
-            font-size: 0.8rem;
-            color: var(--text-soft);
-        }
+.panel {
+    background: linear-gradient(145deg, rgba(15, 23, 42, 0.96), rgba(15, 23, 42, 0.9));
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border-subtle);
+    box-shadow: var(--shadow-soft);
+    padding: 18px;
+    position: relative;
+}
 
-        .header-right {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-size: 0.8rem;
-            color: var(--text-soft);
-        }
+.panel-title {
+    font-size: 0.95rem;
+    font-weight: 500;
+}
 
-        .pill {
-            padding: 6px 12px;
-            border-radius: var(--radius-pill);
-            border: 1px solid rgba(148, 163, 184, 0.35);
-            background: rgba(15, 23, 42, 0.8);
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-        }
+.panel-subtitle {
+    font-size: 0.8rem;
+    color: var(--text-soft);
+    margin-bottom: 14px;
+}
 
-        .pill-dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 999px;
-            background: var(--success);
-            box-shadow: 0 0 12px rgba(34, 197, 94, 0.9);
-        }
+/* ============================================================
+   ORB ANIMADO
+============================================================ */
+.orb-wrapper {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 14px;
+}
 
-        /* LAYOUT PRINCIPAL */
+.orb {
+    width: 82px;
+    height: 82px;
+    border-radius: 999px;
+    background:
+        radial-gradient(circle at 30% 20%, #a855f7, transparent 55%),
+        radial-gradient(circle at 70% 80%, #0ea5e9, transparent 55%),
+        radial-gradient(circle at 50% 50%, #4f46e5, #111827 70%);
+    box-shadow:
+        0 0 25px rgba(79, 70, 229, 0.9),
+        0 0 55px rgba(56, 189, 248, 0.7);
+    animation: orb-breathe 3.8s ease-in-out infinite;
+}
 
-        .app-main {
-            display: grid;
-            grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
-            gap: 18px;
-        }
+@keyframes orb-breathe {
+    0% { transform: scale(0.96); }
+    50% { transform: scale(1.04); }
+    100% { transform: scale(0.96); }
+}
 
-        @media (max-width: 900px) {
-            .app-main {
-                grid-template-columns: minmax(0, 1fr);
-            }
-        }
+/* ============================================================
+   INPUT
+============================================================ */
+.input-shell {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(15, 23, 42, 0.9);
+    border-radius: var(--radius-pill);
+    border: 1px solid rgba(148, 163, 184, 0.45);
+    padding: 4px 12px;
+}
 
-        /* PANEL IZQUIERDO */
+.input-prefix {
+    font-size: 0.78rem;
+    color: var(--text-soft);
+    padding-right: 6px;
+    border-right: 1px solid rgba(148, 163, 184, 0.35);
+}
 
-        .panel {
-            background: linear-gradient(145deg, rgba(15, 23, 42, 0.96), rgba(15, 23, 42, 0.9));
-            border-radius: var(--radius-lg);
-            border: 1px solid var(--border-subtle);
-            box-shadow: var(--shadow-soft);
-            padding: 18px 18px 16px;
-            position: relative;
-            overflow: hidden;
-        }
+#queryInput {
+    flex: 1;
+    border: none;
+    outline: none;
+    background: transparent;
+    color: var(--text);
+    font-size: 0.9rem;
+}
 
-        .panel::before {
-            content: "";
-            position: absolute;
-            inset: -40%;
-            background: radial-gradient(circle at top, rgba(79, 70, 229, 0.18), transparent 60%);
-            opacity: 0.7;
-            pointer-events: none;
-        }
+.btn {
+    border: none;
+    border-radius: var(--radius-pill);
+    padding: 6px 12px;
+    font-size: 0.78rem;
+    cursor: pointer;
+    background: rgba(15, 23, 42, 0.9);
+    color: var(--text-soft);
+    border: 1px solid rgba(148, 163, 184, 0.4);
+}
 
-        .panel-inner {
-            position: relative;
-            z-index: 1;
-        }
+.btn-primary {
+    background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+    color: white;
+    border: none;
+}
 
-        .panel-title {
-            font-size: 0.95rem;
-            font-weight: 500;
-            color: #e5e7eb;
-            margin-bottom: 4px;
-        }
+/* ============================================================
+   RESPUESTA
+============================================================ */
+.response-shell {
+    background: rgba(15, 23, 42, 0.9);
+    border-radius: var(--radius-md);
+    border: 1px solid rgba(148, 163, 184, 0.4);
+    padding: 10px 12px;
+    min-height: 120px;
+    font-size: 0.8rem;
+    overflow: auto;
+}
 
-        .panel-subtitle {
-            font-size: 0.8rem;
-            color: var(--text-soft);
-            margin-bottom: 14px;
-        }
+pre {
+    margin: 0;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+}
 
-        /* ORB ANIMADO */
+/* ============================================================
+   AUTOCOMPLETE
+============================================================ */
+.autocomplete-list {
+    margin: 0;
+    padding: 6px 0;
+    list-style: none;
+    border-radius: var(--radius-md);
+    background: rgba(15, 23, 42, 0.98);
+    border: 1px solid rgba(148, 163, 184, 0.4);
+    max-height: 180px;
+    overflow-y: auto;
+    font-size: 0.8rem;
+}
 
-        .orb-wrapper {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-bottom: 14px;
-        }
+.autocomplete-item {
+    padding: 6px 10px;
+    cursor: pointer;
+    color: var(--text-soft);
+}
 
-        .orb {
-            width: 82px;
-            height: 82px;
-            border-radius: 999px;
-            background:
-                radial-gradient(circle at 30% 20%, #a855f7, transparent 55%),
-                radial-gradient(circle at 70% 80%, #0ea5e9, transparent 55%),
-                radial-gradient(circle at 50% 50%, #4f46e5, #111827 70%);
-            box-shadow:
-                0 0 25px rgba(79, 70, 229, 0.9),
-                0 0 55px rgba(56, 189, 248, 0.7);
-            position: relative;
-            animation: orb-breathe 3.8s ease-in-out infinite;
-        }
+.autocomplete-item:hover {
+    background: rgba(30, 64, 175, 0.35);
+    color: #e5e7eb;
+}
+</style>
+</head>
 
-        .orb::after {
-            content: "";
-            position: absolute;
-            inset: 18%;
-            border-radius: inherit;
-            border: 1px solid rgba(248, 250, 252, 0.18);
-            box-shadow: 0 0 18px rgba(248, 250, 252, 0.35);
-            opacity: 0.9;
-        }
+<body>
+<div class="app-shell">
 
-        @keyframes orb-breathe {
-            0% {
-                transform: scale(0.96);
-                box-shadow:
-                    0 0 18px rgba(79, 70, 229, 0.7),
-                    0 0 40px rgba(56, 189, 248, 0.5);
-            }
-            50% {
-                transform: scale(1.04);
-                box-shadow:
-                    0 0 32px rgba(79, 70, 229, 1),
-                    0 0 70px rgba(56, 189, 248, 0.9);
-            }
-            100% {
-                transform: scale(0.96);
-                box-shadow:
-                    0 0 18px rgba(79, 70, 229, 0.7),
-                    0 0 40px rgba(56, 189, 248, 0.5);
-            }
-        }
-
-        /* INPUT + AUTOCOMPLETE */
-
-        .input-row {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            margin-bottom: 10px;
-        }
-
-        .input-shell {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            background: rgba(15, 23, 42, 0.9);
-            border-radius: var(--radius-pill);
-            border: 1px solid rgba(148, 163, 184, 0.45);
-            padding: 4px 6px 4px 12px;
-        }
-
-        .input-shell:focus-within {
-            border-color: var(--accent-strong);
-            box-shadow: 0 0 0 1px rgba(99, 102, 241, 0.5);
-        }
-
-        .input-prefix {
-            font-size: 0.78rem;
-            color: var(--text-soft);
-            padding-right: 6px;
-            border-right: 1px solid rgba(148, 163, 184, 0.35);
-        }
-
-        #queryInput {
-            flex: 1;
-            border: none;
-            outline: none;
-            background: transparent;
-            color: var(--text);
-            font-size: 0.9rem;
-            padding: 6px 4px;
-        }
-
-        #queryInput::placeholder {
-            color: rgba(148, 163, 184, 0.7);
-        }
-
-        .input-actions {
-            display: flex;
-            align-items: center;
-            gap: 4px;
-        }
-
-        .chip {
-            font-size: 0.7rem;
-            padding: 4px 8px;
-            border-radius: var(--radius-pill);
-            border: 1px solid rgba(148, 163, 184, 0.4);
-            color: var(--text-soft);
-            background: rgba(15, 23, 42, 0.9);
-            cursor: default;
-        }
-
-        .btn {
-            border: none;
-            outline: none;
-            border-radius: var(--radius-pill);
-            padding: 6px 12px;
-            font-size: 0.78rem;
-            font-weight: 500;
-            cursor: pointer;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            transition: all 0.16s ease-out;
-            background: rgba(15, 23, 42, 0.9);
-            color: var(--text-soft);
-            border: 1px solid rgba(148, 163, 184, 0.4);
-        }
-
-        .btn-primary {
-            background: linear-gradient(135deg, var(--accent), var(--accent-strong));
-            color: #f9fafb;
-            border-color: transparent;
-            box-shadow: 0 10px 25px rgba(79, 70, 229, 0.55);
-        }
-
-        .btn-primary:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 14px 32px rgba(79, 70, 229, 0.75);
-        }
-
-        .btn-ghost {
-            background: rgba(15, 23, 42, 0.9);
-        }
-
-        .btn:hover {
-            background: rgba(30, 64, 175, 0.25);
-            border-color: rgba(129, 140, 248, 0.7);
-        }
-
-        .btn-icon {
-            width: 26px;
-            height: 26px;
-            border-radius: 999px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            padding: 0;
-        }
-
-        .btn-danger {
-            border-color: rgba(248, 113, 113, 0.7);
-            color: #fecaca;
-        }
-
-        .btn-danger:hover {
-            background: rgba(248, 113, 113, 0.15);
-        }
-
-        .autocomplete-list {
-            margin: 0;
-            padding: 6px 0;
-            list-style: none;
-            border-radius: var(--radius-md);
-            background: rgba(15, 23, 42, 0.98);
-            border: 1px solid rgba(148, 163, 184, 0.4);
-            max-height: 180px;
-            overflow-y: auto;
-            font-size: 0.8rem;
-        }
-
-        .autocomplete-item {
-            padding: 6px 10px;
-            cursor: pointer;
-            color: var(--text-soft);
-        }
-
-        .autocomplete-item:hover {
-            background: rgba(30, 64, 175, 0.35);
-            color: #e5e7eb;
-        }
-
-        /* BOTONES SECUNDARIOS */
-
-        .secondary-actions {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 6px;
-            margin-bottom: 10px;
-        }
-                            <div class="secondary-actions">
-                        <button id="btnSpeak" class="btn btn-ghost" type="button">Hablar</button>
-                        <button id="btnHandsFree" class="btn btn-ghost" type="button">Manos libres</button>
-                        <button id="btnStop" class="btn btn-ghost btn-danger" type="button">Stop</button>
-
-                        <button id="btnClear" class="btn btn-ghost" type="button">Limpiar</button>
-                        <button id="btnCopy" class="btn btn-ghost" type="button">Copiar respuesta</button>
-                    </div>
-                </div>
-            </section>
-
-            <!-- PANEL DERECHO -->
-            <section class="panel">
-                <div class="panel-inner">
-                    <div class="panel-right-header">
-                        <div class="panel-right-title">Resultado</div>
-                        <div class="view-switcher">
-                            <button id="btnViewJson" class="btn-toggle active" type="button">JSON</button>
-                            <button id="btnViewList" class="btn-toggle" type="button">Lista</button>
-                            <button id="btnViewCards" class="btn-toggle" type="button">Tarjetas</button>
-                            <button id="btnViewTable" class="btn-toggle" type="button">Tabla</button>
-                            <button id="btnViewDashboard" class="btn-toggle" type="button">Dashboard</button>
-                        </div>
-                    </div>
-
-                    <div id="responseContainer" class="response-shell">
-                        <pre id="responsePre">{}</pre>
-                    </div>
-
-                    <div class="response-meta">
-                        <div id="responseVoice" class="badge badge-success">
-                            Listo para responder tu consulta.
-                        </div>
-                        <div id="responseSource" class="badge">
-                            Fuente: -
-                        </div>
-                    </div>
-                </div>
-            </section>
-        </main>
+<header class="app-header">
+    <div class="brand">
+        <div class="brand-logo"></div>
+        <div>
+            <div class="brand-text-title">Stock IA PRO v2.0</div>
+            <div class="brand-text-sub">Asistente inteligente de stock</div>
+        </div>
     </div>
 
-    <!-- JS HOOKS -->
-    <script>
-        const input = document.getElementById("queryInput");
-        const btnSend = document.getElementById("btnSend");
-        const autocompleteList = document.getElementById("autocompleteList");
+    <div class="pill">
+        <span class="pill-dot"></span>
+        <span>Backend conectado</span>
+    </div>
+</header>
 
-        // ENTER envía la consulta
-        input.addEventListener("keydown", (e) => {
-            if (e.key === "Enter") {
-                e.preventDefault();
-                btnSend.click();
-            }
+<main class="app-main">
+
+<!-- PANEL IZQUIERDO -->
+<section class="panel">
+    <div class="panel-title">Consulta de stock</div>
+    <div class="panel-subtitle">Escribí o hablá como si fuera una persona.</div>
+
+    <div class="orb-wrapper">
+        <div class="orb" id="orbStatus"></div>
+    </div>
+
+    <div class="input-shell">
+        <span class="input-prefix">¿Qué stock hay de…?</span>
+        <input id="queryInput" type="text" placeholder="pantuflas avengers plush" autocomplete="off" />
+        <button id="btnSend" class="btn btn-primary">Consultar</button>
+    </div>
+
+    <ul id="autocompleteList" class="autocomplete-list" style="display:none;"></ul>
+
+    <div style="margin-top:10px; display:flex; gap:6px; flex-wrap:wrap;">
+        <button id="btnSpeak" class="btn">Hablar</button>
+        <button id="btnHandsFree" class="btn">Manos libres</button>
+        <button id="btnStop" class="btn">Stop</button>
+        <button id="btnClear" class="btn">Limpiar</button>
+        <button id="btnCopy" class="btn">Copiar</button>
+    </div>
+</section>
+
+<!-- PANEL DERECHO -->
+<section class="panel">
+    <div class="panel-title">Resultado</div>
+
+    <div style="display:flex; gap:6px; margin-bottom:8px; flex-wrap:wrap;">
+        <button id="btnViewJson" class="btn btn-primary">JSON</button>
+        <button id="btnViewList" class="btn">Lista</button>
+        <button id="btnViewCards" class="btn">Tarjetas</button>
+        <button id="btnViewTable" class="btn">Tabla</button>
+        <button id="btnViewDashboard" class="btn">Dashboard</button>
+    </div>
+
+    <div id="responseContainer" class="response-shell">
+        <pre id="responsePre">{}</pre>
+    </div>
+
+    <div style="margin-top:8px; font-size:0.75rem; color:var(--text-soft);">
+        <span id="responseVoice">Listo para responder.</span>
+    </div>
+</section>
+
+</main>
+</div>
+
+<script>
+/* ============================================================
+   JS BÁSICO (HOOKS)
+============================================================ */
+
+const input = document.getElementById("queryInput");
+const btnSend = document.getElementById("btnSend");
+const responsePre = document.getElementById("responsePre");
+const autocompleteList = document.getElementById("autocompleteList");
+
+/* ENTER envía */
+input.addEventListener("keydown", e => {
+    if (e.key === "Enter") {
+        e.preventDefault();
+        btnSend.click();
+    }
+});
+
+/* AUTOCOMPLETE */
+input.addEventListener("input", async () => {
+    const q = input.value.trim();
+    if (!q) {
+        autocompleteList.style.display = "none";
+        return;
+    }
+
+    try {
+        const r = await fetch(`https://stock-backend-1-twzg.onrender.com/autocomplete?q=${encodeURIComponent(q)}`);
+        const data = await r.json();
+
+        autocompleteList.innerHTML = "";
+        if (data.sugerencias && data.sugerencias.length > 0) {
+            data.sugerencias.forEach(s => {
+                const li = document.createElement("li");
+                li.className = "autocomplete-item";
+                li.textContent = s;
+                li.onclick = () => {
+                    input.value = s;
+                    autocompleteList.style.display = "none";
+                };
+                autocompleteList.appendChild(li);
+            });
+            autocompleteList.style.display = "block";
+        } else {
+            autocompleteList.style.display = "none";
+        }
+    } catch (e) {
+        autocompleteList.style.display = "none";
+    }
+});
+
+/* CONSULTA */
+btnSend.addEventListener("click", async () => {
+    const q = input.value.trim();
+    if (!q) return;
+
+    responsePre.textContent = "Consultando...";
+
+    try {
+        const r = await fetch("https://stock-backend-1-twzg.onrender.com/query", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ pregunta: q })
         });
 
-        // Estos IDs quedan listos para tu app.js:
-        // btnSpeak, btnHandsFree, btnStop, btnClear, btnCopy,
-        // btnViewJson, btnViewList, btnViewCards, btnViewTable, btnViewDashboard,
-        // responsePre, responseVoice, responseSource, autocompleteList, orbStatus.
-    </script>
+        const data = await r.json();
+        responsePre.textContent = JSON.stringify(data, null, 2);
+    } catch (e) {
+        responsePre.textContent = "Error consultando backend.";
+    }
+});
+</script>
+
 </body>
 </html>
