@@ -1,380 +1,239 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Stock IA PRO v2.0</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Stock IA PRO v2.0</title>
 
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jsqr/1.4.0/jsQR.min.js"></script>
+<style>
+/* ============================================================
+   ESTILOS BASE
+============================================================ */
+body {
+    background: #0f0f0f;
+    color: white;
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+}
 
-    <style>
-        body {
-            background: #121212;
-            color: #fff;
-            font-family: Arial, sans-serif;
-            margin: 20px;
-        }
+#app {
+    padding: 20px;
+    position: relative;
+}
 
-        .tabs {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-        }
+/* AUTOCOMPLETE */
+#autocomplete-box {
+    position: absolute;
+    background: #1e1e1e;
+    border-radius: 10px;
+    border: 1px solid #2a2f36;
+    width: 100%;
+    display: none;
+    z-index: 9999;
+}
 
-        .tab {
-            padding: 10px 20px;
-            background: #222;
-            color: #fff;
-            border: none;
-            cursor: pointer;
-            border-radius: 6px;
-            transition: 0.2s;
-        }
+.suggestion {
+    padding: 10px;
+    cursor: pointer;
+}
+.suggestion:hover {
+    background: #333;
+}
 
-        .tab.active {
-            background: #4a90e2;
-        }
+/* ORB ANIMADO */
+#orb {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #4a90e2;
+    position: absolute;
+    right: 10px;
+    top: 10px;
+    display: none;
+    box-shadow: 0 0 10px rgba(77,141,255,0.8);
+    animation: orbPulse 1.2s infinite ease-in-out;
+}
 
-        #vistaDashboard {
-            display: none;
-        }
+@keyframes orbPulse {
+    0% { transform: scale(1); box-shadow: 0 0 10px rgba(77,141,255,0.8); }
+    50% { transform: scale(1.4); box-shadow: 0 0 20px rgba(77,141,255,1); }
+    100% { transform: scale(1); box-shadow: 0 0 10px rgba(77,141,255,0.8); }
+}
 
-        #app {
-            max-width: 900px;
-            margin: auto;
-            background: #1e1e1e;
-            padding: 25px;
-            border-radius: 14px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.45);
-            position: relative;
-        }
-
-        input {
-            width: 100%;
-            padding: 14px;
-            border-radius: 14px;
-            border: 1px solid #2a2f36;
-            font-size: 16px;
-            background: #0f1115;
-            color: #fff;
-            outline: none;
-            transition: 0.2s;
-        }
-
-        input:focus {
-            border-color: #4a90e2;
-            box-shadow: 0 0 0 3px rgba(77,141,255,0.25);
-        }
-
-        button {
-            padding: 12px 16px;
-            border-radius: 14px;
-            border: none;
-            background: #4a90e2;
-            color: white;
-            font-size: 15px;
-            cursor: pointer;
-            margin: 4px;
-            transition: 0.2s ease;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        button:hover {
-            background: #3c6dcc;
-            transform: translateY(-1px);
-        }
-
-        #btnStop {
-            background: #ff3b3b;
-        }
-
-        #btnStop:hover {
-            background: #d62828;
-        }
-
-        #autocomplete-box {
-            position: absolute;
-            background: #1e1e1e;
-            width: calc(100% - 50px);
-            margin-top: 4px;
-            border-radius: 14px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.45);
-            border: 1px solid #2a2f36;
-            display: none;
-            z-index: 999;
-        }
-
-        .suggestion {
-            padding: 12px 16px;
-            cursor: pointer;
-        }
-
-        .suggestion:hover {
-            background: rgba(77,141,255,0.15);
-        }
-
-        #stockFilterLabel {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            background: #0f1115;
-            padding: 12px 16px;
-            border-radius: 14px;
-            border: 1px solid #2a2f36;
-            margin-bottom: 15px;
-            cursor: pointer;
-            font-weight: 600;
-        }
-
-        #version {
-            position: absolute;
-            bottom: 8px;
-            right: 12px;
-            font-size: 11px;
-            opacity: 0.45;
-        }
-    </style>
+/* BANNER OFFLINE */
+#offlineBanner {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    padding: 10px;
+    background: #d62828;
+    color: white;
+    text-align: center;
+    font-weight: bold;
+    display: none;
+    z-index: 99999;
+}
+</style>
 </head>
 
 <body>
+<div id="offlineBanner">Sin conexión a internet. La app sigue funcionando, pero no puede consultar el servidor.</div>
 
-<div class="tabs">
-    <button id="tabBuscar" class="tab active">Buscar</button>
-    <button id="tabDashboard" class="tab">Dashboard</button>
-</div>
+<div id="app">
+    <h2>Stock IA PRO v2.0</h2>
 
-<div id="vistaBuscar">
-    <div id="app">
-        <h2>Stock IA PRO v2.0</h2>
-
-        <input id="pregunta" type="text" placeholder="Decime qué buscás..." autocomplete="off" />
+    <div style="position:relative;">
+        <input id="pregunta" type="text" placeholder="Decime qué buscás..." autocomplete="off" style="width:100%;padding:12px;border-radius:8px;border:none;font-size:16px;" />
         <div id="autocomplete-box"></div>
-
-        <br><br>
-
-        <button id="btnHablar"><i class="fa-solid fa-microphone"></i> Hablar</button>
-        <button id="btnManosLibres"><i class="fa-solid fa-headset"></i> Manos libres</button>
-        <button id="btnStop"><i class="fa-solid fa-stop"></i> Stop</button>
-        <button id="btnScannerExterno"><i class="fa-solid fa-qrcode"></i> Scanner externo</button>
-        <button id="btnScanner"><i class="fa-solid fa-camera"></i> Scanner interno</button>
-        <button id="btnLimpiar"><i class="fa-solid fa-eraser"></i> Limpiar</button>
-        <button id="btnCopiar"><i class="fa-solid fa-copy"></i> Copiar</button>
-        <button id="btnWhatsApp"><i class="fa-brands fa-whatsapp"></i> WhatsApp</button>
-
-        <br><br>
-
-        <label id="stockFilterLabel">
-            <input type="checkbox" id="chkStock">
-            <span>Mostrar solo productos con stock disponible</span>
-        </label>
-
-        <div id="respuesta"></div>
-
-        <h3>Historial</h3>
-        <div id="historial"></div>
-
-        <video id="preview" style="width:100%; display:none;"></video>
-
-        <div id="version">v2.0 PRO</div>
+        <div id="orb"></div>
     </div>
+
+    <br>
+
+    <button id="btnHablar">Hablar</button>
+    <button id="btnManosLibres">Manos libres</button>
+    <button id="btnStop">Stop</button>
+
+    <br><br>
+
+    <div id="respuesta"></div>
 </div>
-<div id="vistaDashboard">
-
-    <div class="dashboard-selector">
-        <label><input type="radio" name="modoDashboard" value="global" checked> Métricas globales</label>
-        <label><input type="radio" name="modoDashboard" value="busqueda"> Métricas de la búsqueda actual</label>
-    </div>
-
-    <div class="dashboard-cards">
-        <div class="card" id="cardStockTotal"></div>
-        <div class="card" id="cardArticulos"></div>
-        <div class="card" id="cardRubro"></div>
-        <div class="card" id="cardMarca"></div>
-        <div class="card" id="cardTalle"></div>
-    </div>
-
-    <div class="charts-container">
-        <canvas id="chartRubros"></canvas>
-        <canvas id="chartMarcas"></canvas>
-        <canvas id="chartTalles"></canvas>
-    </div>
-
-</div>
-
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <script>
-/* ============================
-   TABS
-============================= */
-const tabBuscar = document.getElementById("tabBuscar");
-const tabDashboard = document.getElementById("tabDashboard");
-const vistaBuscar = document.getElementById("vistaBuscar");
-const vistaDashboard = document.getElementById("vistaDashboard");
-
-tabBuscar.onclick = () => {
-    tabBuscar.classList.add("active");
-    tabDashboard.classList.remove("active");
-    vistaBuscar.style.display = "block";
-    vistaDashboard.style.display = "none";
-};
-
-tabDashboard.onclick = () => {
-    tabDashboard.classList.add("active");
-    tabBuscar.classList.remove("active");
-    vistaBuscar.style.display = "none";
-    vistaDashboard.style.display = "block";
-    cargarDashboardGlobal();
-};
-
-/* ============================
-   VARIABLES GLOBALES
-============================= */
-let ultimaBusqueda = null;
-let chartRubros, chartMarcas, chartTalles;
-
-/* ============================
-   ACTUALIZAR TARJETAS
-============================= */
-function actualizarTarjetas(data) {
-    document.getElementById("cardStockTotal").innerHTML = `<b>Stock total:</b> ${data.stock_total}`;
-    document.getElementById("cardArticulos").innerHTML = `<b>Artículos:</b> ${data.articulos}`;
-
-    const rubroTop = Object.entries(data.rubros)[0]?.[0] || "-";
-    const marcaTop = Object.entries(data.marcas)[0]?.[0] || "-";
-    const talleTop = Object.entries(data.talles)[0]?.[0] || "-";
-
-    document.getElementById("cardRubro").innerHTML = `<b>Rubro dominante:</b> ${rubroTop}`;
-    document.getElementById("cardMarca").innerHTML = `<b>Marca dominante:</b> ${marcaTop}`;
-    document.getElementById("cardTalle").innerHTML = `<b>Talle dominante:</b> ${talleTop}`;
-}
-
-/* ============================
-   DIBUJAR GRÁFICOS
-============================= */
-function dibujarGraficos(data) {
-    if (chartRubros) chartRubros.destroy();
-    if (chartMarcas) chartMarcas.destroy();
-    if (chartTalles) chartTalles.destroy();
-
-    chartRubros = new Chart(document.getElementById("chartRubros"), {
-        type: "doughnut",
-        data: {
-            labels: Object.keys(data.rubros),
-            datasets: [{
-                data: Object.values(data.rubros),
-                backgroundColor: ["#4a90e2", "#50e3c2", "#f5a623", "#d0021b", "#9013fe"]
-            }]
-        }
-    });
-
-    chartMarcas = new Chart(document.getElementById("chartMarcas"), {
-        type: "bar",
-        data: {
-            labels: Object.keys(data.marcas),
-            datasets: [{
-                label: "Stock por marca",
-                data: Object.values(data.marcas),
-                backgroundColor: "#4a90e2"
-            }]
-        }
-    });
-
-    chartTalles = new Chart(document.getElementById("chartTalles"), {
-        type: "bar",
-        data: {
-            labels: Object.keys(data.talles),
-            datasets: [{
-                label: "Stock por talle",
-                data: Object.values(data.talles),
-                backgroundColor: "#50e3c2"
-            }]
-        }
-    });
-}
-
-/* ============================
-   CARGAR DASHBOARD GLOBAL
-============================= */
-async function cargarDashboardGlobal() {
-    const res = await fetch("https://stock-backend-1-twzg.onrender.com/dashboard/global");
-    const data = await res.json();
-
-    actualizarTarjetas(data);
-    dibujarGraficos(data);
-}
-
-/* ============================
-   SELECTOR GLOBAL / BÚSQUEDA
-============================= */
-document.querySelectorAll("input[name='modoDashboard']").forEach(radio => {
-    radio.addEventListener("change", () => {
-        if (radio.value === "global") {
-            cargarDashboardGlobal();
-        } else {
-            if (!ultimaBusqueda) {
-                alert("Realizá una búsqueda primero.");
-                return;
-            }
-            actualizarTarjetas(ultimaBusqueda);
-            dibujarGraficos(ultimaBusqueda);
-        }
-    });
-});
-
-/* ============================
-   GUARDAR RESULTADO DE BÚSQUEDA
-============================= */
-function guardarResultadoBusqueda(data) {
-    if (data.tipo === "resumen") {
-        ultimaBusqueda = {
-            stock_total: data.resumen.unidades_totales || 0,
-            articulos: data.resumen.cant_articulos || 0,
-            rubros: contar(data.items, "rubro"),
-            marcas: contar(data.items, "marca"),
-            talles: contarTalles(data.items)
-        };
-    }
-}
-
-function contar(items, campo) {
-    const mapa = {};
-    items.forEach(i => {
-        const key = i[campo] || "Sin dato";
-        mapa[key] = (mapa[key] || 0) + (i.talles?.reduce((a, t) => a + t.stock, 0) || 0);
-    });
-    return mapa;
-}
-
-function contarTalles(items) {
-    const mapa = {};
-    items.forEach(i => {
-        i.talles.forEach(t => {
-            mapa[t.talle] = (mapa[t.talle] || 0) + t.stock;
-        });
-    });
-    return mapa;
-}
-
-/* ============================
-   BUSCADOR PRO v2.0
-============================= */
+/* ============================================================
+   CONFIG
+============================================================ */
 const backendURL = "https://stock-backend-1-twzg.onrender.com/query";
 const autocompleteURL = "https://stock-backend-1-twzg.onrender.com/autocomplete";
 
+/* ============================================================
+   DETECCIÓN DE INTERNET
+============================================================ */
+const offlineBanner = document.getElementById("offlineBanner");
+
+function actualizarEstadoConexion() {
+    offlineBanner.style.display = navigator.onLine ? "none" : "block";
+}
+window.addEventListener("online", actualizarEstadoConexion);
+window.addEventListener("offline", actualizarEstadoConexion);
+actualizarEstadoConexion();
+
+/* ============================================================
+   ORB ANIMADO
+============================================================ */
+const orb = document.getElementById("orb");
+function mostrarOrb() { orb.style.display = "block"; }
+function ocultarOrb() { orb.style.display = "none"; }
+
+/* ============================================================
+   SONIDOS DE INICIO / FIN
+============================================================ */
+const sonidoInicio = new Audio("data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEA...");
+const sonidoFin = new Audio("data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEA...");
+
+/* ============================================================
+   MÓDULO DE VOZ PRO MAX
+============================================================ */
+let reconocimiento = null;
+let escuchando = false;
+let manosLibres = false;
+let reconectando = false;
+let dictadoContinuo = true; // ACTIVADO
+
+function crearReconocimiento() {
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SR) {
+        alert("Tu navegador no soporta reconocimiento de voz.");
+        return null;
+    }
+
+    const rec = new SR();
+    rec.lang = "es-AR";
+    rec.continuous = dictadoContinuo;
+    rec.interimResults = false;
+
+    rec.onstart = () => {
+        escuchando = true;
+        mostrarOrb();
+        sonidoInicio.play();
+    };
+
+    rec.onend = () => {
+        escuchando = false;
+        ocultarOrb();
+        sonidoFin.play();
+
+        if (manosLibres && !reconectando) {
+            reconectando = true;
+            setTimeout(() => {
+                reconectando = false;
+                if (manosLibres) rec.start();
+            }, 300);
+        }
+    };
+
+    rec.onerror = () => {
+        escuchando = false;
+        ocultarOrb();
+
+        if (manosLibres && !reconectando) {
+            reconectando = true;
+            setTimeout(() => {
+                reconectando = false;
+                if (manosLibres) rec.start();
+            }, 500);
+        }
+    };
+
+    rec.onresult = (event) => {
+        const texto = event.results[event.results.length - 1][0].transcript;
+        input.value = texto;
+        enviarConsulta();
+    };
+
+    return rec;
+}
+
+function iniciarVoz() {
+    if (!reconocimiento) reconocimiento = crearReconocimiento();
+    if (!reconocimiento) return;
+
+    if (!escuchando) reconocimiento.start();
+}
+
+function detenerVoz() {
+    manosLibres = false;
+    escuchando = false;
+    reconectando = false;
+
+    if (reconocimiento) reconocimiento.stop();
+    speechSynthesis.cancel();
+    ocultarOrb();
+}
+
+/* ============================================================
+   BOTONES
+============================================================ */
+document.getElementById("btnHablar").onclick = () => {
+    detenerVoz();
+    iniciarVoz();
+};
+
+document.getElementById("btnManosLibres").onclick = () => {
+    manosLibres = !manosLibres;
+    if (manosLibres) iniciarVoz();
+    else detenerVoz();
+};
+
+document.getElementById("btnStop").onclick = () => detenerVoz();
+
+/* ============================================================
+   AUTOCOMPLETE
+============================================================ */
 const input = document.getElementById("pregunta");
 const box = document.getElementById("autocomplete-box");
-
-/* === FIX ENTER === */
-input.addEventListener("keydown", (e) => {
-    if (e.key === "Enter") {
-        e.preventDefault();
-        enviarConsulta();
-    }
-});
 
 let autoTimer = null;
 
@@ -389,6 +248,8 @@ async function buscarSugerencias() {
         box.style.display = "none";
         return;
     }
+
+    if (!navigator.onLine) return;
 
     const res = await fetch(`${autocompleteURL}?q=${encodeURIComponent(q)}`);
     const data = await res.json();
@@ -414,7 +275,16 @@ async function buscarSugerencias() {
     box.style.display = "block";
 }
 
+/* ============================================================
+   CONSULTA AL BACKEND
+============================================================ */
 async function enviarConsulta() {
+    if (!navigator.onLine) {
+        document.getElementById("respuesta").innerHTML =
+            "<div class='card'>Sin conexión a internet. No se puede consultar el servidor.</div>";
+        return;
+    }
+
     const pregunta = input.value.trim();
     if (!pregunta) return;
 
@@ -427,243 +297,15 @@ async function enviarConsulta() {
     });
 
     const data = await res.json();
-
     renderResultados(data);
-    agregarHistorial(pregunta);
-    guardarResultadoBusqueda(data);
-}
-
-function agregarHistorial(texto) {
-    const h = document.getElementById("historial");
-    const div = document.createElement("div");
-    div.textContent = texto;
-    div.style.padding = "6px 0";
-    h.prepend(div);
-}
-</script>
-<script>
-/* ============================================================
-   LECTURA POR VOZ
-============================================================ */
-function leerTexto(texto) {
-    if (!("speechSynthesis" in window)) return;
-    const u = new SpeechSynthesisUtterance(texto);
-    u.lang = "es-AR";
-    speechSynthesis.speak(u);
 }
 
 /* ============================================================
-   RECONOCIMIENTO DE VOZ
-============================================================ */
-let reconocimiento = null;
-let escuchando = false;
-let manosLibres = false;
-
-function initVoz() {
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SpeechRecognition) return null;
-
-    const rec = new SpeechRecognition();
-    rec.lang = "es-AR";
-    rec.continuous = false;
-    rec.interimResults = false;
-    return rec;
-}
-
-document.getElementById("btnHablar").addEventListener("click", () => {
-    if (!reconocimiento) {
-        reconocimiento = initVoz();
-        if (!reconocimiento) return;
-
-        reconocimiento.onresult = (event) => {
-            const texto = event.results[0][0].transcript;
-            input.value = texto;
-            enviarConsulta();
-        };
-
-        reconocimiento.onend = () => {
-            escuchando = false;
-        };
-    }
-
-    if (!escuchando) {
-        escuchando = true;
-        reconocimiento.start();
-    } else {
-        escuchando = false;
-        reconocimiento.stop();
-    }
-});
-
-/* ============================================================
-   MANOS LIBRES
-============================================================ */
-document.getElementById("btnManosLibres").addEventListener("click", () => {
-    if (!reconocimiento) {
-        reconocimiento = initVoz();
-        if (!reconocimiento) return;
-
-        reconocimiento.onresult = (event) => {
-            const texto = event.results[0][0].transcript;
-            input.value = texto;
-            enviarConsulta();
-        };
-
-        reconocimiento.onend = () => {
-            if (manosLibres) reconocimiento.start();
-        };
-    }
-
-    manosLibres = !manosLibres;
-
-    if (manosLibres) reconocimiento.start();
-    else reconocimiento.stop();
-});
-
-/* ============================================================
-   BOTÓN STOP GLOBAL
-============================================================ */
-document.getElementById("btnStop").addEventListener("click", () => {
-    manosLibres = false;
-    escuchando = false;
-
-    if (reconocimiento) reconocimiento.stop();
-    speechSynthesis.cancel();
-});
-
-/* ============================================================
-   BOTONES VARIOS
-============================================================ */
-document.getElementById("btnLimpiar").onclick = () => {
-    input.value = "";
-    document.getElementById("respuesta").innerHTML = "";
-};
-
-document.getElementById("btnCopiar").onclick = () => {
-    navigator.clipboard.writeText(document.getElementById("respuesta").innerText);
-};
-
-document.getElementById("btnWhatsApp").onclick = () => {
-    const texto = encodeURIComponent(document.getElementById("respuesta").innerText);
-    window.open(`https://wa.me/?text=${texto}`);
-};
-
-/* ============================================================
-   SCANNER INTERNO (CÁMARA)
-============================================================ */
-let scannerActivo = false;
-
-document.getElementById("btnScanner").onclick = async () => {
-    const video = document.getElementById("preview");
-
-    if (scannerActivo) {
-        video.style.display = "none";
-        scannerActivo = false;
-        if (window.stream) {
-            window.stream.getTracks().forEach(t => t.stop());
-        }
-        return;
-    }
-
-    try {
-        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
-        window.stream = stream;
-        video.srcObject = stream;
-        video.setAttribute("playsinline", true);
-        video.style.display = "block";
-        video.play();
-        scannerActivo = true;
-
-        escanearFrame(video);
-    } catch (e) {
-        alert("No se pudo acceder a la cámara.");
-    }
-};
-
-function escanearFrame(video) {
-    if (!scannerActivo) return;
-
-    const canvas = document.createElement("canvas");
-    const ctx = canvas.getContext("2d");
-
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-
-    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-    try {
-        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-        const code = jsQR(imageData.data, canvas.width, canvas.height);
-
-        if (code) {
-            input.value = code.data;
-            enviarConsulta();
-            scannerActivo = false;
-            video.style.display = "none";
-            window.stream.getTracks().forEach(t => t.stop());
-            return;
-        }
-    } catch (e) {}
-
-    requestAnimationFrame(() => escanearFrame(video));
-}
-
-/* ============================================================
-   SCANNER EXTERNO (ZXing)
-============================================================ */
-document.getElementById("btnScannerExterno").onclick = () => {
-    const callback = encodeURIComponent(
-        "https://diegosportsfiorito-cmyk.github.io/stock-frontend/?code={CODE}"
-    );
-
-    window.location.href = `zxing://scan/?ret=${callback}`;
-};
-
-/* ============================================================
-   CALLBACK DEL SCANNER EXTERNO
-============================================================ */
-const params = new URLSearchParams(window.location.search);
-if (params.has("code")) {
-    const codigo = params.get("code");
-    input.value = codigo;
-    enviarConsulta();
-}
-
-/* ============================================================
-   RENDERIZADO DE RESULTADOS (CORREGIDO)
+   RENDER DE RESULTADOS
 ============================================================ */
 function renderResultados(data) {
-    const cont = document.getElementById("respuesta");
-
-    if (data.tipo === "texto") {
-        cont.innerHTML = `<div class="card">${data.texto}</div>`;
-        return;
-    }
-
-    if (data.tipo === "resumen") {
-        let html = `<div class="card"><h3>Resumen</h3>`;
-        html += `<p><b>Unidades totales:</b> ${data.resumen.unidades_totales}</p>`;
-        html += `<p><b>Artículos:</b> ${data.resumen.cant_articulos}</p>`;
-        html += `</div>`;
-
-        data.items.forEach(item => {
-            const totalStock = item.talles.reduce((acc, t) => acc + t.stock, 0);
-
-            html += `
-                <div class="card">
-                    <b>${item.descripcion}</b><br>
-                    Marca: ${item.marca}<br>
-                    Rubro: ${item.rubro}<br>
-                    Stock total: ${totalStock}<br>
-                </div>
-            `;
-        });
-
-        cont.innerHTML = html;
-        return;
-    }
-
-    cont.innerHTML = `<div class="card">Sin resultados.</div>`;
+    document.getElementById("respuesta").innerHTML =
+        `<pre>${JSON.stringify(data, null, 2)}</pre>`;
 }
 </script>
 
