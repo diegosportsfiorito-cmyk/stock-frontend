@@ -2,573 +2,350 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8" />
-<title>Stock IA PRO v2.1</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>STOCK IA PRO V2.1</title>
 
-<!-- ============================================================
-     ESTILOS PRINCIPALES + MODO OSCURO/CLARO + RESPONSIVE
-     ============================================================ -->
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 <style>
-
-/* ============================================================
-   VARIABLES DE TEMA (MODO OSCURO POR DEFECTO)
-============================================================ */
 :root {
-    --bg: #050816;
-    --bg-elevated: #0b1020;
-    --accent: #4f46e5;
-    --accent-soft: rgba(79, 70, 229, 0.18);
-    --accent-strong: #6366f1;
-    --text: #e5e7eb;
-    --text-soft: #9ca3af;
-    --danger: #ef4444;
-    --success: #22c55e;
-    --border-subtle: rgba(148, 163, 184, 0.25);
-    --radius-lg: 18px;
-    --radius-md: 12px;
-    --radius-pill: 999px;
-    --shadow-soft: 0 18px 45px rgba(15, 23, 42, 0.75);
+    --bg-dark: #0f172a;
+    --bg-light: #f8fafc;
+    --text-light: #f1f5f9;
+    --text-dark: #0f172a;
+    --text-soft: #94a3b8;
+    --primary: #6366f1;
+    --card-bg-dark: #1e293b;
+    --card-bg-light: #ffffff;
 }
 
-/* ============================================================
-   MODO CLARO (SE ACTIVA CON .light EN <body>)
-============================================================ */
-body.light {
-    --bg: #f3f4f6;
-    --bg-elevated: #ffffff;
-    --accent: #4f46e5;
-    --accent-soft: rgba(79, 70, 229, 0.08);
-    --accent-strong: #4f46e5;
-    --text: #111827;
-    --text-soft: #6b7280;
-    --border-subtle: rgba(148, 163, 184, 0.5);
-    background: radial-gradient(circle at top, #e5e7eb 0, #f9fafb 45%, #e5e7eb 100%);
-}
-
-/* ============================================================
-   RESET
-============================================================ */
-* { box-sizing: border-box; }
 body {
     margin: 0;
-    min-height: 100vh;
     font-family: "Inter", sans-serif;
-    background: radial-gradient(circle at top, #111827 0, #020617 45%, #000 100%);
-    color: var(--text);
-    display: flex;
-    justify-content: center;
+    background: var(--bg-dark);
+    color: var(--text-light);
+    transition: background 0.3s, color 0.3s;
 }
 
-/* ============================================================
-   LAYOUT GENERAL
-============================================================ */
-.app-shell {
-    width: 100%;
-    max-width: 1200px;
-    margin: 24px;
-    display: grid;
-    grid-template-rows: auto 1fr;
-    gap: 18px;
+body.light {
+    background: var(--bg-light);
+    color: var(--text-dark);
 }
 
-.app-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 12px;
-    flex-wrap: wrap;
+/* CONTENEDOR PRINCIPAL */
+.container {
+    max-width: 900px;
+    margin: auto;
+    padding: 20px;
 }
 
-/* ============================================================
-   BRANDING
-============================================================ */
-.brand {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-}
-
-.brand-logo {
-    width: 52px;
-    height: 52px;
-    border-radius: 18px;
-    background: radial-gradient(circle at 30% 20%, #a855f7, #4f46e5 45%, #0ea5e9 100%);
-    box-shadow: 0 0 35px rgba(79, 70, 229, 0.7);
-}
-
-.brand-text-title {
-    font-size: 1.1rem;
-    font-weight: 600;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-}
-
-.brand-text-sub {
-    font-size: 0.8rem;
-    color: var(--text-soft);
-}
-
-/* ============================================================
-   HEADER DERECHO (BOTÓN TEMA + ESTADO SISTEMA)
-============================================================ */
-.header-right {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    flex-wrap: wrap;
-}
-
-.toggle-theme {
-    border-radius: var(--radius-pill);
-    border: 1px solid rgba(148, 163, 184, 0.5);
-    background: rgba(15, 23, 42, 0.9);
-    color: var(--text-soft);
-    padding: 6px 12px;
-    font-size: 0.78rem;
-    cursor: pointer;
-}
-body.light .toggle-theme {
-    background: #ffffff;
-}
-
-.pill {
-    padding: 6px 12px;
-    border-radius: var(--radius-pill);
-    border: 1px solid rgba(148, 163, 184, 0.35);
-    background: rgba(15, 23, 42, 0.8);
-    display: flex;
-    align-items: center;
-    gap: 6px;
-}
-body.light .pill {
-    background: rgba(255, 255, 255, 0.9);
-}
-
-.pill-dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 999px;
-    background: var(--success);
-    box-shadow: 0 0 12px rgba(34, 197, 94, 0.9);
-}
-
-/* ============================================================
-   PANEL PRINCIPAL
-============================================================ */
-.app-main {
-    display: grid;
-    grid-template-columns: 1.4fr 1fr;
-    gap: 18px;
-}
-
-.panel {
-    background: linear-gradient(145deg, rgba(15, 23, 42, 0.96), rgba(15, 23, 42, 0.9));
-    border-radius: var(--radius-lg);
-    border: 1px solid var(--border-subtle);
-    box-shadow: var(--shadow-soft);
-    padding: 18px;
-    position: relative;
-}
-body.light .panel {
-    background: linear-gradient(145deg, #ffffff, #f9fafb);
-}
-
-.panel-title {
-    font-size: 0.95rem;
-    font-weight: 500;
-}
-
-.panel-subtitle {
-    font-size: 0.8rem;
-    color: var(--text-soft);
-    margin-bottom: 14px;
-}
-
-/* ============================================================
-   ORB ANIMADO (RESPIRA + MODO ESCUCHA)
-============================================================ */
-.orb-wrapper {
-    display: flex;
-    justify-content: center;
-    margin-bottom: 14px;
-}
-
-.orb {
-    width: 82px;
-    height: 82px;
-    border-radius: 999px;
-    background:
-        radial-gradient(circle at 30% 20%, #a855f7, transparent 55%),
-        radial-gradient(circle at 70% 80%, #0ea5e9, transparent 55%),
-        radial-gradient(circle at 50% 50%, #4f46e5, #111827 70%);
-    box-shadow:
-        0 0 25px rgba(79, 70, 229, 0.9),
-        0 0 55px rgba(56, 189, 248, 0.7);
-    animation: orb-breathe 3.8s ease-in-out infinite;
-}
-
-@keyframes orb-breathe {
-    0% { transform: scale(0.96); }
-    50% { transform: scale(1.04); }
-    100% { transform: scale(0.96); }
-}
-
-/* ============================================================
-   INPUT + BOTONES
-============================================================ */
-.input-shell {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    background: rgba(15, 23, 42, 0.9);
-    border-radius: var(--radius-pill);
-    border: 1px solid rgba(148, 163, 184, 0.45);
-    padding: 4px 12px;
-}
-body.light .input-shell {
-    background: rgba(255, 255, 255, 0.9);
-}
-
-.input-prefix {
-    font-size: 0.78rem;
-    color: var(--text-soft);
-    padding-right: 6px;
-    border-right: 1px solid rgba(148, 163, 184, 0.35);
-}
-
+/* INPUT */
 #queryInput {
-    flex: 1;
-    border: none;
+    width: 100%;
+    padding: 14px;
+    font-size: 1rem;
+    border-radius: 10px;
+    border: 1px solid #334155;
+    background: #1e293b;
+    color: white;
     outline: none;
-    background: transparent;
-    color: var(--text);
-    font-size: 0.9rem;
+    transition: 0.2s;
+    min-height: 46px;
 }
 
-.btn {
-    border: none;
-    border-radius: var(--radius-pill);
-    padding: 6px 12px;
-    font-size: 0.78rem;
-    cursor: pointer;
-    background: rgba(15, 23, 42, 0.9);
-    color: var(--text-soft);
-    border: 1px solid rgba(148, 163, 184, 0.4);
+body.light #queryInput {
+    background: white;
+    color: black;
+    border: 1px solid #cbd5e1;
 }
-body.light .btn {
-    background: #ffffff;
+
+#queryInput::placeholder {
+    color: #64748b;
+}
+
+/* BOTONES */
+button {
+    padding: 10px 16px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: 0.2s;
 }
 
 .btn-primary {
-    background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+    background: var(--primary);
     color: white;
-    border: none;
 }
 
-/* ============================================================
-   AUTOCOMPLETE
-============================================================ */
-.autocomplete-list {
-    margin: 0;
-    padding: 6px 0;
-    list-style: none;
-    border-radius: var(--radius-md);
-    background: rgba(15, 23, 42, 0.98);
-    border: 1px solid rgba(148, 163, 184, 0.4);
-    max-height: 180px;
-    overflow-y: auto;
-    font-size: 0.8rem;
-}
-body.light .autocomplete-list {
-    background: #ffffff;
+.btn-secondary {
+    background: #334155;
+    color: white;
 }
 
-.autocomplete-item {
+body.light .btn-secondary {
+    background: #e2e8f0;
+    color: #0f172a;
+}
+
+/* HISTORIAL */
+.history-item {
     padding: 6px 10px;
+    background: #1e293b;
+    border-radius: 6px;
+    margin-bottom: 6px;
     cursor: pointer;
-    color: var(--text-soft);
+    font-size: 0.85rem;
 }
 
-.autocomplete-item:hover {
-    background: rgba(30, 64, 175, 0.35);
-    color: #e5e7eb;
+body.light .history-item {
+    background: #e2e8f0;
 }
 
-/* ============================================================
-   RESULTADOS + VISTAS + DASHBOARD
-============================================================ */
-.response-shell {
-    background: rgba(15, 23, 42, 0.9);
-    border-radius: var(--radius-md);
-    border: 1px solid rgba(148, 163, 184, 0.4);
-    padding: 10px 12px;
-    min-height: 120px;
-    font-size: 0.8rem;
-    overflow: auto;
-}
-body.light .response-shell {
-    background: #ffffff;
-}
-
-pre {
-    margin: 0;
-    white-space: pre-wrap;
-    word-wrap: break-word;
-}
-
+/* VISTAS */
 .view-hidden {
     display: none;
 }
 
 .dashboard-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-    gap: 10px;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px;
 }
 
 .dashboard-card {
-    background: rgba(15, 23, 42, 0.9);
+    background: var(--card-bg-dark);
+    padding: 14px;
     border-radius: 10px;
-    padding: 8px;
-    border: 1px solid rgba(148, 163, 184, 0.4);
-    font-size: 0.78rem;
-}
-body.light .dashboard-card {
-    background: #f9fafb;
+    text-align: center;
 }
 
-.dashboard-label {
-    color: var(--text-soft);
-    font-size: 0.7rem;
+body.light .dashboard-card {
+    background: var(--card-bg-light);
 }
 
 .dashboard-value {
-    font-size: 0.95rem;
-    font-weight: 600;
+    font-size: 1.4rem;
+    font-weight: bold;
 }
 
-/* ============================================================
-   HISTORIAL
-============================================================ */
-.history-shell {
-    margin-top: 10px;
-    font-size: 0.75rem;
+.dashboard-label {
+    font-size: 0.8rem;
     color: var(--text-soft);
 }
 
-.history-list {
-    list-style: none;
-    padding-left: 0;
-    margin: 6px 0 0 0;
-    max-height: 120px;
-    overflow-y: auto;
+/* ORB */
+#orbStatus {
+    width: 22px;
+    height: 22px;
+    background: #22c55e;
+    border-radius: 50%;
+    margin-left: 10px;
+    animation: orb-breathe 3.8s ease-in-out infinite;
 }
 
-.history-item {
-    padding: 4px 6px;
-    border-radius: 6px;
+@keyframes orb-breathe {
+    0% { transform: scale(1); opacity: 0.8; }
+    50% { transform: scale(1.15); opacity: 1; }
+    100% { transform: scale(1); opacity: 0.8; }
+}
+
+/* SWITCH iOS (ON/OFF) — ROJO/VERDE SUTIL */
+.switch-ios {
+    position: relative;
+    width: 48px;
+    height: 26px;
+    border-radius: 26px;
+    background: #444;
     cursor: pointer;
-    border: 1px solid rgba(148, 163, 184, 0.25);
-    margin-bottom: 4px;
-}
-.history-item:hover {
-    background: rgba(79, 70, 229, 0.12);
-}
-
-/* ============================================================
-   TARJETA DE FUENTE COLAPSABLE
-============================================================ */
-#fuenteToggle {
-    margin-top: 10px;
-    font-size: 0.75rem;
-    cursor: pointer;
-    color: var(--text-soft);
+    transition: background 0.25s ease;
+    display: inline-flex;
+    align-items: center;
+    padding: 0 4px;
 }
 
-#fuenteCard {
-    margin-top: 8px;
-    padding: 10px;
-    border-radius: 10px;
-    border: 1px solid var(--border-subtle);
-    background: var(--bg-elevated);
-    display: none;
-    font-size: 0.75rem;
+.switch-ios.on {
+    background: #22c55e;
 }
 
-/* ============================================================
-   RESPONSIVE MOBILE
-============================================================ */
-@media (max-width: 768px) {
-    .app-main {
-        grid-template-columns: 1fr;
-    }
-
-    .panel {
-        padding: 14px;
-    }
-
-    .input-shell {
-        flex-direction: column;
-        align-items: stretch;
-        gap: 10px;
-        padding: 10px;
-    }
-
-    .input-prefix {
-        border-right: none;
-        border-bottom: 1px solid rgba(148, 163, 184, 0.35);
-        padding-bottom: 6px;
-        width: 100%;
-        text-align: left;
-    }
-
-    #queryInput {
-        width: 100%;
-        font-size: 1rem;
-    }
-
-    .btn {
-        width: 100%;
-        text-align: center;
-    }
-
-    .orb {
-        width: 70px;
-        height: 70px;
-    }
+.switch-ios.off {
+    background: #ef4444;
 }
 
+.switch-ios-circle {
+    width: 22px;
+    height: 22px;
+    background: white;
+    border-radius: 50%;
+    transition: transform 0.25s ease;
+}
+
+.switch-ios.on .switch-ios-circle {
+    transform: translateX(22px);
+}
+
+.switch-ios.off .switch-ios-circle {
+    transform: translateX(0px);
+}
+
+.switch-ios-label {
+    font-size: 0.65rem;
+    color: white;
+    position: absolute;
+    width: 100%;
+    text-align: center;
+    pointer-events: none;
+}
 </style>
 </head>
 <body>
-<div class="app-shell">
-
-    <!-- ============================================================
-         ENCABEZADO SUPERIOR
-         ============================================================ -->
-    <header class="app-header">
-        <div class="brand">
-            <div class="brand-logo"></div>
-            <div>
-                <div class="brand-text-title">Stock IA PRO v2.1</div>
-                <div class="brand-text-sub">Asistente inteligente de stock</div>
-            </div>
+<div class="container">
+    <header style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+        <div>
+            <h1 style="margin:0; font-size:1.2rem;">STOCK IA PRO V2.1</h1>
+            <p style="margin:0; font-size:0.8rem; color:var(--text-soft);">
+                Asistente inteligente de stock
+            </p>
         </div>
-
-        <div class="header-right">
-            <!-- Botón de modo claro/oscuro -->
-            <button id="btnTheme" class="toggle-theme">Modo claro/oscuro</button>
-
-            <!-- Estado del sistema -->
-            <div class="pill">
-                <span class="pill-dot"></span>
-                <span>Sistema Conectado (Backend)</span>
-            </div>
+        <div style="display:flex; align-items:center; gap:10px;">
+            <button id="btnTheme" class="btn-secondary">Modo claro/oscuro</button>
+            <div id="orbStatus"></div>
         </div>
     </header>
 
-    <!-- ============================================================
-         CONTENIDO PRINCIPAL (2 COLUMNAS)
-         ============================================================ -->
-    <main class="app-main">
+    <section style="margin-bottom:16px; font-size:0.8rem; color:var(--text-soft); display:flex; align-items:center; gap:6px;">
+        <span>Estado:</span>
+        <span style="color:#22c55e; font-weight:500;">Sistema Conectado (Backend)</span>
+    </section>
 
-        <!-- ============================================================
-             PANEL IZQUIERDO — CONSULTA
-             ============================================================ -->
-        <section class="panel">
-            <div class="panel-title">Consulta de stock</div>
-            <div class="panel-subtitle">Escribí o hablá como si fuera una persona.</div>
+    <main style="display:flex; flex-direction:column; gap:16px;">
+        <section style="display:flex; flex-direction:column; gap:16px;">
+            <div style="display:flex; flex-direction:column; gap:10px;">
+                <label for="queryInput" style="font-size:0.9rem; font-weight:500;">
+                    Consulta de stock
+                </label>
+                <p style="margin:0; font-size:0.8rem; color:var(--text-soft);">
+                    Escribí o hablá como si fuera una persona.
+                </p>
+                <input
+                    id="queryInput"
+                    type="text"
+                    placeholder="¿Qué stock hay de...?"
+                    autocomplete="off"
+                />
+                <div id="loadingIndicator" style="margin-top:6px; font-size:0.75rem; color:var(--text-soft); display:none;">
+                    🔄 Consultando…
+                </div>
 
-            <!-- ORB ANIMADO -->
-            <div class="orb-wrapper">
-                <div class="orb" id="orbStatus"></div>
+                <!-- SWITCH MOSTRAR SOLO STOCK (IZQUIERDA) -->
+                <div style="margin-top:10px; display:flex; align-items:center; gap:8px;">
+                    <div id="switchLeft" class="switch-ios off">
+                        <div class="switch-ios-circle"></div>
+                        <div class="switch-ios-label">OFF</div>
+                    </div>
+                    <span style="font-size:0.8rem;">Mostrar solo artículos con stock</span>
+                </div>
+
+                <div style="display:flex; flex-wrap:wrap; gap:8px; margin-top:10px;">
+                    <button id="btnSend" class="btn-primary">Consultar</button>
+                    <button id="btnSpeak" class="btn-secondary">Hablar</button>
+                    <button id="btnHandsFree" class="btn-secondary">Manos libres</button>
+                    <button id="btnStop" class="btn-secondary">Stop</button>
+                    <button id="btnClear" class="btn-secondary">Limpiar</button>
+                    <button id="btnCopy" class="btn-secondary">Copiar</button>
+                </div>
+
+                <ul id="autocompleteList" style="
+                    list-style:none;
+                    margin:6px 0 0 0;
+                    padding:0;
+                    background:#020617;
+                    border-radius:8px;
+                    border:1px solid #1e293b;
+                    display:none;
+                    max-height:160px;
+                    overflow-y:auto;
+                    font-size:0.85rem;
+                "></ul>
             </div>
 
-            <!-- INPUT + BOTÓN CONSULTAR -->
-            <div class="input-shell">
-                <span class="input-prefix">¿Qué stock hay de…?</span>
-                <input id="queryInput" type="text" placeholder="pantuflas avengers plush" autocomplete="off" />
-                <button id="btnSend" class="btn btn-primary">Consultar</button>
-            </div>
-
-            <!-- AUTOCOMPLETE -->
-            <ul id="autocompleteList" class="autocomplete-list" style="display:none;"></ul>
-
-            <!-- BOTONES DE VOZ Y ACCIONES -->
-            <div style="margin-top:10px; display:flex; gap:6px; flex-wrap:wrap;">
-                <button id="btnSpeak" class="btn">Hablar</button>
-                <button id="btnHandsFree" class="btn">Manos libres</button>
-                <button id="btnStop" class="btn">Stop</button>
-                <button id="btnClear" class="btn">Limpiar</button>
-                <button id="btnCopy" class="btn">Copiar</button>
-            </div>
-
-            <!-- HISTORIAL DE CONSULTAS -->
-            <div class="history-shell">
-                <div>Historial de consultas:</div>
-                <ul id="historyList" class="history-list"></ul>
+            <div>
+                <h3 style="margin-bottom:6px; font-size:0.9rem;">Historial de consultas:</h3>
+                <ul id="historyList" style="
+                    list-style:none;
+                    margin:0;
+                    padding:0;
+                    max-height:160px;
+                    overflow-y:auto;
+                "></ul>
             </div>
         </section>
 
-        <!-- ============================================================
-             PANEL DERECHO — RESULTADOS
-             ============================================================ -->
-        <section class="panel">
-            <div class="panel-title">Resultado</div>
+        <section style="margin-top:10px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                <div style="display:flex; gap:6px; flex-wrap:wrap;">
+                    <button id="btnViewCards" class="btn-secondary btn-primary">Tarjetas</button>
+                    <button id="btnViewList" class="btn-secondary">Lista</button>
+                    <button id="btnViewTable" class="btn-secondary">Tabla</button>
+                    <button id="btnViewDashboard" class="btn-secondary">Dashboard</button>
+                    <button id="btnViewJson" class="btn-secondary view-hidden">JSON</button>
+                </div>
 
-            <!-- BOTONES DE VISTA -->
-            <div style="display:flex; gap:6px; margin-bottom:8px; flex-wrap:wrap;">
-                <button id="btnViewCards" class="btn btn-primary">Tarjetas</button>
-                <button id="btnViewList" class="btn">Lista</button>
-                <button id="btnViewTable" class="btn">Tabla</button>
-                <button id="btnViewDashboard" class="btn">Dashboard</button>
-
-                <!-- JSON oculto por defecto (se activa con /admin o 5 toques al ORB) -->
-                <button id="btnViewJson" class="btn view-hidden">JSON</button>
+                <!-- SWITCH MOSTRAR SOLO STOCK (DERECHA) -->
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <div id="switchRight" class="switch-ios off">
+                        <div class="switch-ios-circle"></div>
+                        <div class="switch-ios-label">OFF</div>
+                    </div>
+                    <span style="font-size:0.8rem;">Mostrar solo artículos con stock</span>
+                </div>
             </div>
 
-            <!-- CONTENEDOR DE RESPUESTAS -->
-            <div id="responseContainer" class="response-shell">
-
-                <!-- Vista JSON -->
-                <pre id="viewJson" class="view-hidden"></pre>
-
-                <!-- Vista Lista -->
-                <div id="viewList" class="view-hidden"></div>
-
-                <!-- Vista Tarjetas (vista por defecto) -->
-                <div id="viewCards"></div>
-
-                <!-- Vista Tabla -->
-                <div id="viewTable" class="view-hidden"></div>
-
-                <!-- Vista Dashboard -->
-                <div id="viewDashboard" class="view-hidden"></div>
+            <div id="responseVoice" style="font-size:0.85rem; color:var(--text-soft); margin-bottom:8px;">
+                Listo para responder.
             </div>
 
-            <!-- TEXTO DE VOZ / ESTADO -->
-            <div style="margin-top:8px; font-size:0.75rem; color:var(--text-soft);">
-                <span id="responseVoice">Listo para responder.</span>
+            <div id="viewCards"></div>
+            <div id="viewList" class="view-hidden"></div>
+            <div id="viewTable" class="view-hidden"></div>
+            <div id="viewDashboard" class="view-hidden">
+                <div class="dashboard-grid"></div>
+                <canvas id="chartCanvas" style="margin-top:10px;"></canvas>
             </div>
-
-            <!-- FUENTE DE DATOS (COLAPSABLE) -->
-            <div id="fuenteToggle">Fuente de datos (clic para ver)</div>
-
-            <div id="fuenteCard">
-                <!-- Se completa dinámicamente desde el backend -->
-                <div><strong>Origen:</strong> <span id="fuenteOrigen"></span></div>
-                <div><strong>Archivo:</strong> <span id="fuenteNombre"></span></div>
-                <div><strong>Última actualización:</strong> <span id="fuenteFecha"></span></div>
-            </div>
-
+            <pre id="viewJson" class="view-hidden" style="
+                background:#020617;
+                color:#e5e7eb;
+                padding:12px;
+                border-radius:8px;
+                font-size:0.75rem;
+                overflow-x:auto;
+            "></pre>
         </section>
 
+        <section style="margin-top:10px;">
+            <div id="fuenteToggle" style="font-size:0.8rem; color:var(--text-soft); cursor:pointer;">
+                Fuente de datos ▾
+            </div>
+            <div id="fuenteCard" style="
+                margin-top:6px;
+                padding:10px;
+                border-radius:8px;
+                background:#020617;
+                font-size:0.75rem;
+                display:none;
+            ">
+                <div>Origen: <span id="fuenteOrigen">-</span></div>
+                <div>Archivo: <span id="fuenteNombre">-</span></div>
+                <div>Actualizado: <span id="fuenteFecha">-</span></div>
+            </div>
+        </section>
     </main>
 </div>
 <script>
 /* ============================================================
    REFERENCIAS A ELEMENTOS DEL DOM
-   ============================================================ */
+============================================================ */
 const input = document.getElementById("queryInput");
 const btnSend = document.getElementById("btnSend");
 const autocompleteList = document.getElementById("autocompleteList");
@@ -601,36 +378,47 @@ const fuenteOrigen = document.getElementById("fuenteOrigen");
 const fuenteNombre = document.getElementById("fuenteNombre");
 const fuenteFecha = document.getElementById("fuenteFecha");
 
+const loadingIndicator = document.getElementById("loadingIndicator");
+
 /* ============================================================
    VARIABLES DE ESTADO
-   ============================================================ */
+============================================================ */
 let lastResponse = null;
 let history = JSON.parse(localStorage.getItem("history") || "[]");
 let adminMode = JSON.parse(localStorage.getItem("adminMode") || "false");
 
 /* ============================================================
-   FUNCIÓN: REPRODUCIR SONIDO DE CONFIRMACIÓN
-   ============================================================ */
-function playBeep() {
-    try {
-        const ctx = new (window.AudioContext || window.webkitAudioContext)();
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.type = "sine";
-        osc.frequency.value = 880;
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-        gain.gain.setValueAtTime(0.0001, ctx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.2, ctx.currentTime + 0.01);
-        gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.15);
-        osc.start();
-        osc.stop(ctx.currentTime + 0.2);
-    } catch (e) {}
+   SWITCH STOCK — SINCRONIZADO (IZQUIERDA + DERECHA)
+============================================================ */
+let filterStock = JSON.parse(localStorage.getItem("filterStock") || "false");
+
+const switchLeft = document.getElementById("switchLeft");
+const switchRight = document.getElementById("switchRight");
+
+function updateSwitchUI() {
+    const switches = [switchLeft, switchRight];
+    switches.forEach(sw => {
+        sw.classList.remove("on", "off");
+        sw.classList.add(filterStock ? "on" : "off");
+        sw.querySelector(".switch-ios-label").textContent = filterStock ? "ON" : "OFF";
+    });
 }
+
+function toggleSwitch() {
+    filterStock = !filterStock;
+    localStorage.setItem("filterStock", filterStock);
+    updateSwitchUI();
+    if (lastResponse) renderViews(lastResponse);
+}
+
+switchLeft.addEventListener("click", toggleSwitch);
+switchRight.addEventListener("click", toggleSwitch);
+
+updateSwitchUI();
 
 /* ============================================================
    FUNCIÓN: ACTIVAR UNA VISTA
-   ============================================================ */
+============================================================ */
 function setActiveView(viewId) {
     const views = [viewJson, viewList, viewCards, viewTable, viewDashboard];
     views.forEach(v => v.classList.add("view-hidden"));
@@ -647,9 +435,22 @@ function setActiveView(viewId) {
 }
 
 /* ============================================================
-   FUNCIÓN: RENDERIZAR TODAS LAS VISTAS
-   ============================================================ */
+   FILTRO DE STOCK
+============================================================ */
+function applyStockFilter(data) {
+    if (filterStock && data.items) {
+        data.items = data.items.filter(it =>
+            it.talles?.some(t => t.stock > 0)
+        );
+    }
+}
+
+/* ============================================================
+   RENDERIZAR TODAS LAS VISTAS
+============================================================ */
 function renderViews(data) {
+    applyStockFilter(data);
+
     /* ---------------- JSON ---------------- */
     viewJson.textContent = JSON.stringify(data, null, 2);
 
@@ -668,7 +469,7 @@ function renderViews(data) {
         viewList.textContent = data.voz || "Sin resultados.";
     }
 
-    /* ---------------- TARJETAS (vista por defecto) ---------------- */
+    /* ---------------- TARJETAS ---------------- */
     viewCards.innerHTML = "";
     if (data.items && data.items.length > 0) {
         const grid = document.createElement("div");
@@ -740,10 +541,9 @@ function renderViews(data) {
     }
 
     /* ---------------- DASHBOARD ---------------- */
-    viewDashboard.innerHTML = "";
+    viewDashboard.querySelector(".dashboard-grid").innerHTML = "";
     const resumen = data.resumen || {};
-    const dash = document.createElement("div");
-    dash.className = "dashboard-grid";
+    const dash = viewDashboard.querySelector(".dashboard-grid");
 
     function addCard(label, value) {
         const card = document.createElement("div");
@@ -767,8 +567,6 @@ function renderViews(data) {
         addCard("Estado", data.voz || "Sin datos de resumen.");
     }
 
-    viewDashboard.appendChild(dash);
-
     /* ---------------- FUENTE DE DATOS ---------------- */
     if (data.fuente) {
         fuenteOrigen.textContent = data.fuente.origen || "-";
@@ -779,9 +577,10 @@ function renderViews(data) {
 
 /* ============================================================
    HISTORIAL (PERSISTENTE)
-   ============================================================ */
+============================================================ */
 function addToHistory(q) {
     if (!q) return;
+    if (history[0] === q) return;
     history.unshift(q);
     if (history.length > 20) history.pop();
     localStorage.setItem("history", JSON.stringify(history));
@@ -805,7 +604,7 @@ renderHistory();
 
 /* ============================================================
    MODO CLARO/OSCURO (PERSISTENTE)
-   ============================================================ */
+============================================================ */
 if (localStorage.getItem("theme") === "light") {
     document.body.classList.add("light");
 }
@@ -816,18 +615,37 @@ btnTheme.addEventListener("click", () => {
 });
 
 /* ============================================================
-   ENTER ENVÍA
-   ============================================================ */
+   ENTER — COMANDOS ADMIN + CONSULTA
+============================================================ */
 input.addEventListener("keydown", e => {
-    if (e.key === "Enter") {
-        e.preventDefault();
-        btnSend.click();
-    }
-});
+    if (e.key !== "Enter") return;
+    e.preventDefault();
 
+    const q = input.value.trim();
+
+    if (q === "/admin") {
+        adminMode = true;
+        localStorage.setItem("adminMode", "true");
+        updateAdminUI();
+        responseVoice.textContent = "Modo administrador activado.";
+        input.value = "";
+        return;
+    }
+
+    if (q === "/admin off") {
+        adminMode = false;
+        localStorage.setItem("adminMode", "false");
+        updateAdminUI();
+        responseVoice.textContent = "Modo administrador desactivado.";
+        input.value = "";
+        return;
+    }
+
+    btnSend.click();
+});
 /* ============================================================
    AUTOCOMPLETE
-   ============================================================ */
+============================================================ */
 input.addEventListener("input", async () => {
     const q = input.value.trim();
     if (!q) {
@@ -862,15 +680,33 @@ input.addEventListener("input", async () => {
 });
 
 /* ============================================================
+   DETECCIÓN DE RUBROS
+============================================================ */
+function normalizeQuery(q) {
+    const rubros = {
+        "indumentaria": "rubro:indumentaria",
+        "ropa": "rubro:indumentaria",
+        "balones": "rubro:balones",
+        "pelotas": "rubro:balones",
+        "calzado": "rubro:calzado",
+        "zapatillas": "rubro:calzado"
+    };
+
+    for (const key in rubros) {
+        if (q.toLowerCase().includes(key)) return rubros[key];
+    }
+    return q;
+}
+
+/* ============================================================
    CONSULTA AL BACKEND
-   ============================================================ */
+============================================================ */
 btnSend.addEventListener("click", async () => {
-    const q = input.value.trim();
+    const q = normalizeQuery(input.value.trim());
     if (!q) return;
 
     responseVoice.textContent = "Consultando...";
-    playBeep();
-    addToHistory(q);
+    loadingIndicator.style.display = "block";
 
     try {
         const r = await fetch("https://stock-backend-1-twzg.onrender.com/query", {
@@ -883,19 +719,20 @@ btnSend.addEventListener("click", async () => {
         lastResponse = data;
 
         renderViews(data);
-        setActiveView("viewCards"); // Vista por defecto
+        setActiveView("viewCards");
 
         responseVoice.textContent = data.voz || "Respuesta lista.";
-        playBeep();
     } catch (e) {
         viewJson.textContent = "Error consultando backend.";
         responseVoice.textContent = "Error al consultar.";
     }
+
+    loadingIndicator.style.display = "none";
 });
 
 /* ============================================================
    BOTONES DE VISTA
-   ============================================================ */
+============================================================ */
 btnViewCards.addEventListener("click", () => setActiveView("viewCards"));
 btnViewList.addEventListener("click", () => setActiveView("viewList"));
 btnViewTable.addEventListener("click", () => setActiveView("viewTable"));
@@ -904,7 +741,7 @@ btnViewJson.addEventListener("click", () => setActiveView("viewJson"));
 
 /* ============================================================
    BOTONES AUXILIARES
-   ============================================================ */
+============================================================ */
 btnClear.addEventListener("click", () => {
     input.value = "";
     viewJson.textContent = "";
@@ -918,8 +755,7 @@ btnClear.addEventListener("click", () => {
 btnCopy.addEventListener("click", async () => {
     try {
         await navigator.clipboard.writeText(viewJson.textContent || "");
-        responseVoice.textContent = "Respuesta copiada al portapapeles.";
-        playBeep();
+        responseVoice.textContent = "Respuesta copiada.";
     } catch (e) {
         responseVoice.textContent = "No se pudo copiar.";
     }
@@ -927,18 +763,17 @@ btnCopy.addEventListener("click", async () => {
 
 /* ============================================================
    TARJETA DE FUENTE (COLAPSABLE)
-   ============================================================ */
+============================================================ */
 fuenteToggle.addEventListener("click", () => {
-    if (fuenteCard.style.display === "none" || fuenteCard.style.display === "") {
-        fuenteCard.style.display = "block";
-    } else {
-        fuenteCard.style.display = "none";
-    }
+    fuenteCard.style.display =
+        fuenteCard.style.display === "none" || fuenteCard.style.display === ""
+            ? "block"
+            : "none";
 });
 
 /* ============================================================
    VOZ COMPLETA (Hablar / Manos libres / Stop)
-   ============================================================ */
+============================================================ */
 let recognition = null;
 let listening = false;
 let handsFree = false;
@@ -957,8 +792,9 @@ function initSpeech() {
 
     recognition.onstart = () => {
         listening = true;
+        input.value = "";
+        responseVoice.textContent = "Escuchando…";
         orbStatus.style.animation = "orb-breathe 1.2s ease-in-out infinite";
-        responseVoice.textContent = handsFree ? "Modo manos libres activo" : "Escuchando…";
     };
 
     recognition.onend = () => {
@@ -968,13 +804,15 @@ function initSpeech() {
     };
 
     recognition.onresult = (event) => {
-        let texto = "";
+        let parcial = "";
         for (let i = 0; i < event.results.length; i++) {
-            texto += event.results[i][0].transcript;
+            parcial = event.results[i][0].transcript;
         }
-        input.value = texto;
+
+        input.value = parcial;
 
         if (event.results[event.results.length - 1].isFinal) {
+            responseVoice.textContent = "Procesando tu consulta…";
             btnSend.click();
         }
     };
@@ -1001,45 +839,50 @@ btnStop.addEventListener("click", () => {
 });
 
 /* ============================================================
-   MODO ADMIN SECRETO
-   ============================================================ */
+   DASHBOARD — CHART.JS
+============================================================ */
+let chartInstance = null;
 
-/* --- Mostrar/ocultar botón JSON según adminMode --- */
+function renderChart(labels, values) {
+    const ctx = document.getElementById("chartCanvas").getContext("2d");
+
+    if (chartInstance) chartInstance.destroy();
+
+    chartInstance = new Chart(ctx, {
+        type: "pie",
+        data: {
+            labels,
+            datasets: [{
+                data: values,
+                backgroundColor: ["#4f46e5", "#0ea5e9", "#22c55e", "#ef4444", "#f59e0b"]
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { position: "bottom" }
+            }
+        }
+    });
+}
+
+/* ============================================================
+   MODO ADMIN — MOSTRAR JSON
+============================================================ */
 function updateAdminUI() {
     if (adminMode) {
         btnViewJson.classList.remove("view-hidden");
     } else {
         btnViewJson.classList.add("view-hidden");
+        if (!viewCards.classList.contains("view-hidden")) return;
+        setActiveView("viewCards");
     }
 }
 updateAdminUI();
 
-/* --- Activación por comando secreto /admin --- */
-input.addEventListener("keydown", e => {
-    if (e.key === "Enter") {
-        const q = input.value.trim();
-
-        if (q === "/admin") {
-            adminMode = true;
-            localStorage.setItem("adminMode", "true");
-            updateAdminUI();
-            responseVoice.textContent = "Modo administrador activado.";
-            input.value = "";
-            return;
-        }
-
-        if (q === "/admin off") {
-            adminMode = false;
-            localStorage.setItem("adminMode", "false");
-            updateAdminUI();
-            responseVoice.textContent = "Modo administrador desactivado.";
-            input.value = "";
-            return;
-        }
-    }
-});
-
-/* --- Activación por 5 toques al ORB --- */
+/* ============================================================
+   ACTIVACIÓN POR 5 TOQUES EN EL ORB
+============================================================ */
 let orbTapCount = 0;
 let orbTapTimer = null;
 
@@ -1047,10 +890,7 @@ orbStatus.addEventListener("click", () => {
     orbTapCount++;
 
     if (orbTapTimer) clearTimeout(orbTapTimer);
-
-    orbTapTimer = setTimeout(() => {
-        orbTapCount = 0;
-    }, 600);
+    orbTapTimer = setTimeout(() => { orbTapCount = 0; }, 600);
 
     if (orbTapCount >= 5) {
         adminMode = !adminMode;
@@ -1065,7 +905,7 @@ orbStatus.addEventListener("click", () => {
 
 /* ============================================================
    FIN DEL SCRIPT
-   ============================================================ */
+============================================================ */
 </script>
 
 </body>
