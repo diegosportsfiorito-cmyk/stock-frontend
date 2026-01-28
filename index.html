@@ -1,313 +1,447 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Stock IA PRO v2.0</title>
+    <meta charset="UTF-8" />
+    <title>Stock IA PRO v2.0</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-<style>
-/* ============================================================
-   ESTILOS BASE
-============================================================ */
-body {
-    background: #0f0f0f;
-    color: white;
-    font-family: Arial, sans-serif;
-    margin: 0;
-    padding: 0;
-}
+    <!-- Fuente y estilos básicos -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
 
-#app {
-    padding: 20px;
-    position: relative;
-}
+    <style>
+        :root {
+            --bg: #050816;
+            --bg-elevated: #0b1020;
+            --accent: #4f46e5;
+            --accent-soft: rgba(79, 70, 229, 0.18);
+            --accent-strong: #6366f1;
+            --text: #e5e7eb;
+            --text-soft: #9ca3af;
+            --danger: #ef4444;
+            --success: #22c55e;
+            --border-subtle: rgba(148, 163, 184, 0.25);
+            --radius-lg: 18px;
+            --radius-md: 12px;
+            --radius-pill: 999px;
+            --shadow-soft: 0 18px 45px rgba(15, 23, 42, 0.75);
+        }
 
-/* AUTOCOMPLETE */
-#autocomplete-box {
-    position: absolute;
-    background: #1e1e1e;
-    border-radius: 10px;
-    border: 1px solid #2a2f36;
-    width: 100%;
-    display: none;
-    z-index: 9999;
-}
+        * {
+            box-sizing: border-box;
+        }
 
-.suggestion {
-    padding: 10px;
-    cursor: pointer;
-}
-.suggestion:hover {
-    background: #333;
-}
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            background: radial-gradient(circle at top, #111827 0, #020617 45%, #000 100%);
+            color: var(--text);
+            display: flex;
+            align-items: stretch;
+            justify-content: center;
+        }
 
-/* ORB ANIMADO */
-#orb {
-    width: 18px;
-    height: 18px;
-    border-radius: 50%;
-    background: #4a90e2;
-    position: absolute;
-    right: 10px;
-    top: 10px;
-    display: none;
-    box-shadow: 0 0 10px rgba(77,141,255,0.8);
-    animation: orbPulse 1.2s infinite ease-in-out;
-}
+        .app-shell {
+            width: 100%;
+            max-width: 1200px;
+            margin: 24px;
+            display: grid;
+            grid-template-rows: auto 1fr;
+            gap: 18px;
+        }
 
-@keyframes orbPulse {
-    0% { transform: scale(1); box-shadow: 0 0 10px rgba(77,141,255,0.8); }
-    50% { transform: scale(1.4); box-shadow: 0 0 20px rgba(77,141,255,1); }
-    100% { transform: scale(1); box-shadow: 0 0 10px rgba(77,141,255,0.8); }
-}
+        /* HEADER */
 
-/* BANNER OFFLINE */
-#offlineBanner {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    padding: 10px;
-    background: #d62828;
-    color: white;
-    text-align: center;
-    font-weight: bold;
-    display: none;
-    z-index: 99999;
-}
-</style>
-</head>
+        .app-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+        }
 
-<body>
-<div id="offlineBanner">Sin conexión a internet. La app sigue funcionando, pero no puede consultar el servidor.</div>
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
 
-<div id="app">
-    <h2>Stock IA PRO v2.0</h2>
+        .brand-logo {
+            width: 52px;
+            height: 52px;
+            border-radius: 18px;
+            background: radial-gradient(circle at 30% 20%, #a855f7, #4f46e5 45%, #0ea5e9 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 35px rgba(79, 70, 229, 0.7);
+            overflow: hidden;
+        }
 
-    <div style="position:relative;">
-        <input id="pregunta" type="text" placeholder="Decime qué buscás..." autocomplete="off" style="width:100%;padding:12px;border-radius:8px;border:none;font-size:16px;" />
-        <div id="autocomplete-box"></div>
-        <div id="orb"></div>
+        .brand-logo img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .brand-text-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            color: #e5e7eb;
+        }
+
+        .brand-text-sub {
+            font-size: 0.8rem;
+            color: var(--text-soft);
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.8rem;
+            color: var(--text-soft);
+        }
+
+        .pill {
+            padding: 6px 12px;
+            border-radius: var(--radius-pill);
+            border: 1px solid rgba(148, 163, 184, 0.35);
+            background: rgba(15, 23, 42, 0.8);
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .pill-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 999px;
+            background: var(--success);
+            box-shadow: 0 0 12px rgba(34, 197, 94, 0.9);
+        }
+
+        /* LAYOUT PRINCIPAL */
+
+        .app-main {
+            display: grid;
+            grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+            gap: 18px;
+        }
+
+        @media (max-width: 900px) {
+            .app-main {
+                grid-template-columns: minmax(0, 1fr);
+            }
+        }
+
+        /* PANEL IZQUIERDO */
+
+        .panel {
+            background: linear-gradient(145deg, rgba(15, 23, 42, 0.96), rgba(15, 23, 42, 0.9));
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border-subtle);
+            box-shadow: var(--shadow-soft);
+            padding: 18px 18px 16px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .panel::before {
+            content: "";
+            position: absolute;
+            inset: -40%;
+            background: radial-gradient(circle at top, rgba(79, 70, 229, 0.18), transparent 60%);
+            opacity: 0.7;
+            pointer-events: none;
+        }
+
+        .panel-inner {
+            position: relative;
+            z-index: 1;
+        }
+
+        .panel-title {
+            font-size: 0.95rem;
+            font-weight: 500;
+            color: #e5e7eb;
+            margin-bottom: 4px;
+        }
+
+        .panel-subtitle {
+            font-size: 0.8rem;
+            color: var(--text-soft);
+            margin-bottom: 14px;
+        }
+
+        /* ORB ANIMADO */
+
+        .orb-wrapper {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 14px;
+        }
+
+        .orb {
+            width: 82px;
+            height: 82px;
+            border-radius: 999px;
+            background:
+                radial-gradient(circle at 30% 20%, #a855f7, transparent 55%),
+                radial-gradient(circle at 70% 80%, #0ea5e9, transparent 55%),
+                radial-gradient(circle at 50% 50%, #4f46e5, #111827 70%);
+            box-shadow:
+                0 0 25px rgba(79, 70, 229, 0.9),
+                0 0 55px rgba(56, 189, 248, 0.7);
+            position: relative;
+            animation: orb-breathe 3.8s ease-in-out infinite;
+        }
+
+        .orb::after {
+            content: "";
+            position: absolute;
+            inset: 18%;
+            border-radius: inherit;
+            border: 1px solid rgba(248, 250, 252, 0.18);
+            box-shadow: 0 0 18px rgba(248, 250, 252, 0.35);
+            opacity: 0.9;
+        }
+
+        @keyframes orb-breathe {
+            0% {
+                transform: scale(0.96);
+                box-shadow:
+                    0 0 18px rgba(79, 70, 229, 0.7),
+                    0 0 40px rgba(56, 189, 248, 0.5);
+            }
+            50% {
+                transform: scale(1.04);
+                box-shadow:
+                    0 0 32px rgba(79, 70, 229, 1),
+                    0 0 70px rgba(56, 189, 248, 0.9);
+            }
+            100% {
+                transform: scale(0.96);
+                box-shadow:
+                    0 0 18px rgba(79, 70, 229, 0.7),
+                    0 0 40px rgba(56, 189, 248, 0.5);
+            }
+        }
+
+        /* INPUT + AUTOCOMPLETE */
+
+        .input-row {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        .input-shell {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(15, 23, 42, 0.9);
+            border-radius: var(--radius-pill);
+            border: 1px solid rgba(148, 163, 184, 0.45);
+            padding: 4px 6px 4px 12px;
+        }
+
+        .input-shell:focus-within {
+            border-color: var(--accent-strong);
+            box-shadow: 0 0 0 1px rgba(99, 102, 241, 0.5);
+        }
+
+        .input-prefix {
+            font-size: 0.78rem;
+            color: var(--text-soft);
+            padding-right: 6px;
+            border-right: 1px solid rgba(148, 163, 184, 0.35);
+        }
+
+        #queryInput {
+            flex: 1;
+            border: none;
+            outline: none;
+            background: transparent;
+            color: var(--text);
+            font-size: 0.9rem;
+            padding: 6px 4px;
+        }
+
+        #queryInput::placeholder {
+            color: rgba(148, 163, 184, 0.7);
+        }
+
+        .input-actions {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .chip {
+            font-size: 0.7rem;
+            padding: 4px 8px;
+            border-radius: var(--radius-pill);
+            border: 1px solid rgba(148, 163, 184, 0.4);
+            color: var(--text-soft);
+            background: rgba(15, 23, 42, 0.9);
+            cursor: default;
+        }
+
+        .btn {
+            border: none;
+            outline: none;
+            border-radius: var(--radius-pill);
+            padding: 6px 12px;
+            font-size: 0.78rem;
+            font-weight: 500;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.16s ease-out;
+            background: rgba(15, 23, 42, 0.9);
+            color: var(--text-soft);
+            border: 1px solid rgba(148, 163, 184, 0.4);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+            color: #f9fafb;
+            border-color: transparent;
+            box-shadow: 0 10px 25px rgba(79, 70, 229, 0.55);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 14px 32px rgba(79, 70, 229, 0.75);
+        }
+
+        .btn-ghost {
+            background: rgba(15, 23, 42, 0.9);
+        }
+
+        .btn:hover {
+            background: rgba(30, 64, 175, 0.25);
+            border-color: rgba(129, 140, 248, 0.7);
+        }
+
+        .btn-icon {
+            width: 26px;
+            height: 26px;
+            border-radius: 999px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+        }
+
+        .btn-danger {
+            border-color: rgba(248, 113, 113, 0.7);
+            color: #fecaca;
+        }
+
+        .btn-danger:hover {
+            background: rgba(248, 113, 113, 0.15);
+        }
+
+        .autocomplete-list {
+            margin: 0;
+            padding: 6px 0;
+            list-style: none;
+            border-radius: var(--radius-md);
+            background: rgba(15, 23, 42, 0.98);
+            border: 1px solid rgba(148, 163, 184, 0.4);
+            max-height: 180px;
+            overflow-y: auto;
+            font-size: 0.8rem;
+        }
+
+        .autocomplete-item {
+            padding: 6px 10px;
+            cursor: pointer;
+            color: var(--text-soft);
+        }
+
+        .autocomplete-item:hover {
+            background: rgba(30, 64, 175, 0.35);
+            color: #e5e7eb;
+        }
+
+        /* BOTONES SECUNDARIOS */
+
+        .secondary-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-bottom: 10px;
+        }
+                            <div class="secondary-actions">
+                        <button id="btnSpeak" class="btn btn-ghost" type="button">Hablar</button>
+                        <button id="btnHandsFree" class="btn btn-ghost" type="button">Manos libres</button>
+                        <button id="btnStop" class="btn btn-ghost btn-danger" type="button">Stop</button>
+
+                        <button id="btnClear" class="btn btn-ghost" type="button">Limpiar</button>
+                        <button id="btnCopy" class="btn btn-ghost" type="button">Copiar respuesta</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- PANEL DERECHO -->
+            <section class="panel">
+                <div class="panel-inner">
+                    <div class="panel-right-header">
+                        <div class="panel-right-title">Resultado</div>
+                        <div class="view-switcher">
+                            <button id="btnViewJson" class="btn-toggle active" type="button">JSON</button>
+                            <button id="btnViewList" class="btn-toggle" type="button">Lista</button>
+                            <button id="btnViewCards" class="btn-toggle" type="button">Tarjetas</button>
+                            <button id="btnViewTable" class="btn-toggle" type="button">Tabla</button>
+                            <button id="btnViewDashboard" class="btn-toggle" type="button">Dashboard</button>
+                        </div>
+                    </div>
+
+                    <div id="responseContainer" class="response-shell">
+                        <pre id="responsePre">{}</pre>
+                    </div>
+
+                    <div class="response-meta">
+                        <div id="responseVoice" class="badge badge-success">
+                            Listo para responder tu consulta.
+                        </div>
+                        <div id="responseSource" class="badge">
+                            Fuente: -
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
     </div>
 
-    <br>
+    <!-- JS HOOKS -->
+    <script>
+        const input = document.getElementById("queryInput");
+        const btnSend = document.getElementById("btnSend");
+        const autocompleteList = document.getElementById("autocompleteList");
 
-    <button id="btnHablar">Hablar</button>
-    <button id="btnManosLibres">Manos libres</button>
-    <button id="btnStop">Stop</button>
+        // ENTER envía la consulta
+        input.addEventListener("keydown", (e) => {
+            if (e.key === "Enter") {
+                e.preventDefault();
+                btnSend.click();
+            }
+        });
 
-    <br><br>
-
-    <div id="respuesta"></div>
-</div>
-
-<script>
-/* ============================================================
-   CONFIG
-============================================================ */
-const backendURL = "https://stock-backend-1-twzg.onrender.com/query";
-const autocompleteURL = "https://stock-backend-1-twzg.onrender.com/autocomplete";
-
-/* ============================================================
-   DETECCIÓN DE INTERNET
-============================================================ */
-const offlineBanner = document.getElementById("offlineBanner");
-
-function actualizarEstadoConexion() {
-    offlineBanner.style.display = navigator.onLine ? "none" : "block";
-}
-window.addEventListener("online", actualizarEstadoConexion);
-window.addEventListener("offline", actualizarEstadoConexion);
-actualizarEstadoConexion();
-
-/* ============================================================
-   ORB ANIMADO
-============================================================ */
-const orb = document.getElementById("orb");
-function mostrarOrb() { orb.style.display = "block"; }
-function ocultarOrb() { orb.style.display = "none"; }
-
-/* ============================================================
-   SONIDOS DE INICIO / FIN
-============================================================ */
-const sonidoInicio = new Audio("data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEA...");
-const sonidoFin = new Audio("data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEA...");
-
-/* ============================================================
-   MÓDULO DE VOZ PRO MAX
-============================================================ */
-let reconocimiento = null;
-let escuchando = false;
-let manosLibres = false;
-let reconectando = false;
-let dictadoContinuo = true; // ACTIVADO
-
-function crearReconocimiento() {
-    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SR) {
-        alert("Tu navegador no soporta reconocimiento de voz.");
-        return null;
-    }
-
-    const rec = new SR();
-    rec.lang = "es-AR";
-    rec.continuous = dictadoContinuo;
-    rec.interimResults = false;
-
-    rec.onstart = () => {
-        escuchando = true;
-        mostrarOrb();
-        sonidoInicio.play();
-    };
-
-    rec.onend = () => {
-        escuchando = false;
-        ocultarOrb();
-        sonidoFin.play();
-
-        if (manosLibres && !reconectando) {
-            reconectando = true;
-            setTimeout(() => {
-                reconectando = false;
-                if (manosLibres) rec.start();
-            }, 300);
-        }
-    };
-
-    rec.onerror = () => {
-        escuchando = false;
-        ocultarOrb();
-
-        if (manosLibres && !reconectando) {
-            reconectando = true;
-            setTimeout(() => {
-                reconectando = false;
-                if (manosLibres) rec.start();
-            }, 500);
-        }
-    };
-
-    rec.onresult = (event) => {
-        const texto = event.results[event.results.length - 1][0].transcript;
-        input.value = texto;
-        enviarConsulta();
-    };
-
-    return rec;
-}
-
-function iniciarVoz() {
-    if (!reconocimiento) reconocimiento = crearReconocimiento();
-    if (!reconocimiento) return;
-
-    if (!escuchando) reconocimiento.start();
-}
-
-function detenerVoz() {
-    manosLibres = false;
-    escuchando = false;
-    reconectando = false;
-
-    if (reconocimiento) reconocimiento.stop();
-    speechSynthesis.cancel();
-    ocultarOrb();
-}
-
-/* ============================================================
-   BOTONES
-============================================================ */
-document.getElementById("btnHablar").onclick = () => {
-    detenerVoz();
-    iniciarVoz();
-};
-
-document.getElementById("btnManosLibres").onclick = () => {
-    manosLibres = !manosLibres;
-    if (manosLibres) iniciarVoz();
-    else detenerVoz();
-};
-
-document.getElementById("btnStop").onclick = () => detenerVoz();
-
-/* ============================================================
-   AUTOCOMPLETE
-============================================================ */
-const input = document.getElementById("pregunta");
-const box = document.getElementById("autocomplete-box");
-
-let autoTimer = null;
-
-input.addEventListener("input", () => {
-    clearTimeout(autoTimer);
-    autoTimer = setTimeout(buscarSugerencias, 120);
-});
-
-async function buscarSugerencias() {
-    const q = input.value.trim();
-    if (q.length < 1) {
-        box.style.display = "none";
-        return;
-    }
-
-    if (!navigator.onLine) return;
-
-    const res = await fetch(`${autocompleteURL}?q=${encodeURIComponent(q)}`);
-    const data = await res.json();
-
-    if (!data.sugerencias || data.sugerencias.length === 0) {
-        box.style.display = "none";
-        return;
-    }
-
-    box.innerHTML = "";
-    data.sugerencias.forEach(s => {
-        const div = document.createElement("div");
-        div.className = "suggestion";
-        div.textContent = s;
-        div.onclick = () => {
-            input.value = s;
-            box.style.display = "none";
-            enviarConsulta();
-        };
-        box.appendChild(div);
-    });
-
-    box.style.display = "block";
-}
-
-/* ============================================================
-   CONSULTA AL BACKEND
-============================================================ */
-async function enviarConsulta() {
-    if (!navigator.onLine) {
-        document.getElementById("respuesta").innerHTML =
-            "<div class='card'>Sin conexión a internet. No se puede consultar el servidor.</div>";
-        return;
-    }
-
-    const pregunta = input.value.trim();
-    if (!pregunta) return;
-
-    document.getElementById("respuesta").innerHTML = "<p>Consultando...</p>";
-
-    const res = await fetch(backendURL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ question: pregunta })
-    });
-
-    const data = await res.json();
-    renderResultados(data);
-}
-
-/* ============================================================
-   RENDER DE RESULTADOS
-============================================================ */
-function renderResultados(data) {
-    document.getElementById("respuesta").innerHTML =
-        `<pre>${JSON.stringify(data, null, 2)}</pre>`;
-}
-</script>
-
+        // Estos IDs quedan listos para tu app.js:
+        // btnSpeak, btnHandsFree, btnStop, btnClear, btnCopy,
+        // btnViewJson, btnViewList, btnViewCards, btnViewTable, btnViewDashboard,
+        // responsePre, responseVoice, responseSource, autocompleteList, orbStatus.
+    </script>
 </body>
 </html>
