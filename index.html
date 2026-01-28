@@ -382,7 +382,7 @@ btnSend.addEventListener("click", async () => {
         const r = await fetch("https://stock-backend-1-twzg.onrender.com/query", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ pregunta: q })
+            body: JSON.stringify({ question: q })   // ← CORREGIDO
         });
 
         const data = await r.json();
