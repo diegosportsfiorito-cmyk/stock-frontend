@@ -1,3 +1,7 @@
+<!-- ============================================================
+     ========== INICIO BLOQUE 1 — HEAD + ESTILOS ==========
+     ============================================================ -->
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -173,19 +177,8 @@ body.light .panel {
     background: linear-gradient(145deg, #ffffff, #f9fafb);
 }
 
-.panel-title {
-    font-size: 0.95rem;
-    font-weight: 500;
-}
-
-.panel-subtitle {
-    font-size: 0.8rem;
-    color: var(--text-soft);
-    margin-bottom: 14px;
-}
-
 /* ============================================================
-   ORB ANIMADO (RESPIRA + MODO ESCUCHA)
+   ORB ANIMADO
 ============================================================ */
 .orb-wrapper {
     display: flex;
@@ -530,6 +523,15 @@ body.light .dashboard-card {
 
 </style>
 </head>
+
+<!-- ============================================================
+     ========== FIN BLOQUE 1 — HEAD + ESTILOS ==========
+     ============================================================ -->
+
+<!-- ============================================================
+     ========== INICIO BLOQUE 2 — BODY + ESTRUCTURA ==========
+     ============================================================ -->
+
 <body>
 <div class="app-shell">
 
@@ -597,6 +599,7 @@ body.light .dashboard-card {
             <div style="margin-top:8px; display:flex; gap:6px; flex-wrap:wrap;">
                 <button id="btnScannerExterno" class="btn">Scanner externo</button>
                 <button id="btnScannerInterno" class="btn">Scanner interno</button>
+                <button id="btnScannerZXing" class="btn">Scanner universal (imagen)</button>
             </div>
 
             <!-- SWITCH: MOSTRAR SOLO CON STOCK -->
@@ -628,7 +631,7 @@ body.light .dashboard-card {
                 <button id="btnViewTable" class="btn">Tabla</button>
                 <button id="btnViewDashboard" class="btn">Dashboard</button>
 
-                <!-- JSON oculto por defecto (se activa con /admin o 5 toques al ORB) -->
+                <!-- JSON oculto por defecto (modo admin) -->
                 <button id="btnViewJson" class="btn view-hidden">JSON</button>
             </div>
 
@@ -669,7 +672,9 @@ body.light .dashboard-card {
     </main>
 </div>
 
-<!-- OVERLAY SCANNER INTERNO -->
+<!-- ============================================================
+     OVERLAY DEL SCANNER INTERNO (QUAGGA)
+     ============================================================ -->
 <div id="scannerOverlay" class="scanner-overlay">
     <div class="scanner-inner">
         <div style="font-size:0.85rem; margin-bottom:8px; color:var(--text-soft);">
@@ -683,10 +688,23 @@ body.light .dashboard-card {
     </div>
 </div>
 
+<!-- Librería Quagga -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/quagga/0.12.1/quagga.min.js"></script>
+
+<!-- Librería ZXing (scanner universal por archivo) -->
+<script src="https://unpkg.com/@zxing/library@latest"></script>
+
+<!-- ============================================================
+     ========== FIN BLOQUE 2 — BODY + ESTRUCTURA ==========
+     ============================================================ -->
+<!-- ============================================================
+     ========== INICIO BLOQUE 3 — LÓGICA PRINCIPAL ==========
+     ============================================================ -->
+
 <script>
 /* ============================================================
    REFERENCIAS A ELEMENTOS DEL DOM
+   (Todo lo que se usa en la lógica principal)
 ============================================================ */
 const input = document.getElementById("queryInput");
 const btnSend = document.getElementById("btnSend");
@@ -702,6 +720,8 @@ const btnCopy = document.getElementById("btnCopy");
 
 const btnScannerExterno = document.getElementById("btnScannerExterno");
 const btnScannerInterno = document.getElementById("btnScannerInterno");
+const btnScannerZXing = document.getElementById("btnScannerZXing");
+
 const chkSoloStock = document.getElementById("chkSoloStock");
 
 const viewJson = document.getElementById("viewJson");
@@ -732,7 +752,7 @@ let history = JSON.parse(localStorage.getItem("history") || "[]");
 let adminMode = JSON.parse(localStorage.getItem("adminMode") || "false");
 
 /* ============================================================
-   FUNCIÓN: REPRODUCIR SONIDO DE CONFIRMACIÓN
+   SONIDO DE CONFIRMACIÓN (BEEP)
 ============================================================ */
 function playBeep() {
     try {
@@ -752,7 +772,7 @@ function playBeep() {
 }
 
 /* ============================================================
-   FUNCIÓN: ACTIVAR UNA VISTA
+   ACTIVAR UNA VISTA (CARDS / LIST / TABLE / DASHBOARD / JSON)
 ============================================================ */
 function setActiveView(viewId) {
     const views = [viewJson, viewList, viewCards, viewTable, viewDashboard];
@@ -770,35 +790,53 @@ function setActiveView(viewId) {
 }
 
 /* ============================================================
-   FUNCIÓN: RENDERIZAR TODAS LAS VISTAS
+   RENDERIZAR TODAS LAS VISTAS
+   (Incluye filtro SOLO STOCK corregido)
 ============================================================ */
 function renderViews(data) {
 
-    /* ---------------- JSON ---------------- */
+    /* ============================================================
+       FILTRO SOLO STOCK (FRONTEND)
+       ============================================================ */
+    let items = data.items || [];
+
+    if (chkSoloStock.checked) {
+        items = items.filter(it =>
+            it.talles && it.talles.some(t => t.stock > 0)
+        );
+    }
+
+    /* ============================================================
+       VISTA JSON
+       ============================================================ */
     viewJson.textContent = JSON.stringify(data, null, 2);
 
-    /* ---------------- LISTA ---------------- */
+    /* ============================================================
+       VISTA LISTA
+       ============================================================ */
     viewList.innerHTML = "";
-    if (data.items && data.items.length > 0) {
+    if (items.length > 0) {
         const ul = document.createElement("ul");
         ul.style.paddingLeft = "18px";
-        data.items.forEach(it => {
+        items.forEach(it => {
             const li = document.createElement("li");
             li.textContent = it.descripcion || it.descripcion_completa || JSON.stringify(it);
             ul.appendChild(li);
         });
         viewList.appendChild(ul);
     } else {
-        viewList.textContent = data.voz || "Sin resultados.";
+        viewList.textContent = data.voz || "No encontré resultados.";
     }
 
-    /* ---------------- TARJETAS ---------------- */
+    /* ============================================================
+       VISTA TARJETAS
+       ============================================================ */
     viewCards.innerHTML = "";
-    if (data.items && data.items.length > 0) {
+    if (items.length > 0) {
         const grid = document.createElement("div");
         grid.className = "dashboard-grid";
 
-        data.items.forEach(it => {
+        items.forEach(it => {
             const card = document.createElement("div");
             card.className = "dashboard-card";
             card.innerHTML = `
@@ -814,12 +852,14 @@ function renderViews(data) {
 
         viewCards.appendChild(grid);
     } else {
-        viewCards.textContent = data.voz || "Sin resultados.";
+        viewCards.textContent = data.voz || "No encontré resultados.";
     }
 
-    /* ---------------- TABLA ---------------- */
+    /* ============================================================
+       VISTA TABLA
+       ============================================================ */
     viewTable.innerHTML = "";
-    if (data.items && data.items.length > 0) {
+    if (items.length > 0) {
         const table = document.createElement("table");
         table.style.width = "100%";
         table.style.borderCollapse = "collapse";
@@ -839,7 +879,7 @@ function renderViews(data) {
         table.appendChild(thead);
 
         const tbody = document.createElement("tbody");
-        data.items.forEach(it => {
+        items.forEach(it => {
             const tr = document.createElement("tr");
             const cols = [
                 it.codigo || "",
@@ -860,10 +900,12 @@ function renderViews(data) {
         table.appendChild(tbody);
         viewTable.appendChild(table);
     } else {
-        viewTable.textContent = data.voz || "Sin resultados.";
+        viewTable.textContent = data.voz || "No encontré resultados.";
     }
 
-    /* ---------------- DASHBOARD ---------------- */
+    /* ============================================================
+       VISTA DASHBOARD
+       ============================================================ */
     viewDashboard.innerHTML = "";
     const resumen = data.resumen || {};
     const dash = document.createElement("div");
@@ -893,7 +935,9 @@ function renderViews(data) {
 
     viewDashboard.appendChild(dash);
 
-    /* ---------------- FUENTE DE DATOS ---------------- */
+    /* ============================================================
+       FUENTE DE DATOS
+       ============================================================ */
     if (data.fuente) {
         fuenteOrigen.textContent = data.fuente.origen || "-";
         fuenteNombre.textContent = data.fuente.name || "-";
@@ -1063,6 +1107,14 @@ fuenteToggle.addEventListener("click", () => {
     }
 });
 </script>
+
+<!-- ============================================================
+     ========== FIN BLOQUE 3 — LÓGICA PRINCIPAL ==========
+     ============================================================ -->
+<!-- ============================================================
+     ========== INICIO BLOQUE 4 — SCANNERS + VOZ + ADMIN ==========
+     ============================================================ -->
+
 <script>
 /* ============================================================
    VOZ (Web Speech API)
@@ -1130,15 +1182,39 @@ btnStop.addEventListener("click", () => {
 
 /* ============================================================
    SCANNER EXTERNO (Barcode Scanner+)
+   - Usa intent correcto
+   - Copia al portapapeles
+   - Al volver, la app lee el portapapeles automáticamente
 ============================================================ */
 btnScannerExterno.addEventListener("click", () => {
     const intentUrl =
-        "intent://scan/?ret=encode#Intent;scheme=zxing;package=com.srowen.bs.android;end;";
+        "intent://scan/?ret=clipboard#Intent;scheme=zxing;package=com.srowen.bs.android;end;";
     window.location.href = intentUrl;
 });
 
 /* ============================================================
-   SCANNER INTERNO (Quagga)
+   DETECTAR CUANDO EL USUARIO VUELVE A LA APP
+   Y LEER AUTOMÁTICAMENTE EL PORTAPAPELES
+============================================================ */
+document.addEventListener("visibilitychange", async () => {
+    if (!document.hidden) {
+        try {
+            const text = await navigator.clipboard.readText();
+            if (text && text.length >= 3) {
+                input.value = text;
+                responseVoice.textContent = `Código detectado: ${text}`;
+                btnSend.click();
+            }
+        } catch (e) {
+            console.warn("No se pudo leer el portapapeles.");
+        }
+    }
+});
+
+/* ============================================================
+   SCANNER INTERNO (QUAGGA)
+   - Fix pantalla negra con setTimeout
+   - Consulta automática
 ============================================================ */
 const scannerOverlay = document.getElementById("scannerOverlay");
 const scannerVideo = document.getElementById("scannerVideo");
@@ -1155,28 +1231,31 @@ function iniciarScannerInterno() {
     scannerOverlay.style.display = "flex";
     responseVoice.textContent = "Iniciando cámara…";
 
-    Quagga.init({
-        inputStream: {
-            name: "Live",
-            type: "LiveStream",
-            target: scannerVideo,
-            constraints: { facingMode: "environment" }
-        },
-        decoder: {
-            readers: ["ean_reader", "ean_8_reader", "code128_reader"]
-        }
-    }, function(err) {
-        if (err) {
-            console.error(err);
-            responseVoice.textContent = "Error al iniciar cámara.";
-            return;
-        }
-        Quagga.start();
-        scanning = true;
-        responseVoice.textContent = "Escaneando código…";
-    });
+    // FIX PANTALLA NEGRA — esperar a que el video sea visible
+    setTimeout(() => {
+        Quagga.init({
+            inputStream: {
+                name: "Live",
+                type: "LiveStream",
+                target: scannerVideo,
+                constraints: { facingMode: "environment" }
+            },
+            decoder: {
+                readers: ["ean_reader", "ean_8_reader", "code128_reader"]
+            }
+        }, function(err) {
+            if (err) {
+                console.error(err);
+                responseVoice.textContent = "Error al iniciar cámara.";
+                return;
+            }
+            Quagga.start();
+            scanning = true;
+            responseVoice.textContent = "Escaneando código…";
+        });
 
-    Quagga.onDetected(onBarcodeDetected);
+        Quagga.onDetected(onBarcodeDetected);
+    }, 250);
 }
 
 function onBarcodeDetected(data) {
@@ -1201,6 +1280,37 @@ function detenerScannerInterno() {
     }
     responseVoice.textContent = "Scanner cerrado.";
 }
+
+/* ============================================================
+   SCANNER UNIVERSAL (ZXing) — LECTOR POR ARCHIVO/IMAGEN
+============================================================ */
+btnScannerZXing.addEventListener("click", async () => {
+    const inputFile = document.createElement("input");
+    inputFile.type = "file";
+    inputFile.accept = "image/*";
+
+    inputFile.onchange = async () => {
+        const file = inputFile.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = async () => {
+            try {
+                const codeReader = new ZXing.BrowserMultiFormatReader();
+                const result = await codeReader.decodeFromImage(undefined, reader.result);
+
+                input.value = result.text;
+                responseVoice.textContent = `Código detectado: ${result.text}`;
+                btnSend.click();
+            } catch (e) {
+                responseVoice.textContent = "No pude leer el código en la imagen.";
+            }
+        };
+        reader.readAsDataURL(file);
+    };
+
+    inputFile.click();
+});
 
 /* ============================================================
    MODO ADMIN SECRETO
@@ -1270,3 +1380,7 @@ orbStatus.addEventListener("click", () => {
 
 </body>
 </html>
+
+<!-- ============================================================
+     ========== FIN BLOQUE 4 — SCANNERS + VOZ + ADMIN ==========
+     ============================================================ -->
