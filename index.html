@@ -9,9 +9,6 @@
 <title>Stock IA PRO v2.1</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-<!-- ============================================================
-     ESTILOS PRINCIPALES + MODO OSCURO/CLARO + RESPONSIVE
-     ============================================================ -->
 <style>
 
 /* ============================================================
@@ -35,7 +32,7 @@
 }
 
 /* ============================================================
-   MODO CLARO (SE ACTIVA CON .light EN <body>)
+   MODO CLARO
 ============================================================ */
 body.light {
     --bg: #f3f4f6;
@@ -113,7 +110,7 @@ body {
 }
 
 /* ============================================================
-   HEADER DERECHO (BOTÓN TEMA + ESTADO SISTEMA)
+   HEADER DERECHO
 ============================================================ */
 .header-right {
     display: flex;
@@ -178,7 +175,7 @@ body.light .panel {
 }
 
 /* ============================================================
-   ORB ANIMADO
+   ORB
 ============================================================ */
 .orb-wrapper {
     display: flex;
@@ -288,7 +285,7 @@ body.light .autocomplete-list {
 }
 
 /* ============================================================
-   RESULTADOS + VISTAS + DASHBOARD
+   RESULTADOS
 ============================================================ */
 .response-shell {
     background: rgba(15, 23, 42, 0.9);
@@ -369,7 +366,7 @@ body.light .dashboard-card {
 }
 
 /* ============================================================
-   TARJETA DE FUENTE COLAPSABLE
+   TARJETA DE FUENTE
 ============================================================ */
 #fuenteToggle {
     margin-top: 10px;
@@ -389,7 +386,40 @@ body.light .dashboard-card {
 }
 
 /* ============================================================
-   SCANNER OVERLAY (INTERNO)
+   PANEL ADMIN
+============================================================ */
+#adminPanel {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.88);
+    display: none;
+    flex-direction: column;
+    padding: 20px;
+    z-index: 9999;
+}
+
+#adminPanel-inner {
+    max-width: 420px;
+    margin: auto;
+    background: var(--bg-elevated);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border-subtle);
+    padding: 18px;
+    box-shadow: var(--shadow-soft);
+}
+
+#adminPanel select {
+    width: 100%;
+    margin: 8px 0 14px 0;
+    padding: 6px 10px;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-subtle);
+    background: var(--bg);
+    color: var(--text);
+}
+
+/* ============================================================
+   SCANNER OVERLAY
 ============================================================ */
 .scanner-overlay {
     position: fixed;
@@ -425,61 +455,7 @@ body.light .dashboard-card {
 }
 
 /* ============================================================
-   SWITCH STOCK (MOSTRAR SOLO CON STOCK)
-============================================================ */
-.toggle-row {
-    margin-top: 10px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 0.78rem;
-    color: var(--text-soft);
-}
-
-.switch {
-    position: relative;
-    display: inline-block;
-    width: 38px;
-    height: 20px;
-}
-
-.switch input {
-    opacity: 0;
-    width: 0;
-    height: 0;
-}
-
-.slider {
-    position: absolute;
-    cursor: pointer;
-    inset: 0;
-    background-color: #4b5563;
-    transition: .2s;
-    border-radius: 999px;
-}
-
-.slider:before {
-    position: absolute;
-    content: "";
-    height: 14px;
-    width: 14px;
-    left: 3px;
-    bottom: 3px;
-    background-color: white;
-    transition: .2s;
-    border-radius: 50%;
-}
-
-.switch input:checked + .slider {
-    background-color: #22c55e;
-}
-
-.switch input:checked + .slider:before {
-    transform: translateX(18px);
-}
-
-/* ============================================================
-   RESPONSIVE MOBILE
+   RESPONSIVE
 ============================================================ */
 @media (max-width: 768px) {
     .app-main {
@@ -527,7 +503,6 @@ body.light .dashboard-card {
 <!-- ============================================================
      ========== FIN BLOQUE 1 — HEAD + ESTILOS ==========
      ============================================================ -->
-
 <!-- ============================================================
      ========== INICIO BLOQUE 2 — BODY + ESTRUCTURA ==========
      ============================================================ -->
@@ -548,10 +523,8 @@ body.light .dashboard-card {
         </div>
 
         <div class="header-right">
-            <!-- Botón de modo claro/oscuro -->
             <button id="btnTheme" class="toggle-theme">Modo claro/oscuro</button>
 
-            <!-- Estado del sistema -->
             <div class="pill">
                 <span class="pill-dot"></span>
                 <span>Sistema Conectado (Backend)</span>
@@ -560,7 +533,7 @@ body.light .dashboard-card {
     </header>
 
     <!-- ============================================================
-         CONTENIDO PRINCIPAL (2 COLUMNAS)
+         CONTENIDO PRINCIPAL
          ============================================================ -->
     <main class="app-main">
 
@@ -571,22 +544,18 @@ body.light .dashboard-card {
             <div class="panel-title">Consulta de stock</div>
             <div class="panel-subtitle">Escribí o hablá como si fuera una persona.</div>
 
-            <!-- ORB ANIMADO -->
             <div class="orb-wrapper">
                 <div class="orb" id="orbStatus"></div>
             </div>
 
-            <!-- INPUT + BOTÓN CONSULTAR -->
             <div class="input-shell">
                 <span class="input-prefix">¿Qué stock hay de…?</span>
                 <input id="queryInput" type="text" placeholder="pantuflas avengers plush" autocomplete="off" />
                 <button id="btnSend" class="btn btn-primary">Consultar</button>
             </div>
 
-            <!-- AUTOCOMPLETE -->
             <ul id="autocompleteList" class="autocomplete-list" style="display:none;"></ul>
 
-            <!-- BOTONES DE VOZ Y ACCIONES -->
             <div style="margin-top:10px; display:flex; gap:6px; flex-wrap:wrap;">
                 <button id="btnSpeak" class="btn">Hablar</button>
                 <button id="btnHandsFree" class="btn">Manos libres</button>
@@ -595,7 +564,6 @@ body.light .dashboard-card {
                 <button id="btnCopy" class="btn">Copiar</button>
             </div>
 
-            <!-- BOTONES DE SCANNER -->
             <div style="margin-top:8px; display:flex; gap:6px; flex-wrap:wrap;">
                 <button id="btnScannerExterno" class="btn">Scanner externo</button>
                 <button id="btnScannerInterno" class="btn">Scanner interno</button>
@@ -611,7 +579,7 @@ body.light .dashboard-card {
                 <span>Mostrar solo artículos con stock</span>
             </div>
 
-            <!-- HISTORIAL DE CONSULTAS -->
+            <!-- HISTORIAL -->
             <div class="history-shell">
                 <div>Historial de consultas:</div>
                 <ul id="historyList" class="history-list"></ul>
@@ -624,41 +592,26 @@ body.light .dashboard-card {
         <section class="panel">
             <div class="panel-title">Resultado</div>
 
-            <!-- BOTONES DE VISTA -->
             <div style="display:flex; gap:6px; margin-bottom:8px; flex-wrap:wrap;">
                 <button id="btnViewCards" class="btn btn-primary">Tarjetas</button>
                 <button id="btnViewList" class="btn">Lista</button>
                 <button id="btnViewTable" class="btn">Tabla</button>
                 <button id="btnViewDashboard" class="btn">Dashboard</button>
-
-                <!-- JSON oculto por defecto (modo admin) -->
                 <button id="btnViewJson" class="btn view-hidden">JSON</button>
             </div>
 
-            <!-- CONTENEDOR DE RESPUESTAS -->
             <div id="responseContainer" class="response-shell">
-                <!-- Vista JSON -->
                 <pre id="viewJson" class="view-hidden"></pre>
-
-                <!-- Vista Lista -->
                 <div id="viewList" class="view-hidden"></div>
-
-                <!-- Vista Tarjetas (vista por defecto) -->
                 <div id="viewCards"></div>
-
-                <!-- Vista Tabla -->
                 <div id="viewTable" class="view-hidden"></div>
-
-                <!-- Vista Dashboard -->
                 <div id="viewDashboard" class="view-hidden"></div>
             </div>
 
-            <!-- TEXTO DE VOZ / ESTADO -->
             <div style="margin-top:8px; font-size:0.75rem; color:var(--text-soft);">
                 <span id="responseVoice">Listo para responder.</span>
             </div>
 
-            <!-- FUENTE DE DATOS (COLAPSABLE) -->
             <div id="fuenteToggle">Fuente de datos (clic para ver)</div>
 
             <div id="fuenteCard">
@@ -666,14 +619,13 @@ body.light .dashboard-card {
                 <div><strong>Archivo:</strong> <span id="fuenteNombre"></span></div>
                 <div><strong>Última actualización:</strong> <span id="fuenteFecha"></span></div>
             </div>
-
         </section>
 
     </main>
 </div>
 
 <!-- ============================================================
-     OVERLAY DEL SCANNER INTERNO (QUAGGA)
+     OVERLAY DEL SCANNER INTERNO
      ============================================================ -->
 <div id="scannerOverlay" class="scanner-overlay">
     <div class="scanner-inner">
@@ -688,10 +640,36 @@ body.light .dashboard-card {
     </div>
 </div>
 
+<!-- ============================================================
+     PANEL ADMIN SECRETO
+     ============================================================ -->
+<div id="adminPanel">
+    <div id="adminPanel-inner">
+        <h3 style="margin-top:0;">Panel administrador</h3>
+        <p style="font-size:0.8rem; color:var(--text-soft);">
+            Ajustá el estilo de respuesta de la IA.
+        </p>
+
+        <label for="styleSelector" style="font-size:0.8rem;">Estilo de respuesta:</label>
+        <select id="styleSelector">
+            <option value="vendedor_experto">Vendedor experto</option>
+            <option value="amigable">Amigable</option>
+            <option value="profesional">Profesional</option>
+            <option value="minimalista">Minimalista</option>
+            <option value="tecnico">Técnico</option>
+        </select>
+
+        <div style="display:flex; justify-content:flex-end; gap:8px;">
+            <button id="btnCloseAdmin" class="btn">Cerrar</button>
+            <button id="btnSaveStyle" class="btn btn-primary">Guardar estilo</button>
+        </div>
+    </div>
+</div>
+
 <!-- Librería Quagga -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/quagga/0.12.1/quagga.min.js"></script>
 
-<!-- Librería ZXing (scanner universal por archivo) -->
+<!-- Librería ZXing -->
 <script src="https://unpkg.com/@zxing/library@latest"></script>
 
 <!-- ============================================================
@@ -704,7 +682,6 @@ body.light .dashboard-card {
 <script>
 /* ============================================================
    REFERENCIAS A ELEMENTOS DEL DOM
-   (Todo lo que se usa en la lógica principal)
 ============================================================ */
 const input = document.getElementById("queryInput");
 const btnSend = document.getElementById("btnSend");
@@ -744,60 +721,252 @@ const fuenteOrigen = document.getElementById("fuenteOrigen");
 const fuenteNombre = document.getElementById("fuenteNombre");
 const fuenteFecha = document.getElementById("fuenteFecha");
 
+const adminPanel = document.getElementById("adminPanel");
+const btnSaveStyle = document.getElementById("btnSaveStyle");
+const btnCloseAdmin = document.getElementById("btnCloseAdmin");
+const styleSelector = document.getElementById("styleSelector");
+
 /* ============================================================
    VARIABLES DE ESTADO
 ============================================================ */
 let lastResponse = null;
 let history = JSON.parse(localStorage.getItem("history") || "[]");
 let adminMode = JSON.parse(localStorage.getItem("adminMode") || "false");
+let IA_STYLE = "vendedor_experto";
 
 /* ============================================================
-   SONIDO DE CONFIRMACIÓN (BEEP)
+   BACKEND URL
 ============================================================ */
-function playBeep() {
+const BACKEND = "https://stock-backend-1-0upi.onrender.com";
+
+/* ============================================================
+   CARGAR ESTILO DESDE BACKEND
+============================================================ */
+async function loadStyleFromBackend() {
     try {
-        const ctx = new (window.AudioContext || window.webkitAudioContext)();
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.type = "sine";
-        osc.frequency.value = 880;
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-        gain.gain.setValueAtTime(0.0001, ctx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.2, ctx.currentTime + 0.01);
-        gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.15);
-        osc.start();
-        osc.stop(ctx.currentTime + 0.2);
-    } catch (e) {}
+        const res = await fetch(`${BACKEND}/style`);
+        const data = await res.json();
+        IA_STYLE = data.style || "vendedor_experto";
+        styleSelector.value = IA_STYLE;
+    } catch (e) {
+        console.warn("No se pudo cargar estilo");
+    }
 }
+loadStyleFromBackend();
 
 /* ============================================================
-   ACTIVAR UNA VISTA (CARDS / LIST / TABLE / DASHBOARD / JSON)
+   ADAPTAR RESPUESTA SEGÚN ESTILO
 ============================================================ */
-function setActiveView(viewId) {
-    const views = [viewJson, viewList, viewCards, viewTable, viewDashboard];
-    views.forEach(v => v.classList.add("view-hidden"));
-    document.getElementById(viewId).classList.remove("view-hidden");
-
-    [btnViewJson, btnViewList, btnViewCards, btnViewTable, btnViewDashboard]
-        .forEach(b => b.classList.remove("btn-primary"));
-
-    if (viewId === "viewCards") btnViewCards.classList.add("btn-primary");
-    if (viewId === "viewList") btnViewList.classList.add("btn-primary");
-    if (viewId === "viewTable") btnViewTable.classList.add("btn-primary");
-    if (viewId === "viewDashboard") btnViewDashboard.classList.add("btn-primary");
-    if (viewId === "viewJson") btnViewJson.classList.add("btn-primary");
+function applyStyleToVoice(text) {
+    switch (IA_STYLE) {
+        case "vendedor_experto":
+            return "¡Perfecto! " + text;
+        case "amigable":
+            return "Genial, " + text;
+        case "profesional":
+            return text;
+        case "minimalista":
+            return text;
+        case "tecnico":
+            return "Resultado técnico: " + text;
+        default:
+            return text;
+    }
 }
 
 /* ============================================================
-   RENDERIZAR TODAS LAS VISTAS
-   (Incluye filtro SOLO STOCK corregido)
+   PANEL ADMIN
+============================================================ */
+function openAdminPanel() {
+    adminPanel.style.display = "flex";
+}
+
+btnCloseAdmin.addEventListener("click", () => {
+    adminPanel.style.display = "none";
+});
+
+btnSaveStyle.addEventListener("click", async () => {
+    const newStyle = styleSelector.value;
+
+    try {
+        const res = await fetch(`${BACKEND}/style`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                style: newStyle,
+                admin_key: "ADMIN"
+            })
+        });
+
+        const data = await res.json();
+        if (data.style) {
+            IA_STYLE = data.style;
+            alert("Estilo actualizado a: " + IA_STYLE);
+        }
+    } catch (e) {
+        alert("No se pudo guardar estilo");
+    }
+});
+
+/* ============================================================
+   ORB — 5 TOQUES → ADMIN / 1 TOQUE → VOZ
+============================================================ */
+let orbTapCount = 0;
+let orbTapTimer = null;
+
+orbStatus.addEventListener("click", () => {
+    orbTapCount++;
+
+    if (orbTapTimer) clearTimeout(orbTapTimer);
+    orbTapTimer = setTimeout(() => { orbTapCount = 0; }, 800);
+
+    if (orbTapCount >= 5) {
+        orbTapCount = 0;
+        openAdminPanel();
+    } else {
+        startVoice();
+    }
+});
+
+/* ============================================================
+   VOZ — Web Speech API
+============================================================ */
+let recognition = null;
+let listening = false;
+let handsFree = false;
+
+function initSpeech() {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+        responseVoice.textContent = "Tu navegador no soporta voz.";
+        return;
+    }
+
+    recognition = new SpeechRecognition();
+    recognition.lang = "es-AR";
+    recognition.interimResults = true;
+    recognition.continuous = true;
+
+    recognition.onstart = () => {
+        listening = true;
+        orbStatus.style.animation = "orb-breathe 1.2s ease-in-out infinite";
+        responseVoice.textContent = applyStyleToVoice("escuchando…");
+    };
+
+    recognition.onend = () => {
+        listening = false;
+        orbStatus.style.animation = "orb-breathe 3.8s ease-in-out infinite";
+        if (handsFree) recognition.start();
+    };
+
+    recognition.onresult = (event) => {
+        let texto = "";
+        for (let i = 0; i < event.results.length; i++) {
+            texto += event.results[i][0].transcript;
+        }
+        input.value = texto;
+
+        if (event.results[event.results.length - 1].isFinal) {
+            btnSend.click();
+        }
+    };
+}
+
+function startVoice() {
+    if (!recognition) initSpeech();
+    handsFree = false;
+    recognition.start();
+}
+
+btnSpeak.addEventListener("click", startVoice);
+
+btnHandsFree.addEventListener("click", () => {
+    if (!recognition) initSpeech();
+    handsFree = true;
+    recognition.start();
+});
+
+btnStop.addEventListener("click", () => {
+    if (recognition) {
+        handsFree = false;
+        recognition.stop();
+        responseVoice.textContent = "Voz detenida";
+    }
+});
+
+/* ============================================================
+   CONSULTA AL BACKEND
+============================================================ */
+btnSend.addEventListener("click", async () => {
+    const q = input.value.trim();
+    if (!q) return;
+
+    responseVoice.textContent = applyStyleToVoice("consultando...");
+    addToHistory(q);
+
+    try {
+        const r = await fetch(`${BACKEND}/query`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                question: q,
+                solo_stock: chkSoloStock.checked
+            })
+        });
+
+        const data = await r.json();
+        lastResponse = data;
+
+        renderViews(data);
+        setActiveView("viewCards");
+
+        responseVoice.textContent = applyStyleToVoice(data.voz || "respuesta lista.");
+
+    } catch (e) {
+        responseVoice.textContent = "Error al consultar.";
+    }
+});
+
+/* ============================================================
+   AUTOCOMPLETE
+============================================================ */
+input.addEventListener("input", async () => {
+    const q = input.value.trim();
+    if (!q) {
+        autocompleteList.style.display = "none";
+        return;
+    }
+
+    try {
+        const r = await fetch(`${BACKEND}/autocomplete?q=${encodeURIComponent(q)}`);
+        const data = await r.json();
+
+        autocompleteList.innerHTML = "";
+        if (data.sugerencias && data.sugerencias.length > 0) {
+            data.sugerencias.forEach(s => {
+                const li = document.createElement("li");
+                li.className = "autocomplete-item";
+                li.textContent = s;
+                li.onclick = () => {
+                    input.value = s;
+                    autocompleteList.style.display = "none";
+                    btnSend.click();
+                };
+                autocompleteList.appendChild(li);
+            });
+            autocompleteList.style.display = "block";
+        } else {
+            autocompleteList.style.display = "none";
+        }
+    } catch (e) {
+        autocompleteList.style.display = "none";
+    }
+});
+
+/* ============================================================
+   RENDERIZAR VISTAS
 ============================================================ */
 function renderViews(data) {
-
-    /* ============================================================
-       FILTRO SOLO STOCK (FRONTEND)
-       ============================================================ */
     let items = data.items || [];
 
     if (chkSoloStock.checked) {
@@ -806,14 +975,10 @@ function renderViews(data) {
         );
     }
 
-    /* ============================================================
-       VISTA JSON
-       ============================================================ */
+    /* JSON */
     viewJson.textContent = JSON.stringify(data, null, 2);
 
-    /* ============================================================
-       VISTA LISTA
-       ============================================================ */
+    /* LISTA */
     viewList.innerHTML = "";
     if (items.length > 0) {
         const ul = document.createElement("ul");
@@ -828,9 +993,7 @@ function renderViews(data) {
         viewList.textContent = data.voz || "No encontré resultados.";
     }
 
-    /* ============================================================
-       VISTA TARJETAS
-       ============================================================ */
+    /* TARJETAS */
     viewCards.innerHTML = "";
     if (items.length > 0) {
         const grid = document.createElement("div");
@@ -855,9 +1018,7 @@ function renderViews(data) {
         viewCards.textContent = data.voz || "No encontré resultados.";
     }
 
-    /* ============================================================
-       VISTA TABLA
-       ============================================================ */
+    /* TABLA */
     viewTable.innerHTML = "";
     if (items.length > 0) {
         const table = document.createElement("table");
@@ -903,9 +1064,7 @@ function renderViews(data) {
         viewTable.textContent = data.voz || "No encontré resultados.";
     }
 
-    /* ============================================================
-       VISTA DASHBOARD
-       ============================================================ */
+    /* DASHBOARD */
     viewDashboard.innerHTML = "";
     const resumen = data.resumen || {};
     const dash = document.createElement("div");
@@ -935,9 +1094,7 @@ function renderViews(data) {
 
     viewDashboard.appendChild(dash);
 
-    /* ============================================================
-       FUENTE DE DATOS
-       ============================================================ */
+    /* FUENTE */
     if (data.fuente) {
         fuenteOrigen.textContent = data.fuente.origen || "-";
         fuenteNombre.textContent = data.fuente.name || "-";
@@ -946,7 +1103,7 @@ function renderViews(data) {
 }
 
 /* ============================================================
-   HISTORIAL (PERSISTENTE)
+   HISTORIAL
 ============================================================ */
 function addToHistory(q) {
     if (!q) return;
@@ -972,7 +1129,7 @@ function renderHistory() {
 renderHistory();
 
 /* ============================================================
-   MODO CLARO/OSCURO (PERSISTENTE)
+   MODO CLARO/OSCURO
 ============================================================ */
 if (localStorage.getItem("theme") === "light") {
     document.body.classList.add("light");
@@ -994,197 +1151,7 @@ input.addEventListener("keydown", e => {
 });
 
 /* ============================================================
-   AUTOCOMPLETE
-============================================================ */
-input.addEventListener("input", async () => {
-    const q = input.value.trim();
-    if (!q) {
-        autocompleteList.style.display = "none";
-        return;
-    }
-
-    try {
-        const r = await fetch(`https://stock-backend-1-twzg.onrender.com/autocomplete?q=${encodeURIComponent(q)}`);
-        const data = await r.json();
-
-        autocompleteList.innerHTML = "";
-        if (data.sugerencias && data.sugerencias.length > 0) {
-            data.sugerencias.forEach(s => {
-                const li = document.createElement("li");
-                li.className = "autocomplete-item";
-                li.textContent = s;
-                li.onclick = () => {
-                    input.value = s;
-                    autocompleteList.style.display = "none";
-                    btnSend.click();
-                };
-                autocompleteList.appendChild(li);
-            });
-            autocompleteList.style.display = "block";
-        } else {
-            autocompleteList.style.display = "none";
-        }
-    } catch (e) {
-        autocompleteList.style.display = "none";
-    }
-});
-
-/* ============================================================
-   CONSULTA AL BACKEND
-============================================================ */
-btnSend.addEventListener("click", async () => {
-    const q = input.value.trim();
-    if (!q) return;
-
-    responseVoice.textContent = "Consultando...";
-    playBeep();
-    addToHistory(q);
-
-    try {
-        const r = await fetch("https://stock-backend-1-twzg.onrender.com/query", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                question: q,
-                solo_stock: chkSoloStock.checked
-            })
-        });
-
-        const data = await r.json();
-        lastResponse = data;
-
-        renderViews(data);
-        setActiveView("viewCards");
-
-        responseVoice.textContent = data.voz || "Respuesta lista.";
-        playBeep();
-    } catch (e) {
-        viewJson.textContent = "Error consultando backend.";
-        responseVoice.textContent = "Error al consultar.";
-    }
-});
-
-/* ============================================================
-   BOTONES DE VISTA
-============================================================ */
-btnViewCards.addEventListener("click", () => setActiveView("viewCards"));
-btnViewList.addEventListener("click", () => setActiveView("viewList"));
-btnViewTable.addEventListener("click", () => setActiveView("viewTable"));
-btnViewDashboard.addEventListener("click", () => setActiveView("viewDashboard"));
-btnViewJson.addEventListener("click", () => setActiveView("viewJson"));
-
-/* ============================================================
-   BOTONES AUXILIARES
-============================================================ */
-btnClear.addEventListener("click", () => {
-    input.value = "";
-    viewJson.textContent = "";
-    viewList.textContent = "";
-    viewCards.textContent = "";
-    viewTable.textContent = "";
-    viewDashboard.textContent = "";
-    responseVoice.textContent = "Listo para responder.";
-});
-
-btnCopy.addEventListener("click", async () => {
-    try {
-        await navigator.clipboard.writeText(viewJson.textContent || "");
-        responseVoice.textContent = "Respuesta copiada al portapapeles.";
-        playBeep();
-    } catch (e) {
-        responseVoice.textContent = "No se pudo copiar.";
-    }
-});
-
-/* ============================================================
-   TARJETA DE FUENTE (COLAPSABLE)
-============================================================ */
-fuenteToggle.addEventListener("click", () => {
-    if (fuenteCard.style.display === "none" || fuenteCard.style.display === "") {
-        fuenteCard.style.display = "block";
-    } else {
-        fuenteCard.style.display = "none";
-    }
-});
-</script>
-
-<!-- ============================================================
-     ========== FIN BLOQUE 3 — LÓGICA PRINCIPAL ==========
-     ============================================================ -->
-<!-- ============================================================
-     ========== INICIO BLOQUE 4 — SCANNERS + VOZ + ADMIN ==========
-     ============================================================ -->
-
-<script>
-/* ============================================================
-   VOZ (Web Speech API)
-============================================================ */
-let recognition = null;
-let listening = false;
-let handsFree = false;
-
-function initSpeech() {
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SpeechRecognition) {
-        responseVoice.textContent = "Tu navegador no soporta reconocimiento de voz.";
-        return;
-    }
-
-    recognition = new SpeechRecognition();
-    recognition.lang = "es-AR";
-    recognition.interimResults = true;
-    recognition.continuous = true;
-
-    recognition.onstart = () => {
-        listening = true;
-        orbStatus.style.animation = "orb-breathe 1.2s ease-in-out infinite";
-        responseVoice.textContent = handsFree ? "Modo manos libres activo" : "Escuchando…";
-    };
-
-    recognition.onend = () => {
-        listening = false;
-        orbStatus.style.animation = "orb-breathe 3.8s ease-in-out infinite";
-        if (handsFree) recognition.start();
-    };
-
-    recognition.onresult = (event) => {
-        let texto = "";
-        for (let i = 0; i < event.results.length; i++) {
-            texto += event.results[i][0].transcript;
-        }
-        input.value = texto;
-
-        if (event.results[event.results.length - 1].isFinal) {
-            btnSend.click();
-        }
-    };
-}
-
-btnSpeak.addEventListener("click", () => {
-    if (!recognition) initSpeech();
-    handsFree = false;
-    recognition.start();
-});
-
-btnHandsFree.addEventListener("click", () => {
-    if (!recognition) initSpeech();
-    handsFree = true;
-    recognition.start();
-});
-
-btnStop.addEventListener("click", () => {
-    if (recognition) {
-        handsFree = false;
-        recognition.stop();
-        responseVoice.textContent = "Voz detenida";
-    }
-});
-
-/* ============================================================
-   SCANNER EXTERNO (Barcode Scanner+)
-   - Usa intent correcto
-   - Copia al portapapeles
-   - Al volver, la app lee el portapapeles automáticamente
+   SCANNER EXTERNO
 ============================================================ */
 btnScannerExterno.addEventListener("click", () => {
     const intentUrl =
@@ -1193,8 +1160,7 @@ btnScannerExterno.addEventListener("click", () => {
 });
 
 /* ============================================================
-   DETECTAR CUANDO EL USUARIO VUELVE A LA APP
-   Y LEER AUTOMÁTICAMENTE EL PORTAPAPELES
+   DETECTAR VUELTA A LA APP Y LEER PORTAPAPELES
 ============================================================ */
 document.addEventListener("visibilitychange", async () => {
     if (!document.hidden) {
@@ -1213,8 +1179,6 @@ document.addEventListener("visibilitychange", async () => {
 
 /* ============================================================
    SCANNER INTERNO (QUAGGA)
-   - Fix pantalla negra con setTimeout
-   - Consulta automática
 ============================================================ */
 const scannerOverlay = document.getElementById("scannerOverlay");
 const scannerVideo = document.getElementById("scannerVideo");
@@ -1231,7 +1195,6 @@ function iniciarScannerInterno() {
     scannerOverlay.style.display = "flex";
     responseVoice.textContent = "Iniciando cámara…";
 
-    // FIX PANTALLA NEGRA — esperar a que el video sea visible
     setTimeout(() => {
         Quagga.init({
             inputStream: {
@@ -1272,17 +1235,15 @@ function onBarcodeDetected(data) {
 
 function detenerScannerInterno() {
     scannerOverlay.style.display = "none";
-    if (scanning) {
+    try {
         Quagga.stop();
-        scanning = false;
-    } else {
-        Quagga.stop();
-    }
+    } catch (e) {}
+    scanning = false;
     responseVoice.textContent = "Scanner cerrado.";
 }
 
 /* ============================================================
-   SCANNER UNIVERSAL (ZXing) — LECTOR POR ARCHIVO/IMAGEN
+   SCANNER UNIVERSAL (ZXing) — IMAGEN
 ============================================================ */
 btnScannerZXing.addEventListener("click", async () => {
     const inputFile = document.createElement("input");
@@ -1313,74 +1274,66 @@ btnScannerZXing.addEventListener("click", async () => {
 });
 
 /* ============================================================
-   MODO ADMIN SECRETO
+   BOTONES DE VISTA
 ============================================================ */
-function updateAdminUI() {
-    if (adminMode) {
-        btnViewJson.classList.remove("view-hidden");
-    } else {
-        btnViewJson.classList.add("view-hidden");
-    }
+function setActiveView(viewId) {
+    const views = [viewJson, viewList, viewCards, viewTable, viewDashboard];
+    views.forEach(v => v.classList.add("view-hidden"));
+    document.getElementById(viewId).classList.remove("view-hidden");
+
+    [btnViewJson, btnViewList, btnViewCards, btnViewTable, btnViewDashboard]
+        .forEach(b => b.classList.remove("btn-primary"));
+
+    if (viewId === "viewCards") btnViewCards.classList.add("btn-primary");
+    if (viewId === "viewList") btnViewList.classList.add("btn-primary");
+    if (viewId === "viewTable") btnViewTable.classList.add("btn-primary");
+    if (viewId === "viewDashboard") btnViewDashboard.classList.add("btn-primary");
+    if (viewId === "viewJson") btnViewJson.classList.add("btn-primary");
 }
-updateAdminUI();
 
-/* --- Activación por comando secreto /admin --- */
-input.addEventListener("keydown", e => {
-    if (e.key === "Enter") {
-        const q = input.value.trim();
+btnViewCards.addEventListener("click", () => setActiveView("viewCards"));
+btnViewList.addEventListener("click", () => setActiveView("viewList"));
+btnViewTable.addEventListener("click", () => setActiveView("viewTable"));
+btnViewDashboard.addEventListener("click", () => setActiveView("viewDashboard"));
+btnViewJson.addEventListener("click", () => setActiveView("viewJson"));
 
-        if (q === "/admin") {
-            adminMode = true;
-            localStorage.setItem("adminMode", "true");
-            updateAdminUI();
-            responseVoice.textContent = "Modo administrador activado.";
-            input.value = "";
-            return;
-        }
-
-        if (q === "/admin off") {
-            adminMode = false;
-            localStorage.setItem("adminMode", "false");
-            updateAdminUI();
-            responseVoice.textContent = "Modo administrador desactivado.";
-            input.value = "";
-            return;
-        }
-    }
+/* ============================================================
+   BOTONES AUXILIARES
+============================================================ */
+btnClear.addEventListener("click", () => {
+    input.value = "";
+    viewJson.textContent = "";
+    viewList.textContent = "";
+    viewCards.textContent = "";
+    viewTable.textContent = "";
+    viewDashboard.textContent = "";
+    responseVoice.textContent = "Listo para responder.";
 });
 
-/* --- Activación por 5 toques al ORB --- */
-let orbTapCount = 0;
-let orbTapTimer = null;
-
-orbStatus.addEventListener("click", () => {
-    orbTapCount++;
-
-    if (orbTapTimer) clearTimeout(orbTapTimer);
-
-    orbTapTimer = setTimeout(() => {
-        orbTapCount = 0;
-    }, 600);
-
-    if (orbTapCount >= 5) {
-        adminMode = !adminMode;
-        localStorage.setItem("adminMode", adminMode ? "true" : "false");
-        updateAdminUI();
-        responseVoice.textContent = adminMode
-            ? "Modo administrador activado."
-            : "Modo administrador desactivado.";
-        orbTapCount = 0;
+btnCopy.addEventListener("click", async () => {
+    try {
+        await navigator.clipboard.writeText(viewJson.textContent || "");
+        responseVoice.textContent = "Respuesta copiada al portapapeles.";
+    } catch (e) {
+        responseVoice.textContent = "No se pudo copiar.";
     }
 });
 
 /* ============================================================
-   FIN DEL SCRIPT
+   TARJETA DE FUENTE (COLAPSABLE)
 ============================================================ */
+fuenteToggle.addEventListener("click", () => {
+    if (fuenteCard.style.display === "none" || fuenteCard.style.display === "") {
+        fuenteCard.style.display = "block";
+    } else {
+        fuenteCard.style.display = "none";
+    }
+});
 </script>
+
+<!-- ============================================================
+     ========== FIN BLOQUE 3 — LÓGICA PRINCIPAL ==========
+     ============================================================ -->
 
 </body>
 </html>
-
-<!-- ============================================================
-     ========== FIN BLOQUE 4 — SCANNERS + VOZ + ADMIN ==========
-     ============================================================ -->
