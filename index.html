@@ -1,7 +1,3 @@
-<!-- ============================================================
-     ========== BLOQUE 1 — HEAD + ESTILOS ==========
-     ============================================================ -->
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -173,19 +169,8 @@ body.light .panel {
     background: linear-gradient(145deg, #ffffff, #f9fafb);
 }
 
-.panel-title {
-    font-size: 1rem;
-    font-weight: 600;
-    margin-bottom: 4px;
-}
-.panel-subtitle {
-    font-size: 0.8rem;
-    color: var(--text-soft);
-    margin-bottom: 10px;
-}
-
 /* ============================================================
-   ORB ANIMADO
+   ORB
 ============================================================ */
 .orb-wrapper {
     display: flex;
@@ -528,10 +513,6 @@ body.light .dashboard-card {
 }
 </style>
 </head>
-<!-- ============================================================
-     ========== BLOQUE 2 — BODY + ESTRUCTURA ==========
-     ============================================================ -->
-
 <body>
 <div class="app-shell">
 
@@ -604,33 +585,44 @@ body.light .dashboard-card {
         <!-- PANEL DERECHO -->
         <section class="panel">
             <div class="panel-title">Resultado</div>
+            <div class="panel-subtitle">Vista inteligente de los artículos encontrados.</div>
 
             <div style="display:flex; gap:6px; margin-bottom:8px; flex-wrap:wrap;">
                 <button id="btnViewCards" class="btn btn-primary">Tarjetas</button>
                 <button id="btnViewList" class="btn">Lista</button>
                 <button id="btnViewTable" class="btn">Tabla</button>
                 <button id="btnViewDashboard" class="btn">Dashboard</button>
-                <button id="btnViewJson" class="btn view-hidden">JSON</button>
             </div>
 
-            <div id="responseContainer" class="response-shell">
-                <pre id="viewJson" class="view-hidden"></pre>
-                <div id="viewList" class="view-hidden"></div>
-                <div id="viewCards"></div>
-                <div id="viewTable" class="view-hidden"></div>
-                <div id="viewDashboard" class="view-hidden"></div>
+            <div id="viewCards" class="response-shell">
+                <div id="cardsContainer">Listo para responder.</div>
             </div>
 
-            <div style="margin-top:8px; font-size:0.75rem; color:var(--text-soft);">
-                <span id="responseVoice">Listo para responder.</span>
+            <div id="viewList" class="response-shell view-hidden">
+                <ul id="listContainer" style="padding-left:18px; margin:0;"></ul>
+            </div>
+
+            <div id="viewTable" class="response-shell view-hidden">
+                <table id="tableContainer" style="width:100%; border-collapse:collapse; font-size:0.78rem;">
+                    <thead>
+                        <tr>
+                            <th style="text-align:left; border-bottom:1px solid rgba(148,163,184,0.4); padding:4px;">Código</th>
+                            <th style="text-align:left; border-bottom:1px solid rgba(148,163,184,0.4); padding:4px;">Descripción</th>
+                            <th style="text-align:right; border-bottom:1px solid rgba(148,163,184,0.4); padding:4px;">Stock</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+
+            <div id="viewDashboard" class="response-shell view-hidden">
+                <div id="dashboardContainer" class="dashboard-grid"></div>
             </div>
 
             <div id="fuenteToggle">Fuente de datos (clic para ver)</div>
-
             <div id="fuenteCard">
-                <div><strong>Origen:</strong> <span id="fuenteOrigen"></span></div>
-                <div><strong>Archivo:</strong> <span id="fuenteNombre"></span></div>
-                <div><strong>Última actualización:</strong> <span id="fuenteFecha"></span></div>
+                <div><strong>Backend:</strong> <span id="backendUrlLabel"></span></div>
+                <div style="margin-top:4px;">Consultas en tiempo real al servidor de stock.</div>
             </div>
         </section>
 
@@ -640,28 +632,24 @@ body.light .dashboard-card {
 <!-- OVERLAY SCANNER INTERNO -->
 <div id="scannerOverlay" class="scanner-overlay">
     <div class="scanner-inner">
-        <div style="font-size:0.85rem; margin-bottom:8px; color:var(--text-soft);">
-            Escaneando código de barras (cámara interna)…
-        </div>
+        <div style="font-size:0.9rem; margin-bottom:8px;">Scanner interno (cámara)</div>
         <video id="scannerVideo" autoplay playsinline></video>
         <div class="scanner-actions">
-            <button id="btnScannerStop" class="btn">Detener</button>
-            <button id="btnScannerClose" class="btn">Cerrar</button>
+            <button id="btnCloseScanner" class="btn">Cerrar</button>
         </div>
     </div>
 </div>
 
-<!-- Librerías de scanners -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/quagga/0.12.1/quagga.min.js"></script>
-<script src="https://unpkg.com/@zxing/library@latest"></script>
-<!-- ============================================================
-     ========== BLOQUE 3 — LÓGICA PRINCIPAL ==========
-     ============================================================ -->
-
+<audio id="responseVoice" style="display:none;"></audio>
 <script>
-/* ============================================================
-   DOM
-============================================================ */
+// ==================================================
+// CONFIGURACIÓN BACKEND
+// ==================================================
+const BACKEND = "https://stock-backend-1-0upi.onrender.com";
+
+// ==================================================
+// REFERENCIAS DOM
+// ==================================================
 const input = document.getElementById("queryInput");
 const btnSend = document.getElementById("btnSend");
 const autocompleteList = document.getElementById("autocompleteList");
@@ -680,619 +668,401 @@ const btnScannerInterno = document.getElementById("btnScannerInterno");
 const btnScannerZXing = document.getElementById("btnScannerZXing");
 
 const chkSoloStock = document.getElementById("chkSoloStock");
+const historyList = document.getElementById("historyList");
 
-const viewJson = document.getElementById("viewJson");
-const viewList = document.getElementById("viewList");
-const viewCards = document.getElementById("viewCards");
-const viewTable = document.getElementById("viewTable");
-const viewDashboard = document.getElementById("viewDashboard");
-
-const btnViewJson = document.getElementById("btnViewJson");
-const btnViewList = document.getElementById("btnViewList");
 const btnViewCards = document.getElementById("btnViewCards");
+const btnViewList = document.getElementById("btnViewList");
 const btnViewTable = document.getElementById("btnViewTable");
 const btnViewDashboard = document.getElementById("btnViewDashboard");
 
-const historyList = document.getElementById("historyList");
+const viewCards = document.getElementById("viewCards");
+const viewList = document.getElementById("viewList");
+const viewTable = document.getElementById("viewTable");
+const viewDashboard = document.getElementById("viewDashboard");
+
+const cardsContainer = document.getElementById("cardsContainer");
+const listContainer = document.getElementById("listContainer");
+const tableContainer = document.getElementById("tableContainer").querySelector("tbody");
+const dashboardContainer = document.getElementById("dashboardContainer");
 
 const fuenteToggle = document.getElementById("fuenteToggle");
 const fuenteCard = document.getElementById("fuenteCard");
-const fuenteOrigen = document.getElementById("fuenteOrigen");
-const fuenteNombre = document.getElementById("fuenteNombre");
-const fuenteFecha = document.getElementById("fuenteFecha");
-
-const btnTheme = document.getElementById("btnTheme");
+const backendUrlLabel = document.getElementById("backendUrlLabel");
 
 const scannerOverlay = document.getElementById("scannerOverlay");
 const scannerVideo = document.getElementById("scannerVideo");
-const btnScannerStop = document.getElementById("btnScannerStop");
-const btnScannerClose = document.getElementById("btnScannerClose");
+const btnCloseScanner = document.getElementById("btnCloseScanner");
 
-/* ============================================================
-   ESTADO
-============================================================ */
-let lastResponse = null;
-let history = JSON.parse(localStorage.getItem("history") || "[]");
-let adminMode = JSON.parse(localStorage.getItem("adminMode") || "false");
+const btnTheme = document.getElementById("btnTheme");
 
-/* PONÉ ACÁ LA URL REAL DE TU BACKEND */
-const BACKEND = "https://stock-backend-1-0upi.onrender.com";
+// ==================================================
+// ESTADO
+// ==================================================
+let recognition = null;
+let handsFreeMode = false;
+let mediaStream = null;
+let lastResults = [];
 
-/* ============================================================
-   TTS — VOZ DE SALIDA
-============================================================ */
-function speak(text) {
-    if (!("speechSynthesis" in window)) return;
+// Mostrar URL de backend
+backendUrlLabel.textContent = BACKEND;
+
+// ==================================================
+// TEMA CLARO/OSCURO
+// ==================================================
+btnTheme.addEventListener("click", () => {
+    document.body.classList.toggle("light");
+});
+
+// ==================================================
+// AUTOCOMPLETE
+// ==================================================
+let autocompleteTimeout = null;
+
+input.addEventListener("input", () => {
+    const q = input.value.trim();
+    if (!q) {
+        autocompleteList.style.display = "none";
+        autocompleteList.innerHTML = "";
+        return;
+    }
+    if (autocompleteTimeout) clearTimeout(autocompleteTimeout);
+    autocompleteTimeout = setTimeout(() => {
+        fetch(`${BACKEND}/autocomplete?q=${encodeURIComponent(q)}`)
+            .then(r => r.ok ? r.json() : [])
+            .then(data => {
+                autocompleteList.innerHTML = "";
+                if (!data || !data.suggestions || data.suggestions.length === 0) {
+                    autocompleteList.style.display = "none";
+                    return;
+                }
+                data.suggestions.forEach(s => {
+                    const li = document.createElement("li");
+                    li.className = "autocomplete-item";
+                    li.textContent = s;
+                    li.addEventListener("click", () => {
+                        input.value = s;
+                        autocompleteList.style.display = "none";
+                    });
+                    autocompleteList.appendChild(li);
+                });
+                autocompleteList.style.display = "block";
+            })
+            .catch(() => {
+                autocompleteList.style.display = "none";
+            });
+    }, 250);
+});
+
+// ==================================================
+// CONSULTA PRINCIPAL
+// ==================================================
+async function consultar() {
+    const q = input.value.trim();
+    if (!q) return;
+
+    orbStatus.style.opacity = "0.5";
+    cardsContainer.textContent = "Consultando...";
+    listContainer.innerHTML = "";
+    tableContainer.innerHTML = "";
+    dashboardContainer.innerHTML = "";
+
+    try {
+        const params = new URLSearchParams();
+        params.set("q", q);
+        params.set("solo_stock", chkSoloStock.checked ? "1" : "0");
+
+        const resp = await fetch(`${BACKEND}/query?${params.toString()}`);
+        if (!resp.ok) throw new Error("Error en backend");
+        const data = await resp.json();
+
+        lastResults = data.items || [];
+
+        renderCards(lastResults, data.message || "");
+        renderList(lastResults);
+        renderTable(lastResults);
+        renderDashboard(lastResults);
+
+        addToHistory(q);
+        speakText(data.tts || data.message || "Consulta realizada.");
+    } catch (err) {
+        cardsContainer.textContent = "Error al consultar el backend.";
+        listContainer.innerHTML = "";
+        tableContainer.innerHTML = "";
+        dashboardContainer.innerHTML = "";
+    } finally {
+        orbStatus.style.opacity = "1";
+    }
+}
+
+btnSend.addEventListener("click", consultar);
+input.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") consultar();
+});
+
+// ==================================================
+// RENDERIZADO DE VISTAS
+// ==================================================
+function renderCards(items, message) {
+    if (!items || items.length === 0) {
+        cardsContainer.textContent = message || "No se encontraron resultados.";
+        return;
+    }
+    cardsContainer.innerHTML = "";
+    items.forEach(it => {
+        const div = document.createElement("div");
+        div.className = "dashboard-card";
+        div.innerHTML = `
+            <div class="dashboard-label">${it.codigo || ""}</div>
+            <div class="dashboard-value">${it.descripcion || ""}</div>
+            <div style="margin-top:4px; font-size:0.75rem;">
+                Stock: <strong>${it.stock ?? "-"}</strong>
+            </div>
+        `;
+        cardsContainer.appendChild(div);
+    });
+}
+
+function renderList(items) {
+    listContainer.innerHTML = "";
+    if (!items || items.length === 0) return;
+    items.forEach(it => {
+        const li = document.createElement("li");
+        li.textContent = `${it.codigo || ""} - ${it.descripcion || ""} (Stock: ${it.stock ?? "-"})`;
+        listContainer.appendChild(li);
+    });
+}
+
+function renderTable(items) {
+    tableContainer.innerHTML = "";
+    if (!items || items.length === 0) return;
+    items.forEach(it => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+            <td style="padding:4px; border-bottom:1px solid rgba(148,163,184,0.2);">${it.codigo || ""}</td>
+            <td style="padding:4px; border-bottom:1px solid rgba(148,163,184,0.2);">${it.descripcion || ""}</td>
+            <td style="padding:4px; border-bottom:1px solid rgba(148,163,184,0.2); text-align:right;">${it.stock ?? "-"}</td>
+        `;
+        tableContainer.appendChild(tr);
+    });
+}
+
+function renderDashboard(items) {
+    dashboardContainer.innerHTML = "";
+    const totalItems = items.length;
+    const totalConStock = items.filter(i => (i.stock || 0) > 0).length;
+    const totalStock = items.reduce((acc, i) => acc + (i.stock || 0), 0);
+
+    const cards = [
+        { label: "Artículos encontrados", value: totalItems },
+        { label: "Con stock", value: totalConStock },
+        { label: "Unidades totales", value: totalStock }
+    ];
+
+    cards.forEach(c => {
+        const div = document.createElement("div");
+        div.className = "dashboard-card";
+        div.innerHTML = `
+            <div class="dashboard-label">${c.label}</div>
+            <div class="dashboard-value">${c.value}</div>
+        `;
+        dashboardContainer.appendChild(div);
+    });
+}
+
+// ==================================================
+// CAMBIO DE VISTA
+// ==================================================
+function setView(view) {
+    viewCards.classList.add("view-hidden");
+    viewList.classList.add("view-hidden");
+    viewTable.classList.add("view-hidden");
+    viewDashboard.classList.add("view-hidden");
+
+    btnViewCards.classList.remove("btn-primary");
+    btnViewList.classList.remove("btn-primary");
+    btnViewTable.classList.remove("btn-primary");
+    btnViewDashboard.classList.remove("btn-primary");
+
+    if (view === "cards") {
+        viewCards.classList.remove("view-hidden");
+        btnViewCards.classList.add("btn-primary");
+    } else if (view === "list") {
+        viewList.classList.remove("view-hidden");
+        btnViewList.classList.add("btn-primary");
+    } else if (view === "table") {
+        viewTable.classList.remove("view-hidden");
+        btnViewTable.classList.add("btn-primary");
+    } else if (view === "dashboard") {
+        viewDashboard.classList.remove("view-hidden");
+        btnViewDashboard.classList.add("btn-primary");
+    }
+}
+
+btnViewCards.addEventListener("click", () => setView("cards"));
+btnViewList.addEventListener("click", () => setView("list"));
+btnViewTable.addEventListener("click", () => setView("table"));
+btnViewDashboard.addEventListener("click", () => setView("dashboard"));
+
+setView("cards");
+
+// ==================================================
+// HISTORIAL
+// ==================================================
+function addToHistory(q) {
+    if (!q) return;
+    const li = document.createElement("li");
+    li.className = "history-item";
+    li.textContent = q;
+    li.addEventListener("click", () => {
+        input.value = q;
+        input.focus();
+    });
+    historyList.prepend(li);
+}
+
+// ==================================================
+// FUENTE DE DATOS
+// ==================================================
+fuenteToggle.addEventListener("click", () => {
+    fuenteCard.style.display = (fuenteCard.style.display === "none" || !fuenteCard.style.display)
+        ? "block"
+        : "none";
+});
+
+// ==================================================
+// VOZ: RECONOCIMIENTO
+// ==================================================
+function initRecognition() {
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SR) return null;
+    const rec = new SR();
+    rec.lang = "es-AR";
+    rec.interimResults = false;
+    rec.maxAlternatives = 1;
+    return rec;
+}
+
+btnSpeak.addEventListener("click", () => {
+    if (!recognition) recognition = initRecognition();
+    if (!recognition) {
+        alert("Reconocimiento de voz no soportado en este navegador.");
+        return;
+    }
+    handsFreeMode = false;
+    recognition.onresult = (event) => {
+        const text = event.results[0][0].transcript;
+        input.value = text;
+        consultar();
+    };
+    recognition.start();
+});
+
+btnHandsFree.addEventListener("click", () => {
+    if (!recognition) recognition = initRecognition();
+    if (!recognition) {
+        alert("Reconocimiento de voz no soportado en este navegador.");
+        return;
+    }
+    handsFreeMode = true;
+    recognition.onresult = (event) => {
+        const text = event.results[0][0].transcript;
+        input.value = text;
+        consultar();
+    };
+    recognition.onend = () => {
+        if (handsFreeMode) {
+            recognition.start();
+        }
+    };
+    recognition.start();
+});
+
+btnStop.addEventListener("click", () => {
+    handsFreeMode = false;
+    if (recognition) recognition.stop();
+});
+
+// ==================================================
+// VOZ: SÍNTESIS
+// ==================================================
+function speakText(text) {
+    if (!window.speechSynthesis) return;
+    if (!text) return;
     const utter = new SpeechSynthesisUtterance(text);
     utter.lang = "es-AR";
-    utter.rate = 1;
-    utter.pitch = 1;
     window.speechSynthesis.cancel();
     window.speechSynthesis.speak(utter);
 }
 
-/* ============================================================
-   VISTAS
-============================================================ */
-function setActiveView(viewId) {
-    const views = [viewJson, viewList, viewCards, viewTable, viewDashboard];
-    views.forEach(v => v.classList.add("view-hidden"));
-    document.getElementById(viewId).classList.remove("view-hidden");
-
-    [btnViewJson, btnViewList, btnViewCards, btnViewTable, btnViewDashboard]
-        .forEach(b => b.classList.remove("btn-primary"));
-
-    if (viewId === "viewCards") btnViewCards.classList.add("btn-primary");
-    if (viewId === "viewList") btnViewList.classList.add("btn-primary");
-    if (viewId === "viewTable") btnViewTable.classList.add("btn-primary");
-    if (viewId === "viewDashboard") btnViewDashboard.classList.add("btn-primary");
-    if (viewId === "viewJson") btnViewJson.classList.add("btn-primary");
-}
-
-function renderViews(data) {
-    let items = data.items || [];
-
-    if (chkSoloStock.checked) {
-        items = items.filter(it =>
-            it.talles && it.talles.some(t => t.stock > 0)
-        );
-    }
-
-    /* JSON */
-    viewJson.textContent = JSON.stringify(data, null, 2);
-
-    /* LISTA */
-    viewList.innerHTML = "";
-    if (items.length > 0) {
-        const ul = document.createElement("ul");
-        ul.style.paddingLeft = "18px";
-        items.forEach(it => {
-            const li = document.createElement("li");
-            li.textContent = it.descripcion || it.descripcion_completa || JSON.stringify(it);
-            ul.appendChild(li);
-        });
-        viewList.appendChild(ul);
-    } else {
-        viewList.textContent = data.voz || "No encontré resultados.";
-    }
-
-    /* TARJETAS */
-    viewCards.innerHTML = "";
-    if (items.length > 0) {
-        const grid = document.createElement("div");
-        grid.className = "dashboard-grid";
-
-        items.forEach(it => {
-            const card = document.createElement("div");
-            card.className = "dashboard-card";
-            card.innerHTML = `
-                <div class="dashboard-value">${it.descripcion || "Artículo"}</div>
-                <div class="dashboard-label">Código: ${it.codigo || "-"}</div>
-                <div class="dashboard-label">Precio: ${it.precio ?? "-"}</div>
-                <div class="dashboard-label">Talles: ${
-                    it.talles ? it.talles.map(t => t.talle).join(", ") : "-"
-                }</div>
-            `;
-            grid.appendChild(card);
-        });
-
-        viewCards.appendChild(grid);
-    } else {
-        viewCards.textContent = data.voz || "No encontré resultados.";
-    }
-
-    /* TABLA */
-    viewTable.innerHTML = "";
-    if (items.length > 0) {
-        const table = document.createElement("table");
-        table.style.width = "100%";
-        table.style.borderCollapse = "collapse";
-        table.style.fontSize = "0.75rem";
-
-        const thead = document.createElement("thead");
-        const trh = document.createElement("tr");
-        ["Código", "Descripción", "Talle(s)", "Stock", "Precio"].forEach(h => {
-            const th = document.createElement("th");
-            th.textContent = h;
-            th.style.borderBottom = "1px solid rgba(148,163,184,0.5)";
-            th.style.textAlign = "left";
-            th.style.padding = "4px";
-            trh.appendChild(th);
-        });
-        thead.appendChild(trh);
-        table.appendChild(thead);
-
-        const tbody = document.createElement("tbody");
-        items.forEach(it => {
-            const tr = document.createElement("tr");
-            const cols = [
-                it.codigo || "",
-                it.descripcion || "",
-                it.talles ? it.talles.map(t => t.talle).join(", ") : "",
-                it.talles ? it.talles.reduce((a, t) => a + (t.stock || 0), 0) : "",
-                it.precio ?? ""
-            ];
-            cols.forEach(c => {
-                const td = document.createElement("td");
-                td.textContent = c;
-                td.style.padding = "4px";
-                td.style.borderBottom = "1px solid rgba(148,163,184,0.2)";
-                tr.appendChild(td);
-            });
-            tbody.appendChild(tr);
-        });
-        table.appendChild(tbody);
-        viewTable.appendChild(table);
-    } else {
-        viewTable.textContent = data.voz || "No encontré resultados.";
-    }
-
-    /* DASHBOARD */
-    viewDashboard.innerHTML = "";
-    const resumen = data.resumen || {};
-    const dash = document.createElement("div");
-    dash.className = "dashboard-grid";
-
-    function addCard(label, value) {
-        const card = document.createElement("div");
-        card.className = "dashboard-card";
-        card.innerHTML = `
-            <div class="dashboard-label">${label}</div>
-            <div class="dashboard-value">${value}</div>
-        `;
-        dash.appendChild(card);
-    }
-
-    if (data.tipo === "resumen") {
-        if (resumen.cant_articulos != null) addCard("Artículos", resumen.cant_articulos);
-        if (resumen.unidades_totales != null) addCard("Unidades totales", resumen.unidades_totales);
-        if (resumen.valorizado_total != null) addCard("Valorizado total", resumen.valorizado_total);
-        if (resumen.precio_min != null) addCard("Precio mínimo", resumen.precio_min);
-        if (resumen.precio_max != null) addCard("Precio máximo", resumen.precio_max);
-    }
-
-    if (!dash.children.length) {
-        addCard("Estado", data.voz || "Sin datos de resumen.");
-    }
-
-    viewDashboard.appendChild(dash);
-
-    /* FUENTE */
-    if (data.fuente) {
-        fuenteOrigen.textContent = data.fuente.origen || "-";
-        fuenteNombre.textContent = data.fuente.name || "-";
-        fuenteFecha.textContent = data.fuente.modifiedTime || "-";
-    }
-}
-
-/* ============================================================
-   HISTORIAL
-============================================================ */
-function addToHistory(q) {
-    if (!q) return;
-    history.unshift(q);
-    if (history.length > 20) history.pop();
-    localStorage.setItem("history", JSON.stringify(history));
-    renderHistory();
-}
-
-function renderHistory() {
-    historyList.innerHTML = "";
-    history.forEach(item => {
-        const li = document.createElement("li");
-        li.className = "history-item";
-        li.textContent = item;
-        li.onclick = () => {
-            input.value = item;
-            btnSend.click();
-        };
-        historyList.appendChild(li);
-    });
-}
-renderHistory();
-
-/* ============================================================
-   TEMA CLARO/OSCURO
-============================================================ */
-if (localStorage.getItem("theme") === "light") {
-    document.body.classList.add("light");
-}
-
-btnTheme.addEventListener("click", () => {
-    document.body.classList.toggle("light");
-    localStorage.setItem("theme", document.body.classList.contains("light") ? "light" : "dark");
+// ==================================================
+// UTILIDADES
+// ==================================================
+btnClear.addEventListener("click", () => {
+    input.value = "";
+    cardsContainer.textContent = "Listo para responder.";
+    listContainer.innerHTML = "";
+    tableContainer.innerHTML = "";
+    dashboardContainer.innerHTML = "";
 });
 
-/* ============================================================
-   ENTER ENVÍA
-============================================================ */
-input.addEventListener("keydown", e => {
-    if (e.key === "Enter") {
-        e.preventDefault();
-
-        const q = input.value.trim();
-        if (q === "/admin") {
-            adminMode = true;
-            localStorage.setItem("adminMode", "true");
-            btnViewJson.classList.remove("view-hidden");
-            responseVoice.textContent = "Modo administrador activado.";
-            input.value = "";
-            return;
-        }
-        if (q === "/admin off") {
-            adminMode = false;
-            localStorage.setItem("adminMode", "false");
-            btnViewJson.classList.add("view-hidden");
-            responseVoice.textContent = "Modo administrador desactivado.";
-            input.value = "";
-            return;
-        }
-
-        btnSend.click();
-    }
-});
-
-/* ============================================================
-   AUTOCOMPLETE
-============================================================ */
-input.addEventListener("input", async () => {
-    const q = input.value.trim();
-    if (!q || !BACKEND) {
-        autocompleteList.style.display = "none";
-        return;
-    }
-
+btnCopy.addEventListener("click", async () => {
     try {
-        const r = await fetch(`${BACKEND}/autocomplete?q=${encodeURIComponent(q)}`);
-        const data = await r.json();
-
-        autocompleteList.innerHTML = "";
-        if (data.sugerencias && data.sugerencias.length > 0) {
-            data.sugerencias.forEach(s => {
-                const li = document.createElement("li");
-                li.className = "autocomplete-item";
-                li.textContent = s;
-                li.onclick = () => {
-                    input.value = s;
-                    autocompleteList.style.display = "none";
-                    btnSend.click();
-                };
-                autocompleteList.appendChild(li);
-            });
-            autocompleteList.style.display = "block";
-        } else {
-            autocompleteList.style.display = "none";
-        }
-    } catch (e) {
-        autocompleteList.style.display = "none";
+        await navigator.clipboard.writeText(input.value || "");
+        alert("Consulta copiada.");
+    } catch {
+        alert("No se pudo copiar.");
     }
 });
 
-/* ============================================================
-   CONSULTA AL BACKEND
-============================================================ */
-btnSend.addEventListener("click", async () => {
-    const q = input.value.trim();
-    if (!q || !BACKEND) return;
-
-    responseVoice.textContent = "Consultando...";
-    speak("Consultando.");
-    addToHistory(q);
-
-    try {
-        const r = await fetch(`${BACKEND}/query`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                question: q,
-                solo_stock: chkSoloStock.checked
-            })
-        });
-
-        const data = await r.json();
-        lastResponse = data;
-
-        renderViews(data);
-        setActiveView("viewCards");
-
-        const msg = data.voz || "Respuesta lista.";
-        responseVoice.textContent = msg;
-        speak(msg);
-    } catch (e) {
-        responseVoice.textContent = "Error al consultar.";
-        speak("Error al consultar.");
-    }
-});
-
-/* ============================================================
-   VOZ — RECONOCIMIENTO
-============================================================ */
-let recognition = null;
-let listening = false;
-let handsFree = false;
-
-function initSpeech() {
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SpeechRecognition) {
-        responseVoice.textContent = "Tu navegador no soporta reconocimiento de voz.";
-        return;
-    }
-
-    recognition = new SpeechRecognition();
-    recognition.lang = "es-AR";
-    recognition.interimResults = true;
-    recognition.continuous = true;
-
-    recognition.onstart = () => {
-        listening = true;
-        orbStatus.style.animation = "orb-breathe 1.2s ease-in-out infinite";
-        responseVoice.textContent = "Escuchando…";
-    };
-
-    recognition.onend = () => {
-        listening = false;
-        orbStatus.style.animation = "orb-breathe 3.8s ease-in-out infinite";
-        if (handsFree) recognition.start();
-    };
-
-    recognition.onresult = (event) => {
-        const lastIndex = event.results.length - 1;
-        const result = event.results[lastIndex];
-        const texto = result[0].transcript.trim();
-
-        input.value = texto;
-
-        if (result.isFinal) {
-            btnSend.click();
-        }
-    };
-}
-
-function startVoice() {
-    if (!recognition) initSpeech();
-    handsFree = false;
-    recognition && recognition.start();
-}
-
-btnSpeak.addEventListener("click", startVoice);
-
-btnHandsFree.addEventListener("click", () => {
-    if (!recognition) initSpeech();
-    handsFree = true;
-    recognition && recognition.start();
-});
-
-btnStop.addEventListener("click", () => {
-    if (recognition) {
-        handsFree = false;
-        recognition.stop();
-        responseVoice.textContent = "Voz detenida";
-    }
-});
-
-/* ORB: 5 toques → toggle admin, 1 toque → voz */
-let orbTapCount = 0;
-let orbTapTimer = null;
-
-orbStatus.addEventListener("click", () => {
-    orbTapCount++;
-
-    if (orbTapTimer) clearTimeout(orbTapTimer);
-    orbTapTimer = setTimeout(() => { orbTapCount = 0; }, 600);
-
-    if (orbTapCount >= 5) {
-        adminMode = !adminMode;
-        localStorage.setItem("adminMode", adminMode ? "true" : "false");
-        if (adminMode) {
-            btnViewJson.classList.remove("view-hidden");
-            responseVoice.textContent = "Modo administrador activado.";
-        } else {
-            btnViewJson.classList.add("view-hidden");
-            responseVoice.textContent = "Modo administrador desactivado.";
-        }
-        orbTapCount = 0;
-    } else {
-        startVoice();
-    }
-});
-
-/* ============================================================
-   SCANNER EXTERNO + PORTAPAPELES
-============================================================ */
+// ==================================================
+// SCANNER EXTERNO + LEER CÓDIGO (PORTAPAPELES)
+// ==================================================
 btnScannerExterno.addEventListener("click", () => {
-    const intentUrl =
-        "intent://scan/?ret=clipboard#Intent;scheme=zxing;package=com.srowen.bs.android;end;";
-    window.location.href = intentUrl;
-});
-
-document.addEventListener("visibilitychange", async () => {
-    if (!document.hidden) {
-        try {
-            const text = await navigator.clipboard.readText();
-            if (text && text.length >= 3) {
-                input.value = text;
-                responseVoice.textContent = `Código detectado: ${text}`;
-                btnSend.click();
-            }
-        } catch (e) {
-            console.warn("No se pudo leer el portapapeles.");
-        }
-    }
+    alert("Escaneá el código con tu app externa y luego usá 'Leer código'.");
 });
 
 btnReadClipboard.addEventListener("click", async () => {
     try {
         const text = await navigator.clipboard.readText();
-        if (text && text.length >= 3) {
-            input.value = text;
-            responseVoice.textContent = `Código detectado: ${text}`;
-            btnSend.click();
-        } else {
-            responseVoice.textContent = "No encontré código en el portapapeles.";
+        if (!text) {
+            alert("No hay texto en el portapapeles.");
+            return;
         }
-    } catch (e) {
-        responseVoice.textContent = "No pude leer el portapapeles.";
+        input.value = text.trim();
+        consultar();
+    } catch {
+        alert("No se pudo leer el portapapeles.");
     }
 });
 
-/* ============================================================
-   SCANNER INTERNO (QUAGGA)
-============================================================ */
-let scanning = false;
-
-btnScannerInterno.addEventListener("click", () => iniciarScannerInterno());
-btnScannerStop.addEventListener("click", () => detenerScannerInterno());
-btnScannerClose.addEventListener("click", () => detenerScannerInterno());
-
-function iniciarScannerInterno() {
-    scannerOverlay.style.display = "flex";
-    responseVoice.textContent = "Iniciando cámara…";
-
-    setTimeout(() => {
-        Quagga.init({
-            inputStream: {
-                name: "Live",
-                type: "LiveStream",
-                target: scannerVideo,
-                constraints: { facingMode: "environment" }
-            },
-            decoder: {
-                readers: ["ean_reader", "ean_8_reader", "code128_reader"]
-            }
-        }, function(err) {
-            if (err) {
-                console.error(err);
-                responseVoice.textContent = "Error al iniciar cámara (¿permiso denegado?).";
-                scannerOverlay.style.display = "none";
-                try { Quagga.stop(); } catch (e) {}
-                return;
-            }
-            Quagga.start();
-            scanning = true;
-            responseVoice.textContent = "Escaneando código…";
-        });
-
-        Quagga.onDetected(onBarcodeDetected);
-    }, 250);
-}
-
-function onBarcodeDetected(data) {
-    if (!scanning) return;
-    scanning = false;
-
-    const code = data.codeResult.code;
-    input.value = code;
-    responseVoice.textContent = `Código detectado: ${code}`;
-
-    detenerScannerInterno();
-    btnSend.click();
-}
-
-function detenerScannerInterno() {
-    scannerOverlay.style.display = "none";
-    try { Quagga.stop(); } catch (e) {}
-    scanning = false;
-    responseVoice.textContent = "Scanner cerrado.";
-}
-
-/* ============================================================
-   SCANNER UNIVERSAL (ZXing) — IMAGEN
-============================================================ */
-btnScannerZXing.addEventListener("click", async () => {
-    const inputFile = document.createElement("input");
-    inputFile.type = "file";
-    inputFile.accept = "image/*";
-
-    inputFile.onchange = async () => {
-        const file = inputFile.files[0];
-        if (!file) return;
-
-        const reader = new FileReader();
-        reader.onload = async () => {
-            try {
-                const img = new Image();
-                img.onload = async () => {
-                    try {
-                        const codeReader = new ZXing.BrowserMultiFormatReader();
-                        const result = await codeReader.decodeFromImageElement(img);
-                        input.value = result.text;
-                        responseVoice.textContent = `Código detectado: ${result.text}`;
-                        btnSend.click();
-                    } catch (e) {
-                        responseVoice.textContent = "No pude leer el código en la imagen.";
-                    }
-                };
-                img.src = reader.result;
-            } catch (e) {
-                responseVoice.textContent = "Error cargando la imagen.";
-            }
-        };
-        reader.readAsDataURL(file);
-    };
-
-    inputFile.click();
-});
-
-/* ============================================================
-   BOTONES AUXILIARES
-============================================================ */
-btnViewCards.addEventListener("click", () => setActiveView("viewCards"));
-btnViewList.addEventListener("click", () => setActiveView("viewList"));
-btnViewTable.addEventListener("click", () => setActiveView("viewTable"));
-btnViewDashboard.addEventListener("click", () => setActiveView("viewDashboard"));
-btnViewJson.addEventListener("click", () => setActiveView("viewJson"));
-
-btnClear.addEventListener("click", () => {
-    input.value = "";
-    viewJson.textContent = "";
-    viewList.textContent = "";
-    viewCards.textContent = "";
-    viewTable.textContent = "";
-    viewDashboard.textContent = "";
-    responseVoice.textContent = "Listo para responder.";
-});
-
-btnCopy.addEventListener("click", async () => {
+// ==================================================
+// SCANNER INTERNO (CÁMARA) - MÍNIMO ESTABLE
+// ==================================================
+btnScannerInterno.addEventListener("click", async () => {
     try {
-        await navigator.clipboard.writeText(viewJson.textContent || "");
-        responseVoice.textContent = "Respuesta copiada al portapapeles.";
-    } catch (e) {
-        responseVoice.textContent = "No se pudo copiar.";
+        scannerOverlay.style.display = "flex";
+        mediaStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+        scannerVideo.srcObject = mediaStream;
+    } catch {
+        alert("No se pudo acceder a la cámara.");
+        scannerOverlay.style.display = "none";
     }
 });
 
-/* ============================================================
-   FUENTE COLAPSABLE
-============================================================ */
-fuenteToggle.addEventListener("click", () => {
-    if (fuenteCard.style.display === "none" || fuenteCard.style.display === "") {
-        fuenteCard.style.display = "block";
-    } else {
-        fuenteCard.style.display = "none";
+btnCloseScanner.addEventListener("click", () => {
+    scannerOverlay.style.display = "none";
+    if (mediaStream) {
+        mediaStream.getTracks().forEach(t => t.stop());
+        mediaStream = null;
     }
+});
+
+// ==================================================
+// SCANNER UNIVERSAL (IMAGEN) - PLACEHOLDER SEGURO
+// ==================================================
+btnScannerZXing.addEventListener("click", () => {
+    alert("Subí la imagen a tu lector de códigos y luego pegá el resultado con 'Leer código'.");
 });
 </script>
-
 </body>
 </html>
-
