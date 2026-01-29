@@ -1,5 +1,5 @@
 <!-- ============================================================
-     ========== INICIO BLOQUE 1 — HEAD + ESTILOS ==========
+     ========== BLOQUE 1 — HEAD + ESTILOS ==========
      ============================================================ -->
 
 <!DOCTYPE html>
@@ -10,7 +10,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
 <style>
-
 /* ============================================================
    VARIABLES DE TEMA (MODO OSCURO POR DEFECTO)
 ============================================================ */
@@ -174,8 +173,19 @@ body.light .panel {
     background: linear-gradient(145deg, #ffffff, #f9fafb);
 }
 
+.panel-title {
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 4px;
+}
+.panel-subtitle {
+    font-size: 0.8rem;
+    color: var(--text-soft);
+    margin-bottom: 10px;
+}
+
 /* ============================================================
-   ORB
+   ORB ANIMADO
 ============================================================ */
 .orb-wrapper {
     display: flex;
@@ -278,14 +288,13 @@ body.light .autocomplete-list {
     cursor: pointer;
     color: var(--text-soft);
 }
-
 .autocomplete-item:hover {
     background: rgba(30, 64, 175, 0.35);
     color: #e5e7eb;
 }
 
 /* ============================================================
-   RESULTADOS
+   RESULTADOS + VISTAS
 ============================================================ */
 .response-shell {
     background: rgba(15, 23, 42, 0.9);
@@ -386,40 +395,7 @@ body.light .dashboard-card {
 }
 
 /* ============================================================
-   PANEL ADMIN
-============================================================ */
-#adminPanel {
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.88);
-    display: none;
-    flex-direction: column;
-    padding: 20px;
-    z-index: 9999;
-}
-
-#adminPanel-inner {
-    max-width: 420px;
-    margin: auto;
-    background: var(--bg-elevated);
-    border-radius: var(--radius-lg);
-    border: 1px solid var(--border-subtle);
-    padding: 18px;
-    box-shadow: var(--shadow-soft);
-}
-
-#adminPanel select {
-    width: 100%;
-    margin: 8px 0 14px 0;
-    padding: 6px 10px;
-    border-radius: var(--radius-md);
-    border: 1px solid var(--border-subtle);
-    background: var(--bg);
-    color: var(--text);
-}
-
-/* ============================================================
-   SCANNER OVERLAY
+   SCANNER OVERLAY (INTERNO)
 ============================================================ */
 .scanner-overlay {
     position: fixed;
@@ -452,6 +428,60 @@ body.light .dashboard-card {
     display: flex;
     justify-content: flex-end;
     gap: 8px;
+}
+
+/* ============================================================
+   SWITCH SOLO STOCK
+============================================================ */
+.toggle-row {
+    margin-top: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.78rem;
+    color: var(--text-soft);
+}
+
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 38px;
+    height: 20px;
+}
+
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    inset: 0;
+    background-color: #4b5563;
+    transition: .2s;
+    border-radius: 999px;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 14px;
+    width: 14px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    transition: .2s;
+    border-radius: 50%;
+}
+
+.switch input:checked + .slider {
+    background-color: #22c55e;
+}
+
+.switch input:checked + .slider:before {
+    transform: translateX(18px);
 }
 
 /* ============================================================
@@ -496,23 +526,15 @@ body.light .dashboard-card {
         height: 70px;
     }
 }
-
 </style>
 </head>
-
 <!-- ============================================================
-     ========== FIN BLOQUE 1 — HEAD + ESTILOS ==========
-     ============================================================ -->
-<!-- ============================================================
-     ========== INICIO BLOQUE 2 — BODY + ESTRUCTURA ==========
+     ========== BLOQUE 2 — BODY + ESTRUCTURA ==========
      ============================================================ -->
 
 <body>
 <div class="app-shell">
 
-    <!-- ============================================================
-         ENCABEZADO SUPERIOR
-         ============================================================ -->
     <header class="app-header">
         <div class="brand">
             <div class="brand-logo"></div>
@@ -524,7 +546,6 @@ body.light .dashboard-card {
 
         <div class="header-right">
             <button id="btnTheme" class="toggle-theme">Modo claro/oscuro</button>
-
             <div class="pill">
                 <span class="pill-dot"></span>
                 <span>Sistema Conectado (Backend)</span>
@@ -532,14 +553,9 @@ body.light .dashboard-card {
         </div>
     </header>
 
-    <!-- ============================================================
-         CONTENIDO PRINCIPAL
-         ============================================================ -->
     <main class="app-main">
 
-        <!-- ========================================================
-             PANEL IZQUIERDO — CONSULTA
-             ======================================================== -->
+        <!-- PANEL IZQUIERDO -->
         <section class="panel">
             <div class="panel-title">Consulta de stock</div>
             <div class="panel-subtitle">Escribí o hablá como si fuera una persona.</div>
@@ -566,11 +582,11 @@ body.light .dashboard-card {
 
             <div style="margin-top:8px; display:flex; gap:6px; flex-wrap:wrap;">
                 <button id="btnScannerExterno" class="btn">Scanner externo</button>
+                <button id="btnReadClipboard" class="btn">Leer código</button>
                 <button id="btnScannerInterno" class="btn">Scanner interno</button>
                 <button id="btnScannerZXing" class="btn">Scanner universal (imagen)</button>
             </div>
 
-            <!-- SWITCH: MOSTRAR SOLO CON STOCK -->
             <div class="toggle-row">
                 <label class="switch">
                     <input type="checkbox" id="chkSoloStock" checked />
@@ -579,16 +595,13 @@ body.light .dashboard-card {
                 <span>Mostrar solo artículos con stock</span>
             </div>
 
-            <!-- HISTORIAL -->
             <div class="history-shell">
                 <div>Historial de consultas:</div>
                 <ul id="historyList" class="history-list"></ul>
             </div>
         </section>
 
-        <!-- ========================================================
-             PANEL DERECHO — RESULTADOS
-             ======================================================== -->
+        <!-- PANEL DERECHO -->
         <section class="panel">
             <div class="panel-title">Resultado</div>
 
@@ -624,9 +637,7 @@ body.light .dashboard-card {
     </main>
 </div>
 
-<!-- ============================================================
-     OVERLAY DEL SCANNER INTERNO
-     ============================================================ -->
+<!-- OVERLAY SCANNER INTERNO -->
 <div id="scannerOverlay" class="scanner-overlay">
     <div class="scanner-inner">
         <div style="font-size:0.85rem; margin-bottom:8px; color:var(--text-soft);">
@@ -640,48 +651,16 @@ body.light .dashboard-card {
     </div>
 </div>
 
-<!-- ============================================================
-     PANEL ADMIN SECRETO
-     ============================================================ -->
-<div id="adminPanel">
-    <div id="adminPanel-inner">
-        <h3 style="margin-top:0;">Panel administrador</h3>
-        <p style="font-size:0.8rem; color:var(--text-soft);">
-            Ajustá el estilo de respuesta de la IA.
-        </p>
-
-        <label for="styleSelector" style="font-size:0.8rem;">Estilo de respuesta:</label>
-        <select id="styleSelector">
-            <option value="vendedor_experto">Vendedor experto</option>
-            <option value="amigable">Amigable</option>
-            <option value="profesional">Profesional</option>
-            <option value="minimalista">Minimalista</option>
-            <option value="tecnico">Técnico</option>
-        </select>
-
-        <div style="display:flex; justify-content:flex-end; gap:8px;">
-            <button id="btnCloseAdmin" class="btn">Cerrar</button>
-            <button id="btnSaveStyle" class="btn btn-primary">Guardar estilo</button>
-        </div>
-    </div>
-</div>
-
-<!-- Librería Quagga -->
+<!-- Librerías de scanners -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/quagga/0.12.1/quagga.min.js"></script>
-
-<!-- Librería ZXing -->
 <script src="https://unpkg.com/@zxing/library@latest"></script>
-
 <!-- ============================================================
-     ========== FIN BLOQUE 2 — BODY + ESTRUCTURA ==========
-     ============================================================ -->
-<!-- ============================================================
-     ========== INICIO BLOQUE 3 — LÓGICA PRINCIPAL ==========
+     ========== BLOQUE 3 — LÓGICA PRINCIPAL ==========
      ============================================================ -->
 
 <script>
 /* ============================================================
-   REFERENCIAS A ELEMENTOS DEL DOM
+   DOM
 ============================================================ */
 const input = document.getElementById("queryInput");
 const btnSend = document.getElementById("btnSend");
@@ -696,6 +675,7 @@ const btnClear = document.getElementById("btnClear");
 const btnCopy = document.getElementById("btnCopy");
 
 const btnScannerExterno = document.getElementById("btnScannerExterno");
+const btnReadClipboard = document.getElementById("btnReadClipboard");
 const btnScannerInterno = document.getElementById("btnScannerInterno");
 const btnScannerZXing = document.getElementById("btnScannerZXing");
 
@@ -721,251 +701,54 @@ const fuenteOrigen = document.getElementById("fuenteOrigen");
 const fuenteNombre = document.getElementById("fuenteNombre");
 const fuenteFecha = document.getElementById("fuenteFecha");
 
-const adminPanel = document.getElementById("adminPanel");
-const btnSaveStyle = document.getElementById("btnSaveStyle");
-const btnCloseAdmin = document.getElementById("btnCloseAdmin");
-const styleSelector = document.getElementById("styleSelector");
+const btnTheme = document.getElementById("btnTheme");
+
+const scannerOverlay = document.getElementById("scannerOverlay");
+const scannerVideo = document.getElementById("scannerVideo");
+const btnScannerStop = document.getElementById("btnScannerStop");
+const btnScannerClose = document.getElementById("btnScannerClose");
 
 /* ============================================================
-   VARIABLES DE ESTADO
+   ESTADO
 ============================================================ */
 let lastResponse = null;
 let history = JSON.parse(localStorage.getItem("history") || "[]");
 let adminMode = JSON.parse(localStorage.getItem("adminMode") || "false");
-let IA_STYLE = "vendedor_experto";
+
+/* PONÉ ACÁ LA URL REAL DE TU BACKEND */
+const BACKEND = "https://TU-BACKEND-AQUI.onrender.com";
 
 /* ============================================================
-   BACKEND URL
+   TTS — VOZ DE SALIDA
 ============================================================ */
-const BACKEND = "https://stock-backend-1-0upi.onrender.com";
-
-/* ============================================================
-   CARGAR ESTILO DESDE BACKEND
-============================================================ */
-async function loadStyleFromBackend() {
-    try {
-        const res = await fetch(`${BACKEND}/style`);
-        const data = await res.json();
-        IA_STYLE = data.style || "vendedor_experto";
-        styleSelector.value = IA_STYLE;
-    } catch (e) {
-        console.warn("No se pudo cargar estilo");
-    }
-}
-loadStyleFromBackend();
-
-/* ============================================================
-   ADAPTAR RESPUESTA SEGÚN ESTILO
-============================================================ */
-function applyStyleToVoice(text) {
-    switch (IA_STYLE) {
-        case "vendedor_experto":
-            return "¡Perfecto! " + text;
-        case "amigable":
-            return "Genial, " + text;
-        case "profesional":
-            return text;
-        case "minimalista":
-            return text;
-        case "tecnico":
-            return "Resultado técnico: " + text;
-        default:
-            return text;
-    }
+function speak(text) {
+    if (!("speechSynthesis" in window)) return;
+    const utter = new SpeechSynthesisUtterance(text);
+    utter.lang = "es-AR";
+    utter.rate = 1;
+    utter.pitch = 1;
+    window.speechSynthesis.cancel();
+    window.speechSynthesis.speak(utter);
 }
 
 /* ============================================================
-   PANEL ADMIN
+   VISTAS
 ============================================================ */
-function openAdminPanel() {
-    adminPanel.style.display = "flex";
+function setActiveView(viewId) {
+    const views = [viewJson, viewList, viewCards, viewTable, viewDashboard];
+    views.forEach(v => v.classList.add("view-hidden"));
+    document.getElementById(viewId).classList.remove("view-hidden");
+
+    [btnViewJson, btnViewList, btnViewCards, btnViewTable, btnViewDashboard]
+        .forEach(b => b.classList.remove("btn-primary"));
+
+    if (viewId === "viewCards") btnViewCards.classList.add("btn-primary");
+    if (viewId === "viewList") btnViewList.classList.add("btn-primary");
+    if (viewId === "viewTable") btnViewTable.classList.add("btn-primary");
+    if (viewId === "viewDashboard") btnViewDashboard.classList.add("btn-primary");
+    if (viewId === "viewJson") btnViewJson.classList.add("btn-primary");
 }
 
-btnCloseAdmin.addEventListener("click", () => {
-    adminPanel.style.display = "none";
-});
-
-btnSaveStyle.addEventListener("click", async () => {
-    const newStyle = styleSelector.value;
-
-    try {
-        const res = await fetch(`${BACKEND}/style`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                style: newStyle,
-                admin_key: "ADMIN"
-            })
-        });
-
-        const data = await res.json();
-        if (data.style) {
-            IA_STYLE = data.style;
-            alert("Estilo actualizado a: " + IA_STYLE);
-        }
-    } catch (e) {
-        alert("No se pudo guardar estilo");
-    }
-});
-
-/* ============================================================
-   ORB — 5 TOQUES → ADMIN / 1 TOQUE → VOZ
-============================================================ */
-let orbTapCount = 0;
-let orbTapTimer = null;
-
-orbStatus.addEventListener("click", () => {
-    orbTapCount++;
-
-    if (orbTapTimer) clearTimeout(orbTapTimer);
-    orbTapTimer = setTimeout(() => { orbTapCount = 0; }, 800);
-
-    if (orbTapCount >= 5) {
-        orbTapCount = 0;
-        openAdminPanel();
-    } else {
-        startVoice();
-    }
-});
-
-/* ============================================================
-   VOZ — Web Speech API
-============================================================ */
-let recognition = null;
-let listening = false;
-let handsFree = false;
-
-function initSpeech() {
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SpeechRecognition) {
-        responseVoice.textContent = "Tu navegador no soporta voz.";
-        return;
-    }
-
-    recognition = new SpeechRecognition();
-    recognition.lang = "es-AR";
-    recognition.interimResults = true;
-    recognition.continuous = true;
-
-    recognition.onstart = () => {
-        listening = true;
-        orbStatus.style.animation = "orb-breathe 1.2s ease-in-out infinite";
-        responseVoice.textContent = applyStyleToVoice("escuchando…");
-    };
-
-    recognition.onend = () => {
-        listening = false;
-        orbStatus.style.animation = "orb-breathe 3.8s ease-in-out infinite";
-        if (handsFree) recognition.start();
-    };
-
-    recognition.onresult = (event) => {
-        let texto = "";
-        for (let i = 0; i < event.results.length; i++) {
-            texto += event.results[i][0].transcript;
-        }
-        input.value = texto;
-
-        if (event.results[event.results.length - 1].isFinal) {
-            btnSend.click();
-        }
-    };
-}
-
-function startVoice() {
-    if (!recognition) initSpeech();
-    handsFree = false;
-    recognition.start();
-}
-
-btnSpeak.addEventListener("click", startVoice);
-
-btnHandsFree.addEventListener("click", () => {
-    if (!recognition) initSpeech();
-    handsFree = true;
-    recognition.start();
-});
-
-btnStop.addEventListener("click", () => {
-    if (recognition) {
-        handsFree = false;
-        recognition.stop();
-        responseVoice.textContent = "Voz detenida";
-    }
-});
-
-/* ============================================================
-   CONSULTA AL BACKEND
-============================================================ */
-btnSend.addEventListener("click", async () => {
-    const q = input.value.trim();
-    if (!q) return;
-
-    responseVoice.textContent = applyStyleToVoice("consultando...");
-    addToHistory(q);
-
-    try {
-        const r = await fetch(`${BACKEND}/query`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                question: q,
-                solo_stock: chkSoloStock.checked
-            })
-        });
-
-        const data = await r.json();
-        lastResponse = data;
-
-        renderViews(data);
-        setActiveView("viewCards");
-
-        responseVoice.textContent = applyStyleToVoice(data.voz || "respuesta lista.");
-
-    } catch (e) {
-        responseVoice.textContent = "Error al consultar.";
-    }
-});
-
-/* ============================================================
-   AUTOCOMPLETE
-============================================================ */
-input.addEventListener("input", async () => {
-    const q = input.value.trim();
-    if (!q) {
-        autocompleteList.style.display = "none";
-        return;
-    }
-
-    try {
-        const r = await fetch(`${BACKEND}/autocomplete?q=${encodeURIComponent(q)}`);
-        const data = await r.json();
-
-        autocompleteList.innerHTML = "";
-        if (data.sugerencias && data.sugerencias.length > 0) {
-            data.sugerencias.forEach(s => {
-                const li = document.createElement("li");
-                li.className = "autocomplete-item";
-                li.textContent = s;
-                li.onclick = () => {
-                    input.value = s;
-                    autocompleteList.style.display = "none";
-                    btnSend.click();
-                };
-                autocompleteList.appendChild(li);
-            });
-            autocompleteList.style.display = "block";
-        } else {
-            autocompleteList.style.display = "none";
-        }
-    } catch (e) {
-        autocompleteList.style.display = "none";
-    }
-});
-
-/* ============================================================
-   RENDERIZAR VISTAS
-============================================================ */
 function renderViews(data) {
     let items = data.items || [];
 
@@ -1129,7 +912,7 @@ function renderHistory() {
 renderHistory();
 
 /* ============================================================
-   MODO CLARO/OSCURO
+   TEMA CLARO/OSCURO
 ============================================================ */
 if (localStorage.getItem("theme") === "light") {
     document.body.classList.add("light");
@@ -1146,12 +929,195 @@ btnTheme.addEventListener("click", () => {
 input.addEventListener("keydown", e => {
     if (e.key === "Enter") {
         e.preventDefault();
+
+        const q = input.value.trim();
+        if (q === "/admin") {
+            adminMode = true;
+            localStorage.setItem("adminMode", "true");
+            btnViewJson.classList.remove("view-hidden");
+            responseVoice.textContent = "Modo administrador activado.";
+            input.value = "";
+            return;
+        }
+        if (q === "/admin off") {
+            adminMode = false;
+            localStorage.setItem("adminMode", "false");
+            btnViewJson.classList.add("view-hidden");
+            responseVoice.textContent = "Modo administrador desactivado.";
+            input.value = "";
+            return;
+        }
+
         btnSend.click();
     }
 });
 
 /* ============================================================
-   SCANNER EXTERNO
+   AUTOCOMPLETE
+============================================================ */
+input.addEventListener("input", async () => {
+    const q = input.value.trim();
+    if (!q || !BACKEND) {
+        autocompleteList.style.display = "none";
+        return;
+    }
+
+    try {
+        const r = await fetch(`${BACKEND}/autocomplete?q=${encodeURIComponent(q)}`);
+        const data = await r.json();
+
+        autocompleteList.innerHTML = "";
+        if (data.sugerencias && data.sugerencias.length > 0) {
+            data.sugerencias.forEach(s => {
+                const li = document.createElement("li");
+                li.className = "autocomplete-item";
+                li.textContent = s;
+                li.onclick = () => {
+                    input.value = s;
+                    autocompleteList.style.display = "none";
+                    btnSend.click();
+                };
+                autocompleteList.appendChild(li);
+            });
+            autocompleteList.style.display = "block";
+        } else {
+            autocompleteList.style.display = "none";
+        }
+    } catch (e) {
+        autocompleteList.style.display = "none";
+    }
+});
+
+/* ============================================================
+   CONSULTA AL BACKEND
+============================================================ */
+btnSend.addEventListener("click", async () => {
+    const q = input.value.trim();
+    if (!q || !BACKEND) return;
+
+    responseVoice.textContent = "Consultando...";
+    speak("Consultando.");
+    addToHistory(q);
+
+    try {
+        const r = await fetch(`${BACKEND}/query`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                question: q,
+                solo_stock: chkSoloStock.checked
+            })
+        });
+
+        const data = await r.json();
+        lastResponse = data;
+
+        renderViews(data);
+        setActiveView("viewCards");
+
+        const msg = data.voz || "Respuesta lista.";
+        responseVoice.textContent = msg;
+        speak(msg);
+    } catch (e) {
+        responseVoice.textContent = "Error al consultar.";
+        speak("Error al consultar.");
+    }
+});
+
+/* ============================================================
+   VOZ — RECONOCIMIENTO
+============================================================ */
+let recognition = null;
+let listening = false;
+let handsFree = false;
+
+function initSpeech() {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+        responseVoice.textContent = "Tu navegador no soporta reconocimiento de voz.";
+        return;
+    }
+
+    recognition = new SpeechRecognition();
+    recognition.lang = "es-AR";
+    recognition.interimResults = true;
+    recognition.continuous = true;
+
+    recognition.onstart = () => {
+        listening = true;
+        orbStatus.style.animation = "orb-breathe 1.2s ease-in-out infinite";
+        responseVoice.textContent = "Escuchando…";
+    };
+
+    recognition.onend = () => {
+        listening = false;
+        orbStatus.style.animation = "orb-breathe 3.8s ease-in-out infinite";
+        if (handsFree) recognition.start();
+    };
+
+    recognition.onresult = (event) => {
+        const lastIndex = event.results.length - 1;
+        const result = event.results[lastIndex];
+        const texto = result[0].transcript.trim();
+
+        input.value = texto;
+
+        if (result.isFinal) {
+            btnSend.click();
+        }
+    };
+}
+
+function startVoice() {
+    if (!recognition) initSpeech();
+    handsFree = false;
+    recognition && recognition.start();
+}
+
+btnSpeak.addEventListener("click", startVoice);
+
+btnHandsFree.addEventListener("click", () => {
+    if (!recognition) initSpeech();
+    handsFree = true;
+    recognition && recognition.start();
+});
+
+btnStop.addEventListener("click", () => {
+    if (recognition) {
+        handsFree = false;
+        recognition.stop();
+        responseVoice.textContent = "Voz detenida";
+    }
+});
+
+/* ORB: 5 toques → toggle admin, 1 toque → voz */
+let orbTapCount = 0;
+let orbTapTimer = null;
+
+orbStatus.addEventListener("click", () => {
+    orbTapCount++;
+
+    if (orbTapTimer) clearTimeout(orbTapTimer);
+    orbTapTimer = setTimeout(() => { orbTapCount = 0; }, 600);
+
+    if (orbTapCount >= 5) {
+        adminMode = !adminMode;
+        localStorage.setItem("adminMode", adminMode ? "true" : "false");
+        if (adminMode) {
+            btnViewJson.classList.remove("view-hidden");
+            responseVoice.textContent = "Modo administrador activado.";
+        } else {
+            btnViewJson.classList.add("view-hidden");
+            responseVoice.textContent = "Modo administrador desactivado.";
+        }
+        orbTapCount = 0;
+    } else {
+        startVoice();
+    }
+});
+
+/* ============================================================
+   SCANNER EXTERNO + PORTAPAPELES
 ============================================================ */
 btnScannerExterno.addEventListener("click", () => {
     const intentUrl =
@@ -1159,9 +1125,6 @@ btnScannerExterno.addEventListener("click", () => {
     window.location.href = intentUrl;
 });
 
-/* ============================================================
-   DETECTAR VUELTA A LA APP Y LEER PORTAPAPELES
-============================================================ */
 document.addEventListener("visibilitychange", async () => {
     if (!document.hidden) {
         try {
@@ -1177,14 +1140,24 @@ document.addEventListener("visibilitychange", async () => {
     }
 });
 
+btnReadClipboard.addEventListener("click", async () => {
+    try {
+        const text = await navigator.clipboard.readText();
+        if (text && text.length >= 3) {
+            input.value = text;
+            responseVoice.textContent = `Código detectado: ${text}`;
+            btnSend.click();
+        } else {
+            responseVoice.textContent = "No encontré código en el portapapeles.";
+        }
+    } catch (e) {
+        responseVoice.textContent = "No pude leer el portapapeles.";
+    }
+});
+
 /* ============================================================
    SCANNER INTERNO (QUAGGA)
 ============================================================ */
-const scannerOverlay = document.getElementById("scannerOverlay");
-const scannerVideo = document.getElementById("scannerVideo");
-const btnScannerStop = document.getElementById("btnScannerStop");
-const btnScannerClose = document.getElementById("btnScannerClose");
-
 let scanning = false;
 
 btnScannerInterno.addEventListener("click", () => iniciarScannerInterno());
@@ -1209,7 +1182,9 @@ function iniciarScannerInterno() {
         }, function(err) {
             if (err) {
                 console.error(err);
-                responseVoice.textContent = "Error al iniciar cámara.";
+                responseVoice.textContent = "Error al iniciar cámara (¿permiso denegado?).";
+                scannerOverlay.style.display = "none";
+                try { Quagga.stop(); } catch (e) {}
                 return;
             }
             Quagga.start();
@@ -1235,9 +1210,7 @@ function onBarcodeDetected(data) {
 
 function detenerScannerInterno() {
     scannerOverlay.style.display = "none";
-    try {
-        Quagga.stop();
-    } catch (e) {}
+    try { Quagga.stop(); } catch (e) {}
     scanning = false;
     responseVoice.textContent = "Scanner cerrado.";
 }
@@ -1257,14 +1230,21 @@ btnScannerZXing.addEventListener("click", async () => {
         const reader = new FileReader();
         reader.onload = async () => {
             try {
-                const codeReader = new ZXing.BrowserMultiFormatReader();
-                const result = await codeReader.decodeFromImage(undefined, reader.result);
-
-                input.value = result.text;
-                responseVoice.textContent = `Código detectado: ${result.text}`;
-                btnSend.click();
+                const img = new Image();
+                img.onload = async () => {
+                    try {
+                        const codeReader = new ZXing.BrowserMultiFormatReader();
+                        const result = await codeReader.decodeFromImageElement(img);
+                        input.value = result.text;
+                        responseVoice.textContent = `Código detectado: ${result.text}`;
+                        btnSend.click();
+                    } catch (e) {
+                        responseVoice.textContent = "No pude leer el código en la imagen.";
+                    }
+                };
+                img.src = reader.result;
             } catch (e) {
-                responseVoice.textContent = "No pude leer el código en la imagen.";
+                responseVoice.textContent = "Error cargando la imagen.";
             }
         };
         reader.readAsDataURL(file);
@@ -1274,32 +1254,14 @@ btnScannerZXing.addEventListener("click", async () => {
 });
 
 /* ============================================================
-   BOTONES DE VISTA
+   BOTONES AUXILIARES
 ============================================================ */
-function setActiveView(viewId) {
-    const views = [viewJson, viewList, viewCards, viewTable, viewDashboard];
-    views.forEach(v => v.classList.add("view-hidden"));
-    document.getElementById(viewId).classList.remove("view-hidden");
-
-    [btnViewJson, btnViewList, btnViewCards, btnViewTable, btnViewDashboard]
-        .forEach(b => b.classList.remove("btn-primary"));
-
-    if (viewId === "viewCards") btnViewCards.classList.add("btn-primary");
-    if (viewId === "viewList") btnViewList.classList.add("btn-primary");
-    if (viewId === "viewTable") btnViewTable.classList.add("btn-primary");
-    if (viewId === "viewDashboard") btnViewDashboard.classList.add("btn-primary");
-    if (viewId === "viewJson") btnViewJson.classList.add("btn-primary");
-}
-
 btnViewCards.addEventListener("click", () => setActiveView("viewCards"));
 btnViewList.addEventListener("click", () => setActiveView("viewList"));
 btnViewTable.addEventListener("click", () => setActiveView("viewTable"));
 btnViewDashboard.addEventListener("click", () => setActiveView("viewDashboard"));
 btnViewJson.addEventListener("click", () => setActiveView("viewJson"));
 
-/* ============================================================
-   BOTONES AUXILIARES
-============================================================ */
 btnClear.addEventListener("click", () => {
     input.value = "";
     viewJson.textContent = "";
@@ -1320,7 +1282,7 @@ btnCopy.addEventListener("click", async () => {
 });
 
 /* ============================================================
-   TARJETA DE FUENTE (COLAPSABLE)
+   FUENTE COLAPSABLE
 ============================================================ */
 fuenteToggle.addEventListener("click", () => {
     if (fuenteCard.style.display === "none" || fuenteCard.style.display === "") {
@@ -1330,10 +1292,6 @@ fuenteToggle.addEventListener("click", () => {
     }
 });
 </script>
-
-<!-- ============================================================
-     ========== FIN BLOQUE 3 — LÓGICA PRINCIPAL ==========
-     ============================================================ -->
 
 </body>
 </html>
