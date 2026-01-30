@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8" />
-    <title>Stock Viewer</title>
+    <title>STOCK IA PRO</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <style>
         :root {
@@ -20,9 +20,7 @@
             --success: #22c55e;
         }
 
-        * {
-            box-sizing: border-box;
-        }
+        * { box-sizing: border-box; }
 
         body {
             margin: 0;
@@ -73,6 +71,11 @@
             opacity: 0.7;
         }
 
+        .brandline {
+            font-size: 0.8rem;
+            opacity: 0.8;
+        }
+
         .status-bar {
             display: flex;
             align-items: center;
@@ -104,9 +107,7 @@
             gap: 6px;
         }
 
-        .pill span {
-            opacity: 0.7;
-        }
+        .pill span { opacity: 0.7; }
 
         .btn {
             border-radius: 999px;
@@ -147,9 +148,7 @@
             color: #fecaca;
         }
 
-        body.light .btn-danger {
-            color: #b91c1c;
-        }
+        body.light .btn-danger { color: #b91c1c; }
 
         .btn-small {
             padding: 4px 10px;
@@ -163,9 +162,7 @@
         }
 
         @media (max-width: 900px) {
-            .main {
-                grid-template-columns: minmax(0, 1fr);
-            }
+            .main { grid-template-columns: minmax(0, 1fr); }
         }
 
         .panel {
@@ -280,13 +277,9 @@
         }
 
         .orb {
-            width: 70px;
-            height: 70px;
+            width: 84px;
+            height: 84px;
             border-radius: 999px;
-            background: radial-gradient(circle at 30% 20%, #38bdf8, #0f172a 55%, #020617 100%);
-            box-shadow:
-                0 0 25px rgba(56,189,248,0.7),
-                0 0 80px rgba(8,47,73,0.9);
             position: relative;
             cursor: pointer;
             transition: transform 0.2s, box-shadow 0.2s, filter 0.2s;
@@ -295,26 +288,58 @@
         .orb::before {
             content: "";
             position: absolute;
-            inset: 10px;
+            inset: 12px;
             border-radius: inherit;
             background: radial-gradient(circle at 30% 20%, rgba(248,250,252,0.9), transparent 60%);
-            opacity: 0.7;
+            opacity: 0.8;
         }
 
-        .orb.pulsing {
-            animation: orbPulse 2.4s ease-in-out infinite;
+        /* Estilo base + variantes A/B/C */
+        .orb-style-a {
+            background: radial-gradient(circle at 30% 20%, #a855f7, #1d4ed8 55%, #020617 100%);
+            box-shadow:
+                0 0 30px rgba(129,140,248,0.7),
+                0 0 90px rgba(30,64,175,0.9);
+            animation: orbPulseSoft 3s ease-in-out infinite;
+        }
+
+        .orb-style-b {
+            background: radial-gradient(circle at 30% 20%, #c4b5fd, #2563eb 55%, #020617 100%);
+            box-shadow:
+                0 0 40px rgba(129,140,248,0.9),
+                0 0 120px rgba(37,99,235,1);
+            animation: orbPulseGlow 2.4s ease-in-out infinite;
+        }
+
+        .orb-style-c {
+            background: radial-gradient(circle at 30% 20%, #a855f7, #0ea5e9 55%, #020617 100%);
+            box-shadow:
+                0 0 35px rgba(56,189,248,0.9),
+                0 0 110px rgba(8,47,73,1);
+            animation: orbPulseDynamic 2.2s ease-in-out infinite;
         }
 
         .orb.processing {
             animation: orbSpin 1.2s linear infinite;
             box-shadow:
-                0 0 30px rgba(56,189,248,0.9),
-                0 0 100px rgba(8,47,73,1);
+                0 0 40px rgba(56,189,248,1),
+                0 0 130px rgba(8,47,73,1);
         }
 
-        @keyframes orbPulse {
-            0%, 100% { transform: scale(1); filter: brightness(1); }
-            50% { transform: scale(1.06); filter: brightness(1.2); }
+        @keyframes orbPulseSoft {
+            0%,100% { transform: scale(1); filter: brightness(1); }
+            50% { transform: scale(1.06); filter: brightness(1.15); }
+        }
+
+        @keyframes orbPulseGlow {
+            0%,100% { transform: scale(1); filter: brightness(1); }
+            50% { transform: scale(1.08); filter: brightness(1.25); }
+        }
+
+        @keyframes orbPulseDynamic {
+            0%,100% { transform: scale(1); filter: brightness(1); }
+            40% { transform: scale(1.08); filter: brightness(1.25); }
+            70% { transform: scale(1.03); filter: brightness(1.1); }
         }
 
         @keyframes orbSpin {
@@ -331,9 +356,7 @@
             border: 1px solid rgba(148,163,184,0.4);
         }
 
-        body.light .tabs {
-            background: #e5e7eb;
-        }
+        body.light .tabs { background: #e5e7eb; }
 
         .tab {
             flex: 1;
@@ -350,9 +373,7 @@
             opacity: 1;
         }
 
-        body.light .tab.active {
-            background: #ffffff;
-        }
+        body.light .tab.active { background: #ffffff; }
 
         .results {
             border-radius: 14px;
@@ -365,9 +386,7 @@
             font-size: 0.95rem;
         }
 
-        body.light .results {
-            background: #ffffff;
-        }
+        body.light .results { background: #ffffff; }
 
         .result-item {
             padding: 6px 8px;
@@ -384,13 +403,9 @@
             background: #f3f4f6;
         }
 
-        .result-item:last-child {
-            margin-bottom: 0;
-        }
+        .result-item:last-child { margin-bottom: 0; }
 
-        .result-item strong {
-            font-weight: 600;
-        }
+        .result-item strong { font-weight: 600; }
 
         .result-meta {
             font-size: 0.8rem;
@@ -466,9 +481,7 @@
             font-size: 0.9rem;
         }
 
-        body.light .filters-panel {
-            background: #ffffff;
-        }
+        body.light .filters-panel { background: #ffffff; }
 
         .filters-row {
             display: grid;
@@ -514,9 +527,7 @@
             font-size: 0.85rem;
         }
 
-        body.light .admin-panel {
-            background: #ffffff;
-        }
+        body.light .admin-panel { background: #ffffff; }
 
         .admin-panel pre {
             white-space: pre-wrap;
@@ -524,6 +535,19 @@
             font-size: 0.8rem;
             max-height: 200px;
             overflow-y: auto;
+        }
+
+        .admin-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            align-items: center;
+            margin-bottom: 4px;
+        }
+
+        .admin-label {
+            font-size: 0.8rem;
+            opacity: 0.8;
         }
 
         .scanner-overlay {
@@ -573,8 +597,13 @@
             opacity: 0.8;
         }
 
-        .hidden {
-            display: none !important;
+        .hidden { display: none !important; }
+
+        footer {
+            margin-top: 4px;
+            font-size: 0.75rem;
+            opacity: 0.7;
+            text-align: right;
         }
     </style>
 </head>
@@ -582,8 +611,9 @@
 <div class="app">
     <header>
         <div class="title-block">
-            <h1>CMYK STOCK VIEWER</h1>
+            <h1>STOCK IA PRO</h1>
             <div class="subtitle">Consulta inteligente de artículos · Voz · Scanner · Vistas múltiples</div>
+            <div class="brandline">V.26.01 — SALAS CREATIVE STUDIO</div>
         </div>
         <div class="status-bar">
             <div class="pill">
@@ -595,7 +625,7 @@
     </header>
 
     <main class="main">
-        <!-- PANEL IZQUIERDO: ENTRADA + ORB + FILTROS -->
+        <!-- PANEL IZQUIERDO -->
         <section class="panel">
             <div class="panel-header">
                 <div class="panel-title">
@@ -655,7 +685,7 @@
             </div>
 
             <div class="orb-wrapper">
-                <div id="orb" class="orb pulsing" title="Tocá 5 veces para admin"></div>
+                <div id="orb" class="orb orb-style-c" title="Tocá 5 veces para admin"></div>
             </div>
 
             <div id="adminPanel" class="admin-panel">
@@ -663,15 +693,30 @@
                     <strong>Modo admin</strong>
                     <button id="btnAdminClose" class="btn btn-small btn-ghost">Cerrar</button>
                 </div>
-                <div style="display:flex;gap:6px;margin-bottom:4px;">
-                    <button id="btnModeloNormal" class="btn btn-small">Modelo normal</button>
-                    <button id="btnModeloDebug" class="btn btn-small">Modelo debug</button>
+
+                <div class="admin-row">
+                    <span class="admin-label">Modelo:</span>
+                    <button id="btnModeloNormal" class="btn btn-small">Normal</button>
+                    <button id="btnModeloDebug" class="btn btn-small">Debug</button>
                 </div>
+
+                <div class="admin-row">
+                    <span class="admin-label">Estilo ORB:</span>
+                    <button id="btnOrbA" class="btn btn-small">A</button>
+                    <button id="btnOrbB" class="btn btn-small">B</button>
+                    <button id="btnOrbC" class="btn btn-small">C</button>
+                </div>
+
+                <div class="admin-row">
+                    <span class="admin-label">Marca:</span>
+                    <span>SALAS CREATIVE STUDIO · V.26.01</span>
+                </div>
+
                 <pre id="adminOutput"></pre>
             </div>
         </section>
 
-        <!-- PANEL DERECHO: RESULTADOS -->
+        <!-- PANEL DERECHO -->
         <section class="panel">
             <div class="panel-header">
                 <div class="panel-title">
@@ -694,6 +739,10 @@
             <div id="viewDashboard" class="results hidden"></div>
         </section>
     </main>
+
+    <footer>
+        STOCK IA PRO · V.26.01 · SALAS CREATIVE STUDIO
+    </footer>
 </div>
 
 <!-- OVERLAY SCANNER -->
@@ -707,7 +756,7 @@
             <video id="scannerVideo" autoplay playsinline></video>
         </div>
         <div class="scanner-hint">
-            Apuntá al código de barras. La lectura es automática. Si no funciona, usá tu app de scanner y pegá el código.
+            Apuntá al código de barras. La lectura es automática. Si no funciona, usá tu app de scanner y luego pegá el código.
         </div>
     </div>
 </div>
@@ -716,7 +765,7 @@
     // ==========================
     // CONFIG BÁSICA
     // ==========================
-    const API_BASE = "https://stock-backend-1-0upi.onrender.com"; // si usás ruta relativa, dejalo vacío
+    const API_BASE = "https://stock-backend-1-0upi.onrender.com";
     const HEALTH_URL = API_BASE + "/health";
     const QUERY_URL = API_BASE + "/query";
 
@@ -735,6 +784,9 @@
     const btnAdminClose = document.getElementById("btnAdminClose");
     const btnModeloNormal = document.getElementById("btnModeloNormal");
     const btnModeloDebug = document.getElementById("btnModeloDebug");
+    const btnOrbA = document.getElementById("btnOrbA");
+    const btnOrbB = document.getElementById("btnOrbB");
+    const btnOrbC = document.getElementById("btnOrbC");
 
     const btnToggleFilters = document.getElementById("btnToggleFilters");
     const filtersPanel = document.getElementById("filtersPanel");
@@ -769,6 +821,7 @@
     let orbClickCount = 0;
     let orbClickTimer = null;
     let currentModel = "normal";
+    let currentOrbStyle = "c";
 
     // Voz
     let recognition = null;
@@ -798,6 +851,28 @@
         document.body.classList.toggle("light");
         localStorage.setItem("theme", document.body.classList.contains("light") ? "light" : "dark");
     });
+
+    // ==========================
+    // ORB STYLE
+    // ==========================
+    function applyOrbStyle(style) {
+        orb.classList.remove("orb-style-a", "orb-style-b", "orb-style-c");
+        if (style === "a") orb.classList.add("orb-style-a");
+        else if (style === "b") orb.classList.add("orb-style-b");
+        else orb.classList.add("orb-style-c");
+        currentOrbStyle = style;
+        localStorage.setItem("orbStyle", style);
+    }
+
+    function initOrbStyle() {
+        const saved = localStorage.getItem("orbStyle") || "c";
+        applyOrbStyle(saved);
+    }
+    initOrbStyle();
+
+    btnOrbA.addEventListener("click", () => applyOrbStyle("a"));
+    btnOrbB.addEventListener("click", () => applyOrbStyle("b"));
+    btnOrbC.addEventListener("click", () => applyOrbStyle("c"));
 
     // ==========================
     // SEMÁFORO BACKEND
@@ -863,23 +938,24 @@
     function buildFiltersFromResults(results) {
         const marcas = new Set();
         const rubros = new Set();
-        const articulos = new Map(); // codigo -> descripcion
+        const articulos = new Map();
         const talles = new Set();
 
         results.forEach(item => {
             if (item.marca) marcas.add(item.marca);
             if (item.rubro) rubros.add(item.rubro);
-            if (item.articulo) {
-                const key = item.articulo;
+            if (item.codigo) {
+                const key = item.codigo;
                 const desc = item.descripcion || "";
-                if (!articulos.has(key)) {
-                    articulos.set(key, desc);
-                }
+                if (!articulos.has(key)) articulos.set(key, desc);
             }
-            if (item.talle) talles.add(item.talle);
+            if (Array.isArray(item.talles)) {
+                item.talles.forEach(t => {
+                    if (t.talle) talles.add(t.talle);
+                });
+            }
         });
 
-        // Marca
         fMarca.innerHTML = '<option value="">Todas</option>';
         Array.from(marcas).sort().forEach(m => {
             const opt = document.createElement("option");
@@ -888,7 +964,6 @@
             fMarca.appendChild(opt);
         });
 
-        // Rubro
         fRubro.innerHTML = '<option value="">Todos</option>';
         Array.from(rubros).sort().forEach(r => {
             const opt = document.createElement("option");
@@ -897,7 +972,6 @@
             fRubro.appendChild(opt);
         });
 
-        // Artículos (código – descripción)
         listaArticulos.innerHTML = "";
         Array.from(articulos.entries())
             .sort((a, b) => a[0].localeCompare(b[0]))
@@ -907,7 +981,6 @@
                 listaArticulos.appendChild(opt);
             });
 
-        // Talles
         listaTalles.innerHTML = "";
         Array.from(talles)
             .sort((a, b) => a.toString().localeCompare(b.toString(), undefined, { numeric: true }))
@@ -935,12 +1008,17 @@
         return results.filter(item => {
             if (marca && item.marca !== marca) return false;
             if (rubro && item.rubro !== rubro) return false;
-            if (articuloCode && item.articulo !== articuloCode) return false;
+            if (articuloCode && item.codigo !== articuloCode) return false;
 
             if (talleDesde || talleHasta) {
-                const t = (item.talle || "").toString();
-                if (talleDesde && t < talleDesde) return false;
-                if (talleHasta && t > talleHasta) return false;
+                const talles = Array.isArray(item.talles) ? item.talles : [];
+                const match = talles.some(t => {
+                    const val = (t.talle || "").toString();
+                    if (talleDesde && val < talleDesde) return false;
+                    if (talleHasta && val > talleHasta) return false;
+                    return true;
+                });
+                if (!match) return false;
             }
             return true;
         });
@@ -963,15 +1041,8 @@
         orb.classList.add("processing");
 
         const payload = {
-            query: q,
-            modelo: currentModel,
-            filtros: {
-                marca: fMarca.value.trim() || null,
-                rubro: fRubro.value.trim() || null,
-                articulo: fArticulo.value.trim() || null,
-                talle_desde: fTalleDesde.value.trim() || null,
-                talle_hasta: fTalleHasta.value.trim() || null
-            }
+            question: q,
+            solo_stock: false
         };
 
         try {
@@ -982,7 +1053,7 @@
             });
             const data = await r.json();
             currentRawResponse = data;
-            const items = Array.isArray(data.resultados || data.items) ? (data.resultados || data.items) : [];
+            const items = Array.isArray(data.items) ? data.items : [];
             currentResults = items;
             buildFiltersFromResults(items);
             renderAllViews(items);
@@ -1021,7 +1092,10 @@
             viewResumen.textContent = "Sin resultados. Probá con otro artículo, código o filtro.";
             return;
         }
-        const totalStock = results.reduce((acc, r) => acc + (Number(r.stock_total || r.stock || 0)), 0);
+        const totalStock = results.reduce((acc, r) => {
+            const talles = Array.isArray(r.talles) ? r.talles : [];
+            return acc + talles.reduce((a, t) => a + (Number(t.stock || 0)), 0);
+        }, 0);
         const marcas = new Set(results.map(r => r.marca).filter(Boolean));
         const rubros = new Set(results.map(r => r.rubro).filter(Boolean));
 
@@ -1057,14 +1131,14 @@
             const div = document.createElement("div");
             div.className = "result-item";
             const marca = r.marca || "SIN MARCA";
-            const desc = r.descripcion || r.articulo || "";
-            const talle = r.talle ? ` · Talle: ${r.talle}` : "";
-            const color = r.color ? ` · Color: ${r.color}` : "";
-            const stock = Number(r.stock_total || r.stock || 0);
+            const desc = r.descripcion || r.codigo || "";
+            const rubro = r.rubro ? ` · ${r.rubro}` : "";
+            const talles = Array.isArray(r.talles) ? r.talles : [];
+            const stockTotal = talles.reduce((a, t) => a + (Number(t.stock || 0)), 0);
             div.innerHTML = `
-                <div><strong>${marca}</strong> – ${desc}</div>
+                <div><strong>${marca}</strong> – ${desc}${rubro}</div>
                 <div class="result-meta">
-                    Artículo: ${r.articulo || "-"}${talle}${color} · Stock: ${stock}
+                    Código: ${r.codigo || "-"} · Talles: ${talles.map(t => t.talle + " (" + t.stock + ")").join(", ") || "-"} · Stock total: ${stockTotal}
                 </div>
             `;
             viewTarjetas.appendChild(div);
@@ -1079,11 +1153,12 @@
         viewLista.innerHTML = "";
         results.forEach(r => {
             const marca = r.marca || "SIN MARCA";
-            const desc = r.descripcion || r.articulo || "";
-            const stock = Number(r.stock_total || r.stock || 0);
+            const desc = r.descripcion || r.codigo || "";
+            const talles = Array.isArray(r.talles) ? r.talles : [];
+            const stockTotal = talles.reduce((a, t) => a + (Number(t.stock || 0)), 0);
             const div = document.createElement("div");
             div.className = "result-item";
-            div.textContent = `${marca} – ${desc} – ${stock}`;
+            div.textContent = `${marca} – ${desc} – ${stockTotal}`;
             viewLista.appendChild(div);
         });
     }
@@ -1094,16 +1169,17 @@
             return;
         }
         const rows = results.map(r => {
-            const stock = Number(r.stock_total || r.stock || 0);
+            const talles = Array.isArray(r.talles) ? r.talles : [];
+            const stockTotal = talles.reduce((a, t) => a + (Number(t.stock || 0)), 0);
             return `
                 <tr>
                     <td>${r.marca || ""}</td>
                     <td>${r.rubro || ""}</td>
-                    <td>${r.articulo || ""}</td>
+                    <td>${r.codigo || ""}</td>
                     <td>${r.descripcion || ""}</td>
-                    <td>${r.color || ""}</td>
-                    <td>${r.talle || ""}</td>
-                    <td>${stock}</td>
+                    <td>${talles.map(t => t.talle).join(", ")}</td>
+                    <td>${stockTotal}</td>
+                    <td>${r.precio != null ? r.precio : ""}</td>
                 </tr>
             `;
         }).join("");
@@ -1115,11 +1191,11 @@
                         <tr>
                             <th>Marca</th>
                             <th>Rubro</th>
-                            <th>Artículo</th>
+                            <th>Código</th>
                             <th>Descripción</th>
-                            <th>Color</th>
-                            <th>Talle</th>
-                            <th>Stock</th>
+                            <th>Talles</th>
+                            <th>Stock total</th>
+                            <th>Precio</th>
                         </tr>
                     </thead>
                     <tbody>${rows}</tbody>
@@ -1133,7 +1209,10 @@
             viewDashboard.textContent = "Sin resultados.";
             return;
         }
-        const totalStock = results.reduce((acc, r) => acc + (Number(r.stock_total || r.stock || 0)), 0);
+        const totalStock = results.reduce((acc, r) => {
+            const talles = Array.isArray(r.talles) ? r.talles : [];
+            return acc + talles.reduce((a, t) => a + (Number(t.stock || 0)), 0);
+        }, 0);
         const marcas = new Set(results.map(r => r.marca).filter(Boolean));
         const rubros = new Set(results.map(r => r.rubro).filter(Boolean));
 
@@ -1141,7 +1220,9 @@
             const counts = {};
             results.forEach(r => {
                 if (!r.marca) return;
-                counts[r.marca] = (counts[r.marca] || 0) + (Number(r.stock_total || r.stock || 0));
+                const talles = Array.isArray(r.talles) ? r.talles : [];
+                const stock = talles.reduce((a, t) => a + (Number(t.stock || 0)), 0);
+                counts[r.marca] = (counts[r.marca] || 0) + stock;
             });
             let best = null;
             let bestVal = -1;
@@ -1245,7 +1326,6 @@
             recognizing = false;
             btnMic.classList.remove("active");
             if (handsFreeMode && !stopRequested) {
-                // reactivar manos libres solo si no se pidió STOP
                 setTimeout(() => {
                     if (!stopRequested) {
                         try { recognition.start(); } catch {}
@@ -1318,8 +1398,8 @@
     });
 
     function speakIfNeeded(data) {
-        if (!data || !data.mensaje_voz) return;
-        const text = data.mensaje_voz;
+        if (!data || !data.voz) return;
+        const text = data.voz;
         const utter = new SpeechSynthesisUtterance(text);
         utter.lang = "es-AR";
         utter.rate = 1;
@@ -1329,12 +1409,11 @@
     }
 
     // ==========================
-    // SCANNER NATIVO (BarcodeDetector)
+    // SCANNER NATIVO
     // ==========================
     async function startScanner() {
         stopAllVoice();
         if (!("BarcodeDetector" in window)) {
-            // fallback: solo cámara
             try {
                 scannerOverlay.style.display = "flex";
                 scannerStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
@@ -1426,4 +1505,3 @@
 </script>
 </body>
 </html>
-
