@@ -2,49 +2,24 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8" />
-<title>Stock IA PRO v3.0</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Stock IA PRO v3.1</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 
 <style>
-/* ============================================================
-   VARIABLES DE TEMA (MODO OSCURO POR DEFECTO)
-============================================================ */
 :root {
     --bg: #050816;
     --bg-elevated: #0b1020;
     --accent: #4f46e5;
-    --accent-soft: rgba(79, 70, 229, 0.18);
     --accent-strong: #6366f1;
     --text: #e5e7eb;
     --text-soft: #9ca3af;
     --danger: #ef4444;
     --success: #22c55e;
-    --border-subtle: rgba(148, 163, 184, 0.25);
     --radius-lg: 18px;
     --radius-md: 12px;
     --radius-pill: 999px;
     --shadow-soft: 0 18px 45px rgba(15, 23, 42, 0.75);
 }
-
-/* ============================================================
-   MODO CLARO
-============================================================ */
-body.light {
-    --bg: #f3f4f6;
-    --bg-elevated: #ffffff;
-    --accent: #4f46e5;
-    --accent-soft: rgba(79, 70, 229, 0.08);
-    --accent-strong: #4f46e5;
-    --text: #111827;
-    --text-soft: #6b7280;
-    --border-subtle: rgba(148, 163, 184, 0.5);
-    background: radial-gradient(circle at top, #e5e7eb 0, #f9fafb 45%, #e5e7eb 100%);
-}
-
-/* ============================================================
-   RESET
-============================================================ */
-* { box-sizing: border-box; }
 body {
     margin: 0;
     min-height: 100vh;
@@ -54,10 +29,6 @@ body {
     display: flex;
     justify-content: center;
 }
-
-/* ============================================================
-   LAYOUT GENERAL
-============================================================ */
 .app-shell {
     width: 100%;
     max-width: 1200px;
@@ -66,353 +37,101 @@ body {
     grid-template-rows: auto 1fr;
     gap: 18px;
 }
-
-.app-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 12px;
-    flex-wrap: wrap;
-}
-
-/* ============================================================
-   BRANDING
-============================================================ */
-.brand {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-}
-
-.brand-logo {
-    width: 52px;
-    height: 52px;
-    border-radius: 18px;
-    background: radial-gradient(circle at 30% 20%, #a855f7, #4f46e5 45%, #0ea5e9 100%);
-    box-shadow: 0 0 35px rgba(79, 70, 229, 0.7);
-}
-
-.brand-text-title {
-    font-size: 1.1rem;
-    font-weight: 600;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-}
-
-.brand-text-sub {
-    font-size: 0.8rem;
-    color: var(--text-soft);
-}
-
-/* ============================================================
-   HEADER DERECHO
-============================================================ */
-.header-right {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    flex-wrap: wrap;
-}
-
-.toggle-theme {
-    border-radius: var(--radius-pill);
-    border: 1px solid rgba(148, 163, 184, 0.5);
-    background: rgba(15, 23, 42, 0.9);
-    color: var(--text-soft);
-    padding: 6px 12px;
-    font-size: 0.78rem;
-    cursor: pointer;
-}
-body.light .toggle-theme {
-    background: #ffffff;
-}
-
-/* ============================================================
-   PANEL PRINCIPAL
-============================================================ */
 .app-main {
     display: grid;
     grid-template-columns: 1.4fr 1fr;
     gap: 18px;
 }
-
 .panel {
     background: linear-gradient(145deg, rgba(15, 23, 42, 0.96), rgba(15, 23, 42, 0.9));
     border-radius: var(--radius-lg);
-    border: 1px solid var(--border-subtle);
+    border: 1px solid rgba(148, 163, 184, 0.25);
     box-shadow: var(--shadow-soft);
     padding: 18px;
-    position: relative;
 }
-body.light .panel {
-    background: linear-gradient(145deg, #ffffff, #f9fafb);
-}
-
-/* ============================================================
-   ORB
-============================================================ */
-.orb-wrapper {
-    display: flex;
-    justify-content: center;
-    margin-bottom: 14px;
-}
-
 .orb {
-    width: 82px;
-    height: 82px;
-    border-radius: 999px;
-    background:
-        radial-gradient(circle at 30% 20%, #a855f7, transparent 55%),
-        radial-gradient(circle at 70% 80%, #0ea5e9, transparent 55%),
-        radial-gradient(circle at 50% 50%, #4f46e5, #111827 70%);
-    box-shadow:
-        0 0 25px rgba(79, 70, 229, 0.9),
-        0 0 55px rgba(56, 189, 248, 0.7);
+    width: 82px; height: 82px; border-radius: 999px;
+    background: radial-gradient(circle at 50% 50%, #4f46e5, #111827 70%);
     animation: orb-breathe 3.8s ease-in-out infinite;
 }
-
-@keyframes orb-breathe {
-    0% { transform: scale(0.96); }
-    50% { transform: scale(1.04); }
-    100% { transform: scale(0.96); }
-}
-
-/* ============================================================
-   INPUT RECTANGULAR
-============================================================ */
+@keyframes orb-breathe {0%{transform:scale(0.96);}50%{transform:scale(1.04);}100%{transform:scale(0.96);}}
+@keyframes spin {from{transform:rotate(0deg);}to{transform:rotate(360deg);}}
 .input-shell {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    background: rgba(15, 23, 42, 0.9);
-    border-radius: 12px;
-    border: 1px solid rgba(148, 163, 184, 0.45);
-    padding: 10px 14px;
+    display:flex; gap:8px; background:rgba(15,23,42,0.9);
+    border-radius:12px; border:1px solid rgba(148,163,184,0.45); padding:10px 14px;
 }
-#queryInput {
-    flex: 1;
-    border: none;
-    outline: none;
-    background: transparent;
-    color: var(--text);
-    font-size: 1rem;
-    padding: 6px 0;
-}
-
-/* ============================================================
-   ICON BAR
-============================================================ */
-.icon-bar button {
-    font-size: 1.2rem;
-    padding: 10px 14px;
-}
-
-/* ============================================================
-   RESULTADOS
-============================================================ */
-.response-shell {
-    background: rgba(15, 23, 42, 0.9);
-    border-radius: var(--radius-md);
-    border: 1px solid rgba(148, 163, 184, 0.4);
-    padding: 10px 12px;
-    min-height: 120px;
-    font-size: 0.8rem;
-    overflow: auto;
-}
-body.light .response-shell {
-    background: #ffffff;
-}
-
-.dashboard-card {
-    background: rgba(15, 23, 42, 0.9);
-    border-radius: 10px;
-    padding: 8px;
-    border: 1px solid rgba(148, 163, 184, 0.4);
-    font-size: 0.78rem;
-}
-body.light .dashboard-card {
-    background: #f9fafb;
-}
-
-.dashboard-label {
-    color: var(--text-soft);
-    font-size: 0.7rem;
-}
-
-.dashboard-value {
-    font-size: 0.95rem;
-    font-weight: 600;
-}
-
-/* ============================================================
-   SCANNER OVERLAY
-============================================================ */
-.scanner-overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(15, 23, 42, 0.92);
-    display: none;
-    align-items: center;
-    justify-content: center;
-    z-index: 9999;
-}
-
-.scanner-inner {
-    background: rgba(15, 23, 42, 0.98);
-    border-radius: 16px;
-    border: 1px solid var(--border-subtle);
-    padding: 16px;
-    max-width: 420px;
-    width: 90%;
-    box-shadow: var(--shadow-soft);
-}
-
-#scannerVideo {
-    width: 100%;
-    border-radius: 12px;
-    background: #000;
-}
-
-/* ============================================================
-   SPIN ANIMATION
-============================================================ */
-@keyframes spin {
-    from { transform: rotate(0deg); }
-    to { transform: rotate(360deg); }
+#queryInput {flex:1; border:none; outline:none; background:transparent; color:var(--text); font-size:1rem;}
+.icon-bar button {font-size:1.2rem; padding:10px 14px;}
+.response-shell {background:rgba(15,23,42,0.9); border-radius:var(--radius-md); padding:10px; min-height:120px;}
+.view-hidden {display:none;}
+.pill-dot {width:8px; height:8px; border-radius:999px; background:var(--danger);}
+.pill-dot.ok {background:var(--success);}
+@media(max-width:768px){
+    .app-main{grid-template-columns:1fr;}
+    .panel{padding:14px;}
+    .icon-bar{flex-wrap:wrap; justify-content:space-between;}
+    .icon-bar .btn{flex:1 1 30%; text-align:center;}
 }
 </style>
 </head>
 <body>
 <div class="app-shell">
-
-    <header class="app-header">
-        <div class="brand">
-            <div class="brand-logo"></div>
-            <div>
-                <div class="brand-text-title">Stock IA PRO v3.0</div>
-                <div class="brand-text-sub">Asistente inteligente de stock</div>
-            </div>
-        </div>
-
-        <div class="header-right">
-            <button id="btnTheme" class="toggle-theme">Modo claro/oscuro</button>
-            <div class="pill">
-                <span class="pill-dot"></span>
-                <span>Sistema Conectado (Backend)</span>
-            </div>
-        </div>
-    </header>
-
-    <main class="app-main">
-
-        <!-- PANEL IZQUIERDO -->
-        <section class="panel">
-            <div class="panel-title">Consulta de stock</div>
-            <div class="panel-subtitle">Escribí o hablá como si fuera una persona.</div>
-
-            <div class="orb-wrapper">
-                <div class="orb" id="orbStatus"></div>
-            </div>
-
-            <!-- INPUT RECTANGULAR -->
-            <div class="input-shell">
-                <span class="input-prefix">¿Qué stock hay de…?</span>
-                <input id="queryInput" type="text" placeholder="pantuflas avengers plush" autocomplete="off" />
-                <button id="btnSend" class="btn btn-primary">Consultar</button>
-            </div>
-
-            <!-- AUTOCOMPLETE -->
-            <ul id="autocompleteList" class="autocomplete-list" style="display:none;"></ul>
-
-            <!-- ICON BAR -->
-            <div class="icon-bar" style="margin-top:10px; display:flex; gap:10px; flex-wrap:wrap;">
-                <button id="btnSpeak" class="btn">🎤</button>
-                <button id="btnHandsFree" class="btn">🎧</button>
-                <button id="btnStop" class="btn">⏹</button>
-                <button id="btnClear" class="btn">🧹</button>
-                <button id="btnCopy" class="btn">📋</button>
-                <button id="btnScanner" class="btn">📷</button>
-            </div>
-
-            <!-- SOLO STOCK -->
-            <div class="toggle-row">
-                <label class="switch">
-                    <input type="checkbox" id="chkSoloStock" checked />
-                    <span class="slider"></span>
-                </label>
-                <span>Mostrar solo artículos con stock</span>
-            </div>
-
-            <!-- HISTORIAL -->
-            <div class="history-shell">
-                <div>Historial de consultas:</div>
-                <ul id="historyList" class="history-list"></ul>
-            </div>
-        </section>
-
-        <!-- PANEL DERECHO -->
-        <section class="panel">
-            <div class="panel-title">Resultado</div>
-            <div class="panel-subtitle">Vista inteligente de los artículos encontrados.</div>
-
-            <div style="display:flex; gap:6px; margin-bottom:8px; flex-wrap:wrap;">
-                <button id="btnViewCards" class="btn btn-primary">Tarjetas</button>
-                <button id="btnViewList" class="btn">Lista</button>
-                <button id="btnViewTable" class="btn">Tabla</button>
-                <button id="btnViewDashboard" class="btn">Dashboard</button>
-            </div>
-
-            <div id="viewCards" class="response-shell">
-                <div id="cardsContainer">Listo para responder.</div>
-            </div>
-
-            <div id="viewList" class="response-shell view-hidden">
-                <ul id="listContainer" style="padding-left:18px; margin:0;"></ul>
-            </div>
-
-            <div id="viewTable" class="response-shell view-hidden">
-                <table id="tableContainer" style="width:100%; border-collapse:collapse; font-size:0.78rem;">
-                    <thead>
-                        <tr>
-                            <th style="text-align:left; border-bottom:1px solid rgba(148,163,184,0.4); padding:4px;">Código</th>
-                            <th style="text-align:left; border-bottom:1px solid rgba(148,163,184,0.4); padding:4px;">Descripción</th>
-                            <th style="text-align:right; border-bottom:1px solid rgba(148,163,184,0.4); padding:4px;">Stock</th>
-                        </tr>
-                    </thead>
-                    <tbody></tbody>
-                </table>
-            </div>
-
-            <div id="viewDashboard" class="response-shell view-hidden">
-                <div id="dashboardContainer" class="dashboard-grid"></div>
-            </div>
-
-            <div id="fuenteToggle">Fuente de datos (clic para ver)</div>
-            <div id="fuenteCard">
-                <div><strong>Backend:</strong> <span id="backendUrlLabel"></span></div>
-                <div style="margin-top:4px;">Consultas en tiempo real al servidor de stock.</div>
-            </div>
-        </section>
-
-    </main>
-</div>
-
-<!-- OVERLAY SCANNER PROFESIONAL -->
-<div id="scannerOverlay" class="scanner-overlay">
-    <div class="scanner-inner">
-        <div style="font-size:0.9rem; margin-bottom:8px;">Escaneando código…</div>
-        <video id="scannerVideo" autoplay playsinline></video>
-        <div class="scanner-actions">
-            <button id="btnCloseScanner" class="btn">Cerrar</button>
-        </div>
+<header class="app-header">
+    <div class="brand"><div class="brand-logo"></div><div><div class="brand-text-title">Stock IA PRO v3.1</div></div></div>
+    <div class="header-right">
+        <button id="btnTheme" class="toggle-theme">Modo claro/oscuro</button>
+        <div class="pill"><span class="pill-dot" id="statusDot"></span><span id="statusText">Sistema desconectado</span></div>
     </div>
+</header>
+
+<main class="app-main">
+    <!-- PANEL IZQUIERDO -->
+    <section class="panel">
+        <div class="orb-wrapper"><div class="orb" id="orbStatus"></div></div>
+        <div class="input-shell"><span class="input-prefix">¿Qué stock hay de…?</span>
+            <input id="queryInput" type="text" placeholder="pantuflas avengers plush" />
+            <button id="btnSend" class="btn btn-primary">Consultar</button>
+        </div>
+        <div class="icon-bar">
+            <button id="btnSpeak" class="btn">🎤</button>
+            <button id="btnHandsFree" class="btn">🎧</button>
+            <button id="btnStop" class="btn">⏹</button>
+            <button id="btnClear" class="btn">🧹</button>
+            <button id="btnCopy" class="btn">📋</button>
+            <button id="btnScanner" class="btn">📷</button>
+        </div>
+        <div class="toggle-row"><label class="switch"><input type="checkbox" id="chkSoloStock" checked /><span class="slider"></span></label><span>Mostrar solo artículos con stock</span></div>
+        <div class="history-shell"><div>Historial:</div><ul id="historyList"></ul></div>
+    </section>
+
+    <!-- PANEL DERECHO -->
+    <section class="panel">
+        <div style="display:flex; gap:6px; margin-bottom:8px; flex-wrap:wrap;">
+            <button id="btnViewCards" class="btn btn-primary">Tarjetas</button>
+            <button id="btnViewList" class="btn">Lista</button>
+            <button id="btnViewTable" class="btn">Tabla</button>
+            <button id="btnViewDashboard" class="btn">Dashboard</button>
+            <button id="btnViewAdmin" class="btn">Admin</button>
+        </div>
+        <div id="viewCards" class="response-shell"><div id="cardsContainer">Listo para responder.</div></div>
+        <div id="viewList" class="response-shell view-hidden"><ul id="listContainer"></ul></div>
+        <div id="viewTable" class="response-shell view-hidden"><table><tbody id="tableContainer"></tbody></table></div>
+        <div id="viewDashboard" class="response-shell view-hidden"><div id="dashboardContainer"></div></div>
+        <div id="viewAdmin" class="response-shell view-hidden">
+            <h4>Panel Admin</h4>
+            <button onclick="setModel('vendedor_experto')">Vendedor experto</button>
+            <button onclick="setModel('amigable')">Amigable</button>
+            <button onclick="setModel('profesional')">Profesional</button>
+            <button onclick="setModel('minimalista')">Minimalista</button>
+            <button onclick="setModel('tecnico')">Técnico</button>
+            <pre id="jsonView"></pre>
+        </div>
+    </section>
+</main>
 </div>
 
-<!-- AUDIO BIP -->
-<audio id="beepSound">
-    <source src="data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABAAZGF0YQAAAAA=" type="audio/wav">
-</audio>
-
+<div id="scannerOverlay" class="scanner-overlay"><div class="scanner-inner"><video id="scannerVideo" autoplay playsinline muted></video><button id="btnCloseScanner" class="btn">Cerrar</button></div></div>
+<audio id="beepSound"><source src="data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABAAZGF0YQAAAAA=" type="audio/wav"></audio>
 <audio id="responseVoice" style="display:none;"></audio>
 <script src="https://unpkg.com/@zxing/library@latest"></script>
 <script>
@@ -444,26 +163,26 @@ const btnViewCards = document.getElementById("btnViewCards");
 const btnViewList = document.getElementById("btnViewList");
 const btnViewTable = document.getElementById("btnViewTable");
 const btnViewDashboard = document.getElementById("btnViewDashboard");
+const btnViewAdmin = document.getElementById("btnViewAdmin");
 
 const viewCards = document.getElementById("viewCards");
 const viewList = document.getElementById("viewList");
 const viewTable = document.getElementById("viewTable");
 const viewDashboard = document.getElementById("viewDashboard");
+const viewAdmin = document.getElementById("viewAdmin");
 
 const cardsContainer = document.getElementById("cardsContainer");
 const listContainer = document.getElementById("listContainer");
-const tableContainer = document.getElementById("tableContainer").querySelector("tbody");
+const tableContainer = document.getElementById("tableContainer");
 const dashboardContainer = document.getElementById("dashboardContainer");
 
-const fuenteToggle = document.getElementById("fuenteToggle");
-const fuenteCard = document.getElementById("fuenteCard");
-const backendUrlLabel = document.getElementById("backendUrlLabel");
+const statusDot = document.getElementById("statusDot");
+const statusText = document.getElementById("statusText");
 
 const scannerOverlay = document.getElementById("scannerOverlay");
 const scannerVideo = document.getElementById("scannerVideo");
 const btnCloseScanner = document.getElementById("btnCloseScanner");
 
-const btnTheme = document.getElementById("btnTheme");
 const beepSound = document.getElementById("beepSound");
 
 // ==================================================
@@ -476,13 +195,10 @@ let zxingReader = null;
 let orbTapCount = 0;
 let orbTimer = null;
 
-// Mostrar URL de backend
-backendUrlLabel.textContent = BACKEND;
-
 // ==================================================
 // TEMA CLARO/OSCURO
 // ==================================================
-btnTheme.addEventListener("click", () => {
+document.getElementById("btnTheme").addEventListener("click", () => {
     document.body.classList.toggle("light");
 });
 
@@ -499,12 +215,13 @@ input.addEventListener("input", () => {
         return;
     }
     if (autocompleteTimeout) clearTimeout(autocompleteTimeout);
+
     autocompleteTimeout = setTimeout(() => {
         fetch(`${BACKEND}/autocomplete?q=${encodeURIComponent(q)}`)
             .then(r => r.ok ? r.json() : [])
             .then(data => {
                 autocompleteList.innerHTML = "";
-                if (!data || !data.suggestions || data.suggestions.length === 0) {
+                if (!data?.suggestions?.length) {
                     autocompleteList.style.display = "none";
                     return;
                 }
@@ -512,32 +229,40 @@ input.addEventListener("input", () => {
                     const li = document.createElement("li");
                     li.className = "autocomplete-item";
                     li.textContent = s;
-                    li.addEventListener("click", () => {
+                    li.onclick = () => {
                         input.value = s;
                         autocompleteList.style.display = "none";
-                    });
+                    };
                     autocompleteList.appendChild(li);
                 });
                 autocompleteList.style.display = "block";
             })
-            .catch(() => {
-                autocompleteList.style.display = "none";
-            });
+            .catch(() => autocompleteList.style.display = "none");
     }, 250);
 });
 
 // ==================================================
+// NORMALIZAR TEXTO (acentos, variantes)
+// ==================================================
+function normalizarTexto(t) {
+    return t
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "");
+}
+// ==================================================
 // CONSULTA PRINCIPAL
 // ==================================================
 async function consultar() {
-    const q = input.value.trim();
+    let q = input.value.trim();
     if (!q) return;
 
-    // Modo admin por texto
     if (q.toLowerCase() === "admin") {
-        alert("🔧 MODO ADMIN ACTIVADO");
+        activarAdmin();
         return;
     }
+
+    const qNorm = normalizarTexto(q);
 
     orbStatus.style.animation = "spin 1s linear infinite";
     cardsContainer.textContent = "Consultando...";
@@ -547,125 +272,111 @@ async function consultar() {
 
     try {
         const params = new URLSearchParams();
-        params.set("q", q);
+        params.set("q", qNorm);
         params.set("solo_stock", chkSoloStock.checked ? "1" : "0");
 
         const resp = await fetch(`${BACKEND}/query?${params.toString()}`);
-        if (!resp.ok) throw new Error("Error en backend");
-        const data = await resp.json();
+        if (!resp.ok) throw new Error("Backend error");
 
+        const data = await resp.json();
         lastResults = data.items || [];
 
-        renderCards(lastResults, data.message || "");
+        renderCards(lastResults);
         renderList(lastResults);
         renderTable(lastResults);
         renderDashboard(lastResults);
 
         addToHistory(q);
-        speakText(data.tts || data.message || "Consulta realizada.");
-    } catch (err) {
+
+        // TTS inteligente
+        let tts = data.tts;
+        if (!tts) {
+            if (lastResults.length === 0) {
+                tts = `No encontré resultados para ${q}.`;
+            } else {
+                tts = `Encontré ${lastResults.length} artículos. El primero es ${lastResults[0].descripcion}.`;
+            }
+        }
+        speakText(tts);
+
+    } catch (e) {
         cardsContainer.textContent = "Error al consultar el backend.";
-        listContainer.innerHTML = "";
-        tableContainer.innerHTML = "";
-        dashboardContainer.innerHTML = "";
+        speakText("Hubo un error al consultar el servidor.");
     } finally {
         orbStatus.style.animation = "orb-breathe 3.8s ease-in-out infinite";
     }
 }
 
-btnSend.addEventListener("click", consultar);
-input.addEventListener("keydown", (e) => {
-    if (e.key === "Enter") consultar();
-});
+btnSend.onclick = consultar;
+input.onkeydown = e => { if (e.key === "Enter") consultar(); };
 
 // ==================================================
-// RENDERIZADO DE VISTAS (CORREGIDO)
+// RENDERIZADO
 // ==================================================
-function renderCards(items, message) {
-    if (!items || items.length === 0) {
-        cardsContainer.textContent = message || "No se encontraron resultados.";
+function stockTotal(it) {
+    return (it.talles || []).reduce((a, t) => a + (parseFloat(t.stock) || 0), 0);
+}
+
+function renderCards(items) {
+    if (!items.length) {
+        cardsContainer.textContent = "No se encontraron resultados.";
         return;
     }
     cardsContainer.innerHTML = "";
     items.forEach(it => {
-        const stockTotal = (it.talles || []).reduce((acc, t) => acc + (parseFloat(t.stock) || 0), 0);
-        const tallesHTML = (it.talles || [])
-            .map(t => `${t.talle} (${t.stock})`)
-            .join(", ");
-
         const div = document.createElement("div");
         div.className = "dashboard-card";
         div.innerHTML = `
-            <div class="dashboard-label">${it.codigo || ""}</div>
-            <div class="dashboard-value">${it.descripcion || ""}</div>
+            <div class="dashboard-label">${it.codigo}</div>
+            <div class="dashboard-value">${it.descripcion}</div>
             <div style="margin-top:6px; font-size:0.75rem;">
-                <strong>Marca:</strong> ${it.marca || "-"}<br>
-                <strong>Rubro:</strong> ${it.rubro || "-"}<br>
-                <strong>Color:</strong> ${it.color || "-"}<br>
-                <strong>Precio:</strong> $${it.precio ?? "-"}<br>
-                <strong>Valorizado:</strong> $${it.valorizado ?? "-"}<br>
-                <strong>Stock total:</strong> ${stockTotal}<br>
-                <strong>Talles:</strong> ${tallesHTML || "-"}
-            </div>
-        `;
+                Marca: ${it.marca}<br>
+                Rubro: ${it.rubro}<br>
+                Precio: $${it.precio}<br>
+                Stock total: ${stockTotal(it)}<br>
+                Talles: ${(it.talles||[]).map(t=>`${t.talle} (${t.stock})`).join(", ")}
+            </div>`;
         cardsContainer.appendChild(div);
     });
 }
 
 function renderList(items) {
     listContainer.innerHTML = "";
-    if (!items || items.length === 0) return;
     items.forEach(it => {
-        const stockTotal = (it.talles || []).reduce((acc, t) => acc + (parseFloat(t.stock) || 0), 0);
         const li = document.createElement("li");
-        li.innerHTML = `
-            <strong>${it.codigo || ""}</strong> - ${it.descripcion || ""}<br>
-            Marca: ${it.marca || "-"} | Rubro: ${it.rubro || "-"}<br>
-            Stock total: ${stockTotal}
-        `;
+        li.innerHTML = `<strong>${it.codigo}</strong> - ${it.descripcion}<br>Stock total: ${stockTotal(it)}`;
         listContainer.appendChild(li);
     });
 }
 
 function renderTable(items) {
     tableContainer.innerHTML = "";
-    if (!items || items.length === 0) return;
     items.forEach(it => {
-        const stockTotal = (it.talles || []).reduce((acc, t) => acc + (parseFloat(t.stock) || 0), 0);
         const tr = document.createElement("tr");
         tr.innerHTML = `
-            <td style="padding:4px; border-bottom:1px solid rgba(148,163,184,0.2);">${it.codigo || ""}</td>
-            <td style="padding:4px; border-bottom:1px solid rgba(148,163,184,0.2);">${it.descripcion || ""}</td>
-            <td style="padding:4px; border-bottom:1px solid rgba(148,163,184,0.2); text-align:right;">${stockTotal}</td>
-        `;
+            <td>${it.codigo}</td>
+            <td>${it.descripcion}</td>
+            <td style="text-align:right;">${stockTotal(it)}</td>`;
         tableContainer.appendChild(tr);
     });
 }
 
 function renderDashboard(items) {
     dashboardContainer.innerHTML = "";
-    const totalItems = items.length;
-    const totalStock = items.reduce(
-        (acc, it) => acc + (it.talles || []).reduce((s, t) => s + (parseFloat(t.stock) || 0), 0),
-        0
-    );
-    const conStock = items.filter(
-        it => (it.talles || []).some(t => (parseFloat(t.stock) || 0) > 0)
-    ).length;
+    const total = items.length;
+    const conStock = items.filter(i => stockTotal(i) > 0).length;
+    const unidades = items.reduce((a, i) => a + stockTotal(i), 0);
 
-    const cards = [
-        { label: "Artículos encontrados", value: totalItems },
-        { label: "Con stock", value: conStock },
-        { label: "Unidades totales", value: totalStock }
+    const stats = [
+        ["Artículos encontrados", total],
+        ["Con stock", conStock],
+        ["Unidades totales", unidades]
     ];
 
-    cards.forEach(c => {
+    stats.forEach(([label, value]) => {
         const div = document.createElement("div");
         div.className = "dashboard-card";
-        div.innerHTML = `
-            <div class="dashboard-label">${c.label}</div>
-            <div class="dashboard-value">${c.value}</div>
-        `;
+        div.innerHTML = `<div class="dashboard-label">${label}</div><div class="dashboard-value">${value}</div>`;
         dashboardContainer.appendChild(div);
     });
 }
@@ -673,63 +384,37 @@ function renderDashboard(items) {
 // ==================================================
 // CAMBIO DE VISTA
 // ==================================================
-function setView(view) {
-    viewCards.classList.add("view-hidden");
-    viewList.classList.add("view-hidden");
-    viewTable.classList.add("view-hidden");
-    viewDashboard.classList.add("view-hidden");
+function setView(v) {
+    [viewCards, viewList, viewTable, viewDashboard, viewAdmin].forEach(vw => vw.classList.add("view-hidden"));
+    [btnViewCards, btnViewList, btnViewTable, btnViewDashboard, btnViewAdmin].forEach(b => b.classList.remove("btn-primary"));
 
-    btnViewCards.classList.remove("btn-primary");
-    btnViewList.classList.remove("btn-primary");
-    btnViewTable.classList.remove("btn-primary");
-    btnViewDashboard.classList.remove("btn-primary");
-
-    if (view === "cards") {
-        viewCards.classList.remove("view-hidden");
-        btnViewCards.classList.add("btn-primary");
-    } else if (view === "list") {
-        viewList.classList.remove("view-hidden");
-        btnViewList.classList.add("btn-primary");
-    } else if (view === "table") {
-        viewTable.classList.remove("view-hidden");
-        btnViewTable.classList.add("btn-primary");
-    } else if (view === "dashboard") {
-        viewDashboard.classList.remove("view-hidden");
-        btnViewDashboard.classList.add("btn-primary");
-    }
+    if (v === "cards") { viewCards.classList.remove("view-hidden"); btnViewCards.classList.add("btn-primary"); }
+    if (v === "list") { viewList.classList.remove("view-hidden"); btnViewList.classList.add("btn-primary"); }
+    if (v === "table") { viewTable.classList.remove("view-hidden"); btnViewTable.classList.add("btn-primary"); }
+    if (v === "dashboard") { viewDashboard.classList.remove("view-hidden"); btnViewDashboard.classList.add("btn-primary"); }
+    if (v === "admin") { viewAdmin.classList.remove("view-hidden"); btnViewAdmin.classList.add("btn-primary"); }
 }
-btnViewCards.addEventListener("click", () => setView("cards"));
-btnViewList.addEventListener("click", () => setView("list"));
-btnViewTable.addEventListener("click", () => setView("table"));
-btnViewDashboard.addEventListener("click", () => setView("dashboard"));
+
+btnViewCards.onclick = () => setView("cards");
+btnViewList.onclick = () => setView("list");
+btnViewTable.onclick = () => setView("table");
+btnViewDashboard.onclick = () => setView("dashboard");
+btnViewAdmin.onclick = () => setView("admin");
+
 setView("cards");
 
 // ==================================================
 // HISTORIAL
 // ==================================================
 function addToHistory(q) {
-    if (!q) return;
     const li = document.createElement("li");
-    li.className = "history-item";
     li.textContent = q;
-    li.addEventListener("click", () => {
-        input.value = q;
-        input.focus();
-    });
+    li.onclick = () => { input.value = q; consultar(); };
     historyList.prepend(li);
 }
 
 // ==================================================
-// FUENTE DE DATOS
-// ==================================================
-fuenteToggle.addEventListener("click", () => {
-    fuenteCard.style.display = (fuenteCard.style.display === "none" || !fuenteCard.style.display)
-        ? "block"
-        : "none";
-});
-
-// ==================================================
-// VOZ: RECONOCIMIENTO
+// VOZ
 // ==================================================
 function initRecognition() {
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -742,94 +427,87 @@ function initRecognition() {
 }
 
 function beep() {
-    if (!beepSound) return;
     beepSound.currentTime = 0;
-    beepSound.play().catch(() => {});
+    beepSound.play().catch(()=>{});
 }
 
-btnSpeak.addEventListener("click", () => {
+btnSpeak.onclick = () => {
     beep();
     if (!recognition) recognition = initRecognition();
-    if (!recognition) {
-        alert("Reconocimiento de voz no soportado en este navegador.");
-        return;
-    }
     handsFreeMode = false;
-    recognition.onresult = (event) => {
-        const text = event.results[0][0].transcript;
-        input.value = text;
-        consultar();
-    };
+    recognition.onresult = e => { input.value = e.results[0][0].transcript; consultar(); };
     recognition.start();
-});
+};
 
-btnHandsFree.addEventListener("click", () => {
+btnHandsFree.onclick = () => {
     beep();
     if (!recognition) recognition = initRecognition();
-    if (!recognition) {
-        alert("Reconocimiento de voz no soportado en este navegador.");
-        return;
-    }
     handsFreeMode = true;
-    recognition.onresult = (event) => {
-        const text = event.results[0][0].transcript;
-        input.value = text;
+    let lastSpeech = Date.now();
+
+    recognition.onresult = e => {
+        lastSpeech = Date.now();
+        input.value = e.results[0][0].transcript;
         consultar();
     };
-    recognition.onend = () => {
-        if (handsFreeMode) {
-            recognition.start();
-        }
-    };
-    recognition.start();
-});
 
-btnStop.addEventListener("click", () => {
+    recognition.onend = () => {
+        if (!handsFreeMode) return;
+        if (Date.now() - lastSpeech > 60000) {
+            handsFreeMode = false;
+            alert("No detecté voz por un rato. Desactivo manos libres.");
+            return;
+        }
+        recognition.start();
+    };
+
+    recognition.start();
+};
+
+btnStop.onclick = () => {
     beep();
     handsFreeMode = false;
-    if (recognition) recognition.stop();
-});
+    if (recognition) {
+        recognition.onend = null;
+        recognition.stop();
+    }
+    speechSynthesis.cancel();
+};
 
-// ==================================================
-// VOZ: SÍNTESIS
-// ==================================================
-function speakText(text) {
-    if (!window.speechSynthesis) return;
-    if (!text) return;
-    const utter = new SpeechSynthesisUtterance(text);
-    utter.lang = "es-AR";
-    window.speechSynthesis.cancel();
-    window.speechSynthesis.speak(utter);
+function speakText(t) {
+    if (!t) return;
+    const u = new SpeechSynthesisUtterance(t);
+    u.lang = "es-AR";
+    speechSynthesis.cancel();
+    speechSynthesis.speak(u);
 }
 
 // ==================================================
 // UTILIDADES
 // ==================================================
-btnClear.addEventListener("click", () => {
+btnClear.onclick = () => {
     input.value = "";
     cardsContainer.textContent = "Listo para responder.";
     listContainer.innerHTML = "";
     tableContainer.innerHTML = "";
     dashboardContainer.innerHTML = "";
-});
+};
 
-btnCopy.addEventListener("click", async () => {
+btnCopy.onclick = async () => {
     try {
-        // Copiar el resultado visible (tarjetas)
-        const text = cardsContainer.innerText || "";
-        await navigator.clipboard.writeText(text);
+        await navigator.clipboard.writeText(cardsContainer.innerText);
         alert("Resultado copiado.");
     } catch {
         alert("No se pudo copiar.");
     }
-});
-
+};
 // ==================================================
-// SCANNER PROFESIONAL ZXING
+// SCANNER ZXING
 // ==================================================
-btnScanner.addEventListener("click", async () => {
+btnScanner.onclick = async () => {
     try {
         scannerOverlay.style.display = "flex";
+
         zxingReader = new ZXing.BrowserMultiFormatReader();
 
         const devices = await ZXing.BrowserMultiFormatReader.listVideoInputDevices();
@@ -846,7 +524,7 @@ btnScanner.addEventListener("click", async () => {
         alert("No se pudo iniciar el scanner.");
         cerrarScanner();
     }
-});
+};
 
 function cerrarScanner() {
     scannerOverlay.style.display = "none";
@@ -855,24 +533,60 @@ function cerrarScanner() {
         zxingReader = null;
     }
 }
-btnCloseScanner.addEventListener("click", cerrarScanner);
+btnCloseScanner.onclick = cerrarScanner;
 
 // ==================================================
-// ORB + MODO ADMIN POR TOQUES
+// ADMIN TAB
 // ==================================================
-orbStatus.addEventListener("click", () => {
+function activarAdmin() {
+    alert("Modo administrador activado");
+    setView("admin");
+}
+
+function setModel(m) {
+    localStorage.setItem("modelo_respuesta", m);
+    alert("Modelo cambiado a: " + m);
+}
+
+function mostrarJSON() {
+    document.getElementById("jsonView").textContent = JSON.stringify(lastResults, null, 2);
+}
+setInterval(mostrarJSON, 1000);
+
+// ==================================================
+// ORB + ADMIN POR TOQUES
+// ==================================================
+orbStatus.onclick = () => {
     orbTapCount++;
     if (orbTimer) clearTimeout(orbTimer);
-
-    orbTimer = setTimeout(() => {
-        orbTapCount = 0;
-    }, 800);
+    orbTimer = setTimeout(() => orbTapCount = 0, 800);
 
     if (orbTapCount >= 5) {
         orbTapCount = 0;
-        alert("🔧 MODO ADMIN ACTIVADO");
+        activarAdmin();
     }
-});
+};
+
+// ==================================================
+// ESTADO BACKEND
+// ==================================================
+async function checkBackendStatus() {
+    try {
+        const r = await fetch(`${BACKEND}/health`);
+        if (r.ok) {
+            statusDot.classList.add("ok");
+            statusText.textContent = "Sistema conectado";
+        } else {
+            statusDot.classList.remove("ok");
+            statusText.textContent = "Sistema con problemas";
+        }
+    } catch {
+        statusDot.classList.remove("ok");
+        statusText.textContent = "Sistema desconectado";
+    }
+}
+checkBackendStatus();
+setInterval(checkBackendStatus, 15000);
 </script>
 </body>
 </html>
