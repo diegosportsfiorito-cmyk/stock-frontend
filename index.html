@@ -970,26 +970,49 @@ btnCopy.addEventListener("click", async () => {
 });
 
 // ==================================================
-// SCANNER ZXING
+// SCANNER ZXING (LECTURA AUTOMÁTICA, TODOS LOS FORMATOS)
 // ==================================================
 btnScanner.addEventListener("click", async () => {
     try {
         scannerOverlay.style.display = "flex";
 
         zxingReader = new ZXing.BrowserMultiFormatReader();
+
+        // Activamos TODOS los formatos posibles
+        const hints = new Map();
+        const formats = [
+            ZXing.BarcodeFormat.EAN_13,
+            ZXing.BarcodeFormat.EAN_8,
+            ZXing.BarcodeFormat.UPC_A,
+            ZXing.BarcodeFormat.UPC_E,
+            ZXing.BarcodeFormat.CODE_128,
+            ZXing.BarcodeFormat.CODE_39,
+            ZXing.BarcodeFormat.ITF,
+            ZXing.BarcodeFormat.QR_CODE,
+            ZXing.BarcodeFormat.PDF_417
+        ];
+        hints.set(ZXing.DecodeHintType.POSSIBLE_FORMATS, formats);
+        hints.set(ZXing.DecodeHintType.TRY_HARDER, true);
+        zxingReader.defaultOptions = { hints };
+
         const devices = await ZXing.BrowserMultiFormatReader.listVideoInputDevices();
         if (!devices || devices.length === 0) throw new Error("No hay cámaras");
 
-        const backCam = devices.find(d => d.label.toLowerCase().includes("back")) || devices[0];
+        const backCam = devices.find(d => (d.label || "").toLowerCase().includes("back")) || devices[0];
 
         await zxingReader.decodeFromVideoDevice(backCam.deviceId, "scannerVideo", (result, err) => {
             if (result) {
-                input.value = result.text;
+                // Código leído tal cual viene del código de barras
+                const code = result.text.trim();
+
+                // Lo cargamos directo en el input y consultamos
+                input.value = code;
                 cerrarScanner();
                 consultar();
             }
         });
     } catch (e) {
+        // Fallback: solo mostrar cámara si ZXing falla
         try {
             const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
             scannerVideo.srcObject = stream;
@@ -1013,7 +1036,7 @@ function cerrarScanner() {
     }
 }
 btnCloseScanner.addEventListener("click", cerrarScanner);
-
+    
 // ==================================================
 // ADMIN (solo "admin" o 5 clics al ORB)
 // ==================================================
@@ -1060,3 +1083,4 @@ setInterval(checkBackendStatus, 15000);
 </script>
 </body>
 </html>
+
