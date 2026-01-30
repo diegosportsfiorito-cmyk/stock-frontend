@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8" />
-<title>Stock IA PRO v2.1</title>
+<title>Stock IA PRO v3.0</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
 <style>
@@ -127,27 +127,6 @@ body.light .toggle-theme {
     background: #ffffff;
 }
 
-.pill {
-    padding: 6px 12px;
-    border-radius: var(--radius-pill);
-    border: 1px solid rgba(148, 163, 184, 0.35);
-    background: rgba(15, 23, 42, 0.8);
-    display: flex;
-    align-items: center;
-    gap: 6px;
-}
-body.light .pill {
-    background: rgba(255, 255, 255, 0.9);
-}
-
-.pill-dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 999px;
-    background: var(--success);
-    box-shadow: 0 0 12px rgba(34, 197, 94, 0.9);
-}
-
 /* ============================================================
    PANEL PRINCIPAL
 ============================================================ */
@@ -199,87 +178,37 @@ body.light .panel {
 }
 
 /* ============================================================
-   INPUT + BOTONES
+   INPUT RECTANGULAR
 ============================================================ */
 .input-shell {
     display: flex;
     align-items: center;
     gap: 8px;
     background: rgba(15, 23, 42, 0.9);
-    border-radius: var(--radius-pill);
+    border-radius: 12px;
     border: 1px solid rgba(148, 163, 184, 0.45);
-    padding: 4px 12px;
+    padding: 10px 14px;
 }
-body.light .input-shell {
-    background: rgba(255, 255, 255, 0.9);
-}
-
-.input-prefix {
-    font-size: 0.78rem;
-    color: var(--text-soft);
-    padding-right: 6px;
-    border-right: 1px solid rgba(148, 163, 184, 0.35);
-}
-
 #queryInput {
     flex: 1;
     border: none;
     outline: none;
     background: transparent;
     color: var(--text);
-    font-size: 0.9rem;
-}
-
-.btn {
-    border: none;
-    border-radius: var(--radius-pill);
-    padding: 6px 12px;
-    font-size: 0.78rem;
-    cursor: pointer;
-    background: rgba(15, 23, 42, 0.9);
-    color: var(--text-soft);
-    border: 1px solid rgba(148, 163, 184, 0.4);
-}
-body.light .btn {
-    background: #ffffff;
-}
-
-.btn-primary {
-    background: linear-gradient(135deg, var(--accent), var(--accent-strong));
-    color: white;
-    border: none;
-}
-
-/* ============================================================
-   AUTOCOMPLETE
-============================================================ */
-.autocomplete-list {
-    margin: 0;
+    font-size: 1rem;
     padding: 6px 0;
-    list-style: none;
-    border-radius: var(--radius-md);
-    background: rgba(15, 23, 42, 0.98);
-    border: 1px solid rgba(148, 163, 184, 0.4);
-    max-height: 180px;
-    overflow-y: auto;
-    font-size: 0.8rem;
-}
-body.light .autocomplete-list {
-    background: #ffffff;
-}
-
-.autocomplete-item {
-    padding: 6px 10px;
-    cursor: pointer;
-    color: var(--text-soft);
-}
-.autocomplete-item:hover {
-    background: rgba(30, 64, 175, 0.35);
-    color: #e5e7eb;
 }
 
 /* ============================================================
-   RESULTADOS + VISTAS
+   ICON BAR
+============================================================ */
+.icon-bar button {
+    font-size: 1.2rem;
+    padding: 10px 14px;
+}
+
+/* ============================================================
+   RESULTADOS
 ============================================================ */
 .response-shell {
     background: rgba(15, 23, 42, 0.9);
@@ -292,22 +221,6 @@ body.light .autocomplete-list {
 }
 body.light .response-shell {
     background: #ffffff;
-}
-
-pre {
-    margin: 0;
-    white-space: pre-wrap;
-    word-wrap: break-word;
-}
-
-.view-hidden {
-    display: none;
-}
-
-.dashboard-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-    gap: 10px;
 }
 
 .dashboard-card {
@@ -332,55 +245,7 @@ body.light .dashboard-card {
 }
 
 /* ============================================================
-   HISTORIAL
-============================================================ */
-.history-shell {
-    margin-top: 10px;
-    font-size: 0.75rem;
-    color: var(--text-soft);
-}
-
-.history-list {
-    list-style: none;
-    padding-left: 0;
-    margin: 6px 0 0 0;
-    max-height: 120px;
-    overflow-y: auto;
-}
-
-.history-item {
-    padding: 4px 6px;
-    border-radius: 6px;
-    cursor: pointer;
-    border: 1px solid rgba(148, 163, 184, 0.25);
-    margin-bottom: 4px;
-}
-.history-item:hover {
-    background: rgba(79, 70, 229, 0.12);
-}
-
-/* ============================================================
-   TARJETA DE FUENTE
-============================================================ */
-#fuenteToggle {
-    margin-top: 10px;
-    font-size: 0.75rem;
-    cursor: pointer;
-    color: var(--text-soft);
-}
-
-#fuenteCard {
-    margin-top: 8px;
-    padding: 10px;
-    border-radius: 10px;
-    border: 1px solid var(--border-subtle);
-    background: var(--bg-elevated);
-    display: none;
-    font-size: 0.75rem;
-}
-
-/* ============================================================
-   SCANNER OVERLAY (INTERNO)
+   SCANNER OVERLAY
 ============================================================ */
 .scanner-overlay {
     position: fixed;
@@ -408,108 +273,12 @@ body.light .dashboard-card {
     background: #000;
 }
 
-.scanner-actions {
-    margin-top: 10px;
-    display: flex;
-    justify-content: flex-end;
-    gap: 8px;
-}
-
 /* ============================================================
-   SWITCH SOLO STOCK
+   SPIN ANIMATION
 ============================================================ */
-.toggle-row {
-    margin-top: 10px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 0.78rem;
-    color: var(--text-soft);
-}
-
-.switch {
-    position: relative;
-    display: inline-block;
-    width: 38px;
-    height: 20px;
-}
-
-.switch input {
-    opacity: 0;
-    width: 0;
-    height: 0;
-}
-
-.slider {
-    position: absolute;
-    cursor: pointer;
-    inset: 0;
-    background-color: #4b5563;
-    transition: .2s;
-    border-radius: 999px;
-}
-
-.slider:before {
-    position: absolute;
-    content: "";
-    height: 14px;
-    width: 14px;
-    left: 3px;
-    bottom: 3px;
-    background-color: white;
-    transition: .2s;
-    border-radius: 50%;
-}
-
-.switch input:checked + .slider {
-    background-color: #22c55e;
-}
-
-.switch input:checked + .slider:before {
-    transform: translateX(18px);
-}
-
-/* ============================================================
-   RESPONSIVE
-============================================================ */
-@media (max-width: 768px) {
-    .app-main {
-        grid-template-columns: 1fr;
-    }
-
-    .panel {
-        padding: 14px;
-    }
-
-    .input-shell {
-        flex-direction: column;
-        align-items: stretch;
-        gap: 10px;
-        padding: 10px;
-    }
-
-    .input-prefix {
-        border-right: none;
-        border-bottom: 1px solid rgba(148, 163, 184, 0.35);
-        padding-bottom: 6px;
-        width: 100%;
-        text-align: left;
-    }
-
-    #queryInput {
-        width: 100%;
-        font-size: 1rem;
-    }
-
-    .btn {
-        width: 100%;
-        text-align: center;
-    }
-
-    .orb {
-        width: 70px;
-        height: 70px;
-    }
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
 }
 </style>
 </head>
@@ -520,7 +289,7 @@ body.light .dashboard-card {
         <div class="brand">
             <div class="brand-logo"></div>
             <div>
-                <div class="brand-text-title">Stock IA PRO v2.1</div>
+                <div class="brand-text-title">Stock IA PRO v3.0</div>
                 <div class="brand-text-sub">Asistente inteligente de stock</div>
             </div>
         </div>
@@ -545,29 +314,27 @@ body.light .dashboard-card {
                 <div class="orb" id="orbStatus"></div>
             </div>
 
+            <!-- INPUT RECTANGULAR -->
             <div class="input-shell">
                 <span class="input-prefix">¿Qué stock hay de…?</span>
                 <input id="queryInput" type="text" placeholder="pantuflas avengers plush" autocomplete="off" />
                 <button id="btnSend" class="btn btn-primary">Consultar</button>
             </div>
 
+            <!-- AUTOCOMPLETE -->
             <ul id="autocompleteList" class="autocomplete-list" style="display:none;"></ul>
 
-            <div style="margin-top:10px; display:flex; gap:6px; flex-wrap:wrap;">
-                <button id="btnSpeak" class="btn">Hablar</button>
-                <button id="btnHandsFree" class="btn">Manos libres</button>
-                <button id="btnStop" class="btn">Stop</button>
-                <button id="btnClear" class="btn">Limpiar</button>
-                <button id="btnCopy" class="btn">Copiar</button>
+            <!-- ICON BAR -->
+            <div class="icon-bar" style="margin-top:10px; display:flex; gap:10px; flex-wrap:wrap;">
+                <button id="btnSpeak" class="btn">🎤</button>
+                <button id="btnHandsFree" class="btn">🎧</button>
+                <button id="btnStop" class="btn">⏹</button>
+                <button id="btnClear" class="btn">🧹</button>
+                <button id="btnCopy" class="btn">📋</button>
+                <button id="btnScanner" class="btn">📷</button>
             </div>
 
-            <div style="margin-top:8px; display:flex; gap:6px; flex-wrap:wrap;">
-                <button id="btnScannerExterno" class="btn">Scanner externo</button>
-                <button id="btnReadClipboard" class="btn">Leer código</button>
-                <button id="btnScannerInterno" class="btn">Scanner interno</button>
-                <button id="btnScannerZXing" class="btn">Scanner universal (imagen)</button>
-            </div>
-
+            <!-- SOLO STOCK -->
             <div class="toggle-row">
                 <label class="switch">
                     <input type="checkbox" id="chkSoloStock" checked />
@@ -576,6 +343,7 @@ body.light .dashboard-card {
                 <span>Mostrar solo artículos con stock</span>
             </div>
 
+            <!-- HISTORIAL -->
             <div class="history-shell">
                 <div>Historial de consultas:</div>
                 <ul id="historyList" class="history-list"></ul>
@@ -629,10 +397,10 @@ body.light .dashboard-card {
     </main>
 </div>
 
-<!-- OVERLAY SCANNER INTERNO -->
+<!-- OVERLAY SCANNER PROFESIONAL -->
 <div id="scannerOverlay" class="scanner-overlay">
     <div class="scanner-inner">
-        <div style="font-size:0.9rem; margin-bottom:8px;">Scanner interno (cámara)</div>
+        <div style="font-size:0.9rem; margin-bottom:8px;">Escaneando código…</div>
         <video id="scannerVideo" autoplay playsinline></video>
         <div class="scanner-actions">
             <button id="btnCloseScanner" class="btn">Cerrar</button>
@@ -640,7 +408,13 @@ body.light .dashboard-card {
     </div>
 </div>
 
+<!-- AUDIO BIP -->
+<audio id="beepSound">
+    <source src="data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABAAZGF0YQAAAAA=" type="audio/wav">
+</audio>
+
 <audio id="responseVoice" style="display:none;"></audio>
+<script src="https://unpkg.com/@zxing/library@latest"></script>
 <script>
 // ==================================================
 // CONFIGURACIÓN BACKEND
@@ -661,11 +435,7 @@ const btnHandsFree = document.getElementById("btnHandsFree");
 const btnStop = document.getElementById("btnStop");
 const btnClear = document.getElementById("btnClear");
 const btnCopy = document.getElementById("btnCopy");
-
-const btnScannerExterno = document.getElementById("btnScannerExterno");
-const btnReadClipboard = document.getElementById("btnReadClipboard");
-const btnScannerInterno = document.getElementById("btnScannerInterno");
-const btnScannerZXing = document.getElementById("btnScannerZXing");
+const btnScanner = document.getElementById("btnScanner");
 
 const chkSoloStock = document.getElementById("chkSoloStock");
 const historyList = document.getElementById("historyList");
@@ -694,14 +464,17 @@ const scannerVideo = document.getElementById("scannerVideo");
 const btnCloseScanner = document.getElementById("btnCloseScanner");
 
 const btnTheme = document.getElementById("btnTheme");
+const beepSound = document.getElementById("beepSound");
 
 // ==================================================
 // ESTADO
 // ==================================================
 let recognition = null;
 let handsFreeMode = false;
-let mediaStream = null;
 let lastResults = [];
+let zxingReader = null;
+let orbTapCount = 0;
+let orbTimer = null;
 
 // Mostrar URL de backend
 backendUrlLabel.textContent = BACKEND;
@@ -760,7 +533,13 @@ async function consultar() {
     const q = input.value.trim();
     if (!q) return;
 
-    orbStatus.style.opacity = "0.5";
+    // Modo admin por texto
+    if (q.toLowerCase() === "admin") {
+        alert("🔧 MODO ADMIN ACTIVADO");
+        return;
+    }
+
+    orbStatus.style.animation = "spin 1s linear infinite";
     cardsContainer.textContent = "Consultando...";
     listContainer.innerHTML = "";
     tableContainer.innerHTML = "";
@@ -790,7 +569,7 @@ async function consultar() {
         tableContainer.innerHTML = "";
         dashboardContainer.innerHTML = "";
     } finally {
-        orbStatus.style.opacity = "1";
+        orbStatus.style.animation = "orb-breathe 3.8s ease-in-out infinite";
     }
 }
 
@@ -800,7 +579,7 @@ input.addEventListener("keydown", (e) => {
 });
 
 // ==================================================
-// RENDERIZADO DE VISTAS
+// RENDERIZADO DE VISTAS (CORREGIDO)
 // ==================================================
 function renderCards(items, message) {
     if (!items || items.length === 0) {
@@ -809,13 +588,24 @@ function renderCards(items, message) {
     }
     cardsContainer.innerHTML = "";
     items.forEach(it => {
+        const stockTotal = (it.talles || []).reduce((acc, t) => acc + (parseFloat(t.stock) || 0), 0);
+        const tallesHTML = (it.talles || [])
+            .map(t => `${t.talle} (${t.stock})`)
+            .join(", ");
+
         const div = document.createElement("div");
         div.className = "dashboard-card";
         div.innerHTML = `
             <div class="dashboard-label">${it.codigo || ""}</div>
             <div class="dashboard-value">${it.descripcion || ""}</div>
-            <div style="margin-top:4px; font-size:0.75rem;">
-                Stock: <strong>${it.stock ?? "-"}</strong>
+            <div style="margin-top:6px; font-size:0.75rem;">
+                <strong>Marca:</strong> ${it.marca || "-"}<br>
+                <strong>Rubro:</strong> ${it.rubro || "-"}<br>
+                <strong>Color:</strong> ${it.color || "-"}<br>
+                <strong>Precio:</strong> $${it.precio ?? "-"}<br>
+                <strong>Valorizado:</strong> $${it.valorizado ?? "-"}<br>
+                <strong>Stock total:</strong> ${stockTotal}<br>
+                <strong>Talles:</strong> ${tallesHTML || "-"}
             </div>
         `;
         cardsContainer.appendChild(div);
@@ -826,8 +616,13 @@ function renderList(items) {
     listContainer.innerHTML = "";
     if (!items || items.length === 0) return;
     items.forEach(it => {
+        const stockTotal = (it.talles || []).reduce((acc, t) => acc + (parseFloat(t.stock) || 0), 0);
         const li = document.createElement("li");
-        li.textContent = `${it.codigo || ""} - ${it.descripcion || ""} (Stock: ${it.stock ?? "-"})`;
+        li.innerHTML = `
+            <strong>${it.codigo || ""}</strong> - ${it.descripcion || ""}<br>
+            Marca: ${it.marca || "-"} | Rubro: ${it.rubro || "-"}<br>
+            Stock total: ${stockTotal}
+        `;
         listContainer.appendChild(li);
     });
 }
@@ -836,11 +631,12 @@ function renderTable(items) {
     tableContainer.innerHTML = "";
     if (!items || items.length === 0) return;
     items.forEach(it => {
+        const stockTotal = (it.talles || []).reduce((acc, t) => acc + (parseFloat(t.stock) || 0), 0);
         const tr = document.createElement("tr");
         tr.innerHTML = `
             <td style="padding:4px; border-bottom:1px solid rgba(148,163,184,0.2);">${it.codigo || ""}</td>
             <td style="padding:4px; border-bottom:1px solid rgba(148,163,184,0.2);">${it.descripcion || ""}</td>
-            <td style="padding:4px; border-bottom:1px solid rgba(148,163,184,0.2); text-align:right;">${it.stock ?? "-"}</td>
+            <td style="padding:4px; border-bottom:1px solid rgba(148,163,184,0.2); text-align:right;">${stockTotal}</td>
         `;
         tableContainer.appendChild(tr);
     });
@@ -849,12 +645,17 @@ function renderTable(items) {
 function renderDashboard(items) {
     dashboardContainer.innerHTML = "";
     const totalItems = items.length;
-    const totalConStock = items.filter(i => (i.stock || 0) > 0).length;
-    const totalStock = items.reduce((acc, i) => acc + (i.stock || 0), 0);
+    const totalStock = items.reduce(
+        (acc, it) => acc + (it.talles || []).reduce((s, t) => s + (parseFloat(t.stock) || 0), 0),
+        0
+    );
+    const conStock = items.filter(
+        it => (it.talles || []).some(t => (parseFloat(t.stock) || 0) > 0)
+    ).length;
 
     const cards = [
         { label: "Artículos encontrados", value: totalItems },
-        { label: "Con stock", value: totalConStock },
+        { label: "Con stock", value: conStock },
         { label: "Unidades totales", value: totalStock }
     ];
 
@@ -897,12 +698,10 @@ function setView(view) {
         btnViewDashboard.classList.add("btn-primary");
     }
 }
-
 btnViewCards.addEventListener("click", () => setView("cards"));
 btnViewList.addEventListener("click", () => setView("list"));
 btnViewTable.addEventListener("click", () => setView("table"));
 btnViewDashboard.addEventListener("click", () => setView("dashboard"));
-
 setView("cards");
 
 // ==================================================
@@ -942,7 +741,14 @@ function initRecognition() {
     return rec;
 }
 
+function beep() {
+    if (!beepSound) return;
+    beepSound.currentTime = 0;
+    beepSound.play().catch(() => {});
+}
+
 btnSpeak.addEventListener("click", () => {
+    beep();
     if (!recognition) recognition = initRecognition();
     if (!recognition) {
         alert("Reconocimiento de voz no soportado en este navegador.");
@@ -958,6 +764,7 @@ btnSpeak.addEventListener("click", () => {
 });
 
 btnHandsFree.addEventListener("click", () => {
+    beep();
     if (!recognition) recognition = initRecognition();
     if (!recognition) {
         alert("Reconocimiento de voz no soportado en este navegador.");
@@ -978,6 +785,7 @@ btnHandsFree.addEventListener("click", () => {
 });
 
 btnStop.addEventListener("click", () => {
+    beep();
     handsFreeMode = false;
     if (recognition) recognition.stop();
 });
@@ -1007,61 +815,63 @@ btnClear.addEventListener("click", () => {
 
 btnCopy.addEventListener("click", async () => {
     try {
-        await navigator.clipboard.writeText(input.value || "");
-        alert("Consulta copiada.");
+        // Copiar el resultado visible (tarjetas)
+        const text = cardsContainer.innerText || "";
+        await navigator.clipboard.writeText(text);
+        alert("Resultado copiado.");
     } catch {
         alert("No se pudo copiar.");
     }
 });
 
 // ==================================================
-// SCANNER EXTERNO + LEER CÓDIGO (PORTAPAPELES)
+// SCANNER PROFESIONAL ZXING
 // ==================================================
-btnScannerExterno.addEventListener("click", () => {
-    alert("Escaneá el código con tu app externa y luego usá 'Leer código'.");
-});
-
-btnReadClipboard.addEventListener("click", async () => {
-    try {
-        const text = await navigator.clipboard.readText();
-        if (!text) {
-            alert("No hay texto en el portapapeles.");
-            return;
-        }
-        input.value = text.trim();
-        consultar();
-    } catch {
-        alert("No se pudo leer el portapapeles.");
-    }
-});
-
-// ==================================================
-// SCANNER INTERNO (CÁMARA) - MÍNIMO ESTABLE
-// ==================================================
-btnScannerInterno.addEventListener("click", async () => {
+btnScanner.addEventListener("click", async () => {
     try {
         scannerOverlay.style.display = "flex";
-        mediaStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
-        scannerVideo.srcObject = mediaStream;
-    } catch {
-        alert("No se pudo acceder a la cámara.");
-        scannerOverlay.style.display = "none";
+        zxingReader = new ZXing.BrowserMultiFormatReader();
+
+        const devices = await ZXing.BrowserMultiFormatReader.listVideoInputDevices();
+        const backCam = devices.find(d => d.label.toLowerCase().includes("back")) || devices[0];
+
+        zxingReader.decodeFromVideoDevice(backCam.deviceId, "scannerVideo", (result, err) => {
+            if (result) {
+                input.value = result.text;
+                cerrarScanner();
+                consultar();
+            }
+        });
+    } catch (e) {
+        alert("No se pudo iniciar el scanner.");
+        cerrarScanner();
     }
 });
 
-btnCloseScanner.addEventListener("click", () => {
+function cerrarScanner() {
     scannerOverlay.style.display = "none";
-    if (mediaStream) {
-        mediaStream.getTracks().forEach(t => t.stop());
-        mediaStream = null;
+    if (zxingReader) {
+        zxingReader.reset();
+        zxingReader = null;
     }
-});
+}
+btnCloseScanner.addEventListener("click", cerrarScanner);
 
 // ==================================================
-// SCANNER UNIVERSAL (IMAGEN) - PLACEHOLDER SEGURO
+// ORB + MODO ADMIN POR TOQUES
 // ==================================================
-btnScannerZXing.addEventListener("click", () => {
-    alert("Subí la imagen a tu lector de códigos y luego pegá el resultado con 'Leer código'.");
+orbStatus.addEventListener("click", () => {
+    orbTapCount++;
+    if (orbTimer) clearTimeout(orbTimer);
+
+    orbTimer = setTimeout(() => {
+        orbTapCount = 0;
+    }, 800);
+
+    if (orbTapCount >= 5) {
+        orbTapCount = 0;
+        alert("🔧 MODO ADMIN ACTIVADO");
+    }
 });
 </script>
 </body>
