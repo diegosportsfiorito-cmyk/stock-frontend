@@ -1,1507 +1,2242 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8" />
-    <title>STOCK IA PRO</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <style>
-        :root {
-            --bg-dark: #020617;
-            --bg-light: #f3f4f6;
-            --fg-dark: #e5e7eb;
-            --fg-light: #111827;
-            --accent: #38bdf8;
-            --accent-soft: rgba(56,189,248,0.15);
-            --card-bg-dark: #020617;
-            --card-bg-light: #ffffff;
-            --border-soft-dark: #1f2937;
-            --border-soft-light: #e5e7eb;
-            --danger: #ef4444;
-            --success: #22c55e;
-        }
-
-        * { box-sizing: border-box; }
-
-        body {
-            margin: 0;
-            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-            background: radial-gradient(circle at top, #0f172a 0, #020617 45%, #000 100%);
-            color: var(--fg-dark);
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-        }
-
-        body.light {
-            background: var(--bg-light);
-            color: var(--fg-light);
-        }
-
-        .app {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 12px 12px 24px;
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-
-        header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 12px;
-        }
-
-        .title-block {
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-        }
-
-        h1 {
-            margin: 0;
-            font-size: 1.4rem;
-            letter-spacing: 0.08em;
-            text-transform: uppercase;
-        }
-
-        .subtitle {
-            font-size: 0.9rem;
-            opacity: 0.7;
-        }
-
-        .brandline {
-            font-size: 0.8rem;
-            opacity: 0.8;
-        }
-
-        .status-bar {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-size: 0.9rem;
-        }
-
-        .status-dot {
-            width: 10px;
-            height: 10px;
-            border-radius: 999px;
-            background: var(--danger);
-            box-shadow: 0 0 0 0 rgba(239,68,68,0.5);
-            transition: background 0.2s, box-shadow 0.2s;
-        }
-
-        .status-dot.ok {
-            background: var(--success);
-            box-shadow: 0 0 0 6px rgba(34,197,94,0.25);
-        }
-
-        .pill {
-            padding: 4px 10px;
-            border-radius: 999px;
-            border: 1px solid rgba(148,163,184,0.4);
-            font-size: 0.8rem;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .pill span { opacity: 0.7; }
-
-        .btn {
-            border-radius: 999px;
-            border: 1px solid rgba(148,163,184,0.5);
-            background: radial-gradient(circle at top, rgba(56,189,248,0.2), rgba(15,23,42,0.95));
-            color: #e5e7eb;
-            padding: 8px 14px;
-            font-size: 0.9rem;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            cursor: pointer;
-            transition: transform 0.1s, box-shadow 0.1s, background 0.1s;
-        }
-
-        body.light .btn {
-            background: linear-gradient(135deg, #e0f2fe, #f9fafb);
-            color: #0f172a;
-        }
-
-        .btn:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 8px 20px rgba(15,23,42,0.5);
-        }
-
-        .btn:active {
-            transform: translateY(0);
-            box-shadow: none;
-        }
-
-        .btn-ghost {
-            background: transparent;
-            border-style: dashed;
-        }
-
-        .btn-danger {
-            border-color: rgba(248,113,113,0.7);
-            color: #fecaca;
-        }
-
-        body.light .btn-danger { color: #b91c1c; }
-
-        .btn-small {
-            padding: 4px 10px;
-            font-size: 0.8rem;
-        }
-
-        .main {
-            display: grid;
-            grid-template-columns: minmax(0, 1.1fr) minmax(0, 1.2fr);
-            gap: 12px;
-        }
-
-        @media (max-width: 900px) {
-            .main { grid-template-columns: minmax(0, 1fr); }
-        }
-
-        .panel {
-            border-radius: 18px;
-            border: 1px solid var(--border-soft-dark);
-            background: radial-gradient(circle at top left, rgba(15,23,42,0.9), rgba(2,6,23,0.98));
-            padding: 12px;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-
-        body.light .panel {
-            background: var(--card-bg-light);
-            border-color: var(--border-soft-light);
-        }
-
-        .panel-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 8px;
-        }
-
-        .panel-title {
-            font-size: 1rem;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .panel-title span {
-            opacity: 0.7;
-            font-size: 0.8rem;
-        }
-
-        .input-row {
-            display: flex;
-            gap: 8px;
-            align-items: center;
-        }
-
-        @media (max-width: 600px) {
-            .input-row {
-                flex-direction: column;
-                align-items: stretch;
-            }
-        }
-
-        .input-main {
-            flex: 1;
-            position: relative;
-        }
-
-        input[type="text"] {
-            width: 100%;
-            border-radius: 999px;
-            border: 1px solid rgba(148,163,184,0.6);
-            background: rgba(15,23,42,0.9);
-            color: #e5e7eb;
-            padding: 10px 14px;
-            font-size: 1rem;
-            outline: none;
-        }
-
-        body.light input[type="text"] {
-            background: #ffffff;
-            color: #0f172a;
-            border-color: #cbd5f5;
-        }
-
-        input[type="text"]::placeholder {
-            color: rgba(148,163,184,0.8);
-        }
-
-        .icon-row {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 6px;
-        }
-
-        .icon-btn {
-            width: 34px;
-            height: 34px;
-            border-radius: 999px;
-            border: 1px solid rgba(148,163,184,0.5);
-            background: radial-gradient(circle at top, rgba(15,23,42,0.9), rgba(15,23,42,0.95));
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            font-size: 0.9rem;
-            color: #e5e7eb;
-        }
-
-        body.light .icon-btn {
-            background: #f9fafb;
-            color: #0f172a;
-        }
-
-        .icon-btn.active {
-            border-color: var(--accent);
-            box-shadow: 0 0 0 2px rgba(56,189,248,0.4);
-        }
-
-        .orb-wrapper {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 4px 0;
-        }
-
-        .orb {
-            width: 84px;
-            height: 84px;
-            border-radius: 999px;
-            position: relative;
-            cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.2s, filter 0.2s;
-        }
-
-        .orb::before {
-            content: "";
-            position: absolute;
-            inset: 12px;
-            border-radius: inherit;
-            background: radial-gradient(circle at 30% 20%, rgba(248,250,252,0.9), transparent 60%);
-            opacity: 0.8;
-        }
-
-        /* Estilo base + variantes A/B/C */
-        .orb-style-a {
-            background: radial-gradient(circle at 30% 20%, #a855f7, #1d4ed8 55%, #020617 100%);
-            box-shadow:
-                0 0 30px rgba(129,140,248,0.7),
-                0 0 90px rgba(30,64,175,0.9);
-            animation: orbPulseSoft 3s ease-in-out infinite;
-        }
-
-        .orb-style-b {
-            background: radial-gradient(circle at 30% 20%, #c4b5fd, #2563eb 55%, #020617 100%);
-            box-shadow:
-                0 0 40px rgba(129,140,248,0.9),
-                0 0 120px rgba(37,99,235,1);
-            animation: orbPulseGlow 2.4s ease-in-out infinite;
-        }
-
-        .orb-style-c {
-            background: radial-gradient(circle at 30% 20%, #a855f7, #0ea5e9 55%, #020617 100%);
-            box-shadow:
-                0 0 35px rgba(56,189,248,0.9),
-                0 0 110px rgba(8,47,73,1);
-            animation: orbPulseDynamic 2.2s ease-in-out infinite;
-        }
-
-        .orb.processing {
-            animation: orbSpin 1.2s linear infinite;
-            box-shadow:
-                0 0 40px rgba(56,189,248,1),
-                0 0 130px rgba(8,47,73,1);
-        }
-
-        @keyframes orbPulseSoft {
-            0%,100% { transform: scale(1); filter: brightness(1); }
-            50% { transform: scale(1.06); filter: brightness(1.15); }
-        }
-
-        @keyframes orbPulseGlow {
-            0%,100% { transform: scale(1); filter: brightness(1); }
-            50% { transform: scale(1.08); filter: brightness(1.25); }
-        }
-
-        @keyframes orbPulseDynamic {
-            0%,100% { transform: scale(1); filter: brightness(1); }
-            40% { transform: scale(1.08); filter: brightness(1.25); }
-            70% { transform: scale(1.03); filter: brightness(1.1); }
-        }
-
-        @keyframes orbSpin {
-            0% { transform: rotate(0deg) scale(1.02); }
-            100% { transform: rotate(360deg) scale(1.02); }
-        }
-
-        .tabs {
-            display: flex;
-            gap: 6px;
-            border-radius: 999px;
-            padding: 3px;
-            background: rgba(15,23,42,0.9);
-            border: 1px solid rgba(148,163,184,0.4);
-        }
-
-        body.light .tabs { background: #e5e7eb; }
-
-        .tab {
-            flex: 1;
-            text-align: center;
-            padding: 5px 8px;
-            border-radius: 999px;
-            font-size: 0.8rem;
-            cursor: pointer;
-            opacity: 0.7;
-        }
-
-        .tab.active {
-            background: radial-gradient(circle at top, rgba(56,189,248,0.3), rgba(15,23,42,0.9));
-            opacity: 1;
-        }
-
-        body.light .tab.active { background: #ffffff; }
-
-        .results {
-            border-radius: 14px;
-            border: 1px solid rgba(148,163,184,0.4);
-            background: rgba(15,23,42,0.85);
-            padding: 8px;
-            min-height: 140px;
-            max-height: 360px;
-            overflow-y: auto;
-            font-size: 0.95rem;
-        }
-
-        body.light .results { background: #ffffff; }
-
-        .result-item {
-            padding: 6px 8px;
-            border-radius: 10px;
-            border: 1px solid transparent;
-            margin-bottom: 4px;
-        }
-
-        .result-item:nth-child(odd) {
-            background: rgba(15,23,42,0.6);
-        }
-
-        body.light .result-item:nth-child(odd) {
-            background: #f3f4f6;
-        }
-
-        .result-item:last-child { margin-bottom: 0; }
-
-        .result-item strong { font-weight: 600; }
-
-        .result-meta {
-            font-size: 0.8rem;
-            opacity: 0.8;
-        }
-
-        .results-table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 0.9rem;
-        }
-
-        .results-table th,
-        .results-table td {
-            padding: 6px 8px;
-            border-bottom: 1px solid rgba(148,163,184,0.4);
-            text-align: left;
-        }
-
-        .results-table th {
-            font-size: 0.8rem;
-            text-transform: uppercase;
-            letter-spacing: 0.06em;
-            opacity: 0.8;
-        }
-
-        .results-table tr:nth-child(even) td {
-            background: rgba(15,23,42,0.6);
-        }
-
-        body.light .results-table tr:nth-child(even) td {
-            background: #f9fafb;
-        }
-
-        .dashboard-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-            gap: 8px;
-        }
-
-        .dash-card {
-            border-radius: 12px;
-            border: 1px solid rgba(148,163,184,0.4);
-            padding: 8px;
-            font-size: 0.85rem;
-        }
-
-        .dash-label {
-            font-size: 0.75rem;
-            opacity: 0.7;
-            text-transform: uppercase;
-            letter-spacing: 0.08em;
-        }
-
-        .dash-value {
-            font-size: 1.1rem;
-            font-weight: 600;
-        }
-
-        .filters-toggle {
-            display: flex;
-            justify-content: flex-end;
-        }
-
-        .filters-panel {
-            border-radius: 14px;
-            border: 1px solid rgba(148,163,184,0.4);
-            background: rgba(15,23,42,0.9);
-            padding: 8px;
-            display: none;
-            flex-direction: column;
-            gap: 6px;
-            font-size: 0.9rem;
-        }
-
-        body.light .filters-panel { background: #ffffff; }
-
-        .filters-row {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-            gap: 6px;
-        }
-
-        .filters-field {
-            display: flex;
-            flex-direction: column;
-            gap: 2px;
-        }
-
-        .filters-field label {
-            font-size: 0.75rem;
-            opacity: 0.8;
-        }
-
-        select,
-        .filters-field input[type="text"] {
-            border-radius: 999px;
-            border: 1px solid rgba(148,163,184,0.6);
-            background: rgba(15,23,42,0.9);
-            color: #e5e7eb;
-            padding: 6px 10px;
-            font-size: 0.9rem;
-            outline: none;
-        }
-
-        body.light select,
-        body.light .filters-field input[type="text"] {
-            background: #ffffff;
-            color: #0f172a;
-            border-color: #cbd5f5;
-        }
-
-        .admin-panel {
-            display: none;
-            border-radius: 14px;
-            border: 1px dashed rgba(148,163,184,0.6);
-            background: rgba(15,23,42,0.9);
-            padding: 8px;
-            font-size: 0.85rem;
-        }
-
-        body.light .admin-panel { background: #ffffff; }
-
-        .admin-panel pre {
-            white-space: pre-wrap;
-            word-break: break-word;
-            font-size: 0.8rem;
-            max-height: 200px;
-            overflow-y: auto;
-        }
-
-        .admin-row {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 6px;
-            align-items: center;
-            margin-bottom: 4px;
-        }
-
-        .admin-label {
-            font-size: 0.8rem;
-            opacity: 0.8;
-        }
-
-        .scanner-overlay {
-            position: fixed;
-            inset: 0;
-            background: rgba(15,23,42,0.95);
-            display: none;
-            align-items: center;
-            justify-content: center;
-            z-index: 50;
-        }
-
-        .scanner-box {
-            width: 100%;
-            max-width: 420px;
-            border-radius: 18px;
-            border: 1px solid rgba(148,163,184,0.7);
-            background: #020617;
-            padding: 10px;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-
-        .scanner-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-size: 0.9rem;
-        }
-
-        .scanner-video-wrapper {
-            border-radius: 14px;
-            overflow: hidden;
-            border: 1px solid rgba(148,163,184,0.6);
-            background: #000;
-        }
-
-        video {
-            width: 100%;
-            height: auto;
-            display: block;
-        }
-
-        .scanner-hint {
-            font-size: 0.8rem;
-            opacity: 0.8;
-        }
-
-        .hidden { display: none !important; }
-
-        footer {
-            margin-top: 4px;
-            font-size: 0.75rem;
-            opacity: 0.7;
-            text-align: right;
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <title>STOCK IA PRO · V.26.01</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root {
+      --bg: #050816;
+      --bg-alt: #0b1020;
+      --bg-panel: #0f172a;
+      --bg-panel-soft: #111827;
+      --accent: #4f46e5;
+      --accent-soft: rgba(79, 70, 229, 0.35);
+      --accent-strong: #6366f1;
+      --accent-glow: rgba(96, 165, 250, 0.7);
+      --accent-red: #ef4444;
+      --accent-yellow: #facc15;
+      --accent-green: #22c55e;
+      --text: #e5e7eb;
+      --text-soft: #9ca3af;
+      --border-soft: #1f2937;
+      --radius-lg: 18px;
+      --radius-md: 12px;
+      --radius-sm: 8px;
+      --shadow-soft: 0 18px 45px rgba(15, 23, 42, 0.85);
+      --shadow-orb: 0 0 45px rgba(129, 140, 248, 0.9);
+      --transition-fast: 0.18s ease-out;
+      --transition-med: 0.28s ease-out;
+      --transition-slow: 0.45s ease-out;
+      --orb-size: 120px;
+      --orb-halo-size: 210px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text",
+        "Segoe UI", sans-serif;
+      background: radial-gradient(circle at top, #020617 0, #020617 40%, #020617 100%);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: stretch;
+    }
+
+    .app-shell {
+      width: 100%;
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 16px 12px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    @media (min-width: 768px) {
+      .app-shell {
+        padding: 24px 16px 16px;
+        gap: 16px;
+      }
+    }
+
+    header.app-header {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    @media (min-width: 768px) {
+      header.app-header {
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+      }
+    }
+
+    .brand-block {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .brand-text {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .brand-title {
+      font-size: 1.05rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: #e5e7eb;
+    }
+
+    .brand-sub {
+      font-size: 0.78rem;
+      color: var(--text-soft);
+      white-space: nowrap;
+    }
+
+    .brand-sub span {
+      color: #a5b4fc;
+    }
+
+    .brand-meta {
+      font-size: 0.75rem;
+      color: var(--text-soft);
+    }
+
+    .brand-meta strong {
+      color: #e5e7eb;
+      font-weight: 500;
+    }
+
+    .top-controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      justify-content: flex-end;
+    }
+
+    .status-bar {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: rgba(15, 23, 42, 0.9);
+      border: 1px solid rgba(30, 64, 175, 0.6);
+      box-shadow: 0 0 12px rgba(59, 130, 246, 0.45);
+    }
+
+    .status-dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 999px;
+      background: var(--accent-red);
+      box-shadow: 0 0 10px rgba(248, 113, 113, 0.7);
+      transition: background var(--transition-med), box-shadow var(--transition-med);
+    }
+
+    .status-dot.connected {
+      background: var(--accent-green);
+      box-shadow: 0 0 12px rgba(74, 222, 128, 0.8);
+    }
+
+    .status-dot.processing {
+      background: var(--accent-yellow);
+      box-shadow: 0 0 12px rgba(250, 204, 21, 0.8);
+    }
+
+    .status-label {
+      font-size: 0.72rem;
+      color: var(--text-soft);
+    }
+
+    .status-label span {
+      color: #bfdbfe;
+    }
+
+    .mode-toggle {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: rgba(15, 23, 42, 0.9);
+      border: 1px solid var(--border-soft);
+      font-size: 0.75rem;
+      color: var(--text-soft);
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .mode-toggle-knob {
+      width: 18px;
+      height: 18px;
+      border-radius: 999px;
+      background: radial-gradient(circle at 30% 20%, #f9fafb 0, #e5e7eb 25%, #9ca3af 60%, #4b5563 100%);
+      box-shadow: 0 0 8px rgba(148, 163, 184, 0.7);
+    }
+
+    .orb-wrapper {
+      position: relative;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 10px 0 4px;
+    }
+
+    @media (min-width: 768px) {
+      .orb-wrapper {
+        padding: 12px 0 6px;
+      }
+    }
+
+    .orb-halo {
+      position: absolute;
+      width: var(--orb-halo-size);
+      height: var(--orb-halo-size);
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(129, 140, 248, 0.0) 0, rgba(129, 140, 248, 0.35) 40%, rgba(59, 130, 246, 0.0) 75%);
+      filter: blur(4px);
+      opacity: 0.9;
+      animation: orbHaloPulse 4.5s ease-in-out infinite;
+      pointer-events: none;
+    }
+
+    .orb-core {
+      position: relative;
+      width: var(--orb-size);
+      height: var(--orb-size);
+      border-radius: 50%;
+      background:
+        radial-gradient(circle at 30% 20%, rgba(255, 255, 255, 0.95) 0, rgba(255, 255, 255, 0.0) 35%),
+        radial-gradient(circle at 70% 80%, rgba(56, 189, 248, 0.35) 0, rgba(15, 23, 42, 0.0) 55%),
+        radial-gradient(circle at 50% 50%, #4f46e5 0, #1d4ed8 40%, #0ea5e9 75%, #020617 100%);
+      box-shadow:
+        0 0 35px rgba(129, 140, 248, 0.9),
+        0 0 80px rgba(59, 130, 246, 0.9);
+      overflow: hidden;
+      cursor: pointer;
+      transform-origin: center;
+      animation: orbBreath 5.5s ease-in-out infinite, orbRotate 26s linear infinite;
+    }
+
+    .orb-inner-glow {
+      position: absolute;
+      inset: 12%;
+      border-radius: 50%;
+      background: radial-gradient(circle at 50% 35%, rgba(248, 250, 252, 0.9) 0, rgba(248, 250, 252, 0.0) 55%);
+      mix-blend-mode: screen;
+      opacity: 0.85;
+      pointer-events: none;
+    }
+
+    .orb-shadow {
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      background: radial-gradient(circle at 50% 120%, rgba(15, 23, 42, 0.85) 0, rgba(15, 23, 42, 0.0) 55%);
+      mix-blend-mode: multiply;
+      opacity: 0.7;
+      pointer-events: none;
+    }
+
+    .orb-processing::after {
+      content: "";
+      position: absolute;
+      inset: -10%;
+      border-radius: 50%;
+      border: 2px solid rgba(248, 250, 252, 0.35);
+      border-top-color: rgba(248, 250, 252, 0.9);
+      border-bottom-color: rgba(129, 140, 248, 0.9);
+      animation: orbSpinner 1.4s linear infinite;
+      pointer-events: none;
+    }
+
+    @keyframes orbBreath {
+      0%, 100% {
+        transform: scale(1);
+        box-shadow:
+          0 0 35px rgba(129, 140, 248, 0.9),
+          0 0 80px rgba(59, 130, 246, 0.9);
+      }
+      50% {
+        transform: scale(1.06);
+        box-shadow:
+          0 0 55px rgba(129, 140, 248, 1),
+          0 0 110px rgba(59, 130, 246, 1);
+      }
+    }
+
+    @keyframes orbRotate {
+      0% {
+        transform: rotate(0deg);
+      }
+      100% {
+        transform: rotate(360deg);
+      }
+    }
+
+    @keyframes orbHaloPulse {
+      0%, 100% {
+        opacity: 0.7;
+        transform: scale(1);
+      }
+      50% {
+        opacity: 1;
+        transform: scale(1.08);
+      }
+    }
+
+    @keyframes orbSpinner {
+      0% {
+        transform: rotate(0deg);
+      }
+      100% {
+        transform: rotate(360deg);
+      }
+    }
+
+    .main-panel {
+      background: radial-gradient(circle at top left, rgba(15, 23, 42, 0.9) 0, rgba(15, 23, 42, 0.98) 40%, #020617 100%);
+      border-radius: 24px;
+      padding: 14px 12px 12px;
+      box-shadow: var(--shadow-soft);
+      border: 1px solid rgba(31, 41, 55, 0.9);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    @media (min-width: 768px) {
+      .main-panel {
+        padding: 18px 16px 14px;
+        gap: 14px;
+      }
+    }
+
+    .input-row {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    @media (min-width: 768px) {
+      .input-row {
+        flex-direction: row;
+        align-items: flex-end;
+      }
+    }
+
+    .input-block {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .input-label {
+      font-size: 0.78rem;
+      color: var(--text-soft);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .input-field-wrapper {
+      position: relative;
+      display: flex;
+      align-items: center;
+      background: linear-gradient(135deg, rgba(15, 23, 42, 0.95), rgba(15, 23, 42, 0.98));
+      border-radius: var(--radius-md);
+      border: 1px solid rgba(55, 65, 81, 0.9);
+      padding: 2px 2px 2px 10px;
+      gap: 6px;
+    }
+
+    .input-field-wrapper:focus-within {
+      border-color: rgba(96, 165, 250, 0.9);
+      box-shadow: 0 0 0 1px rgba(96, 165, 250, 0.6);
+    }
+
+    .input-prefix {
+      font-size: 0.78rem;
+      color: var(--text-soft);
+      white-space: nowrap;
+    }
+
+    .input-main {
+      flex: 1;
+      border: none;
+      outline: none;
+      background: transparent;
+      color: var(--text);
+      font-size: 0.9rem;
+      padding: 8px 4px;
+      min-width: 0;
+    }
+
+    .input-main::placeholder {
+      color: #6b7280;
+    }
+
+    .input-icons {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding-right: 4px;
+    }
+
+    .icon-button {
+      width: 32px;
+      height: 32px;
+      border-radius: 999px;
+      border: 1px solid rgba(55, 65, 81, 0.9);
+      background: radial-gradient(circle at 30% 20%, rgba(248, 250, 252, 0.9) 0, rgba(15, 23, 42, 0.0) 45%),
+        linear-gradient(135deg, #020617, #020617);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #9ca3af;
+      cursor: pointer;
+      font-size: 1.05rem;
+      transition: transform var(--transition-fast), box-shadow var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast), background var(--transition-fast);
+    }
+
+    .icon-button span {
+      transform: translateY(-1px);
+    }
+
+    .icon-button:hover {
+      transform: translateY(-1px) scale(1.03);
+      border-color: rgba(96, 165, 250, 0.9);
+      color: #e5e7eb;
+      box-shadow: 0 0 12px rgba(59, 130, 246, 0.7);
+    }
+
+    .icon-button:active {
+      transform: translateY(0) scale(0.98);
+      box-shadow: none;
+    }
+
+    .search-button {
+      min-width: 120px;
+      height: 40px;
+      border-radius: 999px;
+      border: none;
+      background: radial-gradient(circle at 30% 20%, #e0f2fe 0, #bfdbfe 25%, #60a5fa 60%, #1d4ed8 100%);
+      color: #020617;
+      font-weight: 600;
+      font-size: 0.9rem;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      cursor: pointer;
+      box-shadow: 0 10px 25px rgba(37, 99, 235, 0.7);
+      transition: transform var(--transition-fast), box-shadow var(--transition-fast), filter var(--transition-fast);
+    }
+
+    .search-button span.icon {
+      font-size: 1.05rem;
+      transform: translateY(-1px);
+    }
+
+    .search-button:hover {
+      transform: translateY(-1px);
+      filter: brightness(1.05);
+      box-shadow: 0 14px 32px rgba(37, 99, 235, 0.9);
+    }
+
+    .search-button:active {
+      transform: translateY(0);
+      box-shadow: 0 6px 16px rgba(37, 99, 235, 0.7);
+    }
+
+    .search-button:disabled {
+      opacity: 0.6;
+      cursor: default;
+      box-shadow: none;
+    }
+
+    .secondary-controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 4px;
+    }
+
+    .filters-toggle {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(55, 65, 81, 0.9);
+      background: rgba(15, 23, 42, 0.9);
+      color: var(--text-soft);
+      font-size: 0.78rem;
+      cursor: pointer;
+      transition: border-color var(--transition-fast), color var(--transition-fast), background var(--transition-fast), box-shadow var(--transition-fast);
+    }
+
+    .filters-toggle span.icon {
+      font-size: 0.9rem;
+      transform: translateY(-1px);
+    }
+
+    .filters-toggle.active {
+      border-color: rgba(96, 165, 250, 0.9);
+      color: #e5e7eb;
+      box-shadow: 0 0 12px rgba(59, 130, 246, 0.6);
+    }
+
+    .quick-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      justify-content: flex-end;
+    }
+
+    .pill-button {
+      padding: 5px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(55, 65, 81, 0.9);
+      background: rgba(15, 23, 42, 0.9);
+      color: var(--text-soft);
+      font-size: 0.75rem;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: border-color var(--transition-fast), color var(--transition-fast), background var(--transition-fast), box-shadow var(--transition-fast);
+    }
+
+    .pill-button span.icon {
+      font-size: 0.9rem;
+      transform: translateY(-1px);
+    }
+
+    .pill-button:hover {
+      border-color: rgba(96, 165, 250, 0.9);
+      color: #e5e7eb;
+      box-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
+    }
+
+    .pill-button.danger:hover {
+      border-color: rgba(248, 113, 113, 0.9);
+      color: #fecaca;
+      box-shadow: 0 0 10px rgba(248, 113, 113, 0.7);
+    }
+
+    .pill-button.primary {
+      border-color: rgba(96, 165, 250, 0.9);
+      color: #bfdbfe;
+    }
+
+    .pill-button.toggle-active {
+      background: rgba(37, 99, 235, 0.18);
+      border-color: rgba(96, 165, 250, 0.9);
+      color: #e5e7eb;
+    }
+
+    .filters-panel {
+      margin-top: 4px;
+      padding: 10px 10px 8px;
+      border-radius: var(--radius-md);
+      background: rgba(15, 23, 42, 0.96);
+      border: 1px solid rgba(31, 41, 55, 0.9);
+      display: none;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .filters-panel.visible {
+      display: flex;
+    }
+
+    .filters-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 8px;
+    }
+
+    @media (min-width: 640px) {
+      .filters-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (min-width: 900px) {
+      .filters-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+    }
+
+    .filter-block {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .filter-label {
+      font-size: 0.75rem;
+      color: var(--text-soft);
+    }
+
+    .filter-input,
+    .filter-select {
+      width: 100%;
+      border-radius: 999px;
+      border: 1px solid rgba(55, 65, 81, 0.9);
+      background: rgba(15, 23, 42, 0.95);
+      color: var(--text);
+      font-size: 0.8rem;
+      padding: 6px 10px;
+      outline: none;
+    }
+
+    .filter-input::placeholder {
+      color: #6b7280;
+    }
+
+    .filters-footer {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      justify-content: flex-end;
+      margin-top: 4px;
+    }
+
+    .results-panel {
+      margin-top: 6px;
+      padding: 10px 10px 8px;
+      border-radius: var(--radius-md);
+      background: rgba(15, 23, 42, 0.98);
+      border: 1px solid rgba(31, 41, 55, 0.9);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      min-height: 180px;
+    }
+
+    .results-header {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .results-title {
+      font-size: 0.85rem;
+      color: var(--text-soft);
+    }
+
+    .results-title strong {
+      color: #e5e7eb;
+    }
+
+    .results-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      justify-content: flex-end;
+    }
+
+    .view-tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 4px;
+    }
+
+    .view-tab {
+      padding: 5px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(55, 65, 81, 0.9);
+      background: rgba(15, 23, 42, 0.9);
+      color: var(--text-soft);
+      font-size: 0.78rem;
+      cursor: pointer;
+      transition: border-color var(--transition-fast), color var(--transition-fast), background var(--transition-fast), box-shadow var(--transition-fast);
+    }
+
+    .view-tab.active {
+      border-color: rgba(96, 165, 250, 0.9);
+      color: #e5e7eb;
+      background: radial-gradient(circle at 30% 20%, rgba(37, 99, 235, 0.35) 0, rgba(15, 23, 42, 0.98) 55%);
+      box-shadow: 0 0 12px rgba(59, 130, 246, 0.6);
+    }
+
+    .results-body {
+      margin-top: 4px;
+      border-radius: var(--radius-md);
+      background: radial-gradient(circle at top left, rgba(15, 23, 42, 0.98) 0, rgba(15, 23, 42, 1) 40%, #020617 100%);
+      border: 1px solid rgba(31, 41, 55, 0.9);
+      padding: 8px 8px 6px;
+      min-height: 140px;
+      max-height: 420px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .results-scroll {
+      flex: 1;
+      overflow-y: auto;
+      overflow-x: hidden;
+      padding-right: 4px;
+    }
+
+    .results-scroll::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+
+    .results-scroll::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .results-scroll::-webkit-scrollbar-thumb {
+      background: rgba(55, 65, 81, 0.9);
+      border-radius: 999px;
+    }
+
+    .results-scroll::-webkit-scrollbar-thumb:hover {
+      background: rgba(75, 85, 99, 0.95);
+    }
+
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 6px;
+    }
+
+    @media (min-width: 640px) {
+      .summary-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+      }
+    }
+
+    .summary-card {
+      border-radius: var(--radius-md);
+      background: radial-gradient(circle at top left, rgba(37, 99, 235, 0.18) 0, rgba(15, 23, 42, 0.98) 55%);
+      border: 1px solid rgba(55, 65, 81, 0.9);
+      padding: 8px 8px 6px;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .summary-label {
+      font-size: 0.7rem;
+      color: var(--text-soft);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .summary-value {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: #e5e7eb;
+    }
+
+    .summary-sub {
+      font-size: 0.7rem;
+      color: var(--text-soft);
+    }
+
+    .cards-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 8px;
+    }
+
+    @media (min-width: 640px) {
+      .cards-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (min-width: 900px) {
+      .cards-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+    }
+
+    .item-card {
+      border-radius: var(--radius-md);
+      background: radial-gradient(circle at top left, rgba(37, 99, 235, 0.16) 0, rgba(15, 23, 42, 0.98) 55%);
+      border: 1px solid rgba(55, 65, 81, 0.9);
+      padding: 8px 8px 6px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .item-header {
+      display: flex;
+      justify-content: space-between;
+      gap: 6px;
+      align-items: baseline;
+    }
+
+    .item-code {
+      font-size: 0.8rem;
+      color: #bfdbfe;
+      font-weight: 500;
+    }
+
+    .item-brand {
+      font-size: 0.75rem;
+      color: var(--text-soft);
+    }
+
+    .item-desc {
+      font-size: 0.85rem;
+      color: #e5e7eb;
+    }
+
+    .item-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      font-size: 0.75rem;
+      color: var(--text-soft);
+    }
+
+    .item-meta span {
+      padding: 2px 6px;
+      border-radius: 999px;
+      background: rgba(15, 23, 42, 0.9);
+      border: 1px solid rgba(55, 65, 81, 0.9);
+    }
+
+    .item-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 4px;
+      gap: 6px;
+      font-size: 0.78rem;
+    }
+
+    .item-price {
+      color: #bbf7d0;
+      font-weight: 600;
+    }
+
+    .item-stock {
+      color: #e5e7eb;
+    }
+
+    .item-talles {
+      font-size: 0.75rem;
+      color: var(--text-soft);
+    }
+
+    .list-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.78rem;
+      min-width: 100%;
+    }
+
+    .list-table th,
+    .list-table td {
+      padding: 6px 6px;
+      border-bottom: 1px solid rgba(31, 41, 55, 0.9);
+      text-align: left;
+      white-space: nowrap;
+    }
+
+    .list-table th {
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-soft);
+    }
+
+    .list-table td {
+      color: #e5e7eb;
+    }
+
+    .list-table tr:hover td {
+      background: rgba(15, 23, 42, 0.9);
+    }
+
+    .table-wrapper {
+      width: 100%;
+      overflow-x: auto;
+      padding-bottom: 4px;
+    }
+
+    .table-wrapper::-webkit-scrollbar {
+      height: 6px;
+    }
+
+    .table-wrapper::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .table-wrapper::-webkit-scrollbar-thumb {
+      background: rgba(55, 65, 81, 0.9);
+      border-radius: 999px;
+    }
+
+    .table-wrapper::-webkit-scrollbar-thumb:hover {
+      background: rgba(75, 85, 99, 0.95);
+    }
+
+    .data-table {
+      border-collapse: collapse;
+      width: 100%;
+      min-width: 720px;
+      font-size: 0.78rem;
+    }
+
+    .data-table th,
+    .data-table td {
+      padding: 6px 6px;
+      border-bottom: 1px solid rgba(31, 41, 55, 0.9);
+      text-align: left;
+      white-space: nowrap;
+    }
+
+    .data-table th {
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-soft);
+      background: rgba(15, 23, 42, 0.98);
+      position: sticky;
+      top: 0;
+      z-index: 1;
+    }
+
+    .data-table tr:nth-child(even) td {
+      background: rgba(15, 23, 42, 0.96);
+    }
+
+    .data-table tr:hover td {
+      background: rgba(15, 23, 42, 0.9);
+    }
+
+    .dashboard-placeholder {
+      font-size: 0.8rem;
+      color: var(--text-soft);
+      padding: 6px 4px;
+    }
+
+    .no-results {
+      font-size: 0.8rem;
+      color: var(--text-soft);
+      padding: 6px 4px;
+    }
+
+    .voice-line {
+      margin-top: 4px;
+      font-size: 0.78rem;
+      color: #a5b4fc;
+    }
+
+    .footer-bar {
+      margin-top: 4px;
+      padding-top: 6px;
+      border-top: 1px solid rgba(31, 41, 55, 0.9);
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    @media (min-width: 640px) {
+      .footer-bar {
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+      }
+    }
+
+    .footer-text {
+      font-size: 0.72rem;
+      color: var(--text-soft);
+      text-align: right;
+      width: 100%;
+    }
+
+    .footer-text strong {
+      color: #e5e7eb;
+      font-weight: 500;
+    }
+
+    .connection-line {
+      position: relative;
+      width: 100%;
+      height: 2px;
+      border-radius: 999px;
+      background: radial-gradient(circle at left, rgba(59, 130, 246, 0.9) 0, rgba(59, 130, 246, 0.4) 25%, rgba(15, 23, 42, 0.0) 70%);
+      overflow: hidden;
+      box-shadow: 0 0 12px rgba(59, 130, 246, 0.8);
+    }
+
+    .connection-line-inner {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(90deg, transparent 0, rgba(191, 219, 254, 0.9) 40%, rgba(191, 219, 254, 0.9) 60%, transparent 100%);
+      transform: translateX(-100%);
+      animation: connectionSweep 3.5s linear infinite;
+    }
+
+    @keyframes connectionSweep {
+      0% {
+        transform: translateX(-100%);
+      }
+      100% {
+        transform: translateX(100%);
+      }
+    }
+
+    .connection-line.error {
+      background: radial-gradient(circle at left, rgba(248, 113, 113, 0.9) 0, rgba(248, 113, 113, 0.4) 25%, rgba(15, 23, 42, 0.0) 70%);
+      box-shadow: 0 0 12px rgba(248, 113, 113, 0.8);
+    }
+
+    .connection-line.processing {
+      background: radial-gradient(circle at left, rgba(250, 204, 21, 0.9) 0, rgba(250, 204, 21, 0.4) 25%, rgba(15, 23, 42, 0.0) 70%);
+      box-shadow: 0 0 12px rgba(250, 204, 21, 0.8);
+    }
+
+    .admin-panel {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.92);
+      backdrop-filter: blur(10px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 50;
+    }
+
+    .admin-panel.visible {
+      display: flex;
+    }
+
+    .admin-card {
+      width: 100%;
+      max-width: 520px;
+      border-radius: 20px;
+      background: radial-gradient(circle at top left, rgba(37, 99, 235, 0.25) 0, rgba(15, 23, 42, 0.98) 55%);
+      border: 1px solid rgba(55, 65, 81, 0.95);
+      box-shadow: 0 24px 60px rgba(15, 23, 42, 0.95);
+      padding: 14px 14px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .admin-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .admin-title {
+      font-size: 0.9rem;
+      color: #e5e7eb;
+    }
+
+    .admin-sub {
+      font-size: 0.75rem;
+      color: var(--text-soft);
+    }
+
+    .admin-close {
+      width: 28px;
+      height: 28px;
+      border-radius: 999px;
+      border: 1px solid rgba(55, 65, 81, 0.9);
+      background: rgba(15, 23, 42, 0.95);
+      color: var(--text-soft);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 0.9rem;
+      transition: border-color var(--transition-fast), color var(--transition-fast), background var(--transition-fast);
+    }
+
+    .admin-close:hover {
+      border-color: rgba(248, 113, 113, 0.9);
+      color: #fecaca;
+      background: rgba(127, 29, 29, 0.9);
+    }
+
+    .admin-section-title {
+      font-size: 0.78rem;
+      color: var(--text-soft);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-top: 4px;
+    }
+
+    .admin-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 8px;
+      margin-top: 4px;
+    }
+
+    @media (min-width: 640px) {
+      .admin-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    .admin-field {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .admin-label {
+      font-size: 0.75rem;
+      color: var(--text-soft);
+    }
+
+    .admin-select,
+    .admin-input {
+      width: 100%;
+      border-radius: 999px;
+      border: 1px solid rgba(55, 65, 81, 0.9);
+      background: rgba(15, 23, 42, 0.95);
+      color: var(--text);
+      font-size: 0.8rem;
+      padding: 6px 10px;
+      outline: none;
+    }
+
+    .admin-footer {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      justify-content: flex-end;
+      margin-top: 4px;
+    }
+
+    .admin-note {
+      font-size: 0.7rem;
+      color: var(--text-soft);
+      margin-top: 2px;
+    }
+
+    @media (max-width: 480px) {
+      .brand-title {
+        font-size: 0.95rem;
+      }
+      .brand-sub {
+        font-size: 0.72rem;
+      }
+      .brand-meta {
+        font-size: 0.7rem;
+      }
+      .search-button {
+        width: 100%;
+        justify-content: center;
+      }
+      .input-row {
+        gap: 10px;
+      }
+      .icon-button {
+        width: 34px;
+        height: 34px;
+        font-size: 1.15rem;
+      }
+      .view-tab,
+      .pill-button,
+      .filters-toggle {
+        font-size: 0.76rem;
+        padding-inline: 8px;
+      }
+      .results-panel {
+        min-height: 200px;
+      }
+    }
+  </style>
 </head>
 <body>
-<div class="app">
-    <header>
-        <div class="title-block">
-            <h1>STOCK IA PRO</h1>
-            <div class="subtitle">Consulta inteligente de artículos · Voz · Scanner · Vistas múltiples</div>
-            <div class="brandline">V.26.01 — SALAS CREATIVE STUDIO</div>
+  <div class="app-shell">
+    <header class="app-header">
+      <div class="brand-block">
+        <div class="orb-wrapper">
+          <div class="orb-halo"></div>
+          <div id="orb" class="orb-core">
+            <div class="orb-inner-glow"></div>
+            <div class="orb-shadow"></div>
+          </div>
         </div>
+        <div class="brand-text">
+          <div class="brand-title">STOCK IA PRO</div>
+          <div class="brand-sub">
+            Consulta inteligente de artículos · Voz · Scanner · Vistas múltiples
+          </div>
+          <div class="brand-meta">
+            <strong>V.26.01</strong> — SALAS CREATIVE STUDIO
+          </div>
+        </div>
+      </div>
+      <div class="top-controls">
         <div class="status-bar">
-            <div class="pill">
-                <div id="statusDot" class="status-dot"></div>
-                <span id="statusText">Desconectado</span>
-            </div>
-            <button id="btnTheme" class="btn btn-small">Oscuro / Claro</button>
+          <div id="statusDot" class="status-dot"></div>
+          <div class="status-label">
+            Estado: <span id="statusText">Desconectado</span>
+          </div>
         </div>
+        <div class="mode-toggle" id="modeToggle">
+          <div class="mode-toggle-knob"></div>
+          <span>Oscuro / Claro</span>
+        </div>
+      </div>
     </header>
 
-    <main class="main">
-        <!-- PANEL IZQUIERDO -->
-        <section class="panel">
-            <div class="panel-header">
-                <div class="panel-title">
-                    Entrada
-                    <span>Artículo / código / voz / scanner</span>
-                </div>
-                <div class="icon-row">
-                    <button id="btnScanner" class="icon-btn" title="Scanner">📷</button>
-                    <button id="btnMic" class="icon-btn" title="Hablar">🎙️</button>
-                    <button id="btnHandsFree" class="icon-btn" title="Manos libres">🔁</button>
-                    <button id="btnStop" class="icon-btn" title="Detener voz">⏹</button>
-                </div>
+    <main class="main-panel">
+      <div class="input-row">
+        <div class="input-block">
+          <div class="input-label">Entrada</div>
+          <div class="input-field-wrapper">
+            <span class="input-prefix">Artículo / código / voz / scanner</span>
+            <input
+              id="queryInput"
+              class="input-main"
+              type="text"
+              placeholder="Ej: NATI/38, pantuflas, 6202600..."
+              autocomplete="off"
+            />
+            <div class="input-icons">
+              <button id="voiceBtn" class="icon-button" type="button" title="Voz">
+                <span>🎙️</span>
+              </button>
+              <button id="scanBtn" class="icon-button" type="button" title="Scanner">
+                <span>📷</span>
+              </button>
             </div>
+          </div>
+        </div>
+        <button id="searchBtn" class="search-button" type="button">
+          <span class="icon">🔍</span>
+          <span>Buscar</span>
+        </button>
+      </div>
 
-            <div class="input-row">
-                <div class="input-main">
-                    <input id="input" type="text" placeholder="Escribí o escaneá un artículo, código o consulta..." autocomplete="off" />
-                </div>
-                <button id="btnBuscar" class="btn">Buscar</button>
+      <div class="secondary-controls">
+        <button id="filtersToggle" class="filters-toggle" type="button">
+          <span class="icon">⚙️</span>
+          <span>Filtros avanzados</span>
+        </button>
+        <div class="quick-actions">
+          <button id="toggleStockBtn" class="pill-button" type="button">
+            <span class="icon">📊</span>
+            <span>Mostrar con/sin stock</span>
+          </button>
+          <button id="copyGlobalBtn" class="pill-button primary" type="button">
+            <span class="icon">📋</span>
+            <span>Copiar vista</span>
+          </button>
+          <button id="clearBtn" class="pill-button danger" type="button">
+            <span class="icon">🧹</span>
+            <span>Limpiar pantalla</span>
+          </button>
+        </div>
+      </div>
+
+      <section id="filtersPanel" class="filters-panel">
+        <div class="filters-grid">
+          <div class="filter-block">
+            <div class="filter-label">Marca</div>
+            <select id="filterMarca" class="filter-select">
+              <option value="">Todas</option>
+            </select>
+          </div>
+          <div class="filter-block">
+            <div class="filter-label">Rubro</div>
+            <select id="filterRubro" class="filter-select">
+              <option value="">Todos</option>
+            </select>
+          </div>
+          <div class="filter-block">
+            <div class="filter-label">Talle desde</div>
+            <input
+              id="filterTalleDesde"
+              class="filter-input"
+              type="text"
+              placeholder="Ej: 24"
+            />
+          </div>
+          <div class="filter-block">
+            <div class="filter-label">Talle hasta</div>
+            <input
+              id="filterTalleHasta"
+              class="filter-input"
+              type="text"
+              placeholder="Ej: 25"
+            />
+          </div>
+          <div class="filter-block">
+            <div class="filter-label">Solo con stock</div>
+            <select id="filterSoloStock" class="filter-select">
+              <option value="">No filtrar</option>
+              <option value="true">Solo con stock</option>
+              <option value="false">Incluir sin stock</option>
+            </select>
+          </div>
+        </div>
+        <div class="filters-footer">
+          <button id="applyFiltersBtn" class="pill-button primary" type="button">
+            <span class="icon">🔎</span>
+            <span>Aplicar filtros</span>
+          </button>
+          <button id="resetFiltersBtn" class="pill-button" type="button">
+            <span class="icon">♻️</span>
+            <span>Reset filtros</span>
+          </button>
+        </div>
+      </section>
+
+      <section class="results-panel">
+        <div class="results-header">
+          <div class="results-title">
+            Resultados: <strong id="resultsCount">Sin resultados</strong>
+          </div>
+          <div class="results-actions">
+            <button id="copyViewBtn" class="pill-button primary" type="button">
+              <span class="icon">📋</span>
+              <span>Copiar esta vista</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="view-tabs">
+          <button class="view-tab active" data-view="resumen" type="button">Resumen</button>
+          <button class="view-tab" data-view="tarjetas" type="button">Tarjetas</button>
+          <button class="view-tab" data-view="lista" type="button">Lista</button>
+          <button class="view-tab" data-view="tabla" type="button">Tabla</button>
+          <button class="view-tab" data-view="dashboard" type="button">Dashboard</button>
+        </div>
+
+        <div class="results-body">
+          <div id="resultsScroll" class="results-scroll">
+            <div id="resultsContent" class="no-results">
+              Sin resultados. Probá con otro artículo, código o filtro.
             </div>
+          </div>
+          <div id="voiceLine" class="voice-line"></div>
+        </div>
 
-            <div class="filters-toggle">
-                <button id="btnToggleFilters" class="btn btn-ghost btn-small">Filtros avanzados ▾</button>
-            </div>
-
-            <div id="filtersPanel" class="filters-panel">
-                <div class="filters-row">
-                    <div class="filters-field">
-                        <label for="fMarca">Marca</label>
-                        <select id="fMarca">
-                            <option value="">Todas</option>
-                        </select>
-                    </div>
-                    <div class="filters-field">
-                        <label for="fRubro">Rubro</label>
-                        <select id="fRubro">
-                            <option value="">Todos</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="filters-row">
-                    <div class="filters-field">
-                        <label for="fArticulo">Artículo</label>
-                        <input id="fArticulo" type="text" list="listaArticulos" placeholder="Código – descripción" />
-                        <datalist id="listaArticulos"></datalist>
-                    </div>
-                    <div class="filters-field">
-                        <label for="fTalleDesde">Talle desde</label>
-                        <input id="fTalleDesde" type="text" list="listaTalles" placeholder="Ej: 38, 38/9, 28.5" />
-                    </div>
-                    <div class="filters-field">
-                        <label for="fTalleHasta">Talle hasta</label>
-                        <input id="fTalleHasta" type="text" list="listaTalles" placeholder="Ej: 40, 40/1, U/NE" />
-                        <datalist id="listaTalles"></datalist>
-                    </div>
-                </div>
-            </div>
-
-            <div class="orb-wrapper">
-                <div id="orb" class="orb orb-style-c" title="Tocá 5 veces para admin"></div>
-            </div>
-
-            <div id="adminPanel" class="admin-panel">
-                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
-                    <strong>Modo admin</strong>
-                    <button id="btnAdminClose" class="btn btn-small btn-ghost">Cerrar</button>
-                </div>
-
-                <div class="admin-row">
-                    <span class="admin-label">Modelo:</span>
-                    <button id="btnModeloNormal" class="btn btn-small">Normal</button>
-                    <button id="btnModeloDebug" class="btn btn-small">Debug</button>
-                </div>
-
-                <div class="admin-row">
-                    <span class="admin-label">Estilo ORB:</span>
-                    <button id="btnOrbA" class="btn btn-small">A</button>
-                    <button id="btnOrbB" class="btn btn-small">B</button>
-                    <button id="btnOrbC" class="btn btn-small">C</button>
-                </div>
-
-                <div class="admin-row">
-                    <span class="admin-label">Marca:</span>
-                    <span>SALAS CREATIVE STUDIO · V.26.01</span>
-                </div>
-
-                <pre id="adminOutput"></pre>
-            </div>
-        </section>
-
-        <!-- PANEL DERECHO -->
-        <section class="panel">
-            <div class="panel-header">
-                <div class="panel-title">
-                    Resultados
-                    <span id="resultSummary">Sin resultados</span>
-                </div>
-                <div class="tabs">
-                    <div id="tabResumen" class="tab active">Resumen</div>
-                    <div id="tabTarjetas" class="tab">Tarjetas</div>
-                    <div id="tabLista" class="tab">Lista</div>
-                    <div id="tabTabla" class="tab">Tabla</div>
-                    <div id="tabDashboard" class="tab">Dashboard</div>
-                </div>
-            </div>
-
-            <div id="viewResumen" class="results"></div>
-            <div id="viewTarjetas" class="results hidden"></div>
-            <div id="viewLista" class="results hidden"></div>
-            <div id="viewTabla" class="results hidden"></div>
-            <div id="viewDashboard" class="results hidden"></div>
-        </section>
+        <div class="footer-bar">
+          <div class="connection-line" id="connectionLine">
+            <div class="connection-line-inner"></div>
+          </div>
+          <div class="footer-text">
+            STOCK IA PRO · <strong>V.26.01</strong> · SALAS CREATIVE STUDIO
+          </div>
+        </div>
+      </section>
     </main>
+  </div>
 
-    <footer>
-        STOCK IA PRO · V.26.01 · SALAS CREATIVE STUDIO
-    </footer>
-</div>
+  <div id="adminPanel" class="admin-panel">
+    <div class="admin-card">
+      <div class="admin-header">
+        <div>
+          <div class="admin-title">Panel administrador · ORB & sistema</div>
+          <div class="admin-sub">Solo vos conocés este acceso. Clave: ADMIN + 5 clics en el ORB.</div>
+        </div>
+        <button id="adminCloseBtn" class="admin-close" type="button">✕</button>
+      </div>
 
-<!-- OVERLAY SCANNER -->
-<div id="scannerOverlay" class="scanner-overlay">
-    <div class="scanner-box">
-        <div class="scanner-header">
-            <div>Scanner de código de barras</div>
-            <button id="btnCloseScanner" class="icon-btn">✕</button>
+      <div class="admin-section-title">Estilo del ORB</div>
+      <div class="admin-grid">
+        <div class="admin-field">
+          <div class="admin-label">Preset visual</div>
+          <select id="adminOrbPreset" class="admin-select">
+            <option value="A">A — Esfera suave</option>
+            <option value="B">B — Glow fuerte</option>
+            <option value="C">C — Pulso dinámico</option>
+            <option value="D">D — Cristal + halo fuerte (default)</option>
+          </select>
         </div>
-        <div class="scanner-video-wrapper">
-            <video id="scannerVideo" autoplay playsinline></video>
+        <div class="admin-field">
+          <div class="admin-label">Intensidad del halo</div>
+          <select id="adminHaloIntensity" class="admin-select">
+            <option value="low">Baja</option>
+            <option value="medium">Media</option>
+            <option value="high">Alta (default)</option>
+          </select>
         </div>
-        <div class="scanner-hint">
-            Apuntá al código de barras. La lectura es automática. Si no funciona, usá tu app de scanner y luego pegá el código.
+        <div class="admin-field">
+          <div class="admin-label">Velocidad de respiración</div>
+          <select id="adminBreathSpeed" class="admin-select">
+            <option value="slow">Lenta</option>
+            <option value="medium">Media</option>
+            <option value="fast">Rápida</option>
+          </select>
         </div>
+        <div class="admin-field">
+          <div class="admin-label">Velocidad de rotación</div>
+          <select id="adminRotateSpeed" class="admin-select">
+            <option value="off">Sin rotación</option>
+            <option value="slow">Lenta (default)</option>
+            <option value="medium">Media</option>
+          </select>
+        </div>
+        <div class="admin-field">
+          <div class="admin-label">Brillo interno</div>
+          <select id="adminInnerGlow" class="admin-select">
+            <option value="soft">Suave</option>
+            <option value="medium">Medio</option>
+            <option value="strong">Fuerte (default)</option>
+          </select>
+        </div>
+        <div class="admin-field">
+          <div class="admin-label">Paleta de color</div>
+          <select id="adminColorPalette" class="admin-select">
+            <option value="violet-blue">Violeta → Azul (default)</option>
+            <option value="blue-cyan">Azul → Cian</option>
+            <option value="pink-violet">Rosa → Violeta</option>
+            <option value="white-blue">Blanco → Azul (cristal puro)</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="admin-footer">
+        <button id="adminResetOrbBtn" class="pill-button danger" type="button">
+          <span class="icon">↺</span>
+          <span>Restaurar ORB por defecto</span>
+        </button>
+        <button id="adminSaveBtn" class="pill-button primary" type="button">
+          <span class="icon">💾</span>
+          <span>Guardar ajustes</span>
+        </button>
+      </div>
+      <div class="admin-note">
+        Los cambios se guardan localmente en este dispositivo (localStorage). El usuario común no ve ni controla nada de esto.
+      </div>
     </div>
-</div>
+  </div>
 
-<script>
-    // ==========================
-    // CONFIG BÁSICA
-    // ==========================
-    const API_BASE = "https://stock-backend-1-0upi.onrender.com";
-    const HEALTH_URL = API_BASE + "/health";
-    const QUERY_URL = API_BASE + "/query";
+  <script>
+    const API_URL = "https://stock-backend-1-0upi.onrender.com/query";
 
-    const input = document.getElementById("input");
-    const btnBuscar = document.getElementById("btnBuscar");
-    const btnScanner = document.getElementById("btnScanner");
-    const btnMic = document.getElementById("btnMic");
-    const btnHandsFree = document.getElementById("btnHandsFree");
-    const btnStop = document.getElementById("btnStop");
-    const btnTheme = document.getElementById("btnTheme");
+    const queryInput = document.getElementById("queryInput");
+    const searchBtn = document.getElementById("searchBtn");
+    const voiceBtn = document.getElementById("voiceBtn");
+    const scanBtn = document.getElementById("scanBtn");
+    const filtersToggle = document.getElementById("filtersToggle");
+    const filtersPanel = document.getElementById("filtersPanel");
+    const filterMarca = document.getElementById("filterMarca");
+    const filterRubro = document.getElementById("filterRubro");
+    const filterTalleDesde = document.getElementById("filterTalleDesde");
+    const filterTalleHasta = document.getElementById("filterTalleHasta");
+    const filterSoloStock = document.getElementById("filterSoloStock");
+    const applyFiltersBtn = document.getElementById("applyFiltersBtn");
+    const resetFiltersBtn = document.getElementById("resetFiltersBtn");
+    const toggleStockBtn = document.getElementById("toggleStockBtn");
+    const copyGlobalBtn = document.getElementById("copyGlobalBtn");
+    const copyViewBtn = document.getElementById("copyViewBtn");
+    const clearBtn = document.getElementById("clearBtn");
+    const resultsCount = document.getElementById("resultsCount");
+    const resultsContent = document.getElementById("resultsContent");
+    const voiceLine = document.getElementById("voiceLine");
+    const viewTabs = document.querySelectorAll(".view-tab");
     const statusDot = document.getElementById("statusDot");
     const statusText = document.getElementById("statusText");
+    const connectionLine = document.getElementById("connectionLine");
     const orb = document.getElementById("orb");
     const adminPanel = document.getElementById("adminPanel");
-    const adminOutput = document.getElementById("adminOutput");
-    const btnAdminClose = document.getElementById("btnAdminClose");
-    const btnModeloNormal = document.getElementById("btnModeloNormal");
-    const btnModeloDebug = document.getElementById("btnModeloDebug");
-    const btnOrbA = document.getElementById("btnOrbA");
-    const btnOrbB = document.getElementById("btnOrbB");
-    const btnOrbC = document.getElementById("btnOrbC");
+    const adminCloseBtn = document.getElementById("adminCloseBtn");
+    const adminOrbPreset = document.getElementById("adminOrbPreset");
+    const adminHaloIntensity = document.getElementById("adminHaloIntensity");
+    const adminBreathSpeed = document.getElementById("adminBreathSpeed");
+    const adminRotateSpeed = document.getElementById("adminRotateSpeed");
+    const adminInnerGlow = document.getElementById("adminInnerGlow");
+    const adminColorPalette = document.getElementById("adminColorPalette");
+    const adminResetOrbBtn = document.getElementById("adminResetOrbBtn");
+    const adminSaveBtn = document.getElementById("adminSaveBtn");
 
-    const btnToggleFilters = document.getElementById("btnToggleFilters");
-    const filtersPanel = document.getElementById("filtersPanel");
-    const fMarca = document.getElementById("fMarca");
-    const fRubro = document.getElementById("fRubro");
-    const fArticulo = document.getElementById("fArticulo");
-    const fTalleDesde = document.getElementById("fTalleDesde");
-    const fTalleHasta = document.getElementById("fTalleHasta");
-    const listaArticulos = document.getElementById("listaArticulos");
-    const listaTalles = document.getElementById("listaTalles");
-
-    const tabResumen = document.getElementById("tabResumen");
-    const tabTarjetas = document.getElementById("tabTarjetas");
-    const tabLista = document.getElementById("tabLista");
-    const tabTabla = document.getElementById("tabTabla");
-    const tabDashboard = document.getElementById("tabDashboard");
-
-    const viewResumen = document.getElementById("viewResumen");
-    const viewTarjetas = document.getElementById("viewTarjetas");
-    const viewLista = document.getElementById("viewLista");
-    const viewTabla = document.getElementById("viewTabla");
-    const viewDashboard = document.getElementById("viewDashboard");
-    const resultSummary = document.getElementById("resultSummary");
-
-    const scannerOverlay = document.getElementById("scannerOverlay");
-    const scannerVideo = document.getElementById("scannerVideo");
-    const btnCloseScanner = document.getElementById("btnCloseScanner");
-
-    let currentResults = [];
-    let currentRawResponse = null;
-    let adminMode = false;
+    let originalResults = null;
+    let filteredResults = null;
+    let currentView = "resumen";
+    let showOnlyStock = false;
+    let isProcessing = false;
     let orbClickCount = 0;
     let orbClickTimer = null;
-    let currentModel = "normal";
-    let currentOrbStyle = "c";
+    const ORB_CLICK_WINDOW = 800;
+    const ADMIN_SECRET = "ADMIN";
 
-    // Voz
-    let recognition = null;
-    let recognizing = false;
-    let handsFreeMode = false;
-    let lastTranscript = "";
-    let stopRequested = false;
+    const ORB_DEFAULT_CONFIG = {
+      preset: "D",
+      haloIntensity: "high",
+      breathSpeed: "medium",
+      rotateSpeed: "slow",
+      innerGlow: "strong",
+      colorPalette: "violet-blue"
+    };
 
-    // Scanner
-    let scannerStream = null;
-    let scanning = false;
-
-    // ==========================
-    // TEMA OSCURO / CLARO
-    // ==========================
-    function applyThemeFromStorage() {
-        const theme = localStorage.getItem("theme");
-        if (theme === "light") {
-            document.body.classList.add("light");
-        } else {
-            document.body.classList.remove("light");
-        }
-    }
-    applyThemeFromStorage();
-
-    btnTheme.addEventListener("click", () => {
-        document.body.classList.toggle("light");
-        localStorage.setItem("theme", document.body.classList.contains("light") ? "light" : "dark");
-    });
-
-    // ==========================
-    // ORB STYLE
-    // ==========================
-    function applyOrbStyle(style) {
-        orb.classList.remove("orb-style-a", "orb-style-b", "orb-style-c");
-        if (style === "a") orb.classList.add("orb-style-a");
-        else if (style === "b") orb.classList.add("orb-style-b");
-        else orb.classList.add("orb-style-c");
-        currentOrbStyle = style;
-        localStorage.setItem("orbStyle", style);
+    function loadOrbConfig() {
+      try {
+        const stored = localStorage.getItem("stockIaPro_orbConfig");
+        if (!stored) return { ...ORB_DEFAULT_CONFIG };
+        const parsed = JSON.parse(stored);
+        return { ...ORB_DEFAULT_CONFIG, ...parsed };
+      } catch {
+        return { ...ORB_DEFAULT_CONFIG };
+      }
     }
 
-    function initOrbStyle() {
-        const saved = localStorage.getItem("orbStyle") || "c";
-        applyOrbStyle(saved);
-    }
-    initOrbStyle();
-
-    btnOrbA.addEventListener("click", () => applyOrbStyle("a"));
-    btnOrbB.addEventListener("click", () => applyOrbStyle("b"));
-    btnOrbC.addEventListener("click", () => applyOrbStyle("c"));
-
-    // ==========================
-    // SEMÁFORO BACKEND
-    // ==========================
-    async function checkHealth() {
-        try {
-            const r = await fetch(HEALTH_URL, { cache: "no-store" });
-            if (r.ok) {
-                statusDot.classList.add("ok");
-                statusText.textContent = "Conectado";
-            } else {
-                statusDot.classList.remove("ok");
-                statusText.textContent = "Error";
-            }
-        } catch (e) {
-            statusDot.classList.remove("ok");
-            statusText.textContent = "Desconectado";
-        }
-    }
-    checkHealth();
-    setInterval(checkHealth, 15000);
-
-    // ==========================
-    // TABS
-    // ==========================
-    function setActiveTab(tabId) {
-        [tabResumen, tabTarjetas, tabLista, tabTabla, tabDashboard].forEach(t => t.classList.remove("active"));
-        [viewResumen, viewTarjetas, viewLista, viewTabla, viewDashboard].forEach(v => v.classList.add("hidden"));
-
-        if (tabId === "resumen") {
-            tabResumen.classList.add("active");
-            viewResumen.classList.remove("hidden");
-        } else if (tabId === "tarjetas") {
-            tabTarjetas.classList.add("active");
-            viewTarjetas.classList.remove("hidden");
-        } else if (tabId === "lista") {
-            tabLista.classList.add("active");
-            viewLista.classList.remove("hidden");
-        } else if (tabId === "tabla") {
-            tabTabla.classList.add("active");
-            viewTabla.classList.remove("hidden");
-        } else if (tabId === "dashboard") {
-            tabDashboard.classList.add("active");
-            viewDashboard.classList.remove("hidden");
-        }
+    function saveOrbConfig(config) {
+      try {
+        localStorage.setItem("stockIaPro_orbConfig", JSON.stringify(config));
+      } catch {}
     }
 
-    tabResumen.addEventListener("click", () => setActiveTab("resumen"));
-    tabTarjetas.addEventListener("click", () => setActiveTab("tarjetas"));
-    tabLista.addEventListener("click", () => setActiveTab("lista"));
-    tabTabla.addEventListener("click", () => setActiveTab("tabla"));
-    tabDashboard.addEventListener("click", () => setActiveTab("dashboard"));
+    function applyOrbConfig(config) {
+      const halo = document.querySelector(".orb-halo");
+      const innerGlow = document.querySelector(".orb-inner-glow");
+      const shadow = document.querySelector(".orb-shadow");
 
-    // ==========================
-    // FILTROS AVANZADOS
-    // ==========================
-    btnToggleFilters.addEventListener("click", () => {
-        const visible = filtersPanel.style.display === "flex";
-        filtersPanel.style.display = visible ? "none" : "flex";
-        btnToggleFilters.textContent = visible ? "Filtros avanzados ▾" : "Filtros avanzados ▴";
-    });
+      let haloOpacity = 0.7;
+      let haloScale = 1;
+      if (config.haloIntensity === "low") {
+        haloOpacity = 0.4;
+        haloScale = 0.95;
+      } else if (config.haloIntensity === "medium") {
+        haloOpacity = 0.8;
+        haloScale = 1.02;
+      } else {
+        haloOpacity = 1;
+        haloScale = 1.08;
+      }
+      halo.style.opacity = haloOpacity;
+      halo.style.transform = `scale(${haloScale})`;
 
-    function buildFiltersFromResults(results) {
-        const marcas = new Set();
-        const rubros = new Set();
-        const articulos = new Map();
-        const talles = new Set();
+      let breathDuration = "5.5s";
+      if (config.breathSpeed === "slow") breathDuration = "7s";
+      else if (config.breathSpeed === "fast") breathDuration = "4s";
 
-        results.forEach(item => {
-            if (item.marca) marcas.add(item.marca);
-            if (item.rubro) rubros.add(item.rubro);
-            if (item.codigo) {
-                const key = item.codigo;
-                const desc = item.descripcion || "";
-                if (!articulos.has(key)) articulos.set(key, desc);
-            }
-            if (Array.isArray(item.talles)) {
-                item.talles.forEach(t => {
-                    if (t.talle) talles.add(t.talle);
-                });
-            }
-        });
+      let rotateDuration = "26s";
+      if (config.rotateSpeed === "off") rotateDuration = "0s";
+      else if (config.rotateSpeed === "medium") rotateDuration = "18s";
 
-        fMarca.innerHTML = '<option value="">Todas</option>';
-        Array.from(marcas).sort().forEach(m => {
-            const opt = document.createElement("option");
-            opt.value = m;
-            opt.textContent = m;
-            fMarca.appendChild(opt);
-        });
+      let animations = [];
+      animations.push(`orbBreath ${breathDuration} ease-in-out infinite`);
+      if (config.rotateSpeed !== "off") {
+        animations.push(`orbRotate ${rotateDuration} linear infinite`);
+      }
+      orb.style.animation = animations.join(", ");
 
-        fRubro.innerHTML = '<option value="">Todos</option>';
-        Array.from(rubros).sort().forEach(r => {
-            const opt = document.createElement("option");
-            opt.value = r;
-            opt.textContent = r;
-            fRubro.appendChild(opt);
-        });
+      let innerOpacity = 0.7;
+      if (config.innerGlow === "soft") innerOpacity = 0.5;
+      else if (config.innerGlow === "strong") innerOpacity = 0.9;
+      innerGlow.style.opacity = innerOpacity;
 
-        listaArticulos.innerHTML = "";
-        Array.from(articulos.entries())
-            .sort((a, b) => a[0].localeCompare(b[0]))
-            .forEach(([codigo, desc]) => {
-                const opt = document.createElement("option");
-                opt.value = `${codigo} – ${desc || ""}`.trim();
-                listaArticulos.appendChild(opt);
-            });
+      let bg;
+      switch (config.colorPalette) {
+        case "blue-cyan":
+          bg = `
+            radial-gradient(circle at 30% 20%, rgba(255,255,255,0.95) 0, rgba(255,255,255,0.0) 35%),
+            radial-gradient(circle at 70% 80%, rgba(56,189,248,0.45) 0, rgba(15,23,42,0.0) 55%),
+            radial-gradient(circle at 50% 50%, #1d4ed8 0, #0ea5e9 40%, #22d3ee 75%, #020617 100%)
+          `;
+          break;
+        case "pink-violet":
+          bg = `
+            radial-gradient(circle at 30% 20%, rgba(255,255,255,0.95) 0, rgba(255,255,255,0.0) 35%),
+            radial-gradient(circle at 70% 80%, rgba(244,114,182,0.45) 0, rgba(15,23,42,0.0) 55%),
+            radial-gradient(circle at 50% 50%, #db2777 0, #7c3aed 40%, #4f46e5 75%, #020617 100%)
+          `;
+          break;
+        case "white-blue":
+          bg = `
+            radial-gradient(circle at 30% 20%, rgba(255,255,255,1) 0, rgba(255,255,255,0.0) 40%),
+            radial-gradient(circle at 70% 80%, rgba(191,219,254,0.6) 0, rgba(15,23,42,0.0) 55%),
+            radial-gradient(circle at 50% 50%, #e5e7eb 0, #93c5fd 40%, #1d4ed8 75%, #020617 100%)
+          `;
+          break;
+        default:
+          bg = `
+            radial-gradient(circle at 30% 20%, rgba(255,255,255,0.95) 0, rgba(255,255,255,0.0) 35%),
+            radial-gradient(circle at 70% 80%, rgba(56,189,248,0.35) 0, rgba(15,23,42,0.0) 55%),
+            radial-gradient(circle at 50% 50%, #4f46e5 0, #1d4ed8 40%, #0ea5e9 75%, #020617 100%)
+          `;
+      }
+      orb.style.background = bg;
 
-        listaTalles.innerHTML = "";
-        Array.from(talles)
-            .sort((a, b) => a.toString().localeCompare(b.toString(), undefined, { numeric: true }))
-            .forEach(t => {
-                const opt = document.createElement("option");
-                opt.value = t;
-                listaTalles.appendChild(opt);
-            });
+      let boxShadow;
+      if (config.preset === "A") {
+        boxShadow = "0 0 28px rgba(129,140,248,0.7), 0 0 60px rgba(59,130,246,0.7)";
+      } else if (config.preset === "B") {
+        boxShadow = "0 0 45px rgba(129,140,248,1), 0 0 110px rgba(59,130,246,1)";
+      } else if (config.preset === "C") {
+        boxShadow = "0 0 38px rgba(129,140,248,0.9), 0 0 90px rgba(59,130,246,0.9)";
+      } else {
+        boxShadow = "0 0 55px rgba(129,140,248,1), 0 0 120px rgba(59,130,246,1)";
+      }
+      orb.style.boxShadow = boxShadow;
+
+      shadow.style.opacity = config.preset === "A" ? 0.6 : 0.75;
     }
 
-    function applyFiltersLocally(results) {
-        const marca = fMarca.value.trim();
-        const rubro = fRubro.value.trim();
-        const articuloInput = fArticulo.value.trim();
-        const talleDesde = fTalleDesde.value.trim();
-        const talleHasta = fTalleHasta.value.trim();
-
-        let articuloCode = "";
-        if (articuloInput.includes("–")) {
-            articuloCode = articuloInput.split("–")[0].trim();
-        } else {
-            articuloCode = articuloInput;
-        }
-
-        return results.filter(item => {
-            if (marca && item.marca !== marca) return false;
-            if (rubro && item.rubro !== rubro) return false;
-            if (articuloCode && item.codigo !== articuloCode) return false;
-
-            if (talleDesde || talleHasta) {
-                const talles = Array.isArray(item.talles) ? item.talles : [];
-                const match = talles.some(t => {
-                    const val = (t.talle || "").toString();
-                    if (talleDesde && val < talleDesde) return false;
-                    if (talleHasta && val > talleHasta) return false;
-                    return true;
-                });
-                if (!match) return false;
-            }
-            return true;
-        });
+    function initOrbAdminControls() {
+      const config = loadOrbConfig();
+      adminOrbPreset.value = config.preset;
+      adminHaloIntensity.value = config.haloIntensity;
+      adminBreathSpeed.value = config.breathSpeed;
+      adminRotateSpeed.value = config.rotateSpeed;
+      adminInnerGlow.value = config.innerGlow;
+      adminColorPalette.value = config.colorPalette;
+      applyOrbConfig(config);
     }
 
-    [fMarca, fRubro, fArticulo, fTalleDesde, fTalleHasta].forEach(el => {
-        el.addEventListener("change", () => {
-            renderAllViews(currentResults);
-        });
-    });
-
-    // ==========================
-    // CONSULTA AL BACKEND
-    // ==========================
-    async function consultar() {
-        const q = input.value.trim();
-        if (!q) return;
-
-        stopAllVoice();
-        orb.classList.add("processing");
-
-        const payload = {
-            question: q,
-            solo_stock: false
-        };
-
-        try {
-            const r = await fetch(QUERY_URL, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(payload)
-            });
-            const data = await r.json();
-            currentRawResponse = data;
-            const items = Array.isArray(data.items) ? data.items : [];
-            currentResults = items;
-            buildFiltersFromResults(items);
-            renderAllViews(items);
-            speakIfNeeded(data);
-        } catch (e) {
-            console.error(e);
-            resultSummary.textContent = "Error en la consulta";
-            viewResumen.textContent = "Ocurrió un error al consultar el backend.";
-        } finally {
-            orb.classList.remove("processing");
-        }
+    function openAdminPanel() {
+      adminPanel.classList.add("visible");
     }
 
-    btnBuscar.addEventListener("click", consultar);
-    input.addEventListener("keydown", e => {
-        if (e.key === "Enter") consultar();
-    });
-
-    // ==========================
-    // RENDER DE VISTAS
-    // ==========================
-    function renderAllViews(results) {
-        const filtered = applyFiltersLocally(results);
-        const total = filtered.length;
-        resultSummary.textContent = total ? `${total} resultado(s)` : "Sin resultados";
-
-        renderResumen(filtered);
-        renderTarjetas(filtered);
-        renderLista(filtered);
-        renderTabla(filtered);
-        renderDashboard(filtered);
+    function closeAdminPanel() {
+      adminPanel.classList.remove("visible");
     }
-
-    function renderResumen(results) {
-        if (!results.length) {
-            viewResumen.textContent = "Sin resultados. Probá con otro artículo, código o filtro.";
-            return;
-        }
-        const totalStock = results.reduce((acc, r) => {
-            const talles = Array.isArray(r.talles) ? r.talles : [];
-            return acc + talles.reduce((a, t) => a + (Number(t.stock || 0)), 0);
-        }, 0);
-        const marcas = new Set(results.map(r => r.marca).filter(Boolean));
-        const rubros = new Set(results.map(r => r.rubro).filter(Boolean));
-
-        viewResumen.innerHTML = `
-            <div class="dashboard-grid">
-                <div class="dash-card">
-                    <div class="dash-label">Artículos encontrados</div>
-                    <div class="dash-value">${results.length}</div>
-                </div>
-                <div class="dash-card">
-                    <div class="dash-label">Stock total</div>
-                    <div class="dash-value">${totalStock}</div>
-                </div>
-                <div class="dash-card">
-                    <div class="dash-label">Marcas</div>
-                    <div class="dash-value">${marcas.size}</div>
-                </div>
-                <div class="dash-card">
-                    <div class="dash-label">Rubros</div>
-                    <div class="dash-value">${rubros.size}</div>
-                </div>
-            </div>
-        `;
-    }
-
-    function renderTarjetas(results) {
-        if (!results.length) {
-            viewTarjetas.textContent = "Sin resultados.";
-            return;
-        }
-        viewTarjetas.innerHTML = "";
-        results.forEach(r => {
-            const div = document.createElement("div");
-            div.className = "result-item";
-            const marca = r.marca || "SIN MARCA";
-            const desc = r.descripcion || r.codigo || "";
-            const rubro = r.rubro ? ` · ${r.rubro}` : "";
-            const talles = Array.isArray(r.talles) ? r.talles : [];
-            const stockTotal = talles.reduce((a, t) => a + (Number(t.stock || 0)), 0);
-            div.innerHTML = `
-                <div><strong>${marca}</strong> – ${desc}${rubro}</div>
-                <div class="result-meta">
-                    Código: ${r.codigo || "-"} · Talles: ${talles.map(t => t.talle + " (" + t.stock + ")").join(", ") || "-"} · Stock total: ${stockTotal}
-                </div>
-            `;
-            viewTarjetas.appendChild(div);
-        });
-    }
-
-    function renderLista(results) {
-        if (!results.length) {
-            viewLista.textContent = "Sin resultados.";
-            return;
-        }
-        viewLista.innerHTML = "";
-        results.forEach(r => {
-            const marca = r.marca || "SIN MARCA";
-            const desc = r.descripcion || r.codigo || "";
-            const talles = Array.isArray(r.talles) ? r.talles : [];
-            const stockTotal = talles.reduce((a, t) => a + (Number(t.stock || 0)), 0);
-            const div = document.createElement("div");
-            div.className = "result-item";
-            div.textContent = `${marca} – ${desc} – ${stockTotal}`;
-            viewLista.appendChild(div);
-        });
-    }
-
-    function renderTabla(results) {
-        if (!results.length) {
-            viewTabla.textContent = "Sin resultados.";
-            return;
-        }
-        const rows = results.map(r => {
-            const talles = Array.isArray(r.talles) ? r.talles : [];
-            const stockTotal = talles.reduce((a, t) => a + (Number(t.stock || 0)), 0);
-            return `
-                <tr>
-                    <td>${r.marca || ""}</td>
-                    <td>${r.rubro || ""}</td>
-                    <td>${r.codigo || ""}</td>
-                    <td>${r.descripcion || ""}</td>
-                    <td>${talles.map(t => t.talle).join(", ")}</td>
-                    <td>${stockTotal}</td>
-                    <td>${r.precio != null ? r.precio : ""}</td>
-                </tr>
-            `;
-        }).join("");
-
-        viewTabla.innerHTML = `
-            <div style="overflow-x:auto;">
-                <table class="results-table">
-                    <thead>
-                        <tr>
-                            <th>Marca</th>
-                            <th>Rubro</th>
-                            <th>Código</th>
-                            <th>Descripción</th>
-                            <th>Talles</th>
-                            <th>Stock total</th>
-                            <th>Precio</th>
-                        </tr>
-                    </thead>
-                    <tbody>${rows}</tbody>
-                </table>
-            </div>
-        `;
-    }
-
-    function renderDashboard(results) {
-        if (!results.length) {
-            viewDashboard.textContent = "Sin resultados.";
-            return;
-        }
-        const totalStock = results.reduce((acc, r) => {
-            const talles = Array.isArray(r.talles) ? r.talles : [];
-            return acc + talles.reduce((a, t) => a + (Number(t.stock || 0)), 0);
-        }, 0);
-        const marcas = new Set(results.map(r => r.marca).filter(Boolean));
-        const rubros = new Set(results.map(r => r.rubro).filter(Boolean));
-
-        const topMarca = (() => {
-            const counts = {};
-            results.forEach(r => {
-                if (!r.marca) return;
-                const talles = Array.isArray(r.talles) ? r.talles : [];
-                const stock = talles.reduce((a, t) => a + (Number(t.stock || 0)), 0);
-                counts[r.marca] = (counts[r.marca] || 0) + stock;
-            });
-            let best = null;
-            let bestVal = -1;
-            Object.entries(counts).forEach(([m, v]) => {
-                if (v > bestVal) {
-                    bestVal = v;
-                    best = m;
-                }
-            });
-            return best ? `${best} (${bestVal})` : "-";
-        })();
-
-        viewDashboard.innerHTML = `
-            <div class="dashboard-grid">
-                <div class="dash-card">
-                    <div class="dash-label">Artículos</div>
-                    <div class="dash-value">${results.length}</div>
-                </div>
-                <div class="dash-card">
-                    <div class="dash-label">Stock total</div>
-                    <div class="dash-value">${totalStock}</div>
-                </div>
-                <div class="dash-card">
-                    <div class="dash-label">Marcas distintas</div>
-                    <div class="dash-value">${marcas.size}</div>
-                </div>
-                <div class="dash-card">
-                    <div class="dash-label">Rubros distintos</div>
-                    <div class="dash-value">${rubros.size}</div>
-                </div>
-                <div class="dash-card">
-                    <div class="dash-label">Marca con más stock</div>
-                    <div class="dash-value">${topMarca}</div>
-                </div>
-            </div>
-        `;
-    }
-
-    // ==========================
-    // ADMIN OCULTO
-    // ==========================
-    function toggleAdmin(show) {
-        adminMode = show;
-        adminPanel.style.display = show ? "block" : "none";
-        if (show && currentRawResponse) {
-            adminOutput.textContent = JSON.stringify(currentRawResponse, null, 2);
-        }
-    }
-
-    btnAdminClose.addEventListener("click", () => toggleAdmin(false));
-
-    btnModeloNormal.addEventListener("click", () => {
-        currentModel = "normal";
-        btnModeloNormal.classList.add("active");
-        btnModeloDebug.classList.remove("active");
-    });
-
-    btnModeloDebug.addEventListener("click", () => {
-        currentModel = "debug";
-        btnModeloDebug.classList.add("active");
-        btnModeloNormal.classList.remove("active");
-    });
-
-    input.addEventListener("input", () => {
-        if (input.value.trim().toLowerCase() === "admin") {
-            toggleAdmin(true);
-        }
-    });
 
     orb.addEventListener("click", () => {
-        orbClickCount++;
-        if (!orbClickTimer) {
-            orbClickTimer = setTimeout(() => {
-                if (orbClickCount >= 5) {
-                    toggleAdmin(true);
-                }
-                orbClickCount = 0;
-                orbClickTimer = null;
-            }, 800);
-        }
+      const now = Date.now();
+      if (!orbClickTimer) {
+        orbClickTimer = setTimeout(() => {
+          orbClickCount = 0;
+          orbClickTimer = null;
+        }, ORB_CLICK_WINDOW);
+      }
+      orbClickCount++;
+      if (orbClickCount >= 5) {
+        orbClickCount = 0;
+        clearTimeout(orbClickTimer);
+        orbClickTimer = null;
+        openAdminPanel();
+      }
     });
 
-    // ==========================
-    // VOZ / MANOS LIBRES
-    // ==========================
-    function initRecognition() {
-        if (recognition) return;
-        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-        if (!SpeechRecognition) return;
-        recognition = new SpeechRecognition();
-        recognition.lang = "es-AR";
-        recognition.continuous = false;
-        recognition.interimResults = false;
+    adminCloseBtn.addEventListener("click", closeAdminPanel);
 
-        recognition.onstart = () => {
-            recognizing = true;
-            btnMic.classList.add("active");
-        };
+    adminResetOrbBtn.addEventListener("click", () => {
+      const config = { ...ORB_DEFAULT_CONFIG };
+      saveOrbConfig(config);
+      initOrbAdminControls();
+    });
 
-        recognition.onend = () => {
-            recognizing = false;
-            btnMic.classList.remove("active");
-            if (handsFreeMode && !stopRequested) {
-                setTimeout(() => {
-                    if (!stopRequested) {
-                        try { recognition.start(); } catch {}
-                    }
-                }, 400);
-            }
-        };
+    adminSaveBtn.addEventListener("click", () => {
+      const config = {
+        preset: adminOrbPreset.value,
+        haloIntensity: adminHaloIntensity.value,
+        breathSpeed: adminBreathSpeed.value,
+        rotateSpeed: adminRotateSpeed.value,
+        innerGlow: adminInnerGlow.value,
+        colorPalette: adminColorPalette.value
+      };
+      saveOrbConfig(config);
+      applyOrbConfig(config);
+      closeAdminPanel();
+    });
 
-        recognition.onresult = (event) => {
-            const transcript = (event.results[0][0].transcript || "").trim();
-            if (!transcript) return;
-            if (transcript === lastTranscript) return;
-            lastTranscript = transcript;
-            input.value = transcript;
-            consultar();
-        };
-
-        recognition.onerror = (event) => {
-            console.warn("Reconocimiento error:", event.error);
-        };
+    function setStatus(state) {
+      statusDot.classList.remove("connected", "processing");
+      connectionLine.classList.remove("error", "processing");
+      if (state === "connected") {
+        statusDot.classList.add("connected");
+        statusText.textContent = "Conectado";
+      } else if (state === "processing") {
+        statusDot.classList.add("processing");
+        statusText.textContent = "Procesando...";
+        connectionLine.classList.add("processing");
+      } else if (state === "error") {
+        statusText.textContent = "Error";
+        connectionLine.classList.add("error");
+      } else {
+        statusText.textContent = "Desconectado";
+      }
     }
 
-    function stopAllVoice() {
-        stopRequested = true;
-        handsFreeMode = false;
-        if (recognition) {
-            recognition.onend = null;
-            try { recognition.stop(); } catch {}
-        }
-        recognizing = false;
-        btnMic.classList.remove("active");
-        btnHandsFree.classList.remove("active");
-        speechSynthesis.cancel();
-        setTimeout(() => { stopRequested = false; }, 300);
-    }
-
-    btnMic.addEventListener("click", () => {
-        initRecognition();
-        if (!recognition) {
-            alert("El reconocimiento de voz no está disponible en este navegador.");
-            return;
-        }
-        if (recognizing) {
-            stopAllVoice();
+    async function pingBackend() {
+      try {
+        const res = await fetch(API_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ question: "ping", solo_stock: false })
+        });
+        if (res.ok) {
+          setStatus("connected");
         } else {
-            stopRequested = false;
-            handsFreeMode = false;
-            try { recognition.start(); } catch {}
+          setStatus("error");
         }
-    });
-
-    btnHandsFree.addEventListener("click", () => {
-        initRecognition();
-        if (!recognition) {
-            alert("El reconocimiento de voz no está disponible en este navegador.");
-            return;
-        }
-        if (handsFreeMode) {
-            stopAllVoice();
-        } else {
-            stopRequested = false;
-            handsFreeMode = true;
-            btnHandsFree.classList.add("active");
-            try { recognition.start(); } catch {}
-        }
-    });
-
-    btnStop.addEventListener("click", () => {
-        stopAllVoice();
-    });
-
-    function speakIfNeeded(data) {
-        if (!data || !data.voz) return;
-        const text = data.voz;
-        const utter = new SpeechSynthesisUtterance(text);
-        utter.lang = "es-AR";
-        utter.rate = 1;
-        utter.pitch = 1;
-        speechSynthesis.cancel();
-        speechSynthesis.speak(utter);
+      } catch {
+        setStatus("error");
+      }
     }
 
-    // ==========================
-    // SCANNER NATIVO
-    // ==========================
-    async function startScanner() {
-        stopAllVoice();
-        if (!("BarcodeDetector" in window)) {
-            try {
-                scannerOverlay.style.display = "flex";
-                scannerStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
-                scannerVideo.srcObject = scannerStream;
-                alert("Este navegador no soporta scanner nativo. Usá tu app de scanner y luego pegá el código.");
-            } catch (e) {
-                alert("No se pudo acceder a la cámara.");
-                closeScanner();
-            }
-            return;
-        }
+    function parseVoiceQuery(text) {
+      if (!text) return "";
+      let q = text.trim();
+      const lower = q.toLowerCase();
 
-        try {
-            scannerOverlay.style.display = "flex";
-            scannerStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
-            scannerVideo.srcObject = scannerStream;
-            const formats = [
-                "ean_13", "ean_8", "upc_a", "upc_e",
-                "code_128", "code_39", "itf", "pdf417", "qr_code"
-            ];
-            const detector = new BarcodeDetector({ formats });
-            scanning = true;
+      if (lower === ADMIN_SECRET.toLowerCase()) {
+        openAdminPanel();
+        return "";
+      }
 
-            const beep = () => {
-                try {
-                    const ctx = new (window.AudioContext || window.webkitAudioContext)();
-                    const osc = ctx.createOscillator();
-                    const gain = ctx.createGain();
-                    osc.type = "sine";
-                    osc.frequency.value = 880;
-                    osc.connect(gain);
-                    gain.connect(ctx.destination);
-                    osc.start();
-                    setTimeout(() => {
-                        osc.stop();
-                        ctx.close();
-                    }, 120);
-                } catch {}
-            };
+      const match = lower.match(/(.+?)\s+(en|del|de|para)?\s*talle\s+(\d+([.,]\d+)?)/i);
+      if (match) {
+        const articulo = match[1].trim().toUpperCase();
+        const talle = match[3].replace(",", ".");
+        return `${articulo}/${talle}`;
+      }
 
-            const loop = async () => {
-                if (!scanning) return;
-                if (scannerVideo.readyState === HTMLMediaElement.HAVE_ENOUGH_DATA) {
-                    try {
-                        const barcodes = await detector.detect(scannerVideo);
-                        if (barcodes && barcodes.length > 0) {
-                            const code = (barcodes[0].rawValue || "").trim();
-                            if (code) {
-                                if (navigator.vibrate) navigator.vibrate(80);
-                                beep();
-                                input.value = code;
-                                closeScanner();
-                                consultar();
-                                return;
-                            }
-                        }
-                    } catch (e) {
-                        console.warn("Detector error:", e);
-                    }
-                }
-                requestAnimationFrame(loop);
-            };
-            requestAnimationFrame(loop);
-        } catch (e) {
-            console.error(e);
-            alert("No se pudo iniciar el scanner. Usá tu app de scanner y luego pegá el código.");
-            closeScanner();
-        }
+      return q.toUpperCase();
     }
 
-    function closeScanner() {
-        scanning = false;
-        scannerOverlay.style.display = "none";
-        if (scannerStream) {
-            scannerStream.getTracks().forEach(t => t.stop());
-            scannerStream = null;
-        }
-        scannerVideo.srcObject = null;
+    function normalizeQueryFromInput() {
+      const raw = queryInput.value.trim();
+      if (!raw) return "";
+      if (raw.toUpperCase() === ADMIN_SECRET) {
+        openAdminPanel();
+        return "";
+      }
+      return raw;
     }
 
-    btnScanner.addEventListener("click", startScanner);
-    btnCloseScanner.addEventListener("click", closeScanner);
+    async function doSearch() {
+      const raw = normalizeQueryFromInput();
+      if (!raw) return;
 
-    // ==========================
-    // INICIAL
-    // ==========================
-    setActiveTab("resumen");
-    viewResumen.textContent = "Esperando consulta...";
-</script>
+      const parsed = parseVoiceQuery(raw);
+      const finalQuery = parsed || raw;
+
+      queryInput.value = finalQuery;
+
+      isProcessing = true;
+      setStatus("processing");
+      orb.classList.add("orb-processing");
+      searchBtn.disabled = true;
+
+      const soloStockFlag = false;
+
+      try {
+        const res = await fetch(API_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            question: finalQuery,
+            solo_stock: soloStockFlag
+          })
+        });
+
+        if (!res.ok) {
+          throw new Error("Error HTTP");
+        }
+
+        const data = await res.json();
+        handleBackendResponse(data);
+        setStatus("connected");
+      } catch {
+        originalResults = null;
+        filteredResults = null;
+        resultsCount.textContent = "Error al consultar el backend";
+        resultsContent.className = "no-results";
+        resultsContent.textContent = "Ocurrió un error al consultar el backend. Probá nuevamente.";
+        voiceLine.textContent = "";
+        setStatus("error");
+      } finally {
+        isProcessing = false;
+        orb.classList.remove("orb-processing");
+        searchBtn.disabled = false;
+      }
+    }
+
+    function handleBackendResponse(data) {
+      if (!data || !Array.isArray(data.items)) {
+        originalResults = null;
+        filteredResults = null;
+        resultsCount.textContent = "Sin resultados";
+        resultsContent.className = "no-results";
+        resultsContent.textContent = "Sin resultados. Probá con otro artículo, código o filtro.";
+        voiceLine.textContent = data && data.voz ? data.voz : "";
+        return;
+      }
+
+      originalResults = data.items;
+      filteredResults = [...originalResults];
+
+      populateFiltersFromResults(originalResults);
+      applyFilters(false);
+
+      const totalArticulos = filteredResults.length;
+      const totalStock = filteredResults.reduce((acc, item) => {
+        const sum = (item.talles || []).reduce((s, t) => s + (Number(t.stock) || 0), 0);
+        return acc + sum;
+      }, 0);
+      const marcas = new Set(filteredResults.map(i => i.marca || "").filter(Boolean));
+      const rubros = new Set(filteredResults.map(i => i.rubro || "").filter(Boolean));
+
+      resultsCount.textContent = `${totalArticulos} resultado(s)`;
+      voiceLine.textContent = data.voz || "";
+
+      renderCurrentView();
+    }
+
+    function populateFiltersFromResults(items) {
+      const marcas = new Set();
+      const rubros = new Set();
+
+      items.forEach(item => {
+        if (item.marca) marcas.add(item.marca);
+        if (item.rubro) rubros.add(item.rubro);
+      });
+
+      const marcaSelected = filterMarca.value;
+      const rubroSelected = filterRubro.value;
+
+      filterMarca.innerHTML = '<option value="">Todas</option>';
+      Array.from(marcas).sort().forEach(m => {
+        const opt = document.createElement("option");
+        opt.value = m;
+        opt.textContent = m;
+        filterMarca.appendChild(opt);
+      });
+
+      filterRubro.innerHTML = '<option value="">Todos</option>';
+      Array.from(rubros).sort().forEach(r => {
+        const opt = document.createElement("option");
+        opt.value = r;
+        opt.textContent = r;
+        filterRubro.appendChild(opt);
+      });
+
+      if (marcaSelected && marcas.has(marcaSelected)) {
+        filterMarca.value = marcaSelected;
+      }
+      if (rubroSelected && rubros.has(rubroSelected)) {
+        filterRubro.value = rubroSelected;
+      }
+    }
+
+    function parseTalleValue(t) {
+      if (!t) return null;
+      const cleaned = String(t).replace(",", ".").match(/[\d.]+/);
+      if (!cleaned) return null;
+      const num = parseFloat(cleaned[0]);
+      return isNaN(num) ? null : num;
+    }
+
+    function applyFilters(updateView = true) {
+      if (!originalResults) {
+        filteredResults = null;
+        resultsContent.className = "no-results";
+        resultsContent.textContent = "Sin resultados. Probá con otro artículo, código o filtro.";
+        return;
+      }
+
+      const marca = filterMarca.value;
+      const rubro = filterRubro.value;
+      const soloStockVal = filterSoloStock.value;
+      const desde = filterTalleDesde.value.trim();
+      const hasta = filterTalleHasta.value.trim();
+
+      const desdeNum = desde ? parseFloat(desde.replace(",", ".")) : null;
+      const hastaNum = hasta ? parseFloat(hasta.replace(",", ".")) : null;
+
+      filteredResults = originalResults.filter(item => {
+        if (marca && item.marca !== marca) return false;
+        if (rubro && item.rubro !== rubro) return false;
+
+        let talles = item.talles || [];
+
+        if (desdeNum !== null || hastaNum !== null) {
+          talles = talles.filter(t => {
+            const val = parseTalleValue(t.talle);
+            if (val === null) return false;
+            if (desdeNum !== null && val < desdeNum) return false;
+            if (hastaNum !== null && val > hastaNum) return false;
+            return true;
+          });
+          if (talles.length === 0) return false;
+        }
+
+        if (showOnlyStock || soloStockVal === "true") {
+          const hasStock = talles.some(t => Number(t.stock) > 0);
+          if (!hasStock) return false;
+        }
+
+        return true;
+      });
+
+      const totalArticulos = filteredResults.length;
+      const totalStock = filteredResults.reduce((acc, item) => {
+        const sum = (item.talles || []).reduce((s, t) => s + (Number(t.stock) || 0), 0);
+        return acc + sum;
+      }, 0);
+      const marcas = new Set(filteredResults.map(i => i.marca || "").filter(Boolean));
+      const rubros = new Set(filteredResults.map(i => i.rubro || "").filter(Boolean));
+
+      resultsCount.textContent = totalArticulos
+        ? `${totalArticulos} resultado(s)`
+        : "Sin resultados";
+
+      if (!totalArticulos) {
+        resultsContent.className = "no-results";
+        resultsContent.textContent = "Sin resultados. Ajustá filtros o probá con otro artículo.";
+        return;
+      }
+
+      if (updateView) {
+        renderCurrentView();
+      }
+    }
+
+    function renderCurrentView() {
+      if (!filteredResults || filteredResults.length === 0) {
+        resultsContent.className = "no-results";
+        resultsContent.textContent = "Sin resultados. Ajustá filtros o probá con otro artículo.";
+        return;
+      }
+
+      if (currentView === "resumen") {
+        renderResumen();
+      } else if (currentView === "tarjetas") {
+        renderTarjetas();
+      } else if (currentView === "lista") {
+        renderLista();
+      } else if (currentView === "tabla") {
+        renderTabla();
+      } else if (currentView === "dashboard") {
+        renderDashboard();
+      }
+    }
+
+    function renderResumen() {
+      const totalArticulos = filteredResults.length;
+      const totalStock = filteredResults.reduce((acc, item) => {
+        const sum = (item.talles || []).reduce((s, t) => s + (Number(t.stock) || 0), 0);
+        return acc + sum;
+      }, 0);
+      const marcas = new Set(filteredResults.map(i => i.marca || "").filter(Boolean));
+      const rubros = new Set(filteredResults.map(i => i.rubro || "").filter(Boolean));
+
+      resultsContent.className = "";
+      resultsContent.innerHTML = `
+        <div class="summary-grid">
+          <div class="summary-card">
+            <div class="summary-label">Artículos encontrados</div>
+            <div class="summary-value">${totalArticulos}</div>
+            <div class="summary-sub">Coinciden con la consulta actual</div>
+          </div>
+          <div class="summary-card">
+            <div class="summary-label">Stock total</div>
+            <div class="summary-value">${totalStock}</div>
+            <div class="summary-sub">Suma de todos los talles</div>
+          </div>
+          <div class="summary-card">
+            <div class="summary-label">Marcas</div>
+            <div class="summary-value">${marcas.size}</div>
+            <div class="summary-sub">Marcas distintas en el resultado</div>
+          </div>
+          <div class="summary-card">
+            <div class="summary-label">Rubros</div>
+            <div class="summary-value">${rubros.size}</div>
+            <div class="summary-sub">Rubros distintos en el resultado</div>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderTarjetas() {
+      resultsContent.className = "";
+      const cards = filteredResults
+        .map(item => {
+          const totalStock = (item.talles || []).reduce(
+            (acc, t) => acc + (Number(t.stock) || 0),
+            0
+          );
+          const tallesStr = (item.talles || [])
+            .map(t => `${t.talle} (${t.stock})`)
+            .join(", ");
+          const precio = item.precio ? item.precio.toLocaleString("es-AR") : "-";
+          return `
+            <div class="item-card">
+              <div class="item-header">
+                <div>
+                  <div class="item-code">${item.codigo || ""}</div>
+                  <div class="item-brand">${item.marca || ""} · ${item.rubro || ""}</div>
+                </div>
+              </div>
+              <div class="item-desc">${item.descripcion || ""}</div>
+              <div class="item-meta">
+                <span>Color: ${item.color || "-"}</span>
+                <span>Art: ${item.codigo || "-"}</span>
+              </div>
+              <div class="item-talles">Talles: ${tallesStr || "-"}</div>
+              <div class="item-footer">
+                <div class="item-price">$ ${precio}</div>
+                <div class="item-stock">Stock total: ${totalStock}</div>
+              </div>
+            </div>
+          `;
+        })
+        .join("");
+
+      resultsContent.innerHTML = `<div class="cards-grid">${cards}</div>`;
+    }
+
+    function renderLista() {
+      resultsContent.className = "";
+      const rows = filteredResults
+        .map(item => {
+          const totalStock = (item.talles || []).reduce(
+            (acc, t) => acc + (Number(t.stock) || 0),
+            0
+          );
+          const tallesStr = (item.talles || [])
+            .map(t => `${t.talle} (${t.stock})`)
+            .join(", ");
+          const precio = item.precio ? item.precio.toLocaleString("es-AR") : "-";
+          return `
+            <tr>
+              <td>${item.marca || ""}</td>
+              <td>${item.rubro || ""}</td>
+              <td>${item.codigo || ""}</td>
+              <td>${item.descripcion || ""}</td>
+              <td>$ ${precio}</td>
+              <td>${tallesStr || "-"}</td>
+              <td>${totalStock}</td>
+            </tr>
+          `;
+        })
+        .join("");
+
+      resultsContent.innerHTML = `
+        <div class="table-wrapper">
+          <table class="list-table">
+            <thead>
+              <tr>
+                <th>Marca</th>
+                <th>Rubro</th>
+                <th>Código</th>
+                <th>Artículo</th>
+                <th>Precio</th>
+                <th>Talles</th>
+                <th>Stock</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${rows}
+            </tbody>
+          </table>
+        </div>
+      `;
+    }
+
+    function renderTabla() {
+      resultsContent.className = "";
+      const rows = filteredResults
+        .map(item => {
+          const totalStock = (item.talles || []).reduce(
+            (acc, t) => acc + (Number(t.stock) || 0),
+            0
+          );
+          const tallesStr = (item.talles || [])
+            .map(t => `${t.talle} (${t.stock})`)
+            .join(", ");
+          const precio = item.precio ? item.precio.toLocaleString("es-AR") : "-";
+          return `
+            <tr>
+              <td>${item.codigo || ""}</td>
+              <td>${item.descripcion || ""}</td>
+              <td>${item.marca || ""}</td>
+              <td>${item.rubro || ""}</td>
+              <td>${tallesStr || "-"}</td>
+              <td>$ ${precio}</td>
+              <td>${totalStock}</td>
+              <td>${item.color || "-"}</td>
+            </tr>
+          `;
+        })
+        .join("");
+
+      resultsContent.innerHTML = `
+        <div class="table-wrapper">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Código</th>
+                <th>Descripción</th>
+                <th>Marca</th>
+                <th>Rubro</th>
+                <th>Talles</th>
+                <th>Precio</th>
+                <th>Stock total</th>
+                <th>Color</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${rows}
+            </tbody>
+          </table>
+        </div>
+      `;
+    }
+
+    function renderDashboard() {
+      resultsContent.className = "dashboard-placeholder";
+      resultsContent.textContent =
+        "Dashboard en construcción. Próximamente: gráficos de stock, marcas y rubros.";
+    }
+
+    function copyText(text) {
+      if (!text) return;
+      navigator.clipboard.writeText(text).catch(() => {});
+    }
+
+    function getCurrentViewText() {
+      if (!filteredResults || filteredResults.length === 0) return "";
+      if (currentView === "resumen") {
+        const totalArticulos = filteredResults.length;
+        const totalStock = filteredResults.reduce((acc, item) => {
+          const sum = (item.talles || []).reduce((s, t) => s + (Number(t.stock) || 0), 0);
+          return acc + sum;
+        }, 0);
+        const marcas = new Set(filteredResults.map(i => i.marca || "").filter(Boolean));
+        const rubros = new Set(filteredResults.map(i => i.rubro || "").filter(Boolean));
+        return [
+          `Artículos encontrados: ${totalArticulos}`,
+          `Stock total: ${totalStock}`,
+          `Marcas: ${marcas.size}`,
+          `Rubros: ${rubros.size}`
+        ].join("\n");
+      }
+
+      return filteredResults
+        .map(item => {
+          const totalStock = (item.talles || []).reduce(
+            (acc, t) => acc + (Number(t.stock) || 0),
+            0
+          );
+          const tallesStr = (item.talles || [])
+            .map(t => `${t.talle} (${t.stock})`)
+            .join(", ");
+          const precio = item.precio ? item.precio.toLocaleString("es-AR") : "-";
+          return [
+            `Código: ${item.codigo || ""}`,
+            `Descripción: ${item.descripcion || ""}`,
+            `Marca: ${item.marca || ""}`,
+            `Rubro: ${item.rubro || ""}`,
+            `Precio: $ ${precio}`,
+            `Talles: ${tallesStr || "-"}`,
+            `Stock total: ${totalStock}`,
+            `Color: ${item.color || "-"}`,
+            `---`
+          ].join("\n");
+        })
+        .join("\n");
+    }
+
+    searchBtn.addEventListener("click", doSearch);
+
+    queryInput.addEventListener("keydown", e => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        doSearch();
+      }
+    });
+
+    filtersToggle.addEventListener("click", () => {
+      filtersPanel.classList.toggle("visible");
+      filtersToggle.classList.toggle("active");
+    });
+
+    applyFiltersBtn.addEventListener("click", () => applyFilters(true));
+
+    resetFiltersBtn.addEventListener("click", () => {
+      filterMarca.value = "";
+      filterRubro.value = "";
+      filterTalleDesde.value = "";
+      filterTalleHasta.value = "";
+      filterSoloStock.value = "";
+      showOnlyStock = false;
+      toggleStockBtn.classList.remove("toggle-active");
+      applyFilters(true);
+    });
+
+    toggleStockBtn.addEventListener("click", () => {
+      showOnlyStock = !showOnlyStock;
+      toggleStockBtn.classList.toggle("toggle-active", showOnlyStock);
+      applyFilters(true);
+    });
+
+    viewTabs.forEach(tab => {
+      tab.addEventListener("click", () => {
+        viewTabs.forEach(t => t.classList.remove("active"));
+        tab.classList.add("active");
+        currentView = tab.dataset.view;
+        renderCurrentView();
+      });
+    });
+
+    copyGlobalBtn.addEventListener("click", () => {
+      const text = getCurrentViewText();
+      copyText(text);
+    });
+
+    copyViewBtn.addEventListener("click", () => {
+      const text = getCurrentViewText();
+      copyText(text);
+    });
+
+    clearBtn.addEventListener("click", () => {
+      queryInput.value = "";
+      originalResults = null;
+      filteredResults = null;
+      resultsCount.textContent = "Sin resultados";
+      resultsContent.className = "no-results";
+      resultsContent.textContent = "Sin resultados. Probá con otro artículo, código o filtro.";
+      voiceLine.textContent = "";
+      filterMarca.value = "";
+      filterRubro.value = "";
+      filterTalleDesde.value = "";
+      filterTalleHasta.value = "";
+      filterSoloStock.value = "";
+      showOnlyStock = false;
+      toggleStockBtn.classList.remove("toggle-active");
+    });
+
+    voiceBtn.addEventListener("click", () => {
+      alert("Reconocimiento de voz: en esta versión está simulado. Podés seguir usando el input.");
+    });
+
+    scanBtn.addEventListener("click", () => {
+      alert("Scanner: en esta versión se asume que ya carga el código en el input. Luego presioná Buscar.");
+    });
+
+    window.addEventListener("load", () => {
+      initOrbAdminControls();
+      pingBackend();
+    });
+  </script>
 </body>
 </html>
