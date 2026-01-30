@@ -20,134 +20,526 @@
     --radius-pill: 999px;
     --shadow-soft: 0 18px 45px rgba(15, 23, 42, 0.75);
 }
+
+* { box-sizing: border-box; }
+
 body {
     margin: 0;
     min-height: 100vh;
-    font-family: "Inter", sans-serif;
+    font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
     background: radial-gradient(circle at top, #111827 0, #020617 45%, #000 100%);
     color: var(--text);
-    display: flex;
-    justify-content: center;
 }
+
+/* Shell general */
 .app-shell {
     width: 100%;
     max-width: 1200px;
-    margin: 24px;
+    margin: 12px auto 24px auto;
     display: grid;
-    grid-template-rows: auto 1fr;
-    gap: 18px;
+    grid-template-rows: auto auto 1fr;
+    gap: 12px;
+    padding: 0 8px;
 }
-.app-main {
-    display: grid;
-    grid-template-columns: 1.4fr 1fr;
-    gap: 18px;
+
+/* Header */
+.app-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
 }
+.brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.brand-logo {
+    width: 32px;
+    height: 32px;
+    border-radius: 999px;
+    background: radial-gradient(circle at 30% 20%, #4f46e5, #111827 70%);
+    box-shadow: 0 0 18px rgba(79, 70, 229, 0.8);
+}
+.brand-text-title {
+    font-weight: 600;
+    letter-spacing: 0.03em;
+}
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* Semáforo backend */
+.pill {
+    padding: 6px 12px;
+    border-radius: var(--radius-pill);
+    border: 1px solid rgba(148, 163, 184, 0.35);
+    background: rgba(15, 23, 42, 0.9);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.78rem;
+}
+.pill-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 999px;
+    background: var(--danger);
+    box-shadow: 0 0 10px rgba(239, 68, 68, 0.9);
+}
+.pill-dot.ok {
+    background: var(--success);
+    box-shadow: 0 0 10px rgba(34, 197, 94, 0.9);
+}
+
+/* Botón tema */
+.toggle-theme {
+    border-radius: var(--radius-pill);
+    border: 1px solid rgba(148, 163, 184, 0.4);
+    background: rgba(15, 23, 42, 0.9);
+    color: var(--text-soft);
+    padding: 6px 10px;
+    font-size: 0.75rem;
+    cursor: pointer;
+}
+
+/* Paneles */
 .panel {
     background: linear-gradient(145deg, rgba(15, 23, 42, 0.96), rgba(15, 23, 42, 0.9));
     border-radius: var(--radius-lg);
     border: 1px solid rgba(148, 163, 184, 0.25);
     box-shadow: var(--shadow-soft);
-    padding: 18px;
+    padding: 14px;
+}
+
+/* Layout principal (compacto, móvil-first) */
+.app-main {
+    display: grid;
+    grid-template-rows: auto auto;
+    gap: 10px;
+}
+
+/* ORB */
+.orb-wrapper {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 10px;
 }
 .orb {
-    width: 82px; height: 82px; border-radius: 999px;
-    background: radial-gradient(circle at 50% 50%, #4f46e5, #111827 70%);
+    width: 82px;
+    height: 82px;
+    border-radius: 999px;
+    background: radial-gradient(circle at 30% 20%, #4f46e5, #111827 70%);
+    box-shadow: 0 0 25px rgba(79, 70, 229, 0.7);
     animation: orb-breathe 3.8s ease-in-out infinite;
+    cursor: pointer;
 }
-@keyframes orb-breathe {0%{transform:scale(0.96);}50%{transform:scale(1.04);}100%{transform:scale(0.96);}}
-@keyframes spin {from{transform:rotate(0deg);}to{transform:rotate(360deg);}}
+@keyframes orb-breathe {
+    0% { transform: scale(0.96); box-shadow: 0 0 18px rgba(79,70,229,0.6); }
+    50% { transform: scale(1.04); box-shadow: 0 0 32px rgba(79,70,229,0.9); }
+    100% { transform: scale(0.96); box-shadow: 0 0 18px rgba(79,70,229,0.6); }
+}
+.orb.processing {
+    animation: spin 1s linear infinite;
+}
+@keyframes spin {
+    from { transform: rotate(0deg) scale(1.02); }
+    to   { transform: rotate(360deg) scale(1.02); }
+}
+
+/* Input principal */
 .input-shell {
-    display:flex; gap:8px; background:rgba(15,23,42,0.9);
-    border-radius:12px; border:1px solid rgba(148,163,184,0.45); padding:10px 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(15, 23, 42, 0.9);
+    border-radius: 12px;
+    border: 1px solid rgba(148, 163, 184, 0.45);
+    padding: 8px 10px;
 }
-#queryInput {flex:1; border:none; outline:none; background:transparent; color:var(--text); font-size:1rem;}
-.icon-bar button {font-size:1.2rem; padding:10px 14px;}
-.response-shell {background:rgba(15,23,42,0.9); border-radius:var(--radius-md); padding:10px; min-height:120px;}
-.view-hidden {display:none;}
-.pill-dot {width:8px; height:8px; border-radius:999px; background:var(--danger);}
-.pill-dot.ok {background:var(--success);}
-@media(max-width:768px){
-    .app-main{grid-template-columns:1fr;}
-    .panel{padding:14px;}
-    .icon-bar{flex-wrap:wrap; justify-content:space-between;}
-    .icon-bar .btn{flex:1 1 30%; text-align:center;}
+.input-prefix {
+    font-size: 0.8rem;
+    color: var(--text-soft);
+    white-space: nowrap;
+}
+#queryInput {
+    flex: 1;
+    border: none;
+    outline: none;
+    background: transparent;
+    color: var(--text);
+    font-size: 0.95rem;
+}
+.btn {
+    border-radius: 999px;
+    border: 1px solid rgba(148, 163, 184, 0.4);
+    background: rgba(15, 23, 42, 0.9);
+    color: var(--text-soft);
+    padding: 6px 10px;
+    font-size: 0.8rem;
+    cursor: pointer;
+}
+.btn-primary {
+    background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+    color: #f9fafb;
+    border-color: transparent;
+}
+
+/* Filtros */
+.filters-grid {
+    margin-top: 6px;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0,1fr));
+    gap: 6px;
+    font-size: 0.78rem;
+}
+.filters-grid input {
+    border-radius: 8px;
+    border: 1px solid rgba(148, 163, 184, 0.4);
+    background: rgba(15, 23, 42, 0.9);
+    color: var(--text);
+    padding: 4px 8px;
+    font-size: 0.78rem;
+}
+
+/* Icon bar */
+.icon-bar {
+    margin-top: 8px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+.icon-bar .btn {
+    flex: 1 1 30%;
+    text-align: center;
+}
+
+/* Switch solo stock */
+.toggle-row {
+    margin-top: 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.8rem;
+}
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 34px;
+    height: 18px;
+}
+.switch input { display:none; }
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-color: #4b5563;
+    transition: .2s;
+    border-radius: 34px;
+}
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 14px;
+    width: 14px;
+    left: 2px;
+    bottom: 2px;
+    background-color: white;
+    transition: .2s;
+    border-radius: 50%;
+}
+.switch input:checked + .slider {
+    background-color: #22c55e;
+}
+.switch input:checked + .slider:before {
+    transform: translateX(16px);
+}
+
+/* Historial */
+.history-shell {
+    margin-top: 8px;
+    font-size: 0.78rem;
+}
+#historyList {
+    list-style: none;
+    padding: 0;
+    margin: 4px 0 0 0;
+    max-height: 120px;
+    overflow-y: auto;
+}
+#historyList li {
+    padding: 3px 4px;
+    cursor: pointer;
+    border-radius: 6px;
+}
+#historyList li:hover {
+    background: rgba(148, 163, 184, 0.15);
+}
+
+/* Panel resultados */
+.results-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+/* Tabs vistas */
+.view-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+.view-shell {
+    background: rgba(15, 23, 42, 0.9);
+    border-radius: var(--radius-md);
+    border: 1px solid rgba(148, 163, 184, 0.35);
+    padding: 10px;
+    min-height: 140px;
+    font-size: 0.82rem;
+}
+.view-hidden { display: none; }
+
+/* Contenedores */
+#cardsContainer,
+#listContainer,
+#tableContainer,
+#dashboardContainer {
+    font-size: 0.82rem;
+}
+
+/* Tarjetas */
+.dashboard-card {
+    border-radius: 10px;
+    border: 1px solid rgba(148, 163, 184, 0.35);
+    padding: 8px;
+    margin-bottom: 6px;
+    background: radial-gradient(circle at top left, rgba(79, 70, 229, 0.18), rgba(15, 23, 42, 0.95));
+}
+.dashboard-label {
+    font-size: 0.75rem;
+    color: var(--text-soft);
+}
+.dashboard-value {
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+/* Tabla */
+.table-shell table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.78rem;
+}
+.table-shell th,
+.table-shell td {
+    padding: 4px 6px;
+    border-bottom: 1px solid rgba(148, 163, 184, 0.25);
+}
+.table-shell th {
+    text-align: left;
+    color: var(--text-soft);
+}
+
+/* Scanner overlay */
+.scanner-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.9);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 50;
+}
+.scanner-inner {
+    background: #020617;
+    border-radius: 12px;
+    padding: 10px;
+    border: 1px solid rgba(148, 163, 184, 0.4);
+    max-width: 360px;
+    width: 100%;
+}
+#scannerVideo {
+    width: 100%;
+    border-radius: 8px;
+    background: #000;
+}
+
+/* Admin */
+#viewAdmin pre {
+    max-height: 200px;
+    overflow: auto;
+    font-size: 0.7rem;
+}
+
+/* Responsive */
+@media (min-width: 900px) {
+    .app-main {
+        grid-template-columns: 1.1fr 1.2fr;
+        grid-template-rows: auto;
+        gap: 12px;
+    }
 }
 </style>
 </head>
 <body>
 <div class="app-shell">
-<header class="app-header">
-    <div class="brand"><div class="brand-logo"></div><div><div class="brand-text-title">Stock IA PRO v3.1</div></div></div>
-    <div class="header-right">
-        <button id="btnTheme" class="toggle-theme">Modo claro/oscuro</button>
-        <div class="pill"><span class="pill-dot" id="statusDot"></span><span id="statusText">Sistema desconectado</span></div>
-    </div>
-</header>
 
-<main class="app-main">
-    <!-- PANEL IZQUIERDO -->
+    <!-- HEADER -->
+    <header class="app-header">
+        <div class="brand">
+            <div class="brand-logo"></div>
+            <div>
+                <div class="brand-text-title">Stock IA PRO v3.1</div>
+            </div>
+        </div>
+        <div class="header-right">
+            <button id="btnTheme" class="toggle-theme">Modo claro/oscuro</button>
+            <div class="pill">
+                <span class="pill-dot" id="statusDot"></span>
+                <span id="statusText">Sistema desconectado</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- PANEL SUPERIOR (ORB + INPUT + FILTROS + ICONOS + HISTORIAL) -->
     <section class="panel">
-        <div class="orb-wrapper"><div class="orb" id="orbStatus"></div></div>
-        <div class="input-shell"><span class="input-prefix">¿Qué stock hay de…?</span>
-            <input id="queryInput" type="text" placeholder="pantuflas avengers plush" />
+        <div class="orb-wrapper">
+            <div class="orb" id="orbStatus"></div>
+        </div>
+
+        <div class="input-shell">
+            <span class="input-prefix">¿Qué stock hay de…?</span>
+            <input id="queryInput" type="text" placeholder="pantuflas avengers plush" autocomplete="off" />
             <button id="btnSend" class="btn btn-primary">Consultar</button>
         </div>
-        <div class="icon-bar">
-            <button id="btnSpeak" class="btn">🎤</button>
-            <button id="btnHandsFree" class="btn">🎧</button>
-            <button id="btnStop" class="btn">⏹</button>
-            <button id="btnClear" class="btn">🧹</button>
-            <button id="btnCopy" class="btn">📋</button>
-            <button id="btnScanner" class="btn">📷</button>
+
+        <div class="filters-grid">
+            <input id="fMarca" type="text" placeholder="Marca" />
+            <input id="fRubro" type="text" placeholder="Rubro" />
+            <input id="fArticulo" type="text" placeholder="Artículo" />
+            <input id="fTalleDesde" type="text" placeholder="Talle desde" />
+            <input id="fTalleHasta" type="text" placeholder="Talle hasta" />
         </div>
-        <div class="toggle-row"><label class="switch"><input type="checkbox" id="chkSoloStock" checked /><span class="slider"></span></label><span>Mostrar solo artículos con stock</span></div>
-        <div class="history-shell"><div>Historial:</div><ul id="historyList"></ul></div>
+
+        <div class="icon-bar">
+            <button id="btnSpeak" class="btn" title="Hablar">🎤</button>
+            <button id="btnHandsFree" class="btn" title="Manos libres">🎧</button>
+            <button id="btnStop" class="btn" title="Detener voz">⏹</button>
+            <button id="btnClear" class="btn" title="Limpiar">🧹</button>
+            <button id="btnCopy" class="btn" title="Copiar resultado">📋</button>
+            <button id="btnScanner" class="btn" title="Scanner">📷</button>
+        </div>
+
+        <div class="toggle-row">
+            <label class="switch">
+                <input type="checkbox" id="chkSoloStock" checked />
+                <span class="slider"></span>
+            </label>
+            <span>Mostrar solo artículos con stock</span>
+        </div>
+
+        <div class="history-shell">
+            <div>Historial:</div>
+            <ul id="historyList"></ul>
+        </div>
     </section>
 
-    <!-- PANEL DERECHO -->
-    <section class="panel">
-        <div style="display:flex; gap:6px; margin-bottom:8px; flex-wrap:wrap;">
-            <button id="btnViewCards" class="btn btn-primary">Tarjetas</button>
+    <!-- PANEL RESULTADOS (ABAJO / DERECHA) -->
+    <section class="panel results-panel">
+        <div class="view-tabs">
+            <button id="btnViewResumen" class="btn btn-primary">Resumen</button>
+            <button id="btnViewCards" class="btn">Tarjetas</button>
             <button id="btnViewList" class="btn">Lista</button>
             <button id="btnViewTable" class="btn">Tabla</button>
             <button id="btnViewDashboard" class="btn">Dashboard</button>
-            <button id="btnViewAdmin" class="btn">Admin</button>
         </div>
-        <div id="viewCards" class="response-shell"><div id="cardsContainer">Listo para responder.</div></div>
-        <div id="viewList" class="response-shell view-hidden"><ul id="listContainer"></ul></div>
-        <div id="viewTable" class="response-shell view-hidden"><table><tbody id="tableContainer"></tbody></table></div>
-        <div id="viewDashboard" class="response-shell view-hidden"><div id="dashboardContainer"></div></div>
-        <div id="viewAdmin" class="response-shell view-hidden">
-            <h4>Panel Admin</h4>
-            <button onclick="setModel('vendedor_experto')">Vendedor experto</button>
-            <button onclick="setModel('amigable')">Amigable</button>
-            <button onclick="setModel('profesional')">Profesional</button>
-            <button onclick="setModel('minimalista')">Minimalista</button>
-            <button onclick="setModel('tecnico')">Técnico</button>
+
+        <!-- RESUMEN GENERAL -->
+        <div id="viewResumen" class="view-shell">
+            <div id="resumenContainer">Listo para responder.</div>
+        </div>
+
+        <!-- TARJETAS -->
+        <div id="viewCards" class="view-shell view-hidden">
+            <div id="cardsContainer"></div>
+        </div>
+
+        <!-- LISTA -->
+        <div id="viewList" class="view-shell view-hidden">
+            <ul id="listContainer"></ul>
+        </div>
+
+        <!-- TABLA -->
+        <div id="viewTable" class="view-shell view-hidden table-shell">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Código</th>
+                        <th>Descripción</th>
+                        <th>Marca</th>
+                        <th>Rubro</th>
+                        <th>Talle</th>
+                        <th>Cant.</th>
+                        <th>Precio</th>
+                    </tr>
+                </thead>
+                <tbody id="tableContainer"></tbody>
+            </table>
+        </div>
+
+        <!-- DASHBOARD -->
+        <div id="viewDashboard" class="view-shell view-hidden">
+            <div id="dashboardContainer"></div>
+        </div>
+
+        <!-- ADMIN (OCULTO, SOLO ADMIN / 5 CLICS ORB) -->
+        <div id="viewAdmin" class="view-shell view-hidden">
+            <h4>Panel administrador</h4>
+            <div style="margin-bottom:6px; font-size:0.8rem;">Modelo conversacional:</div>
+            <div style="display:flex; flex-wrap:wrap; gap:4px; margin-bottom:8px;">
+                <button onclick="setModel('vendedor_experto')" class="btn">Vendedor experto</button>
+                <button onclick="setModel('amigable')" class="btn">Amigable</button>
+                <button onclick="setModel('profesional')" class="btn">Profesional</button>
+                <button onclick="setModel('minimalista')" class="btn">Minimalista</button>
+                <button onclick="setModel('tecnico')" class="btn">Técnico</button>
+            </div>
+            <div style="font-size:0.8rem; margin-bottom:4px;">Última respuesta (JSON):</div>
             <pre id="jsonView"></pre>
         </div>
+
+        <div style="margin-top:6px; font-size:0.75rem; color:#9ca3af;">
+            Fuente de datos: <span id="backendUrlLabel">-</span>
+        </div>
     </section>
-</main>
+
 </div>
 
-<div id="scannerOverlay" class="scanner-overlay"><div class="scanner-inner"><video id="scannerVideo" autoplay playsinline muted></video><button id="btnCloseScanner" class="btn">Cerrar</button></div></div>
-<audio id="beepSound"><source src="data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABAAZGF0YQAAAAA=" type="audio/wav"></audio>
-<audio id="responseVoice" style="display:none;"></audio>
+<!-- SCANNER OVERLAY -->
+<div id="scannerOverlay" class="scanner-overlay">
+    <div class="scanner-inner">
+        <video id="scannerVideo" autoplay playsinline muted></video>
+        <button id="btnCloseScanner" class="btn" style="margin-top:8px; width:100%;">Cerrar</button>
+    </div>
+</div>
+
+<!-- AUDIO BEEP -->
+<audio id="beepSound">
+    <source src="data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABAAZGF0YQAAAAA=" type="audio/wav">
+</audio>
+
 <script src="https://unpkg.com/@zxing/library@latest"></script>
 <script>
 // ==================================================
-// CONFIGURACIÓN BACKEND
+// CONFIG
 // ==================================================
 const BACKEND = "https://stock-backend-1-0upi.onrender.com";
 
-// ==================================================
-// REFERENCIAS DOM
-// ==================================================
+// DOM
 const input = document.getElementById("queryInput");
 const btnSend = document.getElementById("btnSend");
-const autocompleteList = document.getElementById("autocompleteList");
 const orbStatus = document.getElementById("orbStatus");
-const responseVoice = document.getElementById("responseVoice");
 
 const btnSpeak = document.getElementById("btnSpeak");
 const btnHandsFree = document.getElementById("btnHandsFree");
@@ -159,18 +551,20 @@ const btnScanner = document.getElementById("btnScanner");
 const chkSoloStock = document.getElementById("chkSoloStock");
 const historyList = document.getElementById("historyList");
 
+const btnViewResumen = document.getElementById("btnViewResumen");
 const btnViewCards = document.getElementById("btnViewCards");
 const btnViewList = document.getElementById("btnViewList");
 const btnViewTable = document.getElementById("btnViewTable");
 const btnViewDashboard = document.getElementById("btnViewDashboard");
-const btnViewAdmin = document.getElementById("btnViewAdmin");
 
+const viewResumen = document.getElementById("viewResumen");
 const viewCards = document.getElementById("viewCards");
 const viewList = document.getElementById("viewList");
 const viewTable = document.getElementById("viewTable");
 const viewDashboard = document.getElementById("viewDashboard");
 const viewAdmin = document.getElementById("viewAdmin");
 
+const resumenContainer = document.getElementById("resumenContainer");
 const cardsContainer = document.getElementById("cardsContainer");
 const listContainer = document.getElementById("listContainer");
 const tableContainer = document.getElementById("tableContainer");
@@ -178,78 +572,42 @@ const dashboardContainer = document.getElementById("dashboardContainer");
 
 const statusDot = document.getElementById("statusDot");
 const statusText = document.getElementById("statusText");
+const backendUrlLabel = document.getElementById("backendUrlLabel");
 
 const scannerOverlay = document.getElementById("scannerOverlay");
 const scannerVideo = document.getElementById("scannerVideo");
 const btnCloseScanner = document.getElementById("btnCloseScanner");
-
 const beepSound = document.getElementById("beepSound");
 
-// ==================================================
-// ESTADO
-// ==================================================
+// Filtros
+const fMarca = document.getElementById("fMarca");
+const fRubro = document.getElementById("fRubro");
+const fArticulo = document.getElementById("fArticulo");
+const fTalleDesde = document.getElementById("fTalleDesde");
+const fTalleHasta = document.getElementById("fTalleHasta");
+
+// Estado
 let recognition = null;
 let handsFreeMode = false;
 let lastResults = [];
+let lastDataRaw = null;
 let zxingReader = null;
 let orbTapCount = 0;
 let orbTimer = null;
 
-// ==================================================
-// TEMA CLARO/OSCURO
-// ==================================================
+// Tema
 document.getElementById("btnTheme").addEventListener("click", () => {
     document.body.classList.toggle("light");
 });
 
-// ==================================================
-// AUTOCOMPLETE
-// ==================================================
-let autocompleteTimeout = null;
-
-input.addEventListener("input", () => {
-    const q = input.value.trim();
-    if (!q) {
-        autocompleteList.style.display = "none";
-        autocompleteList.innerHTML = "";
-        return;
-    }
-    if (autocompleteTimeout) clearTimeout(autocompleteTimeout);
-
-    autocompleteTimeout = setTimeout(() => {
-        fetch(`${BACKEND}/autocomplete?q=${encodeURIComponent(q)}`)
-            .then(r => r.ok ? r.json() : [])
-            .then(data => {
-                autocompleteList.innerHTML = "";
-                if (!data?.suggestions?.length) {
-                    autocompleteList.style.display = "none";
-                    return;
-                }
-                data.suggestions.forEach(s => {
-                    const li = document.createElement("li");
-                    li.className = "autocomplete-item";
-                    li.textContent = s;
-                    li.onclick = () => {
-                        input.value = s;
-                        autocompleteList.style.display = "none";
-                    };
-                    autocompleteList.appendChild(li);
-                });
-                autocompleteList.style.display = "block";
-            })
-            .catch(() => autocompleteList.style.display = "none");
-    }, 250);
-});
-
-// ==================================================
-// NORMALIZAR TEXTO (acentos, variantes)
-// ==================================================
+// Normalizar texto
 function normalizarTexto(t) {
     return t
         .toLowerCase()
         .normalize("NFD")
         .replace(/[\u0300-\u036f]/g, "");
 }
+
 // ==================================================
 // CONSULTA PRINCIPAL
 // ==================================================
@@ -257,15 +615,17 @@ async function consultar() {
     let q = input.value.trim();
     if (!q) return;
 
-    if (q.toLowerCase() === "admin") {
+    // MODO ADMIN: solo si es exactamente "admin"
+    if (q.trim().toLowerCase() === "admin") {
         activarAdmin();
         return;
     }
 
     const qNorm = normalizarTexto(q);
 
-    orbStatus.style.animation = "spin 1s linear infinite";
-    cardsContainer.textContent = "Consultando...";
+    orbStatus.classList.add("processing");
+    resumenContainer.textContent = "Consultando...";
+    cardsContainer.textContent = "";
     listContainer.innerHTML = "";
     tableContainer.innerHTML = "";
     dashboardContainer.innerHTML = "";
@@ -275,12 +635,20 @@ async function consultar() {
         params.set("q", qNorm);
         params.set("solo_stock", chkSoloStock.checked ? "1" : "0");
 
+        if (fMarca.value.trim()) params.set("marca", fMarca.value.trim());
+        if (fRubro.value.trim()) params.set("rubro", fRubro.value.trim());
+        if (fArticulo.value.trim()) params.set("articulo", fArticulo.value.trim());
+        if (fTalleDesde.value.trim()) params.set("talle_desde", fTalleDesde.value.trim());
+        if (fTalleHasta.value.trim()) params.set("talle_hasta", fTalleHasta.value.trim());
+
         const resp = await fetch(`${BACKEND}/query?${params.toString()}`);
         if (!resp.ok) throw new Error("Backend error");
 
         const data = await resp.json();
+        lastDataRaw = data;
         lastResults = data.items || [];
 
+        renderResumen(q, data);
         renderCards(lastResults);
         renderList(lastResults);
         renderTable(lastResults);
@@ -288,35 +656,77 @@ async function consultar() {
 
         addToHistory(q);
 
-        // TTS inteligente
-        let tts = data.tts;
+        // Fuente de datos
+        if (data.fuente && data.fuente.name) {
+            backendUrlLabel.textContent = data.fuente.name;
+        } else {
+            backendUrlLabel.textContent = BACKEND;
+        }
+
+        // Voz
+        let tts = data.voz;
         if (!tts) {
             if (lastResults.length === 0) {
                 tts = `No encontré resultados para ${q}.`;
+            } else if (lastResults.length === 1) {
+                tts = `Encontré un resultado para tu consulta: ${lastResults[0].descripcion}.`;
             } else {
                 tts = `Encontré ${lastResults.length} artículos. El primero es ${lastResults[0].descripcion}.`;
             }
         }
         speakText(tts);
 
+        // JSON admin
+        const jsonView = document.getElementById("jsonView");
+        if (jsonView) jsonView.textContent = JSON.stringify(data, null, 2);
+
     } catch (e) {
-        cardsContainer.textContent = "Error al consultar el backend.";
+        resumenContainer.textContent = "Error al consultar el backend.";
         speakText("Hubo un error al consultar el servidor.");
     } finally {
-        orbStatus.style.animation = "orb-breathe 3.8s ease-in-out infinite";
+        orbStatus.classList.remove("processing");
     }
 }
 
-btnSend.onclick = consultar;
-input.onkeydown = e => { if (e.key === "Enter") consultar(); };
+btnSend.addEventListener("click", consultar);
+input.addEventListener("keydown", e => { if (e.key === "Enter") consultar(); });
 
 // ==================================================
 // RENDERIZADO
 // ==================================================
-function stockTotal(it) {
-    return (it.talles || []).reduce((a, t) => a + (parseFloat(t.stock) || 0), 0);
+function stockTotalItem(it) {
+    if (Array.isArray(it.talles)) {
+        return it.talles.reduce((acc, t) => acc + (parseFloat(t.stock) || 0), 0);
+    }
+    return parseFloat(it.stock) || 0;
 }
 
+// RESUMEN GENERAL
+function renderResumen(q, data) {
+    if (!data) {
+        resumenContainer.textContent = "Listo para responder.";
+        return;
+    }
+    const items = data.items || [];
+    if (!items.length) {
+        resumenContainer.textContent = `No se encontraron resultados para: "${q}".`;
+        return;
+    }
+    const total = items.length;
+    const totalStock = items.reduce((a, it) => a + stockTotalItem(it), 0);
+    const marcas = new Set(items.map(i => i.marca).filter(Boolean));
+    const rubros = new Set(items.map(i => i.rubro).filter(Boolean));
+
+    resumenContainer.innerHTML = `
+        <div style="margin-bottom:4px;">Consulta: <strong>${q}</strong></div>
+        <div>Cantidad de artículos encontrados: <strong>${total}</strong></div>
+        <div>Unidades totales en stock: <strong>${totalStock}</strong></div>
+        <div>Marcas involucradas: <strong>${Array.from(marcas).join(", ") || "-"}</strong></div>
+        <div>Rubros involucrados: <strong>${Array.from(rubros).join(", ") || "-"}</strong></div>
+    `;
+}
+
+// TARJETAS (una por artículo)
 function renderCards(items) {
     if (!items.length) {
         cardsContainer.textContent = "No se encontraron resultados.";
@@ -326,82 +736,120 @@ function renderCards(items) {
     items.forEach(it => {
         const div = document.createElement("div");
         div.className = "dashboard-card";
+        const tallesTxt = (it.talles || [])
+            .map(t => `${t.talle} (${t.stock})`)
+            .join(", ");
         div.innerHTML = `
-            <div class="dashboard-label">${it.codigo}</div>
-            <div class="dashboard-value">${it.descripcion}</div>
-            <div style="margin-top:6px; font-size:0.75rem;">
-                Marca: ${it.marca}<br>
-                Rubro: ${it.rubro}<br>
-                Precio: $${it.precio}<br>
-                Stock total: ${stockTotal(it)}<br>
-                Talles: ${(it.talles||[]).map(t=>`${t.talle} (${t.stock})`).join(", ")}
-            </div>`;
+            <div class="dashboard-label">${it.codigo || ""}</div>
+            <div class="dashboard-value">${it.descripcion || ""}</div>
+            <div style="margin-top:4px; font-size:0.75rem;">
+                Marca: ${it.marca || "-"}<br>
+                Rubro: ${it.rubro || "-"}<br>
+                Precio: $${it.precio ?? "-"}<br>
+                Stock total: ${stockTotalItem(it)}<br>
+                Talles: ${tallesTxt || "-"}
+            </div>
+        `;
         cardsContainer.appendChild(div);
     });
 }
 
+// LISTA
 function renderList(items) {
     listContainer.innerHTML = "";
+    if (!items.length) return;
     items.forEach(it => {
         const li = document.createElement("li");
-        li.innerHTML = `<strong>${it.codigo}</strong> - ${it.descripcion}<br>Stock total: ${stockTotal(it)}`;
+        li.innerHTML = `
+            <strong>${it.codigo || ""}</strong> - ${it.descripcion || ""}<br>
+            Marca: ${it.marca || "-"} | Rubro: ${it.rubro || "-"} | Stock total: ${stockTotalItem(it)}
+        `;
         listContainer.appendChild(li);
     });
 }
 
+// TABLA (precio, talle, cantidad)
 function renderTable(items) {
     tableContainer.innerHTML = "";
+    if (!items.length) return;
+
     items.forEach(it => {
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-            <td>${it.codigo}</td>
-            <td>${it.descripcion}</td>
-            <td style="text-align:right;">${stockTotal(it)}</td>`;
-        tableContainer.appendChild(tr);
+        if (Array.isArray(it.talles) && it.talles.length > 0) {
+            it.talles.forEach(t => {
+                const tr = document.createElement("tr");
+                tr.innerHTML = `
+                    <td>${it.codigo || ""}</td>
+                    <td>${it.descripcion || ""}</td>
+                    <td>${it.marca || ""}</td>
+                    <td>${it.rubro || ""}</td>
+                    <td>${t.talle || ""}</td>
+                    <td style="text-align:right;">${t.stock ?? "-"}</td>
+                    <td style="text-align:right;">$${it.precio ?? "-"}</td>
+                `;
+                tableContainer.appendChild(tr);
+            });
+        } else {
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
+                <td>${it.codigo || ""}</td>
+                <td>${it.descripcion || ""}</td>
+                <td>${it.marca || ""}</td>
+                <td>${it.rubro || ""}</td>
+                <td>-</td>
+                <td style="text-align:right;">${it.stock ?? "-"}</td>
+                <td style="text-align:right;">$${it.precio ?? "-"}</td>
+            `;
+            tableContainer.appendChild(tr);
+        }
     });
 }
 
+// DASHBOARD
 function renderDashboard(items) {
     dashboardContainer.innerHTML = "";
-    const total = items.length;
-    const conStock = items.filter(i => stockTotal(i) > 0).length;
-    const unidades = items.reduce((a, i) => a + stockTotal(i), 0);
+    const totalItems = items.length;
+    const totalConStock = items.filter(i => stockTotalItem(i) > 0).length;
+    const totalStock = items.reduce((acc, i) => acc + stockTotalItem(i), 0);
 
-    const stats = [
-        ["Artículos encontrados", total],
-        ["Con stock", conStock],
-        ["Unidades totales", unidades]
+    const cards = [
+        { label: "Artículos encontrados", value: totalItems },
+        { label: "Con stock", value: totalConStock },
+        { label: "Unidades totales", value: totalStock }
     ];
 
-    stats.forEach(([label, value]) => {
+    cards.forEach(c => {
         const div = document.createElement("div");
         div.className = "dashboard-card";
-        div.innerHTML = `<div class="dashboard-label">${label}</div><div class="dashboard-value">${value}</div>`;
+        div.innerHTML = `
+            <div class="dashboard-label">${c.label}</div>
+            <div class="dashboard-value">${c.value}</div>
+        `;
         dashboardContainer.appendChild(div);
     });
 }
 
 // ==================================================
-// CAMBIO DE VISTA
+// VISTAS
 // ==================================================
-function setView(v) {
-    [viewCards, viewList, viewTable, viewDashboard, viewAdmin].forEach(vw => vw.classList.add("view-hidden"));
-    [btnViewCards, btnViewList, btnViewTable, btnViewDashboard, btnViewAdmin].forEach(b => b.classList.remove("btn-primary"));
+function setView(view) {
+    [viewResumen, viewCards, viewList, viewTable, viewDashboard, viewAdmin].forEach(v => v.classList.add("view-hidden"));
+    [btnViewResumen, btnViewCards, btnViewList, btnViewTable, btnViewDashboard].forEach(b => b.classList.remove("btn-primary"));
 
-    if (v === "cards") { viewCards.classList.remove("view-hidden"); btnViewCards.classList.add("btn-primary"); }
-    if (v === "list") { viewList.classList.remove("view-hidden"); btnViewList.classList.add("btn-primary"); }
-    if (v === "table") { viewTable.classList.remove("view-hidden"); btnViewTable.classList.add("btn-primary"); }
-    if (v === "dashboard") { viewDashboard.classList.remove("view-hidden"); btnViewDashboard.classList.add("btn-primary"); }
-    if (v === "admin") { viewAdmin.classList.remove("view-hidden"); btnViewAdmin.classList.add("btn-primary"); }
+    if (view === "resumen") { viewResumen.classList.remove("view-hidden"); btnViewResumen.classList.add("btn-primary"); }
+    if (view === "cards") { viewCards.classList.remove("view-hidden"); btnViewCards.classList.add("btn-primary"); }
+    if (view === "list") { viewList.classList.remove("view-hidden"); btnViewList.classList.add("btn-primary"); }
+    if (view === "table") { viewTable.classList.remove("view-hidden"); btnViewTable.classList.add("btn-primary"); }
+    if (view === "dashboard") { viewDashboard.classList.remove("view-hidden"); btnViewDashboard.classList.add("btn-primary"); }
+    if (view === "admin") { viewAdmin.classList.remove("view-hidden"); }
 }
 
-btnViewCards.onclick = () => setView("cards");
-btnViewList.onclick = () => setView("list");
-btnViewTable.onclick = () => setView("table");
-btnViewDashboard.onclick = () => setView("dashboard");
-btnViewAdmin.onclick = () => setView("admin");
+btnViewResumen.addEventListener("click", () => setView("resumen"));
+btnViewCards.addEventListener("click", () => setView("cards"));
+btnViewList.addEventListener("click", () => setView("list"));
+btnViewTable.addEventListener("click", () => setView("table"));
+btnViewDashboard.addEventListener("click", () => setView("dashboard"));
 
-setView("cards");
+setView("resumen");
 
 // ==================================================
 // HISTORIAL
@@ -409,12 +857,15 @@ setView("cards");
 function addToHistory(q) {
     const li = document.createElement("li");
     li.textContent = q;
-    li.onclick = () => { input.value = q; consultar(); };
+    li.addEventListener("click", () => {
+        input.value = q;
+        consultar();
+    });
     historyList.prepend(li);
 }
 
 // ==================================================
-// VOZ
+// VOZ (RECONOCIMIENTO + SÍNTESIS + MANOS LIBRES + STOP)
 // ==================================================
 function initRecognition() {
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -431,23 +882,36 @@ function beep() {
     beepSound.play().catch(()=>{});
 }
 
-btnSpeak.onclick = () => {
+btnSpeak.addEventListener("click", () => {
     beep();
     if (!recognition) recognition = initRecognition();
+    if (!recognition) {
+        alert("Reconocimiento de voz no soportado en este navegador.");
+        return;
+    }
     handsFreeMode = false;
-    recognition.onresult = e => { input.value = e.results[0][0].transcript; consultar(); };
+    recognition.onresult = (event) => {
+        const text = event.results[0][0].transcript;
+        input.value = text;
+        consultar();
+    };
     recognition.start();
-};
+});
 
-btnHandsFree.onclick = () => {
+btnHandsFree.addEventListener("click", () => {
     beep();
     if (!recognition) recognition = initRecognition();
+    if (!recognition) {
+        alert("Reconocimiento de voz no soportado en este navegador.");
+        return;
+    }
     handsFreeMode = true;
     let lastSpeech = Date.now();
 
-    recognition.onresult = e => {
+    recognition.onresult = (event) => {
         lastSpeech = Date.now();
-        input.value = e.results[0][0].transcript;
+        const text = event.results[0][0].transcript;
+        input.value = text;
         consultar();
     };
 
@@ -455,65 +919,70 @@ btnHandsFree.onclick = () => {
         if (!handsFreeMode) return;
         if (Date.now() - lastSpeech > 60000) {
             handsFreeMode = false;
-            alert("No detecté voz por un rato. Desactivo manos libres.");
+            alert("No detecté consultas por un rato. Desactivo el modo manos libres.");
             return;
         }
         recognition.start();
     };
 
     recognition.start();
-};
+});
 
-btnStop.onclick = () => {
+btnStop.addEventListener("click", () => {
     beep();
     handsFreeMode = false;
     if (recognition) {
         recognition.onend = null;
         recognition.stop();
     }
-    speechSynthesis.cancel();
-};
+    if (window.speechSynthesis) window.speechSynthesis.cancel();
+});
 
-function speakText(t) {
-    if (!t) return;
-    const u = new SpeechSynthesisUtterance(t);
-    u.lang = "es-AR";
-    speechSynthesis.cancel();
-    speechSynthesis.speak(u);
+function speakText(text) {
+    if (!window.speechSynthesis) return;
+    if (!text) return;
+    const utter = new SpeechSynthesisUtterance(text);
+    utter.lang = "es-AR";
+    window.speechSynthesis.cancel();
+    window.speechSynthesis.speak(utter);
 }
 
 // ==================================================
 // UTILIDADES
 // ==================================================
-btnClear.onclick = () => {
+btnClear.addEventListener("click", () => {
     input.value = "";
-    cardsContainer.textContent = "Listo para responder.";
+    resumenContainer.textContent = "Listo para responder.";
+    cardsContainer.textContent = "";
     listContainer.innerHTML = "";
     tableContainer.innerHTML = "";
     dashboardContainer.innerHTML = "";
-};
+});
 
-btnCopy.onclick = async () => {
+btnCopy.addEventListener("click", async () => {
     try {
-        await navigator.clipboard.writeText(cardsContainer.innerText);
+        const txt = resumenContainer.innerText || cardsContainer.innerText || "";
+        await navigator.clipboard.writeText(txt);
         alert("Resultado copiado.");
     } catch {
         alert("No se pudo copiar.");
     }
-};
+});
+
 // ==================================================
 // SCANNER ZXING
 // ==================================================
-btnScanner.onclick = async () => {
+btnScanner.addEventListener("click", async () => {
     try {
         scannerOverlay.style.display = "flex";
 
         zxingReader = new ZXing.BrowserMultiFormatReader();
-
         const devices = await ZXing.BrowserMultiFormatReader.listVideoInputDevices();
+        if (!devices || devices.length === 0) throw new Error("No hay cámaras");
+
         const backCam = devices.find(d => d.label.toLowerCase().includes("back")) || devices[0];
 
-        zxingReader.decodeFromVideoDevice(backCam.deviceId, "scannerVideo", (result, err) => {
+        await zxingReader.decodeFromVideoDevice(backCam.deviceId, "scannerVideo", (result, err) => {
             if (result) {
                 input.value = result.text;
                 cerrarScanner();
@@ -521,10 +990,16 @@ btnScanner.onclick = async () => {
             }
         });
     } catch (e) {
-        alert("No se pudo iniciar el scanner.");
-        cerrarScanner();
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+            scannerVideo.srcObject = stream;
+            alert("No se pudo iniciar el scanner profesional. Usá tu app de scanner y luego pegá el código.");
+        } catch {
+            alert("No se pudo acceder a la cámara.");
+            cerrarScanner();
+        }
     }
-};
+});
 
 function cerrarScanner() {
     scannerOverlay.style.display = "none";
@@ -532,43 +1007,38 @@ function cerrarScanner() {
         zxingReader.reset();
         zxingReader = null;
     }
+    if (scannerVideo.srcObject) {
+        scannerVideo.srcObject.getTracks().forEach(t => t.stop());
+        scannerVideo.srcObject = null;
+    }
 }
-btnCloseScanner.onclick = cerrarScanner;
+btnCloseScanner.addEventListener("click", cerrarScanner);
 
 // ==================================================
-// ADMIN TAB
+// ADMIN (solo "admin" o 5 clics al ORB)
 // ==================================================
 function activarAdmin() {
     alert("Modo administrador activado");
     setView("admin");
 }
 
-function setModel(m) {
-    localStorage.setItem("modelo_respuesta", m);
-    alert("Modelo cambiado a: " + m);
+function setModel(modelo) {
+    localStorage.setItem("modelo_respuesta", modelo);
+    alert("Modelo conversacional cambiado a: " + modelo);
 }
 
-function mostrarJSON() {
-    document.getElementById("jsonView").textContent = JSON.stringify(lastResults, null, 2);
-}
-setInterval(mostrarJSON, 1000);
-
-// ==================================================
-// ORB + ADMIN POR TOQUES
-// ==================================================
-orbStatus.onclick = () => {
+orbStatus.addEventListener("click", () => {
     orbTapCount++;
     if (orbTimer) clearTimeout(orbTimer);
-    orbTimer = setTimeout(() => orbTapCount = 0, 800);
-
+    orbTimer = setTimeout(() => { orbTapCount = 0; }, 800);
     if (orbTapCount >= 5) {
         orbTapCount = 0;
         activarAdmin();
     }
-};
+});
 
 // ==================================================
-// ESTADO BACKEND
+// ESTADO BACKEND (SEMÁFORO)
 // ==================================================
 async function checkBackendStatus() {
     try {
