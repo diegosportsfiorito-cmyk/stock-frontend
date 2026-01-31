@@ -1,5 +1,5 @@
 // ============================================================
-// SCANNER.JS — Lector de códigos de barras / QR
+// SCANNER.JS — Lector de códigos de barras / QR (FINAL)
 // ============================================================
 
 window.ORB_SCANNER = (function () {
@@ -13,6 +13,63 @@ window.ORB_SCANNER = (function () {
   const overlay = document.getElementById("scannerOverlay");
   const video = document.getElementById("scannerVideo");
   const cameraSelect = document.getElementById("cameraSelect");
+
+  // ------------------------------------------------------------
+  // PARSER UNIVERSAL DE CÓDIGOS
+  // ------------------------------------------------------------
+  function parseCode(raw) {
+    let code = (raw || "").trim();
+
+    // 1) Caso especial: "!!" → ARTÍCULO !! TALLE (color vacío)
+    if (code.includes("!!")) {
+      const [articulo, talle] = code.split("!!");
+      return {
+        articulo,
+        color: "",
+        talle
+      };
+    }
+
+    // 2) Caso con "!" → puede ser 1 o 2 separadores
+    if (code.includes("!")) {
+      const parts = code.split("!");
+
+      if (parts.length === 2) {
+        // Formato: ARTÍCULO ! TALLE  (color vacío)
+        return {
+          articulo: parts[0],
+          color: "",
+          talle: parts[1]
+        };
+      }
+
+      if (parts.length === 3) {
+        // Formato: ARTÍCULO ! COLOR ! TALLE
+        return {
+          articulo: parts[0],
+          color: parts[1],
+          talle: parts[2]
+        };
+      }
+    }
+
+    // 3) Caso con "/" → ARTÍCULO / TALLE (color vacío, talle puede ser compuesto)
+    if (code.includes("/")) {
+      const parts = code.split("/");
+      return {
+        articulo: parts[0],
+        color: "",
+        talle: parts.slice(1).join("/") // 38/9, U/NE, etc.
+      };
+    }
+
+    // 4) Sin separadores → todo es artículo
+    return {
+      articulo: code,
+      color: "",
+      talle: ""
+    };
+  }
 
   // ------------------------------------------------------------
   // Abrir scanner
@@ -38,32 +95,37 @@ window.ORB_SCANNER = (function () {
   // Cargar cámaras disponibles
   // ------------------------------------------------------------
   async function loadCameras() {
-    const devices = await navigator.mediaDevices.enumerateDevices();
-    const cams = devices.filter(d => d.kind === "videoinput");
+    try {
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      const cams = devices.filter(d => d.kind === "videoinput");
 
-    cameraSelect.innerHTML = cams
-      .map(c => `<option value="${c.deviceId}">${c.label || "Cámara"}</option>`)
-      .join("");
+      cameraSelect.innerHTML = cams
+        .map((c, idx) => `<option value="${c.deviceId}">${c.label || `Cámara ${idx + 1}`}</option>`)
+        .join("");
 
-    if (!currentDeviceId && cams.length > 0) {
-      currentDeviceId = cams[0].deviceId;
+      // Por defecto: primera cámara (que suele ser la frontal en muchos dispositivos)
+      if (!currentDeviceId && cams.length > 0) {
+        currentDeviceId = cams[0].deviceId;
+      }
+    } catch (err) {
+      console.error("Error al enumerar cámaras:", err);
     }
   }
 
   // ------------------------------------------------------------
-  // Iniciar cámara
+  // Iniciar cámara (por defecto: facing front / user)
   // ------------------------------------------------------------
   async function startCamera() {
     stopCamera();
 
     try {
-      stream = await navigator.mediaDevices.getUserMedia({
-        video: {
-          deviceId: currentDeviceId ? { exact: currentDeviceId } : undefined,
-          facingMode: "environment"
-        }
-      });
+      const constraints = {
+        video: currentDeviceId
+          ? { deviceId: { exact: currentDeviceId } }
+          : { facingMode: "user" } // cámara frontal por defecto
+      };
 
+      stream = await navigator.mediaDevices.getUserMedia(constraints);
       video.srcObject = stream;
       await video.play();
 
@@ -100,7 +162,7 @@ window.ORB_SCANNER = (function () {
     const capabilities = track.getCapabilities();
 
     if (!capabilities.torch) {
-      console.warn("Torch no soportado");
+      console.warn("Torch no soportado en esta cámara");
       return;
     }
 
@@ -111,12 +173,12 @@ window.ORB_SCANNER = (function () {
         advanced: [{ torch: torchOn }]
       });
     } catch (err) {
-      console.error("Error torch:", err);
+      console.error("Error al activar torch:", err);
     }
   }
 
   // ------------------------------------------------------------
-  // Setear modo
+  // Setear modo (solo / completo / auto)
   // ------------------------------------------------------------
   function setMode(m) {
     mode = m;
@@ -154,40 +216,46 @@ window.ORB_SCANNER = (function () {
         return barcodes[0].rawValue;
       }
     } catch (err) {
-      // BarcodeDetector puede fallar en algunos frames
+      // BarcodeDetector puede fallar en algunos frames, no cortamos el loop
     }
 
     return null;
   }
 
   // ------------------------------------------------------------
-  // Manejar código detectado
+  // Manejar código detectado (modos SOLO / COMPLETO / AUTO)
   // ------------------------------------------------------------
   function handleScan(code) {
     if (!code) return;
 
-    console.log("Código detectado:", code);
+    const { articulo, color, talle } = parseCode(code);
+
+    if (!articulo) return;
 
     if (mode === "solo") {
+      // Solo artículo, búsqueda automática, cerrar scanner
       close();
-      document.getElementById("searchInput").value = code;
+      document.getElementById("searchInput").value = articulo;
       ORB.page = 1;
-      ORB_BACKEND.buscar(code);
+      ORB_BACKEND.buscar(articulo);
       return;
     }
 
     if (mode === "completo") {
-      document.getElementById("searchInput").value = code;
+      // Artículo + color + talle (solo los que existan), no cierra scanner
+      const q = [articulo, color, talle].filter(x => x).join(" ");
+      document.getElementById("searchInput").value = q;
       ORB.page = 1;
-      ORB_BACKEND.buscar(code);
+      ORB_BACKEND.buscar(q);
       return;
     }
 
     if (mode === "auto") {
+      // Igual que SOLO, pero pensado para flujo rápido
       close();
-      document.getElementById("searchInput").value = code;
+      document.getElementById("searchInput").value = articulo;
       ORB.page = 1;
-      ORB_BACKEND.buscar(code);
+      ORB_BACKEND.buscar(articulo);
       return;
     }
   }
