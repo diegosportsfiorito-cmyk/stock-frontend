@@ -2,9 +2,7 @@
 // UI.JS — CONTROL DE INTERFAZ COMPLETO
 // ============================================================
 
-// ------------------------------------------------------------
 // BÚSQUEDA
-// ------------------------------------------------------------
 document.getElementById("btnSearch").addEventListener("click", () => {
   const q = document.getElementById("searchInput").value.trim();
   if (q) {
@@ -28,10 +26,7 @@ document.getElementById("btnClearSearch").addEventListener("click", () => {
   document.getElementById("autocompleteBox").style.display = "none";
 });
 
-
-// ------------------------------------------------------------
 // AUTOCOMPLETE
-// ------------------------------------------------------------
 let acTimer = null;
 
 document.getElementById("searchInput").addEventListener("input", () => {
@@ -71,10 +66,7 @@ document.getElementById("autocompleteBox").addEventListener("click", e => {
   ORB_BACKEND.buscar(item.textContent);
 });
 
-
-// ------------------------------------------------------------
 // FILTROS
-// ------------------------------------------------------------
 ["filterMarca", "filterRubro", "filterTalle"].forEach(id => {
   document.getElementById(id).addEventListener("change", () => {
     ORB.page = 1;
@@ -82,10 +74,7 @@ document.getElementById("autocompleteBox").addEventListener("click", e => {
   });
 });
 
-
-// ------------------------------------------------------------
 // MODO SOLO STOCK
-// ------------------------------------------------------------
 document.getElementById("stockOnlyToggle").addEventListener("click", () => {
   ORB.stockOnly = !ORB.stockOnly;
   localStorage.setItem("stockOnly", ORB.stockOnly ? "true" : "false");
@@ -96,10 +85,7 @@ document.getElementById("stockOnlyToggle").addEventListener("click", () => {
   renderResults();
 });
 
-
-// ------------------------------------------------------------
 // ORDENAMIENTO
-// ------------------------------------------------------------
 document.getElementById("sortSelect").addEventListener("change", e => {
   const [field, dir] = e.target.value.split(":");
   ORB.sort = { field, dir };
@@ -107,10 +93,7 @@ document.getElementById("sortSelect").addEventListener("change", e => {
   renderResults();
 });
 
-
-// ------------------------------------------------------------
 // FAVORITOS
-// ------------------------------------------------------------
 document.addEventListener("click", e => {
   const btn = e.target.closest(".fav-btn");
   if (!btn) return;
@@ -145,18 +128,12 @@ document.getElementById("btnShowFavorites").addEventListener("click", () => {
     .join("");
 });
 
-
-// ------------------------------------------------------------
 // EXPORTAR CSV
-// ------------------------------------------------------------
 document.getElementById("btnExport").addEventListener("click", () => {
   exportToCSV(ORB.results);
 });
 
-
-// ------------------------------------------------------------
 // TABS DE VISTA
-// ------------------------------------------------------------
 document.querySelectorAll(".view-tab").forEach(btn => {
   btn.addEventListener("click", () => {
     document.querySelectorAll(".view-tab").forEach(b => b.classList.remove("active"));
@@ -169,10 +146,7 @@ document.querySelectorAll(".view-tab").forEach(btn => {
   });
 });
 
-
-// ------------------------------------------------------------
 // PAGINACIÓN
-// ------------------------------------------------------------
 document.getElementById("pagePrev").addEventListener("click", () => {
   if (ORB.page > 1) {
     ORB.page--;
@@ -185,10 +159,7 @@ document.getElementById("pageNext").addEventListener("click", () => {
   renderResults();
 });
 
-
-// ------------------------------------------------------------
 // SCANNER
-// ------------------------------------------------------------
 document.getElementById("btnOpenScanner").addEventListener("click", () => {
   ORB_SCANNER.open();
 });
@@ -214,31 +185,56 @@ document.querySelectorAll(".scanner-mode").forEach(btn => {
   });
 });
 
-
-// ------------------------------------------------------------
 // VOZ
-// ------------------------------------------------------------
 document.getElementById("btnVoice").addEventListener("click", () => {
   ORB_VOZ.toggle();
 });
 
-
-// ------------------------------------------------------------
 // CLICK FUERA DEL AUTOCOMPLETE
-// ------------------------------------------------------------
 document.addEventListener("click", e => {
   if (!e.target.closest(".search-input-wrapper")) {
     document.getElementById("autocompleteBox").style.display = "none";
   }
 });
 
+// TEMA DÍA/NOCHE
+const themeBtn = document.getElementById("themeToggle");
+if (themeBtn) {
+  const saved = localStorage.getItem("theme") || "dark";
+  if (saved === "light") {
+    document.body.classList.add("light");
+    themeBtn.textContent = "Modo noche";
+  } else {
+    themeBtn.textContent = "Modo día";
+  }
 
-// ------------------------------------------------------------
+  themeBtn.addEventListener("click", () => {
+    const isLight = document.body.classList.toggle("light");
+    localStorage.setItem("theme", isLight ? "light" : "dark");
+    themeBtn.textContent = isLight ? "Modo noche" : "Modo día";
+  });
+}
+
+// MODO ADMIN: 5 clics en ORB + "ADMIN" en input
+let orbClickCount = 0;
+const orbLogo = document.getElementById("orbLogo");
+const adminPanel = document.getElementById("adminPanel");
+
+if (orbLogo && adminPanel) {
+  orbLogo.addEventListener("click", () => {
+    orbClickCount++;
+    if (orbClickCount >= 5) {
+      const val = (document.getElementById("searchInput").value || "").trim().toUpperCase();
+      if (val === "ADMIN") {
+        adminPanel.classList.remove("hidden");
+      }
+      orbClickCount = 0;
+    }
+  });
+}
+
 // INICIALIZACIÓN
-// ------------------------------------------------------------
 window.addEventListener("DOMContentLoaded", () => {
-  // Restaurar estado visual del toggle
   document.getElementById("stockOnlyToggle").classList.toggle("active", ORB.stockOnly);
-
   renderResults();
 });
