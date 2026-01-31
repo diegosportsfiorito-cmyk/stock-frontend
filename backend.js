@@ -1,5 +1,8 @@
 const BACKEND_BASE = "https://stock-backend-1-0upi.onrender.com";
 
+// ============================================================
+// CONSULTA PRINCIPAL
+// ============================================================
 export async function backendQuery({ q, soloStock }) {
   const params = new URLSearchParams();
   params.set("q", q);
@@ -7,10 +10,14 @@ export async function backendQuery({ q, soloStock }) {
 
   const url = `${BACKEND_BASE}/query?${params.toString()}`;
   const res = await fetch(url);
+
   if (!res.ok) throw new Error("Error en backend");
   return await res.json();
 }
 
+// ============================================================
+// AUTOCOMPLETE
+// ============================================================
 export async function backendAutocomplete(q) {
   const url = `${BACKEND_BASE}/autocomplete?q=${encodeURIComponent(q)}`;
   const res = await fetch(url);
@@ -18,6 +25,9 @@ export async function backendAutocomplete(q) {
   return await res.json();
 }
 
+// ============================================================
+// CATÁLOGOS
+// ============================================================
 export async function backendCatalogos() {
   try {
     const url = `${BACKEND_BASE}/catalogos`;
