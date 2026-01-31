@@ -1,77 +1,49 @@
-// ============================================================
-// VOZ.JS — Reconocimiento de voz para búsqueda
-// ============================================================
+const btnVoice = document.getElementById("btnVoice");
+const voiceStatus = document.getElementById("voiceStatus");
+const voiceSearchInput = document.getElementById("searchInput");
+const voiceSearchButton = document.getElementById("btnSearch");
 
-window.ORB_VOZ = (function () {
+let recognition = null;
+let listening = false;
 
-  let recognition = null;
-  let active = false;
+if ("webkitSpeechRecognition" in window || "SpeechRecognition" in window) {
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  recognition = new SpeechRecognition();
+  recognition.lang = "es-AR";
+  recognition.continuous = false;
+  recognition.interimResults = false;
 
-  const statusEl = document.getElementById("voiceStatus");
-
-  function init() {
-    const SpeechRecognition =
-      window.SpeechRecognition || window.webkitSpeechRecognition;
-
-    if (!SpeechRecognition) {
-      if (statusEl) statusEl.textContent = "Voz no soportada";
-      return;
-    }
-
-    recognition = new SpeechRecognition();
-    recognition.lang = "es-AR";
-    recognition.interimResults = false;
-    recognition.maxAlternatives = 1;
-
-    recognition.onstart = () => {
-      active = true;
-      if (statusEl) statusEl.textContent = "Escuchando…";
-    };
-
-    recognition.onend = () => {
-      active = false;
-      if (statusEl) statusEl.textContent = "Voz inactiva";
-    };
-
-    recognition.onerror = () => {
-      active = false;
-      if (statusEl) statusEl.textContent = "Error de voz";
-    };
-
-    recognition.onresult = (event) => {
-      const text = event.results[0][0].transcript.trim();
-      if (statusEl) statusEl.textContent = `Escuchado: "${text}"`;
-
-      if (text) {
-        document.getElementById("searchInput").value = text;
-        ORB.page = 1;
-        ORB_BACKEND.buscar(text);
-      }
-    };
-  }
-
-  function toggle() {
-    if (!recognition) {
-      if (statusEl) statusEl.textContent = "Voz no soportada";
-      return;
-    }
-
-    if (active) {
-      recognition.stop();
-      active = false;
-      if (statusEl) statusEl.textContent = "Voz inactiva";
-    } else {
-      recognition.start();
-    }
-  }
-
-  return {
-    init,
-    toggle
+  recognition.onstart = () => {
+    listening = true;
+    voiceStatus.textContent = "Escuchando...";
   };
 
-})();
+  recognition.onend = () => {
+    listening = false;
+    voiceStatus.textContent = "Voz inactiva";
+  };
 
-window.addEventListener("DOMContentLoaded", () => {
-  ORB_VOZ.init();
+  recognition.onerror = () => {
+    listening = false;
+    voiceStatus.textContent = "Error de voz";
+  };
+
+  recognition.onresult = (event) => {
+    const text = event.results[0][0].transcript.trim();
+    voiceSearchInput.value = text;
+    voiceStatus.textContent = `Escuchado: "${text}"`;
+    voiceSearchButton.click();
+  };
+} else {
+  voiceStatus.textContent = "Voz no soportada en este dispositivo";
+  btnVoice.disabled = true;
+}
+
+btnVoice.addEventListener("click", () => {
+  if (!recognition) return;
+  if (listening) {
+    recognition.stop();
+  } else {
+    recognition.start();
+  }
 });
