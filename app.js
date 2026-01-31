@@ -1,5 +1,12 @@
 import { backendQuery } from "./backend.js";
-import { currentView, soloStock, setBackendStatus, setFooterStatus, loadCatalogosIntoFilters, getFilters } from "./ui.js";
+import {
+  currentView,
+  soloStock,
+  setBackendStatus,
+  setFooterStatus,
+  loadCatalogosIntoFilters,
+  getFilters,
+} from "./ui.js";
 
 const searchInput = document.getElementById("searchInput");
 const btnSearch = document.getElementById("btnSearch");
@@ -17,6 +24,9 @@ let lastResult = null;
 let currentPage = 0;
 const PAGE_SIZE = 20;
 
+// ============================================================
+// INIT
+// ============================================================
 async function init() {
   setBackendStatus(false);
   setFooterStatus("Cargando catálogos...");
@@ -27,6 +37,9 @@ async function init() {
 
 init();
 
+// ============================================================
+// EVENTOS DE BÚSQUEDA
+// ============================================================
 btnSearch.addEventListener("click", () => {
   doSearch();
 });
@@ -38,6 +51,9 @@ searchInput.addEventListener("keydown", (e) => {
   }
 });
 
+// ============================================================
+// PAGINACIÓN
+// ============================================================
 btnPrev.addEventListener("click", () => {
   if (!lastResult) return;
   if (currentPage > 0) {
@@ -55,10 +71,16 @@ btnNext.addEventListener("click", () => {
   }
 });
 
+// ============================================================
+// CAMBIO DE VISTA
+// ============================================================
 document.addEventListener("viewChanged", () => {
   if (lastResult) renderResults(lastResult);
 });
 
+// ============================================================
+// EJECUTAR BÚSQUEDA
+// ============================================================
 async function doSearch() {
   const q = searchInput.value.trim();
   if (!q) return;
@@ -82,6 +104,9 @@ async function doSearch() {
   }
 }
 
+// ============================================================
+// RENDER PRINCIPAL
+// ============================================================
 function renderResults(data) {
   if (!data || !data.items) {
     resultsContainer.innerHTML = "<p>Sin resultados.</p>";
@@ -95,6 +120,7 @@ function renderResults(data) {
 
   updateDashboard(items);
 
+  // FILTROS
   const filters = getFilters();
   let filtered = items.filter((r) => {
     if (filters.marca && String(r.marca || "").toUpperCase() !== filters.marca.toUpperCase()) return false;
@@ -106,6 +132,7 @@ function renderResults(data) {
     return true;
   });
 
+  // COINCIDENCIA EXACTA POR ARTÍCULO
   const q = searchInput.value.trim().toUpperCase();
   if (q) {
     const exact = filtered.filter((r) => String(r.codigo || "").toUpperCase() === q);
@@ -114,9 +141,11 @@ function renderResults(data) {
     }
   }
 
+  // PAGINACIÓN
   const start = currentPage * PAGE_SIZE;
   const pageItems = filtered.slice(start, start + PAGE_SIZE);
 
+  // VISTAS
   if (currentView === "resumen") {
     renderResumen(pageItems);
   } else if (currentView === "lista") {
@@ -134,6 +163,9 @@ function renderResults(data) {
   }
 }
 
+// ============================================================
+// DASHBOARD
+// ============================================================
 function updateDashboard(items) {
   const articulos = items.length;
   let pares = 0;
@@ -197,6 +229,9 @@ function computeStatsByRubro(items) {
   return Array.from(map.values()).sort((a, b) => b.pares - a.pares);
 }
 
+// ============================================================
+// VISTA RESUMEN
+// ============================================================
 function renderResumen(items) {
   resultsContainer.innerHTML = items
     .map((r) => {
@@ -207,7 +242,7 @@ function renderResumen(items) {
           ${r.codigo || ""} - ${r.descripcion || ""}
         </div>
         <div class="result-sub-line">
-          ${r.marca || ""} - ${r.rubro || ""} - ${r.color || "" || ""}
+          ${r.marca || ""} - ${r.rubro || ""} - ${r.color || ""}
         </div>
         <div class="result-meta-line">
           ${pares} pares · $${(r.precio || 0).toLocaleString("es-AR")} · $${(r.valorizado || 0).toLocaleString("es-AR")}
@@ -218,6 +253,9 @@ function renderResumen(items) {
     .join("");
 }
 
+// ============================================================
+// VISTA LISTA
+// ============================================================
 function renderLista(items) {
   const groups = groupBy(items, "codigo");
 
@@ -253,6 +291,9 @@ function renderLista(items) {
   resultsContainer.innerHTML = html;
 }
 
+// ============================================================
+// VISTA TABLA
+// ============================================================
 function renderTabla(items) {
   let html = `
     <table class="table-view">
@@ -291,6 +332,9 @@ function renderTabla(items) {
   resultsContainer.innerHTML = html;
 }
 
+// ============================================================
+// VISTA POR MARCA
+// ============================================================
 function renderPorMarca(items) {
   const map = new Map();
   items.forEach((r) => {
@@ -334,6 +378,9 @@ function renderPorMarca(items) {
   resultsContainer.innerHTML = html;
 }
 
+// ============================================================
+// VISTA POR ARTÍCULO
+// ============================================================
 function renderPorArticulo(items) {
   const groups = groupBy(items, "codigo");
 
@@ -375,10 +422,16 @@ function renderPorArticulo(items) {
   resultsContainer.innerHTML = html;
 }
 
+// ============================================================
+// VISTA DASHBOARD
+// ============================================================
 function renderDashboardView(items) {
   renderResumen(items);
 }
 
+// ============================================================
+// UTILIDAD
+// ============================================================
 function groupBy(items, key) {
   const map = new Map();
   items.forEach((r) => {
