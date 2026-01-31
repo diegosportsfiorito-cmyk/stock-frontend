@@ -9,12 +9,9 @@ window.ORB = {
   sort: { field: "descripcion", dir: "asc" },
   page: 1,
   pageSize: 30,
+  catalogos: null
 };
 
-
-// ============================================================
-// UTILIDADES
-// ============================================================
 function favKey(r) {
   return `${r.articulo || r.codigo}-${r.talle}`;
 }
@@ -34,10 +31,7 @@ function formatNumber(n) {
   return Number(n || 0).toLocaleString("es-AR");
 }
 
-
-// ============================================================
-// FILTROS
-// ============================================================
+// Filtros
 function applyFilters(data) {
   const marca = document.getElementById("filterMarca").value || "";
   const rubro = document.getElementById("filterRubro").value || "";
@@ -56,16 +50,10 @@ function applyFilters(data) {
   return out;
 }
 
-function updateFilterOptions(data) {
-  const marcas = new Set();
-  const rubros = new Set();
-  const talles = new Set();
+function updateFilterOptionsFromCatalog() {
+  if (!ORB.catalogos) return;
 
-  for (const r of data) {
-    if (r.marca) marcas.add(r.marca);
-    if (r.rubro) rubros.add(r.rubro);
-    if (r.talle) talles.add(r.talle);
-  }
+  const { marcas, rubros, talles } = ORB.catalogos;
 
   const selMarca = document.getElementById("filterMarca");
   const selRubro = document.getElementById("filterRubro");
@@ -76,23 +64,20 @@ function updateFilterOptions(data) {
   const prevTalle = selTalle.value;
 
   selMarca.innerHTML = `<option value="">Marca</option>` +
-    Array.from(marcas).sort().map(m => `<option value="${m}">${m}</option>`).join("");
+    (marcas || []).map(m => `<option value="${m}">${m}</option>`).join("");
 
   selRubro.innerHTML = `<option value="">Rubro</option>` +
-    Array.from(rubros).sort().map(r => `<option value="${r}">${r}</option>`).join("");
+    (rubros || []).map(r => `<option value="${r}">${r}</option>`).join("");
 
   selTalle.innerHTML = `<option value="">Talle</option>` +
-    Array.from(talles).sort((a,b)=>parseFloat(a)-parseFloat(b)).map(t => `<option value="${t}">${t}</option>`).join("");
+    (talles || []).map(t => `<option value="${t}">${t}</option>`).join("");
 
   if (prevMarca) selMarca.value = prevMarca;
   if (prevRubro) selRubro.value = prevRubro;
   if (prevTalle) selTalle.value = prevTalle;
 }
 
-
-// ============================================================
-// ORDENAMIENTO
-// ============================================================
+// Ordenamiento
 function sortData(data) {
   const { field, dir } = ORB.sort;
   const mult = dir === "asc" ? 1 : -1;
@@ -115,10 +100,7 @@ function sortData(data) {
   });
 }
 
-
-// ============================================================
-// PAGINACIÓN
-// ============================================================
+// Paginación
 function paginate(data) {
   const total = data.length;
   const totalPages = Math.max(1, Math.ceil(total / ORB.pageSize));
@@ -136,10 +118,7 @@ function paginate(data) {
   return pageData;
 }
 
-
-// ============================================================
-// ESTADÍSTICAS POR RUBRO
-// ============================================================
+// Estadísticas por rubro
 function computeStatsByRubro(data) {
   const map = new Map();
 
@@ -163,10 +142,7 @@ function computeStatsByRubro(data) {
   }));
 }
 
-
-// ============================================================
-// RENDERIZADORES DE VISTAS
-// ============================================================
+// Render vistas
 function renderResumen(data) {
   const cont = document.getElementById("resultsContainer");
   cont.innerHTML = data.map(r => {
@@ -320,7 +296,9 @@ function renderDashboard(data) {
 
   const stats = computeStatsByRubro(data)
     .sort((a,b) => b.pares - a.pares)
-    .slice(0, 10);
+    .slice(0, 5);
+
+  const max = Math.max(...stats.map(s => s.pares), 1);
 
   cont.innerHTML = `
     <div class="dash-block">
@@ -328,33 +306,38 @@ function renderDashboard(data) {
       ${stats.map(s => `
         <div class="dash-rubro-item">
           <div>${s.rubro}</div>
-          <div>${s.articulos} artículos · ${s.pares} pares</div>
+          <div class="bar-row">
+            <div class="bar" style="width:${(s.pares / max) * 100}%"></div>
+            <span>${s.pares} pares</span>
+          </div>
         </div>
       `).join("")}
     </div>
   `;
 }
 
-
-// ============================================================
-// RENDER PRINCIPAL
-// ============================================================
+// Render principal
 function renderResults() {
   const subtitle = document.getElementById("resultsSubtitle");
 
   if (!ORB.results.length) {
     subtitle.textContent = "Sin resultados. Hacé una búsqueda para empezar.";
     document.getElementById("resultsContainer").innerHTML = "";
+    document.getElementById("dashArticulos").textContent = 0;
+    document.getElementById("dashPares").textContent = 0;
+    document.getElementById("dashAlertas").textContent = 0;
+    document.getElementById("dashValorizado").textContent = "$0";
+    document.getElementById("dashRubros").innerHTML = "";
+    document.getElementById("pageInfo").textContent = "0 / 0 (0 resultados)";
     return;
   }
 
   let data = ORB.results.slice();
 
-  updateFilterOptions(data);
+  updateFilterOptionsFromCatalog();
   data = applyFilters(data);
   data = sortData(data);
 
-  // DASHBOARD
   const totalArt = data.length;
   const totalPares = data.reduce((a, r) => a + (Number(r.stock) || 0), 0);
   const alertas = data.filter(r => Number(r.stock) > 0 && Number(r.stock) <= 2).length;
@@ -365,12 +348,21 @@ function renderResults() {
   document.getElementById("dashAlertas").textContent = alertas;
   document.getElementById("dashValorizado").textContent = "$" + formatNumber(totalVal);
 
-  // PAGINACIÓN
+  const statsRubros = computeStatsByRubro(data)
+    .sort((a,b) => b.pares - a.pares)
+    .slice(0, 5);
+
+  document.getElementById("dashRubros").innerHTML = statsRubros.map(s => `
+    <div class="dash-rubro-item">
+      <div>${s.rubro}</div>
+      <div>${s.articulos} artículos · ${s.pares} pares</div>
+    </div>
+  `).join("");
+
   const pageData = paginate(data);
 
   subtitle.textContent = `${data.length} resultados filtrados`;
 
-  // VISTA
   if (ORB.view === "resumen") renderResumen(pageData);
   else if (ORB.view === "lista") renderLista(pageData);
   else if (ORB.view === "tabla") renderTabla(pageData);
@@ -379,10 +371,7 @@ function renderResults() {
   else if (ORB.view === "dashboard") renderDashboard(data);
 }
 
-
-// ============================================================
-// EXPORTAR CSV
-// ============================================================
+// Export CSV
 function exportToCSV(data) {
   if (!data || !data.length) return;
 
@@ -409,10 +398,6 @@ function exportToCSV(data) {
 
 window.exportToCSV = exportToCSV;
 
-
-// ============================================================
-// INICIALIZACIÓN
-// ============================================================
 window.addEventListener("DOMContentLoaded", () => {
   renderResults();
 });
