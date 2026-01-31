@@ -2,237 +2,218 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <title>Consulta de Stock - ORB STOCK</title>
+  <title>ORB STOCK - Consulta de stock unificada</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
-  <!-- Fuentes e íconos básicos -->
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-  <div id="app">
-    <!-- HEADER SUPERIOR -->
-    <header class="top-bar">
-      <div class="top-left">
-        <div class="orb-logo">
-          <div class="orb-pulse"></div>
-          <div class="orb-core"></div>
-        </div>
-        <div class="top-title">
-          <div class="app-name">ORB STOCK</div>
-          <div class="app-subtitle">Consulta de stock unificada</div>
-        </div>
+  <div class="top-bar">
+    <div class="top-left">
+      <div class="orb-logo" id="orbLogo">
+        <div class="orb-core"></div>
+        <div class="orb-pulse"></div>
       </div>
-
-      <div class="top-right">
-        <div id="connectionStatus" class="status-pill">
-          <div class="status-dot"></div>
-          <div>
-            <div class="status-label">Desconectado</div>
-            <div class="status-sub">Sin respuesta</div>
-          </div>
-        </div>
+      <div class="top-title">
+        <div class="app-name">ORB STOCK</div>
+        <div class="app-subtitle">Consulta de stock unificada</div>
       </div>
-    </header>
+    </div>
 
-    <!-- CONTENIDO PRINCIPAL -->
-    <main class="main-layout">
-      <!-- COLUMNA IZQUIERDA: BÚSQUEDA, SCANNER, VOZ -->
-      <section class="left-panel">
-        <!-- BLOQUE BÚSQUEDA + AUTOCOMPLETE -->
-        <section class="card">
-          <div class="card-header">
-            <div class="card-title">Búsqueda y scanner</div>
-            <div class="card-subtitle">Artículo, descripción, marca, rubro, color, talle</div>
-          </div>
-
-          <div class="search-row">
-            <div class="search-input-wrapper">
-              <input
-                id="searchInput"
-                type="text"
-                placeholder="Escribí o escaneá un artículo, nombre, marca, rubro..."
-                autocomplete="off"
-              />
-              <button id="btnClearSearch" class="icon-btn" title="Limpiar">
-                ✕
-              </button>
-              <button id="btnSearch" class="primary-btn">Buscar</button>
-
-              <div id="autocompleteBox" class="autocomplete-box"></div>
-            </div>
-          </div>
-
-          <!-- FILTROS AVANZADOS -->
-          <div class="filters-row">
-            <select id="filterMarca">
-              <option value="">Marca</option>
-            </select>
-            <select id="filterRubro">
-              <option value="">Rubro</option>
-            </select>
-            <select id="filterTalle">
-              <option value="">Talle</option>
-            </select>
-          </div>
-
-          <!-- MODO SOLO STOCK + ORDENAMIENTO -->
-          <div class="options-row">
-            <button id="stockOnlyToggle" class="toggle-btn">
-              <span class="toggle-dot"></span>
-              Mostrar solo con stock
-            </button>
-
-            <select id="sortSelect" class="sort-select">
-              <option value="descripcion:asc">Orden: Descripción ↑</option>
-              <option value="descripcion:desc">Orden: Descripción ↓</option>
-              <option value="stock:desc">Orden: Stock ↓</option>
-              <option value="precio:desc">Orden: Precio ↓</option>
-              <option value="valorizado:desc">Orden: Valorizado ↓</option>
-            </select>
-          </div>
-
-          <!-- SCANNER -->
-          <div class="scanner-row">
-            <div class="scanner-modes">
-              <span class="scanner-label">Scanner:</span>
-              <button class="chip-btn scanner-mode active" data-mode="solo">Solo</button>
-              <button class="chip-btn scanner-mode" data-mode="completo">Completo</button>
-              <button class="chip-btn scanner-mode" data-mode="auto">Auto</button>
-            </div>
-            <button id="btnOpenScanner" class="secondary-btn">
-              📷 Abrir cámara
-            </button>
-          </div>
-
-          <!-- VOZ -->
-          <div class="voice-row">
-            <button id="btnVoice" class="secondary-btn">
-              🎙️ Hablar
-            </button>
-            <div id="voiceStatus" class="voice-status">Voz inactiva</div>
-          </div>
-        </section>
-
-        <!-- BLOQUE ESTADO / ACCIONES -->
-        <section class="card">
-          <div class="card-header">
-            <div class="card-title">Acciones</div>
-            <div class="card-subtitle">Favoritos, exportación y vistas</div>
-          </div>
-
-          <div class="actions-row">
-            <button id="btnShowFavorites" class="chip-btn">
-              ★ Ver favoritos
-            </button>
-            <button id="btnExport" class="chip-btn">
-              ⬇ Exportar CSV
-            </button>
-          </div>
-
-          <div class="views-row">
-            <button class="tab-btn view-tab active" data-view="resumen">Resumen</button>
-            <button class="tab-btn view-tab" data-view="lista">Lista</button>
-            <button class="tab-btn view-tab" data-view="tabla">Tabla</button>
-            <button class="tab-btn view-tab" data-view="marca">Por marca</button>
-            <button class="tab-btn view-tab" data-view="articulo">Por artículo</button>
-            <button class="tab-btn view-tab" data-view="dashboard">Dashboard</button>
-          </div>
-        </section>
-      </section>
-
-      <!-- COLUMNA DERECHA: RESULTADOS + DASHBOARD -->
-      <section class="right-panel">
-        <!-- DASHBOARD SUPERIOR -->
-        <section class="card">
-          <div class="card-header">
-            <div class="card-title">Dashboard</div>
-            <div class="card-subtitle">Resumen de la búsqueda actual</div>
-          </div>
-
-          <div class="dashboard-grid">
-            <div class="dash-card">
-              <div class="dash-label">ARTÍCULOS</div>
-              <div id="dashArticulos" class="dash-value">0</div>
-              <div id="dashArticulosSub" class="dash-sub">Encontrados</div>
-            </div>
-            <div class="dash-card">
-              <div class="dash-label">PARES</div>
-              <div id="dashPares" class="dash-value">0</div>
-              <div id="dashParesSub" class="dash-sub">Totales</div>
-            </div>
-            <div class="dash-card">
-              <div class="dash-label">ALERTAS</div>
-              <div id="dashAlertas" class="dash-value">0</div>
-              <div id="dashAlertasSub" class="dash-sub">Stock bajo</div>
-            </div>
-            <div class="dash-card">
-              <div class="dash-label">VALORIZADO</div>
-              <div id="dashValorizado" class="dash-value">$0</div>
-              <div id="dashValorizadoSub" class="dash-sub">Lista 1</div>
-            </div>
-          </div>
-
-          <div class="dashboard-extra">
-            <div class="dash-block">
-              <div class="dash-block-title">Top rubros por pares</div>
-              <div id="dashRubros" class="dash-rubros"></div>
-            </div>
-          </div>
-        </section>
-
-        <!-- RESULTADOS -->
-        <section class="card results-card">
-          <div class="card-header">
-            <div class="card-title">Resultados</div>
-            <div class="card-subtitle" id="resultsSubtitle">
-              Sin resultados. Hacé una búsqueda para empezar.
-            </div>
-          </div>
-
-          <!-- CONTENEDOR PRINCIPAL DE RESULTADOS -->
-          <div id="resultsContainer" class="results-container">
-            <!-- Se llena desde app.js / ui.js -->
-          </div>
-
-          <!-- PAGINACIÓN -->
-          <div class="pagination-row">
-            <button id="pagePrev" class="icon-btn">‹</button>
-            <span id="pageInfo" class="page-info">0 / 0 (0 resultados)</span>
-            <button id="pageNext" class="icon-btn">›</button>
-          </div>
-        </section>
-      </section>
-    </main>
-  </div>
-
-  <!-- OVERLAY SCANNER -->
-  <div id="scannerOverlay" class="scanner-overlay hidden">
-    <div class="scanner-modal">
-      <div class="scanner-header">
+    <div class="top-right">
+      <button id="themeToggle" class="chip-btn">Modo día</button>
+      <div id="connectionStatus" class="status-pill">
+        <div class="status-dot"></div>
         <div>
-          <div class="scanner-title">Scanner de código</div>
-          <div class="scanner-subtitle">Apuntá al código de barras o QR</div>
+          <div class="status-label">Desconectado</div>
+          <div class="status-sub">Sin respuesta</div>
         </div>
-        <button id="btnCloseScanner" class="icon-btn">✕</button>
-      </div>
-
-      <div class="scanner-body">
-        <video id="scannerVideo" autoplay playsinline></video>
-        <div class="scanner-frame"></div>
-      </div>
-
-      <div class="scanner-footer">
-        <select id="cameraSelect"></select>
-        <button id="btnToggleTorch" class="chip-btn">Linterna</button>
       </div>
     </div>
   </div>
 
-  <!-- SCRIPTS -->
+  <div class="main-layout">
+    <!-- LEFT PANEL -->
+    <div class="left-panel">
+      <!-- Búsqueda y scanner -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Búsqueda y scanner</div>
+          <div class="card-subtitle">
+            Artículo, descripción, marca, rubro, color, talle
+          </div>
+        </div>
+
+        <div class="search-input-wrapper">
+          <input
+            id="searchInput"
+            type="text"
+            placeholder="Escribí o escaneá un artículo, nombre o descripción"
+            autocomplete="off"
+          />
+          <button id="btnSearch" class="primary-btn">Buscar</button>
+          <button id="btnClearSearch" class="icon-btn">✕</button>
+          <div id="autocompleteBox" class="autocomplete-box"></div>
+        </div>
+
+        <div class="filters-row">
+          <select id="filterMarca">
+            <option value="">Marca</option>
+          </select>
+          <select id="filterRubro">
+            <option value="">Rubro</option>
+          </select>
+          <select id="filterTalle">
+            <option value="">Talle</option>
+          </select>
+        </div>
+
+        <div class="options-row">
+          <button id="stockOnlyToggle" class="toggle-btn">
+            <span class="toggle-dot"></span>
+            <span>Mostrar solo con stock</span>
+          </button>
+
+          <select id="sortSelect" class="secondary-select">
+            <option value="descripcion:asc">Orden: Descripción ↑</option>
+            <option value="descripcion:desc">Orden: Descripción ↓</option>
+            <option value="stock:desc">Orden: Stock ↓</option>
+            <option value="precio:asc">Orden: Precio ↑</option>
+            <option value="precio:desc">Orden: Precio ↓</option>
+          </select>
+        </div>
+
+        <div class="scanner-row">
+          <div class="scanner-modes">
+            <span class="scanner-label">Scanner:</span>
+            <button class="chip-btn scanner-mode active" data-mode="solo">Solo</button>
+            <button class="chip-btn scanner-mode" data-mode="completo">Completo</button>
+            <button class="chip-btn scanner-mode" data-mode="auto">Auto</button>
+          </div>
+          <button id="btnOpenScanner" class="secondary-btn">Abrir cámara</button>
+        </div>
+
+        <div class="voice-row">
+          <button id="btnVoice" class="secondary-btn">Hablar</button>
+          <div id="voiceStatus" class="voice-status">Voz inactiva</div>
+        </div>
+      </div>
+
+      <!-- Acciones -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Acciones</div>
+          <div class="card-subtitle">Favoritos, exportación y vistas</div>
+        </div>
+
+        <div class="actions-row">
+          <button id="btnShowFavorites" class="secondary-btn">★ Ver favoritos</button>
+          <button id="btnExport" class="secondary-btn">↓ Exportar CSV</button>
+        </div>
+
+        <div class="views-row">
+          <button class="view-tab active" data-view="resumen">Resumen</button>
+          <button class="view-tab" data-view="lista">Lista</button>
+          <button class="view-tab" data-view="tabla">Tabla</button>
+          <button class="view-tab" data-view="marca">Por marca</button>
+          <button class="view-tab" data-view="articulo">Por artículo</button>
+          <button class="view-tab" data-view="dashboard">Dashboard</button>
+        </div>
+      </div>
+
+      <!-- Admin oculto -->
+      <div id="adminPanel" class="card hidden">
+        <div class="card-header">
+          <div class="card-title">Administrador</div>
+          <div class="card-subtitle">Herramientas avanzadas</div>
+        </div>
+        <div>
+          <p style="font-size:13px;color:#9aa2b4;">
+            Panel admin activado (5 clics en ORB + escribir ADMIN).
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT PANEL -->
+    <div class="right-panel">
+      <!-- Dashboard -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Dashboard</div>
+          <div class="card-subtitle">Resumen de la búsqueda actual</div>
+        </div>
+
+        <div class="dashboard-grid">
+          <div class="dash-card">
+            <div class="dash-label">ARTÍCULOS</div>
+            <div id="dashArticulos" class="dash-value">0</div>
+            <div class="dash-sub">Encontrados</div>
+          </div>
+          <div class="dash-card">
+            <div class="dash-label">PARES</div>
+            <div id="dashPares" class="dash-value">0</div>
+            <div class="dash-sub">Totales</div>
+          </div>
+          <div class="dash-card">
+            <div class="dash-label">ALERTAS</div>
+            <div id="dashAlertas" class="dash-value">0</div>
+            <div class="dash-sub">Stock bajo</div>
+          </div>
+          <div class="dash-card">
+            <div class="dash-label">VALORIZADO</div>
+            <div id="dashValorizado" class="dash-value">$0</div>
+            <div class="dash-sub">Lista 1</div>
+          </div>
+        </div>
+
+        <div class="dashboard-extra">
+          <div class="dash-block-title">Top rubros por pares</div>
+          <div id="dashRubros" class="dash-rubros"></div>
+        </div>
+      </div>
+
+      <!-- Resultados -->
+      <div class="card results-card">
+        <div class="card-header">
+          <div class="card-title">Resultados</div>
+          <div id="resultsSubtitle" class="card-subtitle">
+            Sin resultados. Hacé una búsqueda para empezar.
+          </div>
+        </div>
+
+        <div id="resultsContainer" class="results-container"></div>
+
+        <div class="pagination-row">
+          <button id="pagePrev" class="secondary-btn">← Anterior</button>
+          <div id="pageInfo" class="page-info">0 / 0 (0 resultados)</div>
+          <button id="pageNext" class="secondary-btn">Siguiente →</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scanner overlay -->
+  <div id="scannerOverlay" class="scanner-overlay hidden">
+    <div class="scanner-modal">
+      <div class="scanner-header">
+        <span>Scanner</span>
+        <button id="btnCloseScanner" class="icon-btn">✕</button>
+      </div>
+      <div class="scanner-body">
+        <video id="scannerVideo" autoplay playsinline></video>
+        <div class="scanner-frame"></div>
+      </div>
+      <div class="scanner-footer">
+        <select id="cameraSelect"></select>
+        <button id="btnToggleTorch" class="secondary-btn">Linterna</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
   <script src="backend.js"></script>
+  <script src="ui.js"></script>
   <script src="scanner.js"></script>
   <script src="voz.js"></script>
-  <script src="app.js"></script>
-  <script src="ui.js"></script>
 </body>
 </html>
