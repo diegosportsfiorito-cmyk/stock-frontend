@@ -2,34 +2,39 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <title>STOCK IA PRO · V.26.01</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ORB Stock — V.26.02</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
     :root {
-      --bg: #050816;
-      --bg-alt: #0b1020;
-      --bg-panel: #0f172a;
-      --bg-panel-soft: #111827;
-      --accent: #4f46e5;
-      --accent-soft: rgba(79, 70, 229, 0.35);
-      --accent-strong: #6366f1;
-      --accent-glow: rgba(96, 165, 250, 0.7);
-      --accent-red: #ef4444;
-      --accent-yellow: #facc15;
-      --accent-green: #22c55e;
-      --text: #e5e7eb;
-      --text-soft: #9ca3af;
-      --border-soft: #1f2937;
+      --bg: #05060a;
+      --bg-soft: #10121a;
+      --bg-softer: #181b26;
+      --accent: #4f8cff;
+      --accent-soft: rgba(79, 140, 255, 0.15);
+      --accent-strong: #ffcc33;
+      --text: #f5f7ff;
+      --text-soft: #a5acc7;
+      --danger: #ff4f6a;
+      --success: #3ddc97;
+      --border-soft: #262a3a;
+      --shadow-soft: 0 18px 45px rgba(0, 0, 0, 0.65);
       --radius-lg: 18px;
       --radius-md: 12px;
-      --radius-sm: 8px;
-      --shadow-soft: 0 18px 45px rgba(15, 23, 42, 0.85);
-      --shadow-orb: 0 0 45px rgba(129, 140, 248, 0.9);
+      --radius-pill: 999px;
       --transition-fast: 0.18s ease-out;
-      --transition-med: 0.28s ease-out;
-      --transition-slow: 0.45s ease-out;
-      --orb-size: 120px;
-      --orb-halo-size: 210px;
+      --transition-med: 0.25s ease-out;
+      --font-main: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text",
+        "Segoe UI", sans-serif;
+    }
+
+    [data-theme="light"] {
+      --bg: #f5f6fb;
+      --bg-soft: #ffffff;
+      --bg-softer: #eef0f8;
+      --text: #111322;
+      --text-soft: #5b6075;
+      --border-soft: #d4d7e5;
+      --shadow-soft: 0 12px 30px rgba(15, 23, 42, 0.12);
     }
 
     * {
@@ -38,9 +43,9 @@
 
     body {
       margin: 0;
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text",
-        "Segoe UI", sans-serif;
-      background: radial-gradient(circle at top, #020617 0, #020617 40%, #020617 100%);
+      padding: 0;
+      font-family: var(--font-main);
+      background: radial-gradient(circle at top, #15192b 0, #05060a 55%);
       color: var(--text);
       min-height: 100vh;
       display: flex;
@@ -50,39 +55,58 @@
 
     .app-shell {
       width: 100%;
-      max-width: 1120px;
-      margin: 0 auto;
-      padding: 16px 12px 12px;
+      max-width: 1200px;
+      margin: 12px;
+      padding: 14px;
+      background: linear-gradient(145deg, rgba(255, 255, 255, 0.02), transparent);
+      border-radius: 22px;
+      border: 1px solid rgba(255, 255, 255, 0.04);
+      box-shadow: var(--shadow-soft);
       display: flex;
       flex-direction: column;
       gap: 12px;
     }
 
-    @media (min-width: 768px) {
-      .app-shell {
-        padding: 24px 16px 16px;
-        gap: 16px;
-      }
-    }
-
     header.app-header {
       display: flex;
-      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
       gap: 10px;
-    }
-
-    @media (min-width: 768px) {
-      header.app-header {
-        flex-direction: row;
-        align-items: center;
-        justify-content: space-between;
-      }
     }
 
     .brand-block {
       display: flex;
       align-items: center;
-      gap: 14px;
+      gap: 10px;
+    }
+
+    .orb {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 30% 20%, #ffffff, #ffcc33 35%, #ff4f6a 70%, #05060a 100%);
+      box-shadow: 0 0 25px rgba(255, 204, 51, 0.7);
+      position: relative;
+      overflow: hidden;
+      animation: orbPulse 3.2s ease-in-out infinite;
+    }
+
+    .orb::after {
+      content: "D";
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 20px;
+      color: #05060a;
+      text-shadow: 0 0 8px rgba(255, 255, 255, 0.7);
+    }
+
+    @keyframes orbPulse {
+      0%, 100% { transform: scale(1); box-shadow: 0 0 22px rgba(255, 204, 51, 0.7); }
+      50% { transform: scale(1.06); box-shadow: 0 0 32px rgba(255, 204, 51, 0.9); }
     }
 
     .brand-text {
@@ -92,2150 +116,1300 @@
     }
 
     .brand-title {
-      font-size: 1.05rem;
-      letter-spacing: 0.12em;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      font-size: 14px;
       text-transform: uppercase;
-      color: #e5e7eb;
+      color: var(--text);
     }
 
-    .brand-sub {
-      font-size: 0.78rem;
-      color: var(--text-soft);
-      white-space: nowrap;
-    }
-
-    .brand-sub span {
-      color: #a5b4fc;
-    }
-
-    .brand-meta {
-      font-size: 0.75rem;
+    .brand-subtitle {
+      font-size: 11px;
       color: var(--text-soft);
     }
 
-    .brand-meta strong {
-      color: #e5e7eb;
-      font-weight: 500;
-    }
-
-    .top-controls {
+    .header-right {
       display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
       align-items: center;
-      justify-content: flex-end;
+      gap: 10px;
     }
 
-    .status-bar {
-      position: relative;
+    .status-pill {
       display: inline-flex;
       align-items: center;
       gap: 6px;
-      padding: 4px 10px;
+      padding: 6px 10px;
       border-radius: 999px;
-      background: rgba(15, 23, 42, 0.9);
-      border: 1px solid rgba(30, 64, 175, 0.6);
-      box-shadow: 0 0 12px rgba(59, 130, 246, 0.45);
+      background: rgba(61, 220, 151, 0.08);
+      border: 1px solid rgba(61, 220, 151, 0.4);
+      font-size: 11px;
+      color: var(--text-soft);
     }
 
     .status-dot {
-      width: 9px;
-      height: 9px;
-      border-radius: 999px;
-      background: var(--accent-red);
-      box-shadow: 0 0 10px rgba(248, 113, 113, 0.7);
-      transition: background var(--transition-med), box-shadow var(--transition-med);
-    }
-
-    .status-dot.connected {
-      background: var(--accent-green);
-      box-shadow: 0 0 12px rgba(74, 222, 128, 0.8);
-    }
-
-    .status-dot.processing {
-      background: var(--accent-yellow);
-      box-shadow: 0 0 12px rgba(250, 204, 21, 0.8);
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--success);
+      box-shadow: 0 0 8px rgba(61, 220, 151, 0.9);
     }
 
     .status-label {
-      font-size: 0.72rem;
-      color: var(--text-soft);
+      font-weight: 600;
+      color: var(--success);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
     }
 
-    .status-label span {
-      color: #bfdbfe;
-    }
-
-    .mode-toggle {
-      display: inline-flex;
+    .toggle-group {
+      display: flex;
       align-items: center;
-      gap: 6px;
-      padding: 4px 10px;
-      border-radius: 999px;
-      background: rgba(15, 23, 42, 0.9);
-      border: 1px solid var(--border-soft);
-      font-size: 0.75rem;
-      color: var(--text-soft);
-      cursor: pointer;
-      user-select: none;
+      gap: 8px;
     }
 
-    .mode-toggle-knob {
+    .toggle {
+      position: relative;
+      width: 44px;
+      height: 24px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      cursor: pointer;
+      transition: background var(--transition-fast), border var(--transition-fast);
+    }
+
+    .toggle-knob {
+      position: absolute;
+      top: 2px;
+      left: 2px;
       width: 18px;
       height: 18px;
-      border-radius: 999px;
-      background: radial-gradient(circle at 30% 20%, #f9fafb 0, #e5e7eb 25%, #9ca3af 60%, #4b5563 100%);
-      box-shadow: 0 0 8px rgba(148, 163, 184, 0.7);
-    }
-
-    .orb-wrapper {
-      position: relative;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      padding: 10px 0 4px;
-    }
-
-    @media (min-width: 768px) {
-      .orb-wrapper {
-        padding: 12px 0 6px;
-      }
-    }
-
-    .orb-halo {
-      position: absolute;
-      width: var(--orb-halo-size);
-      height: var(--orb-halo-size);
       border-radius: 50%;
-      background: radial-gradient(circle, rgba(129, 140, 248, 0.0) 0, rgba(129, 140, 248, 0.35) 40%, rgba(59, 130, 246, 0.0) 75%);
-      filter: blur(4px);
-      opacity: 0.9;
-      animation: orbHaloPulse 4.5s ease-in-out infinite;
-      pointer-events: none;
+      background: #ffffff;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+      transition: transform var(--transition-fast);
     }
 
-    .orb-core {
-      position: relative;
-      width: var(--orb-size);
-      height: var(--orb-size);
-      border-radius: 50%;
-      background:
-        radial-gradient(circle at 30% 20%, rgba(255, 255, 255, 0.95) 0, rgba(255, 255, 255, 0.0) 35%),
-        radial-gradient(circle at 70% 80%, rgba(56, 189, 248, 0.35) 0, rgba(15, 23, 42, 0.0) 55%),
-        radial-gradient(circle at 50% 50%, #4f46e5 0, #1d4ed8 40%, #0ea5e9 75%, #020617 100%);
-      box-shadow:
-        0 0 35px rgba(129, 140, 248, 0.9),
-        0 0 80px rgba(59, 130, 246, 0.9);
-      overflow: hidden;
-      cursor: pointer;
-      transform-origin: center;
-      animation: orbBreath 5.5s ease-in-out infinite, orbRotate 26s linear infinite;
+    .toggle.on {
+      background: var(--accent-soft);
+      border-color: var(--accent);
     }
 
-    .orb-inner-glow {
-      position: absolute;
-      inset: 12%;
-      border-radius: 50%;
-      background: radial-gradient(circle at 50% 35%, rgba(248, 250, 252, 0.9) 0, rgba(248, 250, 252, 0.0) 55%);
-      mix-blend-mode: screen;
-      opacity: 0.85;
-      pointer-events: none;
+    .toggle.on .toggle-knob {
+      transform: translateX(18px);
     }
 
-    .orb-shadow {
-      position: absolute;
-      inset: 0;
-      border-radius: 50%;
-      background: radial-gradient(circle at 50% 120%, rgba(15, 23, 42, 0.85) 0, rgba(15, 23, 42, 0.0) 55%);
-      mix-blend-mode: multiply;
-      opacity: 0.7;
-      pointer-events: none;
+    .toggle-label {
+      font-size: 11px;
+      color: var(--text-soft);
     }
 
-    .orb-processing::after {
-      content: "";
-      position: absolute;
-      inset: -10%;
-      border-radius: 50%;
-      border: 2px solid rgba(248, 250, 252, 0.35);
-      border-top-color: rgba(248, 250, 252, 0.9);
-      border-bottom-color: rgba(129, 140, 248, 0.9);
-      animation: orbSpinner 1.4s linear infinite;
-      pointer-events: none;
-    }
-
-    @keyframes orbBreath {
-      0%, 100% {
-        transform: scale(1);
-        box-shadow:
-          0 0 35px rgba(129, 140, 248, 0.9),
-          0 0 80px rgba(59, 130, 246, 0.9);
-      }
-      50% {
-        transform: scale(1.06);
-        box-shadow:
-          0 0 55px rgba(129, 140, 248, 1),
-          0 0 110px rgba(59, 130, 246, 1);
-      }
-    }
-
-    @keyframes orbRotate {
-      0% {
-        transform: rotate(0deg);
-      }
-      100% {
-        transform: rotate(360deg);
-      }
-    }
-
-    @keyframes orbHaloPulse {
-      0%, 100% {
-        opacity: 0.7;
-        transform: scale(1);
-      }
-      50% {
-        opacity: 1;
-        transform: scale(1.08);
-      }
-    }
-
-    @keyframes orbSpinner {
-      0% {
-        transform: rotate(0deg);
-      }
-      100% {
-        transform: rotate(360deg);
-      }
-    }
-
-    .main-panel {
-      background: radial-gradient(circle at top left, rgba(15, 23, 42, 0.9) 0, rgba(15, 23, 42, 0.98) 40%, #020617 100%);
-      border-radius: 24px;
-      padding: 14px 12px 12px;
-      box-shadow: var(--shadow-soft);
-      border: 1px solid rgba(31, 41, 55, 0.9);
-      display: flex;
-      flex-direction: column;
+    main {
+      display: grid;
+      grid-template-columns: minmax(0, 2.1fr) minmax(0, 1.4fr);
       gap: 12px;
     }
 
-    @media (min-width: 768px) {
-      .main-panel {
-        padding: 18px 16px 14px;
-        gap: 14px;
+    @media (max-width: 900px) {
+      main {
+        grid-template-columns: minmax(0, 1fr);
       }
     }
 
-    .input-row {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-
-    @media (min-width: 768px) {
-      .input-row {
-        flex-direction: row;
-        align-items: flex-end;
-      }
-    }
-
-    .input-block {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-
-    .input-label {
-      font-size: 0.78rem;
-      color: var(--text-soft);
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-    }
-
-    .input-field-wrapper {
-      position: relative;
-      display: flex;
-      align-items: center;
-      background: linear-gradient(135deg, rgba(15, 23, 42, 0.95), rgba(15, 23, 42, 0.98));
-      border-radius: var(--radius-md);
-      border: 1px solid rgba(55, 65, 81, 0.9);
-      padding: 2px 2px 2px 10px;
-      gap: 6px;
-    }
-
-    .input-field-wrapper:focus-within {
-      border-color: rgba(96, 165, 250, 0.9);
-      box-shadow: 0 0 0 1px rgba(96, 165, 250, 0.6);
-    }
-
-    .input-prefix {
-      font-size: 0.78rem;
-      color: var(--text-soft);
-      white-space: nowrap;
-    }
-
-    .input-main {
-      flex: 1;
-      border: none;
-      outline: none;
-      background: transparent;
-      color: var(--text);
-      font-size: 0.9rem;
-      padding: 8px 4px;
-      min-width: 0;
-    }
-
-    .input-main::placeholder {
-      color: #6b7280;
-    }
-
-    .input-icons {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      padding-right: 4px;
-    }
-
-    .icon-button {
-      width: 32px;
-      height: 32px;
-      border-radius: 999px;
-      border: 1px solid rgba(55, 65, 81, 0.9);
-      background: radial-gradient(circle at 30% 20%, rgba(248, 250, 252, 0.9) 0, rgba(15, 23, 42, 0.0) 45%),
-        linear-gradient(135deg, #020617, #020617);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: #9ca3af;
-      cursor: pointer;
-      font-size: 1.05rem;
-      transition: transform var(--transition-fast), box-shadow var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast), background var(--transition-fast);
-    }
-
-    .icon-button span {
-      transform: translateY(-1px);
-    }
-
-    .icon-button:hover {
-      transform: translateY(-1px) scale(1.03);
-      border-color: rgba(96, 165, 250, 0.9);
-      color: #e5e7eb;
-      box-shadow: 0 0 12px rgba(59, 130, 246, 0.7);
-    }
-
-    .icon-button:active {
-      transform: translateY(0) scale(0.98);
-      box-shadow: none;
-    }
-
-    .search-button {
-      min-width: 120px;
-      height: 40px;
-      border-radius: 999px;
-      border: none;
-      background: radial-gradient(circle at 30% 20%, #e0f2fe 0, #bfdbfe 25%, #60a5fa 60%, #1d4ed8 100%);
-      color: #020617;
-      font-weight: 600;
-      font-size: 0.9rem;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-      cursor: pointer;
-      box-shadow: 0 10px 25px rgba(37, 99, 235, 0.7);
-      transition: transform var(--transition-fast), box-shadow var(--transition-fast), filter var(--transition-fast);
-    }
-
-    .search-button span.icon {
-      font-size: 1.05rem;
-      transform: translateY(-1px);
-    }
-
-    .search-button:hover {
-      transform: translateY(-1px);
-      filter: brightness(1.05);
-      box-shadow: 0 14px 32px rgba(37, 99, 235, 0.9);
-    }
-
-    .search-button:active {
-      transform: translateY(0);
-      box-shadow: 0 6px 16px rgba(37, 99, 235, 0.7);
-    }
-
-    .search-button:disabled {
-      opacity: 0.6;
-      cursor: default;
-      box-shadow: none;
-    }
-
-    .secondary-controls {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      align-items: center;
-      justify-content: space-between;
-      margin-top: 4px;
-    }
-
-    .filters-toggle {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      padding: 6px 10px;
-      border-radius: 999px;
-      border: 1px solid rgba(55, 65, 81, 0.9);
-      background: rgba(15, 23, 42, 0.9);
-      color: var(--text-soft);
-      font-size: 0.78rem;
-      cursor: pointer;
-      transition: border-color var(--transition-fast), color var(--transition-fast), background var(--transition-fast), box-shadow var(--transition-fast);
-    }
-
-    .filters-toggle span.icon {
-      font-size: 0.9rem;
-      transform: translateY(-1px);
-    }
-
-    .filters-toggle.active {
-      border-color: rgba(96, 165, 250, 0.9);
-      color: #e5e7eb;
-      box-shadow: 0 0 12px rgba(59, 130, 246, 0.6);
-    }
-
-    .quick-actions {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-      justify-content: flex-end;
-    }
-
-    .pill-button {
-      padding: 5px 10px;
-      border-radius: 999px;
-      border: 1px solid rgba(55, 65, 81, 0.9);
-      background: rgba(15, 23, 42, 0.9);
-      color: var(--text-soft);
-      font-size: 0.75rem;
-      cursor: pointer;
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      transition: border-color var(--transition-fast), color var(--transition-fast), background var(--transition-fast), box-shadow var(--transition-fast);
-    }
-
-    .pill-button span.icon {
-      font-size: 0.9rem;
-      transform: translateY(-1px);
-    }
-
-    .pill-button:hover {
-      border-color: rgba(96, 165, 250, 0.9);
-      color: #e5e7eb;
-      box-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
-    }
-
-    .pill-button.danger:hover {
-      border-color: rgba(248, 113, 113, 0.9);
-      color: #fecaca;
-      box-shadow: 0 0 10px rgba(248, 113, 113, 0.7);
-    }
-
-    .pill-button.primary {
-      border-color: rgba(96, 165, 250, 0.9);
-      color: #bfdbfe;
-    }
-
-    .pill-button.toggle-active {
-      background: rgba(37, 99, 235, 0.18);
-      border-color: rgba(96, 165, 250, 0.9);
-      color: #e5e7eb;
-    }
-
-    .filters-panel {
-      margin-top: 4px;
-      padding: 10px 10px 8px;
-      border-radius: var(--radius-md);
-      background: rgba(15, 23, 42, 0.96);
-      border: 1px solid rgba(31, 41, 55, 0.9);
-      display: none;
-      flex-direction: column;
-      gap: 8px;
-    }
-
-    .filters-panel.visible {
-      display: flex;
-    }
-
-    .filters-grid {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 8px;
-    }
-
-    @media (min-width: 640px) {
-      .filters-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-      }
-    }
-
-    @media (min-width: 900px) {
-      .filters-grid {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-      }
-    }
-
-    .filter-block {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-
-    .filter-label {
-      font-size: 0.75rem;
-      color: var(--text-soft);
-    }
-
-    .filter-input,
-    .filter-select {
-      width: 100%;
-      border-radius: 999px;
-      border: 1px solid rgba(55, 65, 81, 0.9);
-      background: rgba(15, 23, 42, 0.95);
-      color: var(--text);
-      font-size: 0.8rem;
-      padding: 6px 10px;
-      outline: none;
-    }
-
-    .filter-input::placeholder {
-      color: #6b7280;
-    }
-
-    .filters-footer {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-      justify-content: flex-end;
-      margin-top: 4px;
-    }
-
-    .results-panel {
-      margin-top: 6px;
-      padding: 10px 10px 8px;
-      border-radius: var(--radius-md);
-      background: rgba(15, 23, 42, 0.98);
-      border: 1px solid rgba(31, 41, 55, 0.9);
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      min-height: 180px;
-    }
-
-    .results-header {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-      align-items: center;
-      justify-content: space-between;
-    }
-
-    .results-title {
-      font-size: 0.85rem;
-      color: var(--text-soft);
-    }
-
-    .results-title strong {
-      color: #e5e7eb;
-    }
-
-    .results-actions {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-      justify-content: flex-end;
-    }
-
-    .view-tabs {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-      margin-top: 4px;
-    }
-
-    .view-tab {
-      padding: 5px 10px;
-      border-radius: 999px;
-      border: 1px solid rgba(55, 65, 81, 0.9);
-      background: rgba(15, 23, 42, 0.9);
-      color: var(--text-soft);
-      font-size: 0.78rem;
-      cursor: pointer;
-      transition: border-color var(--transition-fast), color var(--transition-fast), background var(--transition-fast), box-shadow var(--transition-fast);
-    }
-
-    .view-tab.active {
-      border-color: rgba(96, 165, 250, 0.9);
-      color: #e5e7eb;
-      background: radial-gradient(circle at 30% 20%, rgba(37, 99, 235, 0.35) 0, rgba(15, 23, 42, 0.98) 55%);
-      box-shadow: 0 0 12px rgba(59, 130, 246, 0.6);
-    }
-
-    .results-body {
-      margin-top: 4px;
-      border-radius: var(--radius-md);
-      background: radial-gradient(circle at top left, rgba(15, 23, 42, 0.98) 0, rgba(15, 23, 42, 1) 40%, #020617 100%);
-      border: 1px solid rgba(31, 41, 55, 0.9);
-      padding: 8px 8px 6px;
-      min-height: 140px;
-      max-height: 420px;
-      overflow: hidden;
-      display: flex;
-      flex-direction: column;
-    }
-
-    .results-scroll {
-      flex: 1;
-      overflow-y: auto;
-      overflow-x: hidden;
-      padding-right: 4px;
-    }
-
-    .results-scroll::-webkit-scrollbar {
-      width: 6px;
-      height: 6px;
-    }
-
-    .results-scroll::-webkit-scrollbar-track {
-      background: transparent;
-    }
-
-    .results-scroll::-webkit-scrollbar-thumb {
-      background: rgba(55, 65, 81, 0.9);
-      border-radius: 999px;
-    }
-
-    .results-scroll::-webkit-scrollbar-thumb:hover {
-      background: rgba(75, 85, 99, 0.95);
-    }
-
-    .summary-grid {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 6px;
-    }
-
-    @media (min-width: 640px) {
-      .summary-grid {
-        grid-template-columns: repeat(4, minmax(0, 1fr));
-      }
-    }
-
-    .summary-card {
-      border-radius: var(--radius-md);
-      background: radial-gradient(circle at top left, rgba(37, 99, 235, 0.18) 0, rgba(15, 23, 42, 0.98) 55%);
-      border: 1px solid rgba(55, 65, 81, 0.9);
-      padding: 8px 8px 6px;
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-    }
-
-    .summary-label {
-      font-size: 0.7rem;
-      color: var(--text-soft);
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-    }
-
-    .summary-value {
-      font-size: 0.95rem;
-      font-weight: 600;
-      color: #e5e7eb;
-    }
-
-    .summary-sub {
-      font-size: 0.7rem;
-      color: var(--text-soft);
-    }
-
-    .cards-grid {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 8px;
-    }
-
-    @media (min-width: 640px) {
-      .cards-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-      }
-    }
-
-    @media (min-width: 900px) {
-      .cards-grid {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-      }
-    }
-
-    .item-card {
-      border-radius: var(--radius-md);
-      background: radial-gradient(circle at top left, rgba(37, 99, 235, 0.16) 0, rgba(15, 23, 42, 0.98) 55%);
-      border: 1px solid rgba(55, 65, 81, 0.9);
-      padding: 8px 8px 6px;
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-
-    .item-header {
-      display: flex;
-      justify-content: space-between;
-      gap: 6px;
-      align-items: baseline;
-    }
-
-    .item-code {
-      font-size: 0.8rem;
-      color: #bfdbfe;
-      font-weight: 500;
-    }
-
-    .item-brand {
-      font-size: 0.75rem;
-      color: var(--text-soft);
-    }
-
-    .item-desc {
-      font-size: 0.85rem;
-      color: #e5e7eb;
-    }
-
-    .item-meta {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-      font-size: 0.75rem;
-      color: var(--text-soft);
-    }
-
-    .item-meta span {
-      padding: 2px 6px;
-      border-radius: 999px;
-      background: rgba(15, 23, 42, 0.9);
-      border: 1px solid rgba(55, 65, 81, 0.9);
-    }
-
-    .item-footer {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-top: 4px;
-      gap: 6px;
-      font-size: 0.78rem;
-    }
-
-    .item-price {
-      color: #bbf7d0;
-      font-weight: 600;
-    }
-
-    .item-stock {
-      color: #e5e7eb;
-    }
-
-    .item-talles {
-      font-size: 0.75rem;
-      color: var(--text-soft);
-    }
-
-    .list-table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 0.78rem;
-      min-width: 100%;
-    }
-
-    .list-table th,
-    .list-table td {
-      padding: 6px 6px;
-      border-bottom: 1px solid rgba(31, 41, 55, 0.9);
-      text-align: left;
-      white-space: nowrap;
-    }
-
-    .list-table th {
-      font-size: 0.72rem;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      color: var(--text-soft);
-    }
-
-    .list-table td {
-      color: #e5e7eb;
-    }
-
-    .list-table tr:hover td {
-      background: rgba(15, 23, 42, 0.9);
-    }
-
-    .table-wrapper {
-      width: 100%;
-      overflow-x: auto;
-      padding-bottom: 4px;
-    }
-
-    .table-wrapper::-webkit-scrollbar {
-      height: 6px;
-    }
-
-    .table-wrapper::-webkit-scrollbar-track {
-      background: transparent;
-    }
-
-    .table-wrapper::-webkit-scrollbar-thumb {
-      background: rgba(55, 65, 81, 0.9);
-      border-radius: 999px;
-    }
-
-    .table-wrapper::-webkit-scrollbar-thumb:hover {
-      background: rgba(75, 85, 99, 0.95);
-    }
-
-    .data-table {
-      border-collapse: collapse;
-      width: 100%;
-      min-width: 720px;
-      font-size: 0.78rem;
-    }
-
-    .data-table th,
-    .data-table td {
-      padding: 6px 6px;
-      border-bottom: 1px solid rgba(31, 41, 55, 0.9);
-      text-align: left;
-      white-space: nowrap;
-    }
-
-    .data-table th {
-      font-size: 0.72rem;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      color: var(--text-soft);
-      background: rgba(15, 23, 42, 0.98);
-      position: sticky;
-      top: 0;
-      z-index: 1;
-    }
-
-    .data-table tr:nth-child(even) td {
-      background: rgba(15, 23, 42, 0.96);
-    }
-
-    .data-table tr:hover td {
-      background: rgba(15, 23, 42, 0.9);
-    }
-
-    .dashboard-placeholder {
-      font-size: 0.8rem;
-      color: var(--text-soft);
-      padding: 6px 4px;
-    }
-
-    .no-results {
-      font-size: 0.8rem;
-      color: var(--text-soft);
-      padding: 6px 4px;
-    }
-
-    .voice-line {
-      margin-top: 4px;
-      font-size: 0.78rem;
-      color: #a5b4fc;
-    }
-
-    .footer-bar {
-      margin-top: 4px;
-      padding-top: 6px;
-      border-top: 1px solid rgba(31, 41, 55, 0.9);
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-
-    @media (min-width: 640px) {
-      .footer-bar {
-        flex-direction: row;
-        align-items: center;
-        justify-content: space-between;
-      }
-    }
-
-    .footer-text {
-      font-size: 0.72rem;
-      color: var(--text-soft);
-      text-align: right;
-      width: 100%;
-    }
-
-    .footer-text strong {
-      color: #e5e7eb;
-      font-weight: 500;
-    }
-
-    .connection-line {
-      position: relative;
-      width: 100%;
-      height: 2px;
-      border-radius: 999px;
-      background: radial-gradient(circle at left, rgba(59, 130, 246, 0.9) 0, rgba(59, 130, 246, 0.4) 25%, rgba(15, 23, 42, 0.0) 70%);
-      overflow: hidden;
-      box-shadow: 0 0 12px rgba(59, 130, 246, 0.8);
-    }
-
-    .connection-line-inner {
-      position: absolute;
-      inset: 0;
-      background: linear-gradient(90deg, transparent 0, rgba(191, 219, 254, 0.9) 40%, rgba(191, 219, 254, 0.9) 60%, transparent 100%);
-      transform: translateX(-100%);
-      animation: connectionSweep 3.5s linear infinite;
-    }
-
-    @keyframes connectionSweep {
-      0% {
-        transform: translateX(-100%);
-      }
-      100% {
-        transform: translateX(100%);
-      }
-    }
-
-    .connection-line.error {
-      background: radial-gradient(circle at left, rgba(248, 113, 113, 0.9) 0, rgba(248, 113, 113, 0.4) 25%, rgba(15, 23, 42, 0.0) 70%);
-      box-shadow: 0 0 12px rgba(248, 113, 113, 0.8);
-    }
-
-    .connection-line.processing {
-      background: radial-gradient(circle at left, rgba(250, 204, 21, 0.9) 0, rgba(250, 204, 21, 0.4) 25%, rgba(15, 23, 42, 0.0) 70%);
-      box-shadow: 0 0 12px rgba(250, 204, 21, 0.8);
-    }
-
-    .admin-panel {
-      position: fixed;
-      inset: 0;
-      background: rgba(15, 23, 42, 0.92);
-      backdrop-filter: blur(10px);
-      display: none;
-      align-items: center;
-      justify-content: center;
-      z-index: 50;
-    }
-
-    .admin-panel.visible {
-      display: flex;
-    }
-
-    .admin-card {
-      width: 100%;
-      max-width: 520px;
-      border-radius: 20px;
-      background: radial-gradient(circle at top left, rgba(37, 99, 235, 0.25) 0, rgba(15, 23, 42, 0.98) 55%);
-      border: 1px solid rgba(55, 65, 81, 0.95);
-      box-shadow: 0 24px 60px rgba(15, 23, 42, 0.95);
-      padding: 14px 14px 12px;
+    .panel {
+      background: radial-gradient(circle at top left, rgba(255, 255, 255, 0.03), transparent 55%);
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border-soft);
+      padding: 12px;
+      box-shadow: 0 14px 35px rgba(0, 0, 0, 0.55);
       display: flex;
       flex-direction: column;
       gap: 10px;
     }
 
-    .admin-header {
+    .panel-header {
       display: flex;
-      justify-content: space-between;
       align-items: center;
+      justify-content: space-between;
       gap: 8px;
     }
 
-    .admin-title {
-      font-size: 0.9rem;
-      color: #e5e7eb;
-    }
-
-    .admin-sub {
-      font-size: 0.75rem;
-      color: var(--text-soft);
-    }
-
-    .admin-close {
-      width: 28px;
-      height: 28px;
-      border-radius: 999px;
-      border: 1px solid rgba(55, 65, 81, 0.9);
-      background: rgba(15, 23, 42, 0.95);
-      color: var(--text-soft);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      font-size: 0.9rem;
-      transition: border-color var(--transition-fast), color var(--transition-fast), background var(--transition-fast);
-    }
-
-    .admin-close:hover {
-      border-color: rgba(248, 113, 113, 0.9);
-      color: #fecaca;
-      background: rgba(127, 29, 29, 0.9);
-    }
-
-    .admin-section-title {
-      font-size: 0.78rem;
-      color: var(--text-soft);
+    .panel-title {
+      font-size: 13px;
+      font-weight: 600;
       text-transform: uppercase;
       letter-spacing: 0.08em;
-      margin-top: 4px;
+      color: var(--text-soft);
     }
 
-    .admin-grid {
-      display: grid;
-      grid-template-columns: 1fr;
+    .panel-subtitle {
+      font-size: 11px;
+      color: var(--text-soft);
+    }
+
+    .search-row {
+      display: flex;
+      flex-direction: column;
       gap: 8px;
+    }
+
+    .search-input-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .search-input-wrapper {
+      flex: 1;
+      position: relative;
+    }
+
+    .search-input {
+      width: 100%;
+      padding: 10px 12px 10px 32px;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border-soft);
+      background: rgba(5, 6, 10, 0.85);
+      color: var(--text);
+      font-size: 13px;
+      outline: none;
+      transition: border var(--transition-fast), box-shadow var(--transition-fast), background var(--transition-fast);
+    }
+
+    [data-theme="light"] .search-input {
+      background: #ffffff;
+    }
+
+    .search-input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 1px rgba(79, 140, 255, 0.4);
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 13px;
+      opacity: 0.7;
+    }
+
+    .search-actions {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .btn {
+      border-radius: var(--radius-pill);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      background: rgba(255, 255, 255, 0.04);
+      color: var(--text);
+      font-size: 11px;
+      padding: 7px 10px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      transition: background var(--transition-fast), transform var(--transition-fast), box-shadow var(--transition-fast), border var(--transition-fast);
+      white-space: nowrap;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #4f8cff, #7f5dff);
+      border-color: rgba(255, 255, 255, 0.18);
+      box-shadow: 0 10px 22px rgba(79, 140, 255, 0.45);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 14px 28px rgba(79, 140, 255, 0.6);
+    }
+
+    .btn-icon {
+      font-size: 13px;
+    }
+
+    .quick-controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .quick-left,
+    .quick-right {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .chip-toggle {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 10px;
+      border-radius: var(--radius-pill);
+      border: 1px solid var(--border-soft);
+      background: rgba(255, 255, 255, 0.02);
+      font-size: 11px;
+      color: var(--text-soft);
+      cursor: pointer;
+      transition: background var(--transition-fast), border var(--transition-fast), color var(--transition-fast), box-shadow var(--transition-fast);
+    }
+
+    .chip-toggle.active {
+      background: var(--accent-soft);
+      border-color: var(--accent);
+      color: var(--accent-strong);
+      box-shadow: 0 0 0 1px rgba(79, 140, 255, 0.4);
+    }
+
+    .chip-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.18);
+    }
+
+    .chip-toggle.active .chip-dot {
+      background: var(--accent);
+      box-shadow: 0 0 8px rgba(79, 140, 255, 0.9);
+    }
+
+    .scanner-mode-block {
       margin-top: 4px;
-    }
-
-    @media (min-width: 640px) {
-      .admin-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-      }
-    }
-
-    .admin-field {
       display: flex;
       flex-direction: column;
       gap: 4px;
     }
 
-    .admin-label {
-      font-size: 0.75rem;
+    .scanner-mode-label {
+      font-size: 11px;
       color: var(--text-soft);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
     }
 
-    .admin-select,
-    .admin-input {
-      width: 100%;
-      border-radius: 999px;
-      border: 1px solid rgba(55, 65, 81, 0.9);
-      background: rgba(15, 23, 42, 0.95);
-      color: var(--text);
-      font-size: 0.8rem;
+    .scanner-segments {
+      display: inline-flex;
+      border-radius: var(--radius-pill);
+      background: rgba(5, 6, 10, 0.9);
+      border: 1px solid var(--border-soft);
+      overflow: hidden;
+    }
+
+    [data-theme="light"] .scanner-segments {
+      background: #ffffff;
+    }
+
+    .scanner-segment {
       padding: 6px 10px;
-      outline: none;
+      font-size: 11px;
+      color: var(--text-soft);
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      cursor: pointer;
+      border-right: 1px solid rgba(255, 255, 255, 0.06);
+      transition: background var(--transition-fast), color var(--transition-fast), box-shadow var(--transition-fast), transform var(--transition-fast);
     }
 
-    .admin-footer {
+    .scanner-segment:last-child {
+      border-right: none;
+    }
+
+    .scanner-segment-icon {
+      font-size: 13px;
+    }
+
+    .scanner-segment.active {
+      background: linear-gradient(135deg, rgba(79, 140, 255, 0.18), rgba(127, 93, 255, 0.22));
+      color: var(--accent-strong);
+      box-shadow: 0 0 0 1px rgba(79, 140, 255, 0.5);
+      transform: translateY(-0.5px);
+    }
+
+    .scanner-mode-hint {
+      font-size: 10px;
+      color: var(--text-soft);
+      opacity: 0.8;
+    }
+
+    .filters-advanced-toggle {
+      font-size: 11px;
+      color: var(--accent-strong);
+      cursor: pointer;
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
+
+    .filters-advanced-panel {
+      margin-top: 6px;
+      padding: 8px;
+      border-radius: var(--radius-md);
+      background: rgba(5, 6, 10, 0.85);
+      border: 1px dashed var(--border-soft);
+      display: none;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    [data-theme="light"] .filters-advanced-panel {
+      background: #ffffff;
+    }
+
+    .filters-row {
       display: flex;
       flex-wrap: wrap;
       gap: 6px;
-      justify-content: flex-end;
+    }
+
+    .filter-select {
+      min-width: 120px;
+      flex: 1;
+      padding: 6px 8px;
+      border-radius: 999px;
+      border: 1px solid var(--border-soft);
+      background: rgba(5, 6, 10, 0.9);
+      color: var(--text-soft);
+      font-size: 11px;
+      outline: none;
+    }
+
+    [data-theme="light"] .filter-select {
+      background: #ffffff;
+    }
+
+    .results-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      max-height: 420px;
+      overflow: hidden;
+    }
+
+    .results-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .results-summary {
+      font-size: 11px;
+      color: var(--text-soft);
+    }
+
+    .results-view-tabs {
+      display: inline-flex;
+      border-radius: var(--radius-pill);
+      background: rgba(5, 6, 10, 0.9);
+      border: 1px solid var(--border-soft);
+      overflow: hidden;
+    }
+
+    [data-theme="light"] .results-view-tabs {
+      background: #ffffff;
+    }
+
+    .results-view-tab {
+      padding: 5px 9px;
+      font-size: 10px;
+      color: var(--text-soft);
+      cursor: pointer;
+      border-right: 1px solid rgba(255, 255, 255, 0.06);
+      transition: background var(--transition-fast), color var(--transition-fast);
+    }
+
+    .results-view-tab:last-child {
+      border-right: none;
+    }
+
+    .results-view-tab.active {
+      background: rgba(79, 140, 255, 0.18);
+      color: var(--accent-strong);
+    }
+
+    .results-body {
+      flex: 1;
+      min-height: 160px;
+      border-radius: var(--radius-md);
+      background: rgba(5, 6, 10, 0.85);
+      border: 1px solid var(--border-soft);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    [data-theme="light"] .results-body {
+      background: #ffffff;
+    }
+
+    .results-scroll {
+      flex: 1;
+      overflow: auto;
+      padding: 6px;
+    }
+
+    .results-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 11px;
+      min-width: 520px;
+    }
+
+    .results-table thead {
+      position: sticky;
+      top: 0;
+      background: rgba(5, 6, 10, 0.98);
+      z-index: 2;
+    }
+
+    [data-theme="light"] .results-table thead {
+      background: #f5f6fb;
+    }
+
+    .results-table th,
+    .results-table td {
+      padding: 6px 8px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      text-align: left;
+      white-space: nowrap;
+    }
+
+    .results-table th {
+      font-weight: 600;
+      color: var(--text-soft);
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .results-table tbody tr:nth-child(even) {
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .results-table tbody tr:hover {
+      background: rgba(79, 140, 255, 0.08);
+    }
+
+    .stock-ok {
+      color: var(--success);
+      font-weight: 600;
+    }
+
+    .stock-low {
+      color: var(--danger);
+      font-weight: 600;
+    }
+
+    .right-panel-section {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .voice-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .voice-status {
+      font-size: 11px;
+      color: var(--text-soft);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .voice-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 8px rgba(79, 140, 255, 0.9);
+      opacity: 0;
+      transform: scale(0.6);
+      transition: opacity var(--transition-fast), transform var(--transition-fast);
+    }
+
+    .voice-dot.listening {
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    .dashboard-body {
+      min-height: 160px;
+      border-radius: var(--radius-md);
+      background: rgba(5, 6, 10, 0.85);
+      border: 1px solid var(--border-soft);
+      padding: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    [data-theme="light"] .dashboard-body {
+      background: #ffffff;
+    }
+
+    .dashboard-metrics {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 6px;
+    }
+
+    @media (max-width: 900px) {
+      .dashboard-metrics {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    .metric-card {
+      border-radius: 12px;
+      background: radial-gradient(circle at top left, rgba(79, 140, 255, 0.18), transparent 60%);
+      border: 1px solid var(--border-soft);
+      padding: 6px;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      font-size: 11px;
+    }
+
+    .metric-label {
+      color: var(--text-soft);
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .metric-value {
+      font-weight: 600;
+      font-size: 13px;
+    }
+
+    .metric-sub {
+      font-size: 10px;
+      color: var(--text-soft);
+    }
+
+    .admin-secret {
+      font-size: 10px;
+      color: rgba(255, 255, 255, 0.12);
+      text-align: right;
+      cursor: default;
+      user-select: none;
+    }
+
+    .admin-panel {
+      display: none;
+      margin-top: 6px;
+      padding: 8px;
+      border-radius: var(--radius-md);
+      background: rgba(5, 6, 10, 0.9);
+      border: 1px dashed var(--border-soft);
+      font-size: 11px;
+      color: var(--text-soft);
+    }
+
+    [data-theme="light"] .admin-panel {
+      background: #ffffff;
+    }
+
+    .admin-panel h4 {
+      margin: 0 0 4px;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--accent-strong);
+    }
+
+    .admin-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
       margin-top: 4px;
     }
 
-    .admin-note {
-      font-size: 0.7rem;
-      color: var(--text-soft);
-      margin-top: 2px;
+    .admin-row .btn {
+      font-size: 10px;
+      padding: 5px 8px;
     }
 
-    @media (max-width: 480px) {
-      .brand-title {
-        font-size: 0.95rem;
-      }
-      .brand-sub {
-        font-size: 0.72rem;
-      }
-      .brand-meta {
-        font-size: 0.7rem;
-      }
-      .search-button {
-        width: 100%;
-        justify-content: center;
-      }
-      .input-row {
-        gap: 10px;
-      }
-      .icon-button {
-        width: 34px;
-        height: 34px;
-        font-size: 1.15rem;
-      }
-      .view-tab,
-      .pill-button,
-      .filters-toggle {
-        font-size: 0.76rem;
-        padding-inline: 8px;
-      }
-      .results-panel {
-        min-height: 200px;
-      }
+    .hidden {
+      display: none !important;
     }
   </style>
 </head>
-<body>
+<body data-theme="dark">
   <div class="app-shell">
     <header class="app-header">
       <div class="brand-block">
-        <div class="orb-wrapper">
-          <div class="orb-halo"></div>
-          <div id="orb" class="orb-core">
-            <div class="orb-inner-glow"></div>
-            <div class="orb-shadow"></div>
-          </div>
-        </div>
+        <div class="orb"></div>
         <div class="brand-text">
-          <div class="brand-title">STOCK IA PRO</div>
-          <div class="brand-sub">
-            Consulta inteligente de artículos · Voz · Scanner · Vistas múltiples
-          </div>
-          <div class="brand-meta">
-            <strong>V.26.01</strong> — SALAS CREATIVE STUDIO
-          </div>
+          <div class="brand-title">ORB STOCK</div>
+          <div class="brand-subtitle">Scanner · Voz · Dashboard</div>
         </div>
       </div>
-      <div class="top-controls">
-        <div class="status-bar">
-          <div id="statusDot" class="status-dot"></div>
-          <div class="status-label">
-            Estado: <span id="statusText">Desconectado</span>
+      <div class="header-right">
+        <div class="status-pill" id="connectionStatus">
+          <div class="status-dot"></div>
+          <div>
+            <div class="status-label">Conectado</div>
+            <div style="font-size:10px;">Backend online</div>
           </div>
         </div>
-        <div class="mode-toggle" id="modeToggle">
-          <div class="mode-toggle-knob"></div>
-          <span>Oscuro / Claro</span>
+        <div class="toggle-group">
+          <div class="toggle-label">Claro</div>
+          <div class="toggle" id="themeToggle">
+            <div class="toggle-knob"></div>
+          </div>
         </div>
       </div>
     </header>
 
-    <main class="main-panel">
-      <div class="input-row">
-        <div class="input-block">
-          <div class="input-label">Entrada</div>
-          <div class="input-field-wrapper">
-            <span class="input-prefix">Artículo / código / voz / scanner</span>
-            <input
-              id="queryInput"
-              class="input-main"
-              type="text"
-              placeholder="Ej: NATI/38, pantuflas, 6202600..."
-              autocomplete="off"
-            />
-            <div class="input-icons">
-              <button id="voiceBtn" class="icon-button" type="button" title="Voz">
-                <span>🎙️</span>
+    <main>
+      <section class="panel">
+        <div class="panel-header">
+          <div>
+            <div class="panel-title">Búsqueda y scanner</div>
+            <div class="panel-subtitle">Artículo, color, talle · Scanner físico · Voz</div>
+          </div>
+        </div>
+
+        <div class="search-row">
+          <div class="search-input-row">
+            <div class="search-input-wrapper">
+              <span class="search-icon">🔍</span>
+              <input
+                id="queryInput"
+                class="search-input"
+                type="text"
+                placeholder="Artículo, artículo/color/talle o texto libre"
+                autocomplete="off"
+              />
+            </div>
+            <div class="search-actions">
+              <button class="btn" id="scanBtn" title="Activar scanner">
+                <span class="btn-icon">📷</span>
               </button>
-              <button id="scanBtn" class="icon-button" type="button" title="Scanner">
-                <span>📷</span>
+              <button class="btn" id="voiceBtn" title="Hablar">
+                <span class="btn-icon">🎙️</span>
+              </button>
+              <button class="btn btn-primary" id="searchBtn">
+                <span class="btn-icon">➡️</span>
+                Buscar
               </button>
             </div>
           </div>
-        </div>
-        <button id="searchBtn" class="search-button" type="button">
-          <span class="icon">🔍</span>
-          <span>Buscar</span>
-        </button>
-      </div>
 
-      <div class="secondary-controls">
-        <button id="filtersToggle" class="filters-toggle" type="button">
-          <span class="icon">⚙️</span>
-          <span>Filtros avanzados</span>
-        </button>
-        <div class="quick-actions">
-          <button id="toggleStockBtn" class="pill-button" type="button">
-            <span class="icon">📊</span>
-            <span>Mostrar con/sin stock</span>
-          </button>
-          <button id="copyGlobalBtn" class="pill-button primary" type="button">
-            <span class="icon">📋</span>
-            <span>Copiar vista</span>
-          </button>
-          <button id="clearBtn" class="pill-button danger" type="button">
-            <span class="icon">🧹</span>
-            <span>Limpiar pantalla</span>
-          </button>
-        </div>
-      </div>
+          <div class="quick-controls">
+            <div class="quick-left">
+              <div class="chip-toggle" id="stockOnlyToggle">
+                <div class="chip-dot"></div>
+                <span>Mostrar solo con stock</span>
+              </div>
 
-      <section id="filtersPanel" class="filters-panel">
-        <div class="filters-grid">
-          <div class="filter-block">
-            <div class="filter-label">Marca</div>
-            <select id="filterMarca" class="filter-select">
-              <option value="">Todas</option>
-            </select>
+              <div class="scanner-mode-block">
+                <div class="scanner-mode-label">Modo de scanner</div>
+                <div class="scanner-segments" id="scannerSegments">
+                  <div class="scanner-segment" data-mode="1">
+                    <span class="scanner-segment-icon">📦</span>
+                    <span>Solo</span>
+                  </div>
+                  <div class="scanner-segment" data-mode="2">
+                    <span class="scanner-segment-icon">🎨</span>
+                    <span>Completo</span>
+                  </div>
+                  <div class="scanner-segment" data-mode="3">
+                    <span class="scanner-segment-icon">🤖</span>
+                    <span>Auto</span>
+                  </div>
+                </div>
+                <div class="scanner-mode-hint">Solo · Completo · Auto</div>
+              </div>
+            </div>
+
+            <div class="quick-right">
+              <span class="filters-advanced-toggle" id="advancedFiltersToggle">
+                Filtros avanzados
+              </span>
+            </div>
           </div>
-          <div class="filter-block">
-            <div class="filter-label">Rubro</div>
-            <select id="filterRubro" class="filter-select">
-              <option value="">Todos</option>
-            </select>
-          </div>
-          <div class="filter-block">
-            <div class="filter-label">Talle desde</div>
-            <input
-              id="filterTalleDesde"
-              class="filter-input"
-              type="text"
-              placeholder="Ej: 24"
-            />
-          </div>
-          <div class="filter-block">
-            <div class="filter-label">Talle hasta</div>
-            <input
-              id="filterTalleHasta"
-              class="filter-input"
-              type="text"
-              placeholder="Ej: 25"
-            />
-          </div>
-          <div class="filter-block">
-            <div class="filter-label">Solo con stock</div>
-            <select id="filterSoloStock" class="filter-select">
-              <option value="">No filtrar</option>
-              <option value="true">Solo con stock</option>
-              <option value="false">Incluir sin stock</option>
-            </select>
+
+          <div class="filters-advanced-panel" id="advancedFiltersPanel">
+            <div class="filters-row">
+              <select id="filterMarca" class="filter-select">
+                <option value="">Marca</option>
+              </select>
+              <select id="filterRubro" class="filter-select">
+                <option value="">Rubro</option>
+              </select>
+              <select id="filterTalle" class="filter-select">
+                <option value="">Talle</option>
+              </select>
+            </div>
+            <div class="filters-row">
+              <button class="btn" id="resetFiltersBtn">Limpiar filtros</button>
+            </div>
           </div>
         </div>
-        <div class="filters-footer">
-          <button id="applyFiltersBtn" class="pill-button primary" type="button">
-            <span class="icon">🔎</span>
-            <span>Aplicar filtros</span>
-          </button>
-          <button id="resetFiltersBtn" class="pill-button" type="button">
-            <span class="icon">♻️</span>
-            <span>Reset filtros</span>
-          </button>
+
+        <div class="results-panel">
+          <div class="results-header">
+            <div class="results-summary" id="resultsSummary">
+              Sin resultados todavía.
+            </div>
+            <div class="results-view-tabs" id="viewTabs">
+              <div class="results-view-tab active" data-view="resumen">Resumen</div>
+              <div class="results-view-tab" data-view="tabla">Tabla</div>
+              <div class="results-view-tab" data-view="talles">Por talle</div>
+            </div>
+          </div>
+
+          <div class="results-body">
+            <div class="results-scroll" id="resultsContainer">
+              <!-- Contenido dinámico -->
+            </div>
+          </div>
         </div>
       </section>
 
-      <section class="results-panel">
-        <div class="results-header">
-          <div class="results-title">
-            Resultados: <strong id="resultsCount">Sin resultados</strong>
-          </div>
-          <div class="results-actions">
-            <button id="copyViewBtn" class="pill-button primary" type="button">
-              <span class="icon">📋</span>
-              <span>Copiar esta vista</span>
-            </button>
-          </div>
-        </div>
-
-        <div class="view-tabs">
-          <button class="view-tab active" data-view="resumen" type="button">Resumen</button>
-          <button class="view-tab" data-view="tarjetas" type="button">Tarjetas</button>
-          <button class="view-tab" data-view="lista" type="button">Lista</button>
-          <button class="view-tab" data-view="tabla" type="button">Tabla</button>
-          <button class="view-tab" data-view="dashboard" type="button">Dashboard</button>
-        </div>
-
-        <div class="results-body">
-          <div id="resultsScroll" class="results-scroll">
-            <div id="resultsContent" class="no-results">
-              Sin resultados. Probá con otro artículo, código o filtro.
+      <section class="panel">
+        <div class="right-panel-section">
+          <div class="panel-header">
+            <div>
+              <div class="panel-title">Voz y estado</div>
+              <div class="panel-subtitle">Comandos por voz · Estado del sistema</div>
             </div>
           </div>
-          <div id="voiceLine" class="voice-line"></div>
-        </div>
 
-        <div class="footer-bar">
-          <div class="connection-line" id="connectionLine">
-            <div class="connection-line-inner"></div>
+          <div class="voice-row">
+            <div class="voice-status">
+              <div class="voice-dot" id="voiceDot"></div>
+              <span id="voiceStatusText">Voz en espera</span>
+            </div>
+            <button class="btn" id="voiceToggleBtn">
+              <span class="btn-icon">🎧</span>
+              Auto-escucha
+            </button>
           </div>
-          <div class="footer-text">
-            STOCK IA PRO · <strong>V.26.01</strong> · SALAS CREATIVE STUDIO
+
+          <div class="panel-header">
+            <div>
+              <div class="panel-title">Dashboard</div>
+              <div class="panel-subtitle">Totales · Stock · Alertas</div>
+            </div>
+          </div>
+
+          <div class="dashboard-body">
+            <div class="dashboard-metrics">
+              <div class="metric-card">
+                <div class="metric-label">Artículos</div>
+                <div class="metric-value" id="metricArticulos">0</div>
+                <div class="metric-sub">Encontrados</div>
+              </div>
+              <div class="metric-card">
+                <div class="metric-label">Pares</div>
+                <div class="metric-value" id="metricPares">0</div>
+                <div class="metric-sub">Totales</div>
+              </div>
+              <div class="metric-card">
+                <div class="metric-label">Alertas</div>
+                <div class="metric-value" id="metricAlertas">0</div>
+                <div class="metric-sub">Stock bajo</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="admin-secret" id="adminSecret">
+            .
+          </div>
+
+          <div class="admin-panel" id="adminPanel">
+            <h4>Panel administrador</h4>
+            <div>Comandos internos, pruebas y herramientas.</div>
+            <div class="admin-row">
+              <button class="btn" id="adminPingBtn">Ping backend</button>
+              <button class="btn" id="adminDummyDataBtn">Cargar datos demo</button>
+              <button class="btn" id="adminClearBtn">Limpiar resultados</button>
+            </div>
           </div>
         </div>
       </section>
     </main>
   </div>
 
-  <div id="adminPanel" class="admin-panel">
-    <div class="admin-card">
-      <div class="admin-header">
-        <div>
-          <div class="admin-title">Panel administrador · ORB & sistema</div>
-          <div class="admin-sub">Solo vos conocés este acceso. Clave: ADMIN + 5 clics en el ORB.</div>
-        </div>
-        <button id="adminCloseBtn" class="admin-close" type="button">✕</button>
-      </div>
-
-      <div class="admin-section-title">Estilo del ORB</div>
-      <div class="admin-grid">
-        <div class="admin-field">
-          <div class="admin-label">Preset visual</div>
-          <select id="adminOrbPreset" class="admin-select">
-            <option value="A">A — Esfera suave</option>
-            <option value="B">B — Glow fuerte</option>
-            <option value="C">C — Pulso dinámico</option>
-            <option value="D">D — Cristal + halo fuerte (default)</option>
-          </select>
-        </div>
-        <div class="admin-field">
-          <div class="admin-label">Intensidad del halo</div>
-          <select id="adminHaloIntensity" class="admin-select">
-            <option value="low">Baja</option>
-            <option value="medium">Media</option>
-            <option value="high">Alta (default)</option>
-          </select>
-        </div>
-        <div class="admin-field">
-          <div class="admin-label">Velocidad de respiración</div>
-          <select id="adminBreathSpeed" class="admin-select">
-            <option value="slow">Lenta</option>
-            <option value="medium">Media</option>
-            <option value="fast">Rápida</option>
-          </select>
-        </div>
-        <div class="admin-field">
-          <div class="admin-label">Velocidad de rotación</div>
-          <select id="adminRotateSpeed" class="admin-select">
-            <option value="off">Sin rotación</option>
-            <option value="slow">Lenta (default)</option>
-            <option value="medium">Media</option>
-          </select>
-        </div>
-        <div class="admin-field">
-          <div class="admin-label">Brillo interno</div>
-          <select id="adminInnerGlow" class="admin-select">
-            <option value="soft">Suave</option>
-            <option value="medium">Medio</option>
-            <option value="strong">Fuerte (default)</option>
-          </select>
-        </div>
-        <div class="admin-field">
-          <div class="admin-label">Paleta de color</div>
-          <select id="adminColorPalette" class="admin-select">
-            <option value="violet-blue">Violeta → Azul (default)</option>
-            <option value="blue-cyan">Azul → Cian</option>
-            <option value="pink-violet">Rosa → Violeta</option>
-            <option value="white-blue">Blanco → Azul (cristal puro)</option>
-          </select>
-        </div>
-      </div>
-
-      <div class="admin-footer">
-        <button id="adminResetOrbBtn" class="pill-button danger" type="button">
-          <span class="icon">↺</span>
-          <span>Restaurar ORB por defecto</span>
-        </button>
-        <button id="adminSaveBtn" class="pill-button primary" type="button">
-          <span class="icon">💾</span>
-          <span>Guardar ajustes</span>
-        </button>
-      </div>
-      <div class="admin-note">
-        Los cambios se guardan localmente en este dispositivo (localStorage). El usuario común no ve ni controla nada de esto.
-      </div>
-    </div>
-  </div>
-
   <script>
-    const API_URL = "https://stock-backend-1-0upi.onrender.com/query";
-
-    const queryInput = document.getElementById("queryInput");
-    const searchBtn = document.getElementById("searchBtn");
-    const voiceBtn = document.getElementById("voiceBtn");
-    const scanBtn = document.getElementById("scanBtn");
-    const filtersToggle = document.getElementById("filtersToggle");
-    const filtersPanel = document.getElementById("filtersPanel");
-    const filterMarca = document.getElementById("filterMarca");
-    const filterRubro = document.getElementById("filterRubro");
-    const filterTalleDesde = document.getElementById("filterTalleDesde");
-    const filterTalleHasta = document.getElementById("filterTalleHasta");
-    const filterSoloStock = document.getElementById("filterSoloStock");
-    const applyFiltersBtn = document.getElementById("applyFiltersBtn");
-    const resetFiltersBtn = document.getElementById("resetFiltersBtn");
-    const toggleStockBtn = document.getElementById("toggleStockBtn");
-    const copyGlobalBtn = document.getElementById("copyGlobalBtn");
-    const copyViewBtn = document.getElementById("copyViewBtn");
-    const clearBtn = document.getElementById("clearBtn");
-    const resultsCount = document.getElementById("resultsCount");
-    const resultsContent = document.getElementById("resultsContent");
-    const voiceLine = document.getElementById("voiceLine");
-    const viewTabs = document.querySelectorAll(".view-tab");
-    const statusDot = document.getElementById("statusDot");
-    const statusText = document.getElementById("statusText");
-    const connectionLine = document.getElementById("connectionLine");
-    const orb = document.getElementById("orb");
-    const adminPanel = document.getElementById("adminPanel");
-    const adminCloseBtn = document.getElementById("adminCloseBtn");
-    const adminOrbPreset = document.getElementById("adminOrbPreset");
-    const adminHaloIntensity = document.getElementById("adminHaloIntensity");
-    const adminBreathSpeed = document.getElementById("adminBreathSpeed");
-    const adminRotateSpeed = document.getElementById("adminRotateSpeed");
-    const adminInnerGlow = document.getElementById("adminInnerGlow");
-    const adminColorPalette = document.getElementById("adminColorPalette");
-    const adminResetOrbBtn = document.getElementById("adminResetOrbBtn");
-    const adminSaveBtn = document.getElementById("adminSaveBtn");
-
-    let originalResults = null;
-    let filteredResults = null;
+    // ---------------------------
+    // Estado global
+    // ---------------------------
+    let scannerMode = localStorage.getItem("scannerMode") || "3";
+    let stockOnly = localStorage.getItem("stockOnly") === "true";
+    let autoListen = localStorage.getItem("autoListen") === "true";
+    let theme = localStorage.getItem("theme") || "dark";
     let currentView = "resumen";
-    let showOnlyStock = false;
-    let isProcessing = false;
-    let orbClickCount = 0;
-    let orbClickTimer = null;
-    const ORB_CLICK_WINDOW = 800;
-    const ADMIN_SECRET = "ADMIN";
+    let resultsData = [];
+    let adminTapCount = 0;
+    let adminTapTimer = null;
 
-    const ORB_DEFAULT_CONFIG = {
-      preset: "D",
-      haloIntensity: "high",
-      breathSpeed: "medium",
-      rotateSpeed: "slow",
-      innerGlow: "strong",
-      colorPalette: "violet-blue"
-    };
-
-    function loadOrbConfig() {
-      try {
-        const stored = localStorage.getItem("stockIaPro_orbConfig");
-        if (!stored) return { ...ORB_DEFAULT_CONFIG };
-        const parsed = JSON.parse(stored);
-        return { ...ORB_DEFAULT_CONFIG, ...parsed };
-      } catch {
-        return { ...ORB_DEFAULT_CONFIG };
-      }
-    }
-
-    function saveOrbConfig(config) {
-      try {
-        localStorage.setItem("stockIaPro_orbConfig", JSON.stringify(config));
-      } catch {}
-    }
-
-    function applyOrbConfig(config) {
-      const halo = document.querySelector(".orb-halo");
-      const innerGlow = document.querySelector(".orb-inner-glow");
-      const shadow = document.querySelector(".orb-shadow");
-
-      let haloOpacity = 0.7;
-      let haloScale = 1;
-      if (config.haloIntensity === "low") {
-        haloOpacity = 0.4;
-        haloScale = 0.95;
-      } else if (config.haloIntensity === "medium") {
-        haloOpacity = 0.8;
-        haloScale = 1.02;
+    // ---------------------------
+    // Utilidades
+    // ---------------------------
+    function setTheme(mode) {
+      theme = mode;
+      document.body.setAttribute("data-theme", mode);
+      localStorage.setItem("theme", mode);
+      const toggle = document.getElementById("themeToggle");
+      if (mode === "light") {
+        toggle.classList.add("on");
       } else {
-        haloOpacity = 1;
-        haloScale = 1.08;
+        toggle.classList.remove("on");
       }
-      halo.style.opacity = haloOpacity;
-      halo.style.transform = `scale(${haloScale})`;
+    }
 
-      let breathDuration = "5.5s";
-      if (config.breathSpeed === "slow") breathDuration = "7s";
-      else if (config.breathSpeed === "fast") breathDuration = "4s";
+    function setScannerMode(mode) {
+      scannerMode = mode;
+      localStorage.setItem("scannerMode", mode);
+      document.querySelectorAll(".scanner-segment").forEach(btn => {
+        btn.classList.toggle("active", btn.dataset.mode === mode);
+      });
+    }
 
-      let rotateDuration = "26s";
-      if (config.rotateSpeed === "off") rotateDuration = "0s";
-      else if (config.rotateSpeed === "medium") rotateDuration = "18s";
+    function setStockOnly(on) {
+      stockOnly = on;
+      localStorage.setItem("stockOnly", on ? "true" : "false");
+      const chip = document.getElementById("stockOnlyToggle");
+      chip.classList.toggle("active", on);
+    }
 
-      let animations = [];
-      animations.push(`orbBreath ${breathDuration} ease-in-out infinite`);
-      if (config.rotateSpeed !== "off") {
-        animations.push(`orbRotate ${rotateDuration} linear infinite`);
-      }
-      orb.style.animation = animations.join(", ");
+    function setAutoListen(on) {
+      autoListen = on;
+      localStorage.setItem("autoListen", on ? "true" : "false");
+      const btn = document.getElementById("voiceToggleBtn");
+      btn.classList.toggle("active", on);
+    }
 
-      let innerOpacity = 0.7;
-      if (config.innerGlow === "soft") innerOpacity = 0.5;
-      else if (config.innerGlow === "strong") innerOpacity = 0.9;
-      innerGlow.style.opacity = innerOpacity;
-
-      let bg;
-      switch (config.colorPalette) {
-        case "blue-cyan":
-          bg = `
-            radial-gradient(circle at 30% 20%, rgba(255,255,255,0.95) 0, rgba(255,255,255,0.0) 35%),
-            radial-gradient(circle at 70% 80%, rgba(56,189,248,0.45) 0, rgba(15,23,42,0.0) 55%),
-            radial-gradient(circle at 50% 50%, #1d4ed8 0, #0ea5e9 40%, #22d3ee 75%, #020617 100%)
-          `;
-          break;
-        case "pink-violet":
-          bg = `
-            radial-gradient(circle at 30% 20%, rgba(255,255,255,0.95) 0, rgba(255,255,255,0.0) 35%),
-            radial-gradient(circle at 70% 80%, rgba(244,114,182,0.45) 0, rgba(15,23,42,0.0) 55%),
-            radial-gradient(circle at 50% 50%, #db2777 0, #7c3aed 40%, #4f46e5 75%, #020617 100%)
-          `;
-          break;
-        case "white-blue":
-          bg = `
-            radial-gradient(circle at 30% 20%, rgba(255,255,255,1) 0, rgba(255,255,255,0.0) 40%),
-            radial-gradient(circle at 70% 80%, rgba(191,219,254,0.6) 0, rgba(15,23,42,0.0) 55%),
-            radial-gradient(circle at 50% 50%, #e5e7eb 0, #93c5fd 40%, #1d4ed8 75%, #020617 100%)
-          `;
-          break;
-        default:
-          bg = `
-            radial-gradient(circle at 30% 20%, rgba(255,255,255,0.95) 0, rgba(255,255,255,0.0) 35%),
-            radial-gradient(circle at 70% 80%, rgba(56,189,248,0.35) 0, rgba(15,23,42,0.0) 55%),
-            radial-gradient(circle at 50% 50%, #4f46e5 0, #1d4ed8 40%, #0ea5e9 75%, #020617 100%)
-          `;
-      }
-      orb.style.background = bg;
-
-      let boxShadow;
-      if (config.preset === "A") {
-        boxShadow = "0 0 28px rgba(129,140,248,0.7), 0 0 60px rgba(59,130,246,0.7)";
-      } else if (config.preset === "B") {
-        boxShadow = "0 0 45px rgba(129,140,248,1), 0 0 110px rgba(59,130,246,1)";
-      } else if (config.preset === "C") {
-        boxShadow = "0 0 38px rgba(129,140,248,0.9), 0 0 90px rgba(59,130,246,0.9)";
+    function setConnectionStatus(online) {
+      const pill = document.getElementById("connectionStatus");
+      const label = pill.querySelector(".status-label");
+      const sub = pill.querySelector("div div:nth-child(2)");
+      const dot = pill.querySelector(".status-dot");
+      if (online) {
+        label.textContent = "Conectado";
+        sub.textContent = "Backend online";
+        dot.style.background = "var(--success)";
+        dot.style.boxShadow = "0 0 8px rgba(61, 220, 151, 0.9)";
       } else {
-        boxShadow = "0 0 55px rgba(129,140,248,1), 0 0 120px rgba(59,130,246,1)";
+        label.textContent = "Desconectado";
+        sub.textContent = "Sin respuesta";
+        dot.style.background = "var(--danger)";
+        dot.style.boxShadow = "0 0 8px rgba(255, 79, 106, 0.9)";
       }
-      orb.style.boxShadow = boxShadow;
-
-      shadow.style.opacity = config.preset === "A" ? 0.6 : 0.75;
     }
 
-    function initOrbAdminControls() {
-      const config = loadOrbConfig();
-      adminOrbPreset.value = config.preset;
-      adminHaloIntensity.value = config.haloIntensity;
-      adminBreathSpeed.value = config.breathSpeed;
-      adminRotateSpeed.value = config.rotateSpeed;
-      adminInnerGlow.value = config.innerGlow;
-      adminColorPalette.value = config.colorPalette;
-      applyOrbConfig(config);
+    function setView(view) {
+      currentView = view;
+      document.querySelectorAll(".results-view-tab").forEach(tab => {
+        tab.classList.toggle("active", tab.dataset.view === view);
+      });
+      renderResults();
     }
 
-    function openAdminPanel() {
-      adminPanel.classList.add("visible");
-    }
-
-    function closeAdminPanel() {
-      adminPanel.classList.remove("visible");
-    }
-
-    orb.addEventListener("click", () => {
-      const now = Date.now();
-      if (!orbClickTimer) {
-        orbClickTimer = setTimeout(() => {
-          orbClickCount = 0;
-          orbClickTimer = null;
-        }, ORB_CLICK_WINDOW);
-      }
-      orbClickCount++;
-      if (orbClickCount >= 5) {
-        orbClickCount = 0;
-        clearTimeout(orbClickTimer);
-        orbClickTimer = null;
-        openAdminPanel();
-      }
-    });
-
-    adminCloseBtn.addEventListener("click", closeAdminPanel);
-
-    adminResetOrbBtn.addEventListener("click", () => {
-      const config = { ...ORB_DEFAULT_CONFIG };
-      saveOrbConfig(config);
-      initOrbAdminControls();
-    });
-
-    adminSaveBtn.addEventListener("click", () => {
-      const config = {
-        preset: adminOrbPreset.value,
-        haloIntensity: adminHaloIntensity.value,
-        breathSpeed: adminBreathSpeed.value,
-        rotateSpeed: adminRotateSpeed.value,
-        innerGlow: adminInnerGlow.value,
-        colorPalette: adminColorPalette.value
-      };
-      saveOrbConfig(config);
-      applyOrbConfig(config);
-      closeAdminPanel();
-    });
-
-    function setStatus(state) {
-      statusDot.classList.remove("connected", "processing");
-      connectionLine.classList.remove("error", "processing");
-      if (state === "connected") {
-        statusDot.classList.add("connected");
-        statusText.textContent = "Conectado";
-      } else if (state === "processing") {
-        statusDot.classList.add("processing");
-        statusText.textContent = "Procesando...";
-        connectionLine.classList.add("processing");
-      } else if (state === "error") {
-        statusText.textContent = "Error";
-        connectionLine.classList.add("error");
+    function setVoiceListening(listening) {
+      const dot = document.getElementById("voiceDot");
+      const text = document.getElementById("voiceStatusText");
+      if (listening) {
+        dot.classList.add("listening");
+        text.textContent = "Escuchando…";
       } else {
-        statusText.textContent = "Desconectado";
+        dot.classList.remove("listening");
+        text.textContent = "Voz en espera";
       }
     }
 
-    async function pingBackend() {
-      try {
-        const res = await fetch(API_URL, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ question: "ping", solo_stock: false })
-        });
-        if (res.ok) {
-          setStatus("connected");
-        } else {
-          setStatus("error");
-        }
-      } catch {
-        setStatus("error");
-      }
-    }
-
-    function parseVoiceQuery(text) {
+    function normalizeText(text) {
       if (!text) return "";
-      let q = text.trim();
-      const lower = q.toLowerCase();
-
-      if (lower === ADMIN_SECRET.toLowerCase()) {
-        openAdminPanel();
-        return "";
-      }
-
-      const match = lower.match(/(.+?)\s+(en|del|de|para)?\s*talle\s+(\d+([.,]\d+)?)/i);
-      if (match) {
-        const articulo = match[1].trim().toUpperCase();
-        const talle = match[3].replace(",", ".");
-        return `${articulo}/${talle}`;
-      }
-
-      return q.toUpperCase();
+      let t = text.toLowerCase();
+      t = t.replace(/\bvendas\b/g, "ventas");
+      t = t.replace(/\bvenda\b/g, "venta");
+      return t;
     }
 
-    function normalizeQueryFromInput() {
-      const raw = queryInput.value.trim();
+    // ---------------------------
+    // Scanner: parseo de código
+    // ---------------------------
+    function procesarCodigoEscaneado(raw) {
       if (!raw) return "";
-      if (raw.toUpperCase() === ADMIN_SECRET) {
-        openAdminPanel();
-        return "";
-      }
-      return raw;
-    }
+      const partes = raw.trim().split(/\s+/);
+      const articulo = partes[0] || "";
+      let color = null;
+      let talle = null;
 
-    async function doSearch() {
-      const raw = normalizeQueryFromInput();
-      if (!raw) return;
-
-      const parsed = parseVoiceQuery(raw);
-      const finalQuery = parsed || raw;
-
-      queryInput.value = finalQuery;
-
-      isProcessing = true;
-      setStatus("processing");
-      orb.classList.add("orb-processing");
-      searchBtn.disabled = true;
-
-      const soloStockFlag = false;
-
-      try {
-        const res = await fetch(API_URL, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            question: finalQuery,
-            solo_stock: soloStockFlag
-          })
-        });
-
-        if (!res.ok) {
-          throw new Error("Error HTTP");
+      for (const p of partes) {
+        if (/^\d+([.,]\d+)?$/.test(p)) {
+          talle = p.replace(",", ".");
         }
-
-        const data = await res.json();
-        handleBackendResponse(data);
-        setStatus("connected");
-      } catch {
-        originalResults = null;
-        filteredResults = null;
-        resultsCount.textContent = "Error al consultar el backend";
-        resultsContent.className = "no-results";
-        resultsContent.textContent = "Ocurrió un error al consultar el backend. Probá nuevamente.";
-        voiceLine.textContent = "";
-        setStatus("error");
-      } finally {
-        isProcessing = false;
-        orb.classList.remove("orb-processing");
-        searchBtn.disabled = false;
-      }
-    }
-
-    function handleBackendResponse(data) {
-      if (!data || !Array.isArray(data.items)) {
-        originalResults = null;
-        filteredResults = null;
-        resultsCount.textContent = "Sin resultados";
-        resultsContent.className = "no-results";
-        resultsContent.textContent = "Sin resultados. Probá con otro artículo, código o filtro.";
-        voiceLine.textContent = data && data.voz ? data.voz : "";
-        return;
       }
 
-      originalResults = data.items;
-      filteredResults = [...originalResults];
-
-      populateFiltersFromResults(originalResults);
-      applyFilters(false);
-
-      const totalArticulos = filteredResults.length;
-      const totalStock = filteredResults.reduce((acc, item) => {
-        const sum = (item.talles || []).reduce((s, t) => s + (Number(t.stock) || 0), 0);
-        return acc + sum;
-      }, 0);
-      const marcas = new Set(filteredResults.map(i => i.marca || "").filter(Boolean));
-      const rubros = new Set(filteredResults.map(i => i.rubro || "").filter(Boolean));
-
-      resultsCount.textContent = `${totalArticulos} resultado(s)`;
-      voiceLine.textContent = data.voz || "";
-
-      renderCurrentView();
-    }
-
-    function populateFiltersFromResults(items) {
-      const marcas = new Set();
-      const rubros = new Set();
-
-      items.forEach(item => {
-        if (item.marca) marcas.add(item.marca);
-        if (item.rubro) rubros.add(item.rubro);
-      });
-
-      const marcaSelected = filterMarca.value;
-      const rubroSelected = filterRubro.value;
-
-      filterMarca.innerHTML = '<option value="">Todas</option>';
-      Array.from(marcas).sort().forEach(m => {
-        const opt = document.createElement("option");
-        opt.value = m;
-        opt.textContent = m;
-        filterMarca.appendChild(opt);
-      });
-
-      filterRubro.innerHTML = '<option value="">Todos</option>';
-      Array.from(rubros).sort().forEach(r => {
-        const opt = document.createElement("option");
-        opt.value = r;
-        opt.textContent = r;
-        filterRubro.appendChild(opt);
-      });
-
-      if (marcaSelected && marcas.has(marcaSelected)) {
-        filterMarca.value = marcaSelected;
-      }
-      if (rubroSelected && rubros.has(rubroSelected)) {
-        filterRubro.value = rubroSelected;
-      }
-    }
-
-    function parseTalleValue(t) {
-      if (!t) return null;
-      const cleaned = String(t).replace(",", ".").match(/[\d.]+/);
-      if (!cleaned) return null;
-      const num = parseFloat(cleaned[0]);
-      return isNaN(num) ? null : num;
-    }
-
-    function applyFilters(updateView = true) {
-      if (!originalResults) {
-        filteredResults = null;
-        resultsContent.className = "no-results";
-        resultsContent.textContent = "Sin resultados. Probá con otro artículo, código o filtro.";
-        return;
-      }
-
-      const marca = filterMarca.value;
-      const rubro = filterRubro.value;
-      const soloStockVal = filterSoloStock.value;
-      const desde = filterTalleDesde.value.trim();
-      const hasta = filterTalleHasta.value.trim();
-
-      const desdeNum = desde ? parseFloat(desde.replace(",", ".")) : null;
-      const hastaNum = hasta ? parseFloat(hasta.replace(",", ".")) : null;
-
-      filteredResults = originalResults.filter(item => {
-        if (marca && item.marca !== marca) return false;
-        if (rubro && item.rubro !== rubro) return false;
-
-        let talles = item.talles || [];
-
-        if (desdeNum !== null || hastaNum !== null) {
-          talles = talles.filter(t => {
-            const val = parseTalleValue(t.talle);
-            if (val === null) return false;
-            if (desdeNum !== null && val < desdeNum) return false;
-            if (hastaNum !== null && val > hastaNum) return false;
-            return true;
-          });
-          if (talles.length === 0) return false;
+      for (const p of partes) {
+        if (!/^\d/.test(p) && p !== articulo) {
+          color = p.toUpperCase();
         }
+      }
 
-        if (showOnlyStock || soloStockVal === "true") {
-          const hasStock = talles.some(t => Number(t.stock) > 0);
-          if (!hasStock) return false;
+      if (scannerMode === "1") {
+        return articulo;
+      }
+
+      if (scannerMode === "2") {
+        return `${articulo}/${color || ""}/${talle || ""}`;
+      }
+
+      if (scannerMode === "3") {
+        if (talle || color) {
+          return `${articulo}/${color || ""}/${talle || ""}`;
         }
-
-        return true;
-      });
-
-      const totalArticulos = filteredResults.length;
-      const totalStock = filteredResults.reduce((acc, item) => {
-        const sum = (item.talles || []).reduce((s, t) => s + (Number(t.stock) || 0), 0);
-        return acc + sum;
-      }, 0);
-      const marcas = new Set(filteredResults.map(i => i.marca || "").filter(Boolean));
-      const rubros = new Set(filteredResults.map(i => i.rubro || "").filter(Boolean));
-
-      resultsCount.textContent = totalArticulos
-        ? `${totalArticulos} resultado(s)`
-        : "Sin resultados";
-
-      if (!totalArticulos) {
-        resultsContent.className = "no-results";
-        resultsContent.textContent = "Sin resultados. Ajustá filtros o probá con otro artículo.";
-        return;
+        return articulo;
       }
 
-      if (updateView) {
-        renderCurrentView();
-      }
+      return articulo;
     }
 
-    function renderCurrentView() {
-      if (!filteredResults || filteredResults.length === 0) {
-        resultsContent.className = "no-results";
-        resultsContent.textContent = "Sin resultados. Ajustá filtros o probá con otro artículo.";
+    // ---------------------------
+    // Render de resultados
+    // ---------------------------
+    function renderResults() {
+      const container = document.getElementById("resultsContainer");
+      const summary = document.getElementById("resultsSummary");
+      const metricArt = document.getElementById("metricArticulos");
+      const metricPares = document.getElementById("metricPares");
+      const metricAlertas = document.getElementById("metricAlertas");
+
+      if (!resultsData || resultsData.length === 0) {
+        container.innerHTML = `<div style="font-size:11px;color:var(--text-soft);padding:6px;">Sin resultados todavía. Probá buscar un artículo o usar el scanner.</div>`;
+        summary.textContent = "Sin resultados.";
+        metricArt.textContent = "0";
+        metricPares.textContent = "0";
+        metricAlertas.textContent = "0";
         return;
       }
+
+      const filtered = stockOnly
+        ? resultsData.filter(r => (r.stock || 0) > 0)
+        : resultsData.slice();
+
+      const totalArt = filtered.length;
+      const totalPares = filtered.reduce((acc, r) => acc + (r.stock || 0), 0);
+      const alertas = filtered.filter(r => (r.stock || 0) > 0 && (r.stock || 0) <= 2).length;
+
+      summary.textContent = `${totalArt} artículos · ${totalPares} pares · ${alertas} alertas`;
+
+      metricArt.textContent = String(totalArt);
+      metricPares.textContent = String(totalPares);
+      metricAlertas.textContent = String(alertas);
 
       if (currentView === "resumen") {
-        renderResumen();
-      } else if (currentView === "tarjetas") {
-        renderTarjetas();
-      } else if (currentView === "lista") {
-        renderLista();
-      } else if (currentView === "tabla") {
-        renderTabla();
-      } else if (currentView === "dashboard") {
-        renderDashboard();
-      }
-    }
-
-    function renderResumen() {
-      const totalArticulos = filteredResults.length;
-      const totalStock = filteredResults.reduce((acc, item) => {
-        const sum = (item.talles || []).reduce((s, t) => s + (Number(t.stock) || 0), 0);
-        return acc + sum;
-      }, 0);
-      const marcas = new Set(filteredResults.map(i => i.marca || "").filter(Boolean));
-      const rubros = new Set(filteredResults.map(i => i.rubro || "").filter(Boolean));
-
-      resultsContent.className = "";
-      resultsContent.innerHTML = `
-        <div class="summary-grid">
-          <div class="summary-card">
-            <div class="summary-label">Artículos encontrados</div>
-            <div class="summary-value">${totalArticulos}</div>
-            <div class="summary-sub">Coinciden con la consulta actual</div>
-          </div>
-          <div class="summary-card">
-            <div class="summary-label">Stock total</div>
-            <div class="summary-value">${totalStock}</div>
-            <div class="summary-sub">Suma de todos los talles</div>
-          </div>
-          <div class="summary-card">
-            <div class="summary-label">Marcas</div>
-            <div class="summary-value">${marcas.size}</div>
-            <div class="summary-sub">Marcas distintas en el resultado</div>
-          </div>
-          <div class="summary-card">
-            <div class="summary-label">Rubros</div>
-            <div class="summary-value">${rubros.size}</div>
-            <div class="summary-sub">Rubros distintos en el resultado</div>
-          </div>
-        </div>
-      `;
-    }
-
-    function renderTarjetas() {
-      resultsContent.className = "";
-      const cards = filteredResults
-        .map(item => {
-          const totalStock = (item.talles || []).reduce(
-            (acc, t) => acc + (Number(t.stock) || 0),
-            0
-          );
-          const tallesStr = (item.talles || [])
-            .map(t => `${t.talle} (${t.stock})`)
-            .join(", ");
-          const precio = item.precio ? item.precio.toLocaleString("es-AR") : "-";
-          return `
-            <div class="item-card">
-              <div class="item-header">
-                <div>
-                  <div class="item-code">${item.codigo || ""}</div>
-                  <div class="item-brand">${item.marca || ""} · ${item.rubro || ""}</div>
+        container.innerHTML = filtered
+          .map(r => {
+            const stockClass = (r.stock || 0) <= 2 ? "stock-low" : "stock-ok";
+            return `
+              <div style="padding:6px 8px;border-radius:10px;border:1px solid var(--border-soft);margin-bottom:4px;background:rgba(255,255,255,0.02);display:flex;justify-content:space-between;align-items:center;gap:8px;">
+                <div style="font-size:11px;">
+                  <div style="font-weight:600;">${r.articulo || ""} ${r.color || ""}</div>
+                  <div style="font-size:10px;color:var(--text-soft);">Talle ${r.talle || "-"} · ${r.marca || ""} · ${r.rubro || ""}</div>
+                </div>
+                <div style="text-align:right;font-size:11px;">
+                  <div class="${stockClass}">${r.stock || 0} pares</div>
+                  <div style="font-size:10px;color:var(--text-soft);">Depósito</div>
                 </div>
               </div>
-              <div class="item-desc">${item.descripcion || ""}</div>
-              <div class="item-meta">
-                <span>Color: ${item.color || "-"}</span>
-                <span>Art: ${item.codigo || "-"}</span>
-              </div>
-              <div class="item-talles">Talles: ${tallesStr || "-"}</div>
-              <div class="item-footer">
-                <div class="item-price">$ ${precio}</div>
-                <div class="item-stock">Stock total: ${totalStock}</div>
-              </div>
-            </div>
-          `;
-        })
-        .join("");
-
-      resultsContent.innerHTML = `<div class="cards-grid">${cards}</div>`;
-    }
-
-    function renderLista() {
-      resultsContent.className = "";
-      const rows = filteredResults
-        .map(item => {
-          const totalStock = (item.talles || []).reduce(
-            (acc, t) => acc + (Number(t.stock) || 0),
-            0
-          );
-          const tallesStr = (item.talles || [])
-            .map(t => `${t.talle} (${t.stock})`)
-            .join(", ");
-          const precio = item.precio ? item.precio.toLocaleString("es-AR") : "-";
-          return `
-            <tr>
-              <td>${item.marca || ""}</td>
-              <td>${item.rubro || ""}</td>
-              <td>${item.codigo || ""}</td>
-              <td>${item.descripcion || ""}</td>
-              <td>$ ${precio}</td>
-              <td>${tallesStr || "-"}</td>
-              <td>${totalStock}</td>
-            </tr>
-          `;
-        })
-        .join("");
-
-      resultsContent.innerHTML = `
-        <div class="table-wrapper">
-          <table class="list-table">
-            <thead>
-              <tr>
-                <th>Marca</th>
-                <th>Rubro</th>
-                <th>Código</th>
-                <th>Artículo</th>
-                <th>Precio</th>
-                <th>Talles</th>
-                <th>Stock</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${rows}
-            </tbody>
-          </table>
-        </div>
-      `;
-    }
-
-    function renderTabla() {
-      resultsContent.className = "";
-      const rows = filteredResults
-        .map(item => {
-          const totalStock = (item.talles || []).reduce(
-            (acc, t) => acc + (Number(t.stock) || 0),
-            0
-          );
-          const tallesStr = (item.talles || [])
-            .map(t => `${t.talle} (${t.stock})`)
-            .join(", ");
-          const precio = item.precio ? item.precio.toLocaleString("es-AR") : "-";
-          return `
-            <tr>
-              <td>${item.codigo || ""}</td>
-              <td>${item.descripcion || ""}</td>
-              <td>${item.marca || ""}</td>
-              <td>${item.rubro || ""}</td>
-              <td>${tallesStr || "-"}</td>
-              <td>$ ${precio}</td>
-              <td>${totalStock}</td>
-              <td>${item.color || "-"}</td>
-            </tr>
-          `;
-        })
-        .join("");
-
-      resultsContent.innerHTML = `
-        <div class="table-wrapper">
-          <table class="data-table">
-            <thead>
-              <tr>
-                <th>Código</th>
-                <th>Descripción</th>
-                <th>Marca</th>
-                <th>Rubro</th>
-                <th>Talles</th>
-                <th>Precio</th>
-                <th>Stock total</th>
-                <th>Color</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${rows}
-            </tbody>
-          </table>
-        </div>
-      `;
-    }
-
-    function renderDashboard() {
-      resultsContent.className = "dashboard-placeholder";
-      resultsContent.textContent =
-        "Dashboard en construcción. Próximamente: gráficos de stock, marcas y rubros.";
-    }
-
-    function copyText(text) {
-      if (!text) return;
-      navigator.clipboard.writeText(text).catch(() => {});
-    }
-
-    function getCurrentViewText() {
-      if (!filteredResults || filteredResults.length === 0) return "";
-      if (currentView === "resumen") {
-        const totalArticulos = filteredResults.length;
-        const totalStock = filteredResults.reduce((acc, item) => {
-          const sum = (item.talles || []).reduce((s, t) => s + (Number(t.stock) || 0), 0);
-          return acc + sum;
-        }, 0);
-        const marcas = new Set(filteredResults.map(i => i.marca || "").filter(Boolean));
-        const rubros = new Set(filteredResults.map(i => i.rubro || "").filter(Boolean));
-        return [
-          `Artículos encontrados: ${totalArticulos}`,
-          `Stock total: ${totalStock}`,
-          `Marcas: ${marcas.size}`,
-          `Rubros: ${rubros.size}`
-        ].join("\n");
+            `;
+          })
+          .join("");
+        return;
       }
 
-      return filteredResults
-        .map(item => {
-          const totalStock = (item.talles || []).reduce(
-            (acc, t) => acc + (Number(t.stock) || 0),
-            0
-          );
-          const tallesStr = (item.talles || [])
-            .map(t => `${t.talle} (${t.stock})`)
-            .join(", ");
-          const precio = item.precio ? item.precio.toLocaleString("es-AR") : "-";
-          return [
-            `Código: ${item.codigo || ""}`,
-            `Descripción: ${item.descripcion || ""}`,
-            `Marca: ${item.marca || ""}`,
-            `Rubro: ${item.rubro || ""}`,
-            `Precio: $ ${precio}`,
-            `Talles: ${tallesStr || "-"}`,
-            `Stock total: ${totalStock}`,
-            `Color: ${item.color || "-"}`,
-            `---`
-          ].join("\n");
-        })
-        .join("\n");
+      if (currentView === "tabla") {
+        const rows = filtered
+          .map(r => {
+            const stockClass = (r.stock || 0) <= 2 ? "stock-low" : "stock-ok";
+            return `
+              <tr>
+                <td>${r.articulo || ""}</td>
+                <td>${r.color || ""}</td>
+                <td>${r.talle || ""}</td>
+                <td>${r.marca || ""}</td>
+                <td>${r.rubro || ""}</td>
+                <td class="${stockClass}">${r.stock || 0}</td>
+              </tr>
+            `;
+          })
+          .join("");
+
+        container.innerHTML = `
+          <div style="overflow:auto;">
+            <table class="results-table">
+              <thead>
+                <tr>
+                  <th>Artículo</th>
+                  <th>Color</th>
+                  <th>Talle</th>
+                  <th>Marca</th>
+                  <th>Rubro</th>
+                  <th>Stock</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${rows}
+              </tbody>
+            </table>
+          </div>
+        `;
+        return;
+      }
+
+      if (currentView === "talles") {
+        const porTalle = {};
+        for (const r of filtered) {
+          const key = r.talle || "-";
+          porTalle[key] = (porTalle[key] || 0) + (r.stock || 0);
+        }
+        const tallesOrdenados = Object.keys(porTalle).sort((a, b) => {
+          const na = parseFloat(a.replace(",", ".")) || 0;
+          const nb = parseFloat(b.replace(",", ".")) || 0;
+          return na - nb;
+        });
+
+        const rows = tallesOrdenados
+          .map(t => {
+            const stock = porTalle[t];
+            const stockClass = stock <= 2 ? "stock-low" : "stock-ok";
+            return `
+              <tr>
+                <td>${t}</td>
+                <td class="${stockClass}">${stock}</td>
+              </tr>
+            `;
+          })
+          .join("");
+
+        container.innerHTML = `
+          <div style="overflow:auto;">
+            <table class="results-table">
+              <thead>
+                <tr>
+                  <th>Talle</th>
+                  <th>Stock total</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${rows}
+              </tbody>
+            </table>
+          </div>
+        `;
+        return;
+      }
     }
 
-    searchBtn.addEventListener("click", doSearch);
+    // ---------------------------
+    // Búsqueda (dummy / integrar backend)
+    // ---------------------------
+    async function doSearch() {
+      const input = document.getElementById("queryInput");
+      let query = input.value.trim();
+      if (!query) return;
 
-    queryInput.addEventListener("keydown", e => {
-      if (e.key === "Enter") {
-        e.preventDefault();
-        doSearch();
+      query = normalizeText(query);
+
+      // Acá iría la llamada real al backend.
+      // Por ahora, datos demo para que veas el flujo completo.
+      const demo = [
+        { articulo: "04501-4", color: "NEGRO", talle: "38", marca: "Marca A", rubro: "Zapatilla", stock: 3 },
+        { articulo: "04501-4", color: "NEGRO", talle: "39", marca: "Marca A", rubro: "Zapatilla", stock: 1 },
+        { articulo: "04501-4", color: "BLANCO", talle: "38", marca: "Marca A", rubro: "Zapatilla", stock: 0 },
+        { articulo: "12345-1", color: "ROJO", talle: "40", marca: "Marca B", rubro: "Zapato", stock: 5 }
+      ];
+
+      resultsData = demo;
+      populateFiltersFromResults();
+      renderResults();
+    }
+
+    function populateFiltersFromResults() {
+      const marcaSel = document.getElementById("filterMarca");
+      const rubroSel = document.getElementById("filterRubro");
+      const talleSel = document.getElementById("filterTalle");
+
+      const marcas = new Set();
+      const rubros = new Set();
+      const talles = new Set();
+
+      for (const r of resultsData) {
+        if (r.marca) marcas.add(r.marca);
+        if (r.rubro) rubros.add(r.rubro);
+        if (r.talle) talles.add(r.talle);
       }
-    });
 
-    filtersToggle.addEventListener("click", () => {
-      filtersPanel.classList.toggle("visible");
-      filtersToggle.classList.toggle("active");
-    });
+      function fillSelect(sel, values, label) {
+        const current = sel.value;
+        sel.innerHTML = `<option value="">${label}</option>`;
+        Array.from(values)
+          .sort()
+          .forEach(v => {
+            const opt = document.createElement("option");
+            opt.value = v;
+            opt.textContent = v;
+            sel.appendChild(opt);
+          });
+        if (Array.from(values).includes(current)) {
+          sel.value = current;
+        }
+      }
 
-    applyFiltersBtn.addEventListener("click", () => applyFilters(true));
+      fillSelect(marcaSel, marcas, "Marca");
+      fillSelect(rubroSel, rubros, "Rubro");
+      fillSelect(talleSel, talles, "Talle");
+    }
 
-    resetFiltersBtn.addEventListener("click", () => {
-      filterMarca.value = "";
-      filterRubro.value = "";
-      filterTalleDesde.value = "";
-      filterTalleHasta.value = "";
-      filterSoloStock.value = "";
-      showOnlyStock = false;
-      toggleStockBtn.classList.remove("toggle-active");
-      applyFilters(true);
-    });
+    // ---------------------------
+    // Voz (placeholder)
+    // ---------------------------
+    function startVoiceOnce() {
+      setVoiceListening(true);
+      setTimeout(() => {
+        setVoiceListening(false);
+        // Simular que dijo algo:
+        // document.getElementById("queryInput").value = "04501-4";
+        // doSearch();
+      }, 1500);
+    }
 
-    toggleStockBtn.addEventListener("click", () => {
-      showOnlyStock = !showOnlyStock;
-      toggleStockBtn.classList.toggle("toggle-active", showOnlyStock);
-      applyFilters(true);
-    });
+    // ---------------------------
+    // Scanner (placeholder)
+    // ---------------------------
+    function startScannerOnce() {
+      const raw = "04501-4 NEGRO 38";
+      const parsed = procesarCodigoEscaneado(raw);
+      document.getElementById("queryInput").value = parsed;
+      doSearch();
+    }
 
-    viewTabs.forEach(tab => {
-      tab.addEventListener("click", () => {
-        viewTabs.forEach(t => t.classList.remove("active"));
-        tab.classList.add("active");
-        currentView = tab.dataset.view;
-        renderCurrentView();
+    // ---------------------------
+    // Admin oculto
+    // ---------------------------
+    function handleAdminTap() {
+      adminTapCount++;
+      if (adminTapTimer) clearTimeout(adminTapTimer);
+      adminTapTimer = setTimeout(() => {
+        adminTapCount = 0;
+      }, 1200);
+
+      if (adminTapCount >= 5) {
+        adminTapCount = 0;
+        const panel = document.getElementById("adminPanel");
+        panel.style.display = panel.style.display === "none" || panel.style.display === "" ? "block" : "none";
+      }
+    }
+
+    // ---------------------------
+    // Init
+    // ---------------------------
+    document.addEventListener("DOMContentLoaded", () => {
+      // Tema
+      setTheme(theme);
+
+      // Scanner mode
+      setScannerMode(scannerMode);
+      document.querySelectorAll(".scanner-segment").forEach(btn => {
+        btn.addEventListener("click", () => setScannerMode(btn.dataset.mode));
       });
-    });
 
-    copyGlobalBtn.addEventListener("click", () => {
-      const text = getCurrentViewText();
-      copyText(text);
-    });
+      // Stock only
+      setStockOnly(stockOnly);
+      document.getElementById("stockOnlyToggle").addEventListener("click", () => {
+        setStockOnly(!stockOnly);
+        renderResults();
+      });
 
-    copyViewBtn.addEventListener("click", () => {
-      const text = getCurrentViewText();
-      copyText(text);
-    });
+      // Auto listen
+      setAutoListen(autoListen);
 
-    clearBtn.addEventListener("click", () => {
-      queryInput.value = "";
-      originalResults = null;
-      filteredResults = null;
-      resultsCount.textContent = "Sin resultados";
-      resultsContent.className = "no-results";
-      resultsContent.textContent = "Sin resultados. Probá con otro artículo, código o filtro.";
-      voiceLine.textContent = "";
-      filterMarca.value = "";
-      filterRubro.value = "";
-      filterTalleDesde.value = "";
-      filterTalleHasta.value = "";
-      filterSoloStock.value = "";
-      showOnlyStock = false;
-      toggleStockBtn.classList.remove("toggle-active");
-    });
+      // Theme toggle
+      document.getElementById("themeToggle").addEventListener("click", () => {
+        setTheme(theme === "dark" ? "light" : "dark");
+      });
 
-    voiceBtn.addEventListener("click", () => {
-      alert("Reconocimiento de voz: en esta versión está simulado. Podés seguir usando el input.");
-    });
+      // Advanced filters
+      const advToggle = document.getElementById("advancedFiltersToggle");
+      const advPanel = document.getElementById("advancedFiltersPanel");
+      advToggle.addEventListener("click", () => {
+        const visible = advPanel.style.display === "flex";
+        advPanel.style.display = visible ? "none" : "flex";
+      });
 
-    scanBtn.addEventListener("click", () => {
-      alert("Scanner: en esta versión se asume que ya carga el código en el input. Luego presioná Buscar.");
-    });
+      document.getElementById("resetFiltersBtn").addEventListener("click", () => {
+        document.getElementById("filterMarca").value = "";
+        document.getElementById("filterRubro").value = "";
+        document.getElementById("filterTalle").value = "";
+        renderResults();
+      });
 
-    window.addEventListener("load", () => {
-      initOrbAdminControls();
-      pingBackend();
+      document.getElementById("filterMarca").addEventListener("change", renderResults);
+      document.getElementById("filterRubro").addEventListener("change", renderResults);
+      document.getElementById("filterTalle").addEventListener("change", renderResults);
+
+      // View tabs
+      document.querySelectorAll(".results-view-tab").forEach(tab => {
+        tab.addEventListener("click", () => setView(tab.dataset.view));
+      });
+
+      // Search
+      document.getElementById("searchBtn").addEventListener("click", doSearch);
+      document.getElementById("queryInput").addEventListener("keydown", e => {
+        if (e.key === "Enter") doSearch();
+      });
+
+      // Voice
+      document.getElementById("voiceBtn").addEventListener("click", startVoiceOnce);
+      document.getElementById("voiceToggleBtn").addEventListener("click", () => {
+        setAutoListen(!autoListen);
+      });
+
+      // Scanner
+      document.getElementById("scanBtn").addEventListener("click", startScannerOnce);
+
+      // Admin
+      document.getElementById("adminSecret").addEventListener("click", handleAdminTap);
+      document.getElementById("adminPanel").style.display = "none";
+
+      document.getElementById("adminPingBtn").addEventListener("click", () => {
+        alert("Ping backend (placeholder).");
+      });
+      document.getElementById("adminDummyDataBtn").addEventListener("click", () => {
+        resultsData = [
+          { articulo: "04501-4", color: "NEGRO", talle: "38", marca: "Marca A", rubro: "Zapatilla", stock: 3 },
+          { articulo: "04501-4", color: "NEGRO", talle: "39", marca: "Marca A", rubro: "Zapatilla", stock: 1 },
+          { articulo: "04501-4", color: "BLANCO", talle: "38", marca: "Marca A", rubro: "Zapatilla", stock: 0 },
+          { articulo: "12345-1", color: "ROJO", talle: "40", marca: "Marca B", rubro: "Zapato", stock: 5 }
+        ];
+        populateFiltersFromResults();
+        renderResults();
+      });
+      document.getElementById("adminClearBtn").addEventListener("click", () => {
+        resultsData = [];
+        renderResults();
+      });
+
+      // Estado inicial
+      setConnectionStatus(true);
+      renderResults();
     });
   </script>
 </body>
