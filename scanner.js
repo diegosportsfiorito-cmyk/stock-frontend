@@ -1,173 +1,206 @@
+// ============================================================
+// SCANNER.JS — Lector de códigos de barras / QR
+// ============================================================
+
 window.ORB_SCANNER = (function () {
-  let scannerStream = null;
-  let scannerActive = false;
-  let scannerDevices = [];
+
+  let stream = null;
   let currentDeviceId = null;
-  let zxingReader = null;
-  let barcodeDetector = null;
-  let scannerLoopActive = false;
+  let mode = "solo"; // solo | completo | auto
+  let scanning = false;
+  let torchOn = false;
 
-  async function initScannerEngines() {
-    if ("BarcodeDetector" in window) {
-      try {
-        barcodeDetector = new BarcodeDetector({
-          formats: ["ean_13", "ean_8", "code_128", "code_39", "upc_a", "upc_e", "qr_code"]
-        });
-      } catch {
-        barcodeDetector = null;
-      }
-    }
-    if (window.ZXing && window.ZXing.BrowserMultiFormatReader) {
-      zxingReader = new ZXing.BrowserMultiFormatReader();
-    }
+  const overlay = document.getElementById("scannerOverlay");
+  const video = document.getElementById("scannerVideo");
+  const cameraSelect = document.getElementById("cameraSelect");
+
+  // ------------------------------------------------------------
+  // Abrir scanner
+  // ------------------------------------------------------------
+  async function open() {
+    overlay.classList.remove("hidden");
+    await loadCameras();
+    await startCamera();
+    scanning = true;
+    scanLoop();
   }
 
-  async function listarDispositivosVideo() {
+  // ------------------------------------------------------------
+  // Cerrar scanner
+  // ------------------------------------------------------------
+  function close() {
+    overlay.classList.add("hidden");
+    scanning = false;
+    stopCamera();
+  }
+
+  // ------------------------------------------------------------
+  // Cargar cámaras disponibles
+  // ------------------------------------------------------------
+  async function loadCameras() {
     const devices = await navigator.mediaDevices.enumerateDevices();
-    scannerDevices = devices.filter(d => d.kind === "videoinput");
-    const select = document.getElementById("scannerDeviceSelect");
-    select.innerHTML = "";
-    scannerDevices.forEach((dev, idx) => {
-      const opt = document.createElement("option");
-      opt.value = dev.deviceId;
-      opt.textContent = dev.label || `Cámara ${idx + 1}`;
-      select.appendChild(opt);
-    });
-    if (scannerDevices.length > 0) {
-      currentDeviceId = scannerDevices[0].deviceId;
-      select.value = currentDeviceId;
+    const cams = devices.filter(d => d.kind === "videoinput");
+
+    cameraSelect.innerHTML = cams
+      .map(c => `<option value="${c.deviceId}">${c.label || "Cámara"}</option>`)
+      .join("");
+
+    if (!currentDeviceId && cams.length > 0) {
+      currentDeviceId = cams[0].deviceId;
     }
   }
 
-  async function iniciarStreamScanner(deviceId) {
-    const video = document.getElementById("scannerVideo");
-    if (scannerStream) {
-      scannerStream.getTracks().forEach(t => t.stop());
-      scannerStream = null;
-    }
-    const constraints = {
-      audio: false,
-      video: deviceId ? { deviceId: { exact: deviceId } } : { facingMode: "environment" }
-    };
-    scannerStream = await navigator.mediaDevices.getUserMedia(constraints);
-    video.srcObject = scannerStream;
-  }
+  // ------------------------------------------------------------
+  // Iniciar cámara
+  // ------------------------------------------------------------
+  async function startCamera() {
+    stopCamera();
 
-  function cerrarScannerOverlay() {
-    const overlay = document.getElementById("scannerOverlay");
-    overlay.classList.remove("visible");
-    scannerActive = false;
-    scannerLoopActive = false;
-    if (scannerStream) {
-      scannerStream.getTracks().forEach(t => t.stop());
-      scannerStream = null;
-    }
-  }
-
-  function manejarResultadoScan(texto) {
-    if (!texto) return;
-    try { navigator.vibrate && navigator.vibrate(80); } catch {}
-    try { beep.currentTime = 0; beep.play().catch(() => {}); } catch {}
-
-    const procesado = procesarCodigoEscaneado(texto);
-    const input = document.getElementById("queryInput");
-    input.value = procesado;
-    cerrarScannerOverlay();
-    document.getElementById("searchBtn").click();
-  }
-
-  function iniciarLoopDeteccion(videoEl) {
-    if (!scannerStream) return;
-    scannerLoopActive = true;
-
-    const canvas = document.createElement("canvas");
-    const ctx = canvas.getContext("2d");
-
-    const loop = async () => {
-      if (!scannerLoopActive || !scannerActive) return;
-
-      if (videoEl.readyState === videoEl.HAVE_ENOUGH_DATA) {
-        canvas.width = videoEl.videoWidth;
-        canvas.height = videoEl.videoHeight;
-        ctx.drawImage(videoEl, 0, 0, canvas.width, canvas.height);
-
-        try {
-          if (barcodeDetector) {
-            const bitmap = await createImageBitmap(canvas);
-            const codes = await barcodeDetector.detect(bitmap);
-            if (codes && codes.length > 0) {
-              const raw = codes[0].rawValue || "";
-              manejarResultadoScan(raw);
-              return;
-            }
-          } else if (zxingReader) {
-            const luminanceSource = new ZXing.HTMLCanvasElementLuminanceSource(canvas);
-            const binaryBitmap = new ZXing.BinaryBitmap(new ZXing.HybridBinarizer(luminanceSource));
-            const result = zxingReader.decode(binaryBitmap);
-            if (result && result.text) {
-              manejarResultadoScan(result.text);
-              return;
-            }
-          }
-        } catch {
-          // ZXing lanza excepciones cuando no encuentra código, es normal
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({
+        video: {
+          deviceId: currentDeviceId ? { exact: currentDeviceId } : undefined,
+          facingMode: "environment"
         }
-      }
-      requestAnimationFrame(loop);
-    };
+      });
 
-    requestAnimationFrame(loop);
+      video.srcObject = stream;
+      await video.play();
+
+    } catch (err) {
+      console.error("Error al iniciar cámara:", err);
+    }
   }
 
-  async function abrirScannerOverlay() {
-    const overlay = document.getElementById("scannerOverlay");
-    const video = document.getElementById("scannerVideo");
+  // ------------------------------------------------------------
+  // Detener cámara
+  // ------------------------------------------------------------
+  function stopCamera() {
+    if (stream) {
+      stream.getTracks().forEach(t => t.stop());
+      stream = null;
+    }
+  }
 
-    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-      alert("Este dispositivo no soporta cámara.");
+  // ------------------------------------------------------------
+  // Cambiar cámara
+  // ------------------------------------------------------------
+  async function changeCamera(deviceId) {
+    currentDeviceId = deviceId;
+    await startCamera();
+  }
+
+  // ------------------------------------------------------------
+  // Linterna
+  // ------------------------------------------------------------
+  async function toggleTorch() {
+    if (!stream) return;
+
+    const track = stream.getVideoTracks()[0];
+    const capabilities = track.getCapabilities();
+
+    if (!capabilities.torch) {
+      console.warn("Torch no soportado");
       return;
     }
 
-    overlay.classList.add("visible");
-    scannerActive = true;
+    torchOn = !torchOn;
 
     try {
-      await listarDispositivosVideo();
-      await iniciarStreamScanner(currentDeviceId);
-      iniciarLoopDeteccion(video);
-    } catch (e) {
-      console.error("[SCANNER] Error al iniciar:", e);
-      cerrarScannerOverlay();
+      await track.applyConstraints({
+        advanced: [{ torch: torchOn }]
+      });
+    } catch (err) {
+      console.error("Error torch:", err);
     }
   }
 
-  function initEvents() {
-    document.getElementById("scanBtn").addEventListener("click", async () => {
-      await initScannerEngines();
-      abrirScannerOverlay();
+  // ------------------------------------------------------------
+  // Setear modo
+  // ------------------------------------------------------------
+  function setMode(m) {
+    mode = m;
+  }
+
+  // ------------------------------------------------------------
+  // Loop de escaneo
+  // ------------------------------------------------------------
+  async function scanLoop() {
+    if (!scanning) return;
+
+    try {
+      const code = await detectCode();
+      if (code) handleScan(code);
+    } catch (err) {
+      console.error("Error en scanLoop:", err);
+    }
+
+    requestAnimationFrame(scanLoop);
+  }
+
+  // ------------------------------------------------------------
+  // Detección de código usando BarcodeDetector
+  // ------------------------------------------------------------
+  async function detectCode() {
+    if (!("BarcodeDetector" in window)) return null;
+
+    const detector = new BarcodeDetector({
+      formats: ["ean_13", "ean_8", "code_128", "qr_code", "upc_a", "upc_e"]
     });
 
-    document.getElementById("scannerCloseBtn").addEventListener("click", () => {
-      cerrarScannerOverlay();
-    });
-
-    document.getElementById("scannerDeviceSelect").addEventListener("change", async e => {
-      currentDeviceId = e.target.value;
-      if (scannerActive) {
-        try {
-          await iniciarStreamScanner(currentDeviceId);
-          const video = document.getElementById("scannerVideo");
-          iniciarLoopDeteccion(video);
-        } catch (err) {
-          console.error("[SCANNER] Error cambiando cámara:", err);
-        }
+    try {
+      const barcodes = await detector.detect(video);
+      if (barcodes.length > 0) {
+        return barcodes[0].rawValue;
       }
-    });
+    } catch (err) {
+      // BarcodeDetector puede fallar en algunos frames
+    }
+
+    return null;
   }
 
-  function init() {
-    initEvents();
+  // ------------------------------------------------------------
+  // Manejar código detectado
+  // ------------------------------------------------------------
+  function handleScan(code) {
+    if (!code) return;
+
+    console.log("Código detectado:", code);
+
+    if (mode === "solo") {
+      close();
+      document.getElementById("searchInput").value = code;
+      ORB.page = 1;
+      ORB_BACKEND.buscar(code);
+      return;
+    }
+
+    if (mode === "completo") {
+      document.getElementById("searchInput").value = code;
+      ORB.page = 1;
+      ORB_BACKEND.buscar(code);
+      return;
+    }
+
+    if (mode === "auto") {
+      close();
+      document.getElementById("searchInput").value = code;
+      ORB.page = 1;
+      ORB_BACKEND.buscar(code);
+      return;
+    }
   }
 
-  return { init };
+  // ------------------------------------------------------------
+  // API pública
+  // ------------------------------------------------------------
+  return {
+    open,
+    close,
+    toggleTorch,
+    changeCamera,
+    setMode
+  };
+
 })();
