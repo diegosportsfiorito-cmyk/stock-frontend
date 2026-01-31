@@ -1,14 +1,20 @@
-window.ORB_BACKEND = (function () {
-  // URL REAL DEL BACKEND
-  const API_URL = "https://stock-backend-1-0upi.onrender.com/query";
+// ============================================================
+// BACKEND.JS — Conexión con el backend real
+// ============================================================
 
-  // ---------------------------------------------------------
-  // ESTADO DE CONEXIÓN
-  // ---------------------------------------------------------
+window.ORB_BACKEND = (function () {
+
+  // Endpoint real del backend
+  const API_URL = "https://stock-backend-1-0upi.onrender.com/query";
+  const AUTOCOMPLETE_URL = "https://stock-backend-1-0upi.onrender.com/autocomplete";
+
+  // ------------------------------------------------------------
+  // Estado de conexión
+  // ------------------------------------------------------------
   function setConnectionStatus(online) {
     const pill = document.getElementById("connectionStatus");
     const label = pill.querySelector(".status-label");
-    const sub = pill.querySelector("div div:nth-child(2)");
+    const sub = pill.querySelector(".status-sub");
     const dot = pill.querySelector(".status-dot");
 
     if (online) {
@@ -22,9 +28,9 @@ window.ORB_BACKEND = (function () {
     }
   }
 
-  // ---------------------------------------------------------
-  // EXPANSIÓN DE ITEMS (1 ARTÍCULO → N TALLES)
-  // ---------------------------------------------------------
+  // ------------------------------------------------------------
+  // Expandir items (1 artículo → varios talles)
+  // ------------------------------------------------------------
   function expandItems(items) {
     const out = [];
 
@@ -47,9 +53,9 @@ window.ORB_BACKEND = (function () {
     return out;
   }
 
-  // ---------------------------------------------------------
-  // BÚSQUEDA REAL
-  // ---------------------------------------------------------
+  // ------------------------------------------------------------
+  // Búsqueda real
+  // ------------------------------------------------------------
   async function buscar(query) {
     try {
       const res = await fetch(API_URL, {
@@ -57,7 +63,7 @@ window.ORB_BACKEND = (function () {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           question: query,
-          solo_stock: ORB.stockOnly   // ← ahora sí funciona REAL
+          solo_stock: ORB.stockOnly
         })
       });
 
@@ -65,7 +71,6 @@ window.ORB_BACKEND = (function () {
 
       const data = await res.json();
 
-      // Validación del formato esperado
       if (data.tipo === "lista" && Array.isArray(data.items)) {
         ORB.results = expandItems(data.items);
       } else {
@@ -73,21 +78,36 @@ window.ORB_BACKEND = (function () {
       }
 
       setConnectionStatus(true);
+      ORB.page = 1;
       renderResults();
 
-    } catch (e) {
-      console.error("[BACKEND] Error:", e);
+    } catch (err) {
+      console.error("[BACKEND] Error:", err);
       setConnectionStatus(false);
-
-      // No cargamos dummy data para no confundir stock real
       ORB.results = [];
       renderResults();
     }
   }
 
-  // ---------------------------------------------------------
-  // PING (opcional)
-  // ---------------------------------------------------------
+  // ------------------------------------------------------------
+  // Autocomplete real
+  // ------------------------------------------------------------
+  async function autocomplete(term) {
+    if (!term || term.length < 2) return [];
+
+    try {
+      const res = await fetch(`${AUTOCOMPLETE_URL}?q=${encodeURIComponent(term)}`);
+      if (!res.ok) return [];
+      const data = await res.json();
+      return data.suggestions || [];
+    } catch {
+      return [];
+    }
+  }
+
+  // ------------------------------------------------------------
+  // Ping opcional
+  // ------------------------------------------------------------
   async function ping() {
     try {
       const res = await fetch(API_URL.replace("/query", "/"));
@@ -97,13 +117,18 @@ window.ORB_BACKEND = (function () {
     }
   }
 
-  // ---------------------------------------------------------
-  // INIT
-  // ---------------------------------------------------------
+  // ------------------------------------------------------------
+  // Init
+  // ------------------------------------------------------------
   function init() {
-    // Podés activar un ping inicial si querés
-    // ping();
+    // ping(); // opcional
   }
 
-  return { init, buscar, ping };
+  return {
+    init,
+    buscar,
+    autocomplete,
+    ping
+  };
+
 })();
