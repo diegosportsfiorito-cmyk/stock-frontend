@@ -1,5 +1,5 @@
 let scannerStream = null;
-let currentScannerMode = "solo"; // solo | completo | auto
+let currentScannerMode = "solo";
 
 const scannerOverlay = document.getElementById("scannerOverlay");
 const scannerVideo = document.getElementById("scannerVideo");
@@ -31,20 +31,10 @@ btnCloseScanner.addEventListener("click", () => {
 
 async function startScanner() {
   try {
-    if (scannerStream) {
-      stopScanner();
-    }
-
-    const devices = await navigator.mediaDevices.enumerateDevices();
-    const videoDevices = devices.filter((d) => d.kind === "videoinput");
-
-    let deviceId = undefined;
-    if (videoDevices.length > 0) {
-      deviceId = videoDevices[0].deviceId; // cámara 1 facing front / default
-    }
+    stopScanner();
 
     scannerStream = await navigator.mediaDevices.getUserMedia({
-      video: deviceId ? { deviceId: { exact: deviceId } } : { facingMode: "environment" },
+      video: { facingMode: { exact: "environment" } },
       audio: false,
     });
 
@@ -66,7 +56,9 @@ function stopScanner() {
 }
 
 async function startBarcodeLoop() {
-  const detector = new BarcodeDetector({ formats: ["code_128", "ean_13", "ean_8", "code_39", "upc_a", "upc_e"] });
+  const detector = new BarcodeDetector({
+    formats: ["code_128", "ean_13", "ean_8", "code_39", "upc_a", "upc_e"],
+  });
 
   const canvas = document.createElement("canvas");
   const ctx = canvas.getContext("2d");
@@ -101,26 +93,20 @@ async function startBarcodeLoop() {
 }
 
 function handleScannedCode(raw) {
-  // Separadores válidos: "/", "!", "!!"
   let articulo = "";
-  let color = "";
   let talle = "";
 
   if (raw.includes("!!")) {
     const [art, rest] = raw.split("!!");
     articulo = art || "";
-    color = "";
     talle = rest || "";
   } else if (raw.includes("!")) {
     const [art, rest] = raw.split("!");
     articulo = art || "";
-    // si hay algo después del ! lo tomamos como talle (sin color)
-    color = "";
     talle = rest || "";
   } else if (raw.includes("/")) {
     const parts = raw.split("/");
     articulo = parts[0] || "";
-    color = "";
     talle = parts.slice(1).join("/") || "";
   } else {
     articulo = raw;
@@ -131,10 +117,8 @@ function handleScannedCode(raw) {
   } else if (currentScannerMode === "completo") {
     searchInput.value = raw;
   } else {
-    // auto: si detectamos estructura artículo+color+talle, usamos artículo
     searchInput.value = articulo || raw;
   }
 
-  // Disparar búsqueda automáticamente
   btnSearch.click();
 }
