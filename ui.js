@@ -22,11 +22,17 @@ const talleFilter = document.getElementById("talleFilter");
 let orbClickCount = 0;
 let orbClickTimer = null;
 
+// ============================================================
+// SOLO STOCK
+// ============================================================
 btnSoloStock.addEventListener("click", () => {
   soloStock = !soloStock;
   btnSoloStock.classList.toggle("active", soloStock);
 });
 
+// ============================================================
+// CAMBIO DE VISTA
+// ============================================================
 viewButtons.forEach((btn) => {
   btn.addEventListener("click", () => {
     viewButtons.forEach((b) => b.classList.remove("active"));
@@ -36,8 +42,12 @@ viewButtons.forEach((btn) => {
   });
 });
 
+// ============================================================
+// MODO ADMIN (5 clics + ADMIN en input)
+// ============================================================
 orbLogo.addEventListener("click", () => {
   orbClickCount += 1;
+
   if (orbClickTimer) clearTimeout(orbClickTimer);
   orbClickTimer = setTimeout(() => {
     orbClickCount = 0;
@@ -51,12 +61,18 @@ orbLogo.addEventListener("click", () => {
   }
 });
 
+// ============================================================
+// MODO DÍA / NOCHE
+// ============================================================
 modeSwitch.addEventListener("change", () => {
   const isNight = modeSwitch.checked;
   document.body.classList.toggle("night-mode", isNight);
   modeLabel.textContent = isNight ? "Modo noche" : "Modo día";
 });
 
+// ============================================================
+// ESTADO BACKEND
+// ============================================================
 export function setBackendStatus(online) {
   backendStatusDot.classList.toggle("online", online);
   backendStatusDot.classList.toggle("offline", !online);
@@ -67,6 +83,9 @@ export function setFooterStatus(text) {
   footerStatus.textContent = text;
 }
 
+// ============================================================
+// CARGA DE CATÁLOGOS
+// ============================================================
 export async function loadCatalogosIntoFilters() {
   const data = await backendCatalogos();
   if (!data) return;
@@ -97,6 +116,9 @@ function fillSelect(select, items, label) {
   }
 }
 
+// ============================================================
+// OBTENER FILTROS ACTIVOS
+// ============================================================
 export function getFilters() {
   return {
     marca: marcaFilter.value || "",
