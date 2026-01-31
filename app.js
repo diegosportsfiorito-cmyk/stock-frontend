@@ -1,192 +1,259 @@
-// ============================================================
-// ESTADO GLOBAL ORB
-// ============================================================
-window.ORB = {
-  results: [],
-  view: "resumen",
-  stockOnly: localStorage.getItem("stockOnly") === "true",
-  favorites: new Set(JSON.parse(localStorage.getItem("favorites") || "[]")),
-  sort: { field: "descripcion", dir: "asc" },
-  page: 1,
-  pageSize: 30,
-  catalogos: null
-};
+import { backendQuery } from "./backend.js";
+import { currentView, soloStock, setBackendStatus, setFooterStatus, loadCatalogosIntoFilters, getFilters } from "./ui.js";
 
-function favKey(r) {
-  return `${r.articulo || r.codigo}-${r.talle}`;
+const searchInput = document.getElementById("searchInput");
+const btnSearch = document.getElementById("btnSearch");
+const resultsContainer = document.getElementById("resultsContainer");
+const resultsCount = document.getElementById("resultsCount");
+const dashArticulos = document.getElementById("dashArticulos");
+const dashPares = document.getElementById("dashPares");
+const dashAlertas = document.getElementById("dashAlertas");
+const dashValorizado = document.getElementById("dashValorizado");
+const dashboardExtra = document.getElementById("dashboardExtra");
+const btnPrev = document.getElementById("btnPrev");
+const btnNext = document.getElementById("btnNext");
+
+let lastResult = null;
+let currentPage = 0;
+const PAGE_SIZE = 20;
+
+async function init() {
+  setBackendStatus(false);
+  setFooterStatus("Cargando catálogos...");
+  await loadCatalogosIntoFilters();
+  setFooterStatus("Listo para buscar");
+  setBackendStatus(true);
 }
 
-function toggleFavorite(r) {
-  const key = favKey(r);
-  if (ORB.favorites.has(key)) {
-    ORB.favorites.delete(key);
-  } else {
-    ORB.favorites.add(key);
+init();
+
+btnSearch.addEventListener("click", () => {
+  doSearch();
+});
+
+searchInput.addEventListener("keydown", (e) => {
+  if (e.key === "Enter") {
+    e.preventDefault();
+    doSearch();
   }
-  localStorage.setItem("favorites", JSON.stringify(Array.from(ORB.favorites)));
-  renderResults();
+});
+
+btnPrev.addEventListener("click", () => {
+  if (!lastResult) return;
+  if (currentPage > 0) {
+    currentPage--;
+    renderResults(lastResult);
+  }
+});
+
+btnNext.addEventListener("click", () => {
+  if (!lastResult) return;
+  const totalPages = Math.ceil(lastResult.items.length / PAGE_SIZE);
+  if (currentPage < totalPages - 1) {
+    currentPage++;
+    renderResults(lastResult);
+  }
+});
+
+document.addEventListener("viewChanged", () => {
+  if (lastResult) renderResults(lastResult);
+});
+
+async function doSearch() {
+  const q = searchInput.value.trim();
+  if (!q) return;
+
+  setFooterStatus("Buscando...");
+  btnSearch.disabled = true;
+
+  try {
+    const data = await backendQuery({ q, soloStock });
+    lastResult = data;
+    currentPage = 0;
+    renderResults(data);
+    setFooterStatus("Búsqueda completada");
+    setBackendStatus(true);
+  } catch (err) {
+    console.error(err);
+    setFooterStatus("Error al consultar backend");
+    setBackendStatus(false);
+  } finally {
+    btnSearch.disabled = false;
+  }
 }
 
-function formatNumber(n) {
-  return Number(n || 0).toLocaleString("es-AR");
-}
-
-// Filtros
-function applyFilters(data) {
-  const marca = document.getElementById("filterMarca").value || "";
-  const rubro = document.getElementById("filterRubro").value || "";
-  const talle = document.getElementById("filterTalle").value || "";
-
-  let out = data.slice();
-
-  if (marca) out = out.filter(r => r.marca === marca);
-  if (rubro) out = out.filter(r => r.rubro === rubro);
-  if (talle) out = out.filter(r => r.talle === talle);
-
-  if (ORB.stockOnly) {
-    out = out.filter(r => Number(r.stock) > 0);
+function renderResults(data) {
+  if (!data || !data.items) {
+    resultsContainer.innerHTML = "<p>Sin resultados.</p>";
+    resultsCount.textContent = "0 resultados";
+    updateDashboard([]);
+    return;
   }
 
-  return out;
-}
+  const items = data.items;
+  resultsCount.textContent = `${items.length} resultados`;
 
-function updateFilterOptionsFromCatalog() {
-  if (!ORB.catalogos) return;
+  updateDashboard(items);
 
-  const { marcas, rubros, talles } = ORB.catalogos;
-
-  const selMarca = document.getElementById("filterMarca");
-  const selRubro = document.getElementById("filterRubro");
-  const selTalle = document.getElementById("filterTalle");
-
-  const prevMarca = selMarca.value;
-  const prevRubro = selRubro.value;
-  const prevTalle = selTalle.value;
-
-  selMarca.innerHTML = `<option value="">Marca</option>` +
-    (marcas || []).map(m => `<option value="${m}">${m}</option>`).join("");
-
-  selRubro.innerHTML = `<option value="">Rubro</option>` +
-    (rubros || []).map(r => `<option value="${r}">${r}</option>`).join("");
-
-  selTalle.innerHTML = `<option value="">Talle</option>` +
-    (talles || []).map(t => `<option value="${t}">${t}</option>`).join("");
-
-  if (prevMarca) selMarca.value = prevMarca;
-  if (prevRubro) selRubro.value = prevRubro;
-  if (prevTalle) selTalle.value = prevTalle;
-}
-
-// Ordenamiento
-function sortData(data) {
-  const { field, dir } = ORB.sort;
-  const mult = dir === "asc" ? 1 : -1;
-
-  return data.slice().sort((a, b) => {
-    let va = a[field];
-    let vb = b[field];
-
-    if (["stock", "precio", "valorizado"].includes(field)) {
-      va = Number(va) || 0;
-      vb = Number(vb) || 0;
-    } else {
-      va = (va || "").toString().toUpperCase();
-      vb = (vb || "").toString().toUpperCase();
+  const filters = getFilters();
+  let filtered = items.filter((r) => {
+    if (filters.marca && String(r.marca || "").toUpperCase() !== filters.marca.toUpperCase()) return false;
+    if (filters.rubro && String(r.rubro || "").toUpperCase() !== filters.rubro.toUpperCase()) return false;
+    if (filters.talle) {
+      const hasTalle = (r.talles || []).some((t) => String(t.talle) === filters.talle);
+      if (!hasTalle) return false;
     }
-
-    if (va < vb) return -1 * mult;
-    if (va > vb) return 1 * mult;
-    return 0;
+    return true;
   });
-}
 
-// Paginación
-function paginate(data) {
-  const total = data.length;
-  const totalPages = Math.max(1, Math.ceil(total / ORB.pageSize));
-
-  if (ORB.page > totalPages) ORB.page = totalPages;
-
-  const start = (ORB.page - 1) * ORB.pageSize;
-  const end = start + ORB.pageSize;
-
-  const pageData = data.slice(start, end);
-
-  document.getElementById("pageInfo").textContent =
-    `${ORB.page} / ${totalPages} (${total} resultados)`;
-
-  return pageData;
-}
-
-// Estadísticas por rubro
-function computeStatsByRubro(data) {
-  const map = new Map();
-
-  for (const r of data) {
-    const rubro = r.rubro || "SIN RUBRO";
-    const stock = Number(r.stock) || 0;
-
-    if (!map.has(rubro)) {
-      map.set(rubro, { rubro, articulos: new Set(), pares: 0 });
+  const q = searchInput.value.trim().toUpperCase();
+  if (q) {
+    const exact = filtered.filter((r) => String(r.codigo || "").toUpperCase() === q);
+    if (exact.length > 0) {
+      filtered = exact;
     }
-
-    const obj = map.get(rubro);
-    obj.articulos.add(r.articulo || r.codigo);
-    obj.pares += stock;
   }
 
-  return Array.from(map.values()).map(x => ({
-    rubro: x.rubro,
-    articulos: x.articulos.size,
-    pares: x.pares
-  }));
+  const start = currentPage * PAGE_SIZE;
+  const pageItems = filtered.slice(start, start + PAGE_SIZE);
+
+  if (currentView === "resumen") {
+    renderResumen(pageItems);
+  } else if (currentView === "lista") {
+    renderLista(filtered);
+  } else if (currentView === "tabla") {
+    renderTabla(filtered);
+  } else if (currentView === "marca") {
+    renderPorMarca(filtered);
+  } else if (currentView === "articulo") {
+    renderPorArticulo(filtered);
+  } else if (currentView === "dashboard") {
+    renderDashboardView(filtered);
+  } else {
+    renderResumen(pageItems);
+  }
 }
 
-// Render vistas
-function renderResumen(data) {
-  const cont = document.getElementById("resultsContainer");
-  cont.innerHTML = data.map(r => {
-    const key = favKey(r);
-    const isFav = ORB.favorites.has(key);
-    const stock = Number(r.stock) || 0;
+function updateDashboard(items) {
+  const articulos = items.length;
+  let pares = 0;
+  let valorizado = 0;
+  let alertas = 0;
 
-    const stockClass =
-      stock <= 2 && stock > 0 ? "stock-low" :
-      stock > 2 ? "stock-ok" : "";
+  items.forEach((r) => {
+    (r.talles || []).forEach((t) => {
+      const stock = Number(t.stock) || 0;
+      pares += stock;
+      if (stock > 0 && stock <= 2) alertas += 1;
+    });
+    valorizado += Number(r.valorizado) || 0;
+  });
 
-    return `
-      <div class="result-item">
-        <div class="result-left">
-          <div><strong>${r.articulo}</strong> - ${r.descripcion}</div>
-          <div style="font-size:12px;color:#9aa2b4;">
-            ${r.marca} · ${r.rubro} · Talle ${r.talle}
-          </div>
+  dashArticulos.textContent = articulos;
+  dashPares.textContent = pares;
+  dashAlertas.textContent = alertas;
+  dashValorizado.textContent = `$${valorizado.toLocaleString("es-AR")}`;
+
+  renderDashboardPie(items);
+}
+
+function renderDashboardPie(items) {
+  const byRubro = computeStatsByRubro(items);
+  const total = byRubro.reduce((a, s) => a + s.pares, 0) || 1;
+
+  let angle = 0;
+  const segments = [];
+
+  byRubro.forEach((s, i) => {
+    const pct = (s.pares / total) * 360;
+    const color = `hsl(${i * 40}, 70%, 60%)`;
+    segments.push(`${color} ${angle}deg ${angle + pct}deg`);
+    angle += pct;
+  });
+
+  dashboardExtra.innerHTML = `
+    <div class="pie-chart" style="--segments: ${segments.join(",")}"></div>
+    <div class="dash-rubros">
+      ${byRubro
+        .map((s) => `<div class="dash-rubro-item">${s.rubro || "Sin rubro"} — ${s.pares} pares</div>`)
+        .join("")}
+    </div>
+  `;
+}
+
+function computeStatsByRubro(items) {
+  const map = new Map();
+  items.forEach((r) => {
+    const rubro = r.rubro || "Sin rubro";
+    let entry = map.get(rubro);
+    if (!entry) {
+      entry = { rubro, pares: 0 };
+      map.set(rubro, entry);
+    }
+    (r.talles || []).forEach((t) => {
+      entry.pares += Number(t.stock) || 0;
+    });
+  });
+  return Array.from(map.values()).sort((a, b) => b.pares - a.pares);
+}
+
+function renderResumen(items) {
+  resultsContainer.innerHTML = items
+    .map((r) => {
+      const pares = (r.talles || []).reduce((a, t) => a + (Number(t.stock) || 0), 0);
+      return `
+      <div class="result-card">
+        <div class="result-main-line">
+          ${r.codigo || ""} - ${r.descripcion || ""}
         </div>
-
-        <div class="result-right">
-          <div class="${stockClass}">${stock} pares</div>
-          <div style="font-size:12px;color:#9aa2b4;">
-            $${formatNumber(r.precio)} · $${formatNumber(r.valorizado)}
-          </div>
-          <button class="fav-btn ${isFav ? "on" : ""}" data-key="${key}">★</button>
+        <div class="result-sub-line">
+          ${r.marca || ""} - ${r.rubro || ""} - ${r.color || "" || ""}
+        </div>
+        <div class="result-meta-line">
+          ${pares} pares · $${(r.precio || 0).toLocaleString("es-AR")} · $${(r.valorizado || 0).toLocaleString("es-AR")}
         </div>
       </div>
     `;
-  }).join("");
+    })
+    .join("");
 }
 
-function renderLista(data) {
-  const cont = document.getElementById("resultsContainer");
-  cont.innerHTML = data.map(r => `
-    <div class="group-item">
-      ${r.articulo} - ${r.descripcion} · ${r.marca} · ${r.rubro} · Talle ${r.talle} · ${r.stock} pares
-    </div>
-  `).join("");
+function renderLista(items) {
+  const groups = groupBy(items, "codigo");
+
+  let html = `
+    <table class="table-view">
+      <thead>
+        <tr>
+          <th>Artículo</th>
+          <th>Descripción</th>
+          <th>Total pares</th>
+        </tr>
+      </thead>
+      <tbody>
+  `;
+
+  for (const [art, rows] of groups.entries()) {
+    const descripcion = rows[0].descripcion || "";
+    const totalPares = rows.reduce(
+      (a, r) => a + (r.talles || []).reduce((x, t) => x + (Number(t.stock) || 0), 0),
+      0
+    );
+
+    html += `
+      <tr>
+        <td>${art}</td>
+        <td>${descripcion}</td>
+        <td>${totalPares}</td>
+      </tr>
+    `;
+  }
+
+  html += "</tbody></table>";
+  resultsContainer.innerHTML = html;
 }
 
-function renderTabla(data) {
-  const cont = document.getElementById("resultsContainer");
-
+function renderTabla(items) {
   let html = `
     <table class="table-view">
       <thead>
@@ -196,208 +263,128 @@ function renderTabla(data) {
           <th>Marca</th>
           <th>Rubro</th>
           <th>Color</th>
-          <th>Talle</th>
-          <th>Stock</th>
-          <th>Precio</th>
+          <th>Pares</th>
+          <th>Lista</th>
           <th>Valorizado</th>
         </tr>
       </thead>
       <tbody>
   `;
 
-  for (const r of data) {
+  items.forEach((r) => {
+    const pares = (r.talles || []).reduce((a, t) => a + (Number(t.stock) || 0), 0);
     html += `
       <tr>
-        <td>${r.articulo}</td>
-        <td>${r.descripcion}</td>
+        <td>${r.codigo || ""}</td>
+        <td>${r.descripcion || ""}</td>
+        <td>${r.marca || ""}</td>
+        <td>${r.rubro || ""}</td>
+        <td>${r.color || ""}</td>
+        <td>${pares}</td>
+        <td>$${(r.precio || 0).toLocaleString("es-AR")}</td>
+        <td>$${(r.valorizado || 0).toLocaleString("es-AR")}</td>
+      </tr>
+    `;
+  });
+
+  html += "</tbody></table>";
+  resultsContainer.innerHTML = html;
+}
+
+function renderPorMarca(items) {
+  const map = new Map();
+  items.forEach((r) => {
+    const marca = r.marca || "Sin marca";
+    let entry = map.get(marca);
+    if (!entry) {
+      entry = { marca, pares: 0, valorizado: 0 };
+      map.set(marca, entry);
+    }
+    (r.talles || []).forEach((t) => {
+      entry.pares += Number(t.stock) || 0;
+    });
+    entry.valorizado += Number(r.valorizado) || 0;
+  });
+
+  const rows = Array.from(map.values()).sort((a, b) => b.pares - a.pares);
+
+  let html = `
+    <table class="table-view">
+      <thead>
+        <tr>
+          <th>Marca</th>
+          <th>Pares</th>
+          <th>Valorizado</th>
+        </tr>
+      </thead>
+      <tbody>
+  `;
+
+  rows.forEach((r) => {
+    html += `
+      <tr>
         <td>${r.marca}</td>
-        <td>${r.rubro}</td>
-        <td>${r.color}</td>
-        <td>${r.talle}</td>
-        <td>${r.stock}</td>
-        <td>$${formatNumber(r.precio)}</td>
-        <td>$${formatNumber(r.valorizado)}</td>
+        <td>${r.pares}</td>
+        <td>$${r.valorizado.toLocaleString("es-AR")}</td>
+      </tr>
+    `;
+  });
+
+  html += "</tbody></table>";
+  resultsContainer.innerHTML = html;
+}
+
+function renderPorArticulo(items) {
+  const groups = groupBy(items, "codigo");
+
+  let html = `
+    <table class="table-view">
+      <thead>
+        <tr>
+          <th>Artículo</th>
+          <th>Descripción</th>
+          <th>Pares</th>
+          <th>Valorizado</th>
+        </tr>
+      </thead>
+      <tbody>
+  `;
+
+  for (const [art, rows] of groups.entries()) {
+    const descripcion = rows[0].descripcion || "";
+    let pares = 0;
+    let valorizado = 0;
+    rows.forEach((r) => {
+      (r.talles || []).forEach((t) => {
+        pares += Number(t.stock) || 0;
+      });
+      valorizado += Number(r.valorizado) || 0;
+    });
+
+    html += `
+      <tr>
+        <td>${art}</td>
+        <td>${descripcion}</td>
+        <td>${pares}</td>
+        <td>$${valorizado.toLocaleString("es-AR")}</td>
       </tr>
     `;
   }
 
   html += "</tbody></table>";
-  cont.innerHTML = html;
+  resultsContainer.innerHTML = html;
 }
 
-function groupBy(arr, key) {
+function renderDashboardView(items) {
+  renderResumen(items);
+}
+
+function groupBy(items, key) {
   const map = new Map();
-  for (const r of arr) {
-    const k = r[key] || "SIN " + key.toUpperCase();
+  items.forEach((r) => {
+    const k = r[key] || "";
     if (!map.has(k)) map.set(k, []);
     map.get(k).push(r);
-  }
+  });
   return map;
 }
-
-function renderPorMarca(data) {
-  const cont = document.getElementById("resultsContainer");
-  const groups = groupBy(data, "marca");
-
-  let html = "";
-  for (const [marca, items] of groups.entries()) {
-    const totalPares = items.reduce((a, r) => a + (Number(r.stock) || 0), 0);
-
-    html += `
-      <div class="group-block">
-        <div class="group-header">
-          <span>${marca}</span>
-          <span>${items.length} artículos · ${totalPares} pares</span>
-        </div>
-        <div class="group-body">
-          ${items.map(r => `
-            <div class="group-item">
-              ${r.articulo} - ${r.descripcion} · Talle ${r.talle} · ${r.stock} pares
-            </div>
-          `).join("")}
-        </div>
-      </div>
-    `;
-  }
-
-  cont.innerHTML = html || "<div class='empty'>Sin resultados</div>";
-}
-
-function renderPorArticulo(data) {
-  const cont = document.getElementById("resultsContainer");
-  const groups = groupBy(data, "articulo");
-
-  let html = "";
-  for (const [art, items] of groups.entries()) {
-    const totalPares = items.reduce((a, r) => a + (Number(r.stock) || 0), 0);
-
-    html += `
-      <div class="group-block">
-        <div class="group-header">
-          <span>${art}</span>
-          <span>${items.length} talles · ${totalPares} pares</span>
-        </div>
-        <div class="group-body">
-          ${items.map(r => `
-            <div class="group-item">
-              Talle ${r.talle} · ${r.stock} pares · ${r.marca} · ${r.rubro}
-            </div>
-          `).join("")}
-        </div>
-      </div>
-    `;
-  }
-
-  cont.innerHTML = html || "<div class='empty'>Sin resultados</div>";
-}
-
-function renderDashboard(data) {
-  const cont = document.getElementById("resultsContainer");
-
-  const stats = computeStatsByRubro(data)
-    .sort((a,b) => b.pares - a.pares)
-    .slice(0, 5);
-
-  const max = Math.max(...stats.map(s => s.pares), 1);
-
-  cont.innerHTML = `
-    <div class="dash-block">
-      <div class="dash-block-title">Top rubros por pares</div>
-      ${stats.map(s => `
-        <div class="dash-rubro-item">
-          <div>${s.rubro}</div>
-          <div class="bar-row">
-            <div class="bar" style="width:${(s.pares / max) * 100}%"></div>
-            <span>${s.pares} pares</span>
-          </div>
-        </div>
-      `).join("")}
-    </div>
-  `;
-}
-
-// Render principal
-function renderResults() {
-  const subtitle = document.getElementById("resultsSubtitle");
-
-  if (!ORB.results.length) {
-    subtitle.textContent = "Sin resultados. Hacé una búsqueda para empezar.";
-    document.getElementById("resultsContainer").innerHTML = "";
-    document.getElementById("dashArticulos").textContent = 0;
-    document.getElementById("dashPares").textContent = 0;
-    document.getElementById("dashAlertas").textContent = 0;
-    document.getElementById("dashValorizado").textContent = "$0";
-    document.getElementById("dashRubros").innerHTML = "";
-    document.getElementById("pageInfo").textContent = "0 / 0 (0 resultados)";
-    return;
-  }
-
-  let data = ORB.results.slice();
-
-  updateFilterOptionsFromCatalog();
-  data = applyFilters(data);
-  data = sortData(data);
-
-  const totalArt = data.length;
-  const totalPares = data.reduce((a, r) => a + (Number(r.stock) || 0), 0);
-  const alertas = data.filter(r => Number(r.stock) > 0 && Number(r.stock) <= 2).length;
-  const totalVal = data.reduce((a, r) => a + (Number(r.valorizado) || 0), 0);
-
-  document.getElementById("dashArticulos").textContent = totalArt;
-  document.getElementById("dashPares").textContent = totalPares;
-  document.getElementById("dashAlertas").textContent = alertas;
-  document.getElementById("dashValorizado").textContent = "$" + formatNumber(totalVal);
-
-  const statsRubros = computeStatsByRubro(data)
-    .sort((a,b) => b.pares - a.pares)
-    .slice(0, 5);
-
-  document.getElementById("dashRubros").innerHTML = statsRubros.map(s => `
-    <div class="dash-rubro-item">
-      <div>${s.rubro}</div>
-      <div>${s.articulos} artículos · ${s.pares} pares</div>
-    </div>
-  `).join("");
-
-  const pageData = paginate(data);
-
-  subtitle.textContent = `${data.length} resultados filtrados`;
-
-  if (ORB.view === "resumen") renderResumen(pageData);
-  else if (ORB.view === "lista") renderLista(pageData);
-  else if (ORB.view === "tabla") renderTabla(pageData);
-  else if (ORB.view === "marca") renderPorMarca(data);
-  else if (ORB.view === "articulo") renderPorArticulo(data);
-  else if (ORB.view === "dashboard") renderDashboard(data);
-}
-
-// Export CSV
-function exportToCSV(data) {
-  if (!data || !data.length) return;
-
-  const headers = [
-    "articulo", "descripcion", "marca", "rubro",
-    "color", "talle", "stock", "precio", "valorizado"
-  ];
-
-  const rows = data.map(r => headers.map(h => (r[h] != null ? r[h] : "")));
-
-  let csv = headers.join(";") + "\n";
-  csv += rows.map(row => row.join(";")).join("\n");
-
-  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = "stock_export.csv";
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
-}
-
-window.exportToCSV = exportToCSV;
-
-window.addEventListener("DOMContentLoaded", () => {
-  renderResults();
-});
