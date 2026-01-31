@@ -1,67 +1,88 @@
+// ============================================================
+// VOZ.JS — Reconocimiento de voz para búsqueda
+// ============================================================
+
 window.ORB_VOZ = (function () {
+
   let recognition = null;
-  let listening = false;
+  let active = false;
 
-  function setVoiceListening(on) {
-    listening = on;
-    const dot = document.getElementById("voiceDot");
-    const text = document.getElementById("voiceStatusText");
-    if (on) {
-      dot.classList.add("listening");
-      text.textContent = "Escuchando…";
-    } else {
-      dot.classList.remove("listening");
-      text.textContent = "Voz en espera";
-    }
-  }
+  const statusEl = document.getElementById("voiceStatus");
 
-  function initRecognition() {
-    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SR) {
-      console.warn("SpeechRecognition no disponible");
+  // ------------------------------------------------------------
+  // Inicializar reconocimiento
+  // ------------------------------------------------------------
+  function init() {
+    const SpeechRecognition =
+      window.SpeechRecognition || window.webkitSpeechRecognition;
+
+    if (!SpeechRecognition) {
+      statusEl.textContent = "Voz no soportada";
       return;
     }
-    recognition = new SR();
+
+    recognition = new SpeechRecognition();
     recognition.lang = "es-AR";
     recognition.interimResults = false;
     recognition.maxAlternatives = 1;
 
-    recognition.onstart = () => setVoiceListening(true);
-    recognition.onend = () => setVoiceListening(false);
-    recognition.onerror = () => setVoiceListening(false);
+    recognition.onstart = () => {
+      active = true;
+      statusEl.textContent = "Escuchando…";
+    };
 
-    recognition.onresult = e => {
-      const text = e.results[0][0].transcript;
-      const input = document.getElementById("queryInput");
-      input.value = normalizeText(text);
-      document.getElementById("searchBtn").click();
+    recognition.onend = () => {
+      active = false;
+      statusEl.textContent = "Voz inactiva";
+    };
+
+    recognition.onerror = () => {
+      active = false;
+      statusEl.textContent = "Error de voz";
+    };
+
+    recognition.onresult = (event) => {
+      const text = event.results[0][0].transcript.trim();
+      statusEl.textContent = `Escuchado: "${text}"`;
+
+      if (text) {
+        document.getElementById("searchInput").value = text;
+        ORB.page = 1;
+        ORB_BACKEND.buscar(text);
+      }
     };
   }
 
-  function toggleListen() {
-    if (!recognition) return;
-    if (listening) {
+  // ------------------------------------------------------------
+  // Alternar voz
+  // ------------------------------------------------------------
+  function toggle() {
+    if (!recognition) {
+      statusEl.textContent = "Voz no soportada";
+      return;
+    }
+
+    if (active) {
       recognition.stop();
+      active = false;
+      statusEl.textContent = "Voz inactiva";
     } else {
       recognition.start();
     }
   }
 
-  function initEvents() {
-    document.getElementById("voiceBtn").addEventListener("click", () => {
-      toggleListen();
-    });
+  // ------------------------------------------------------------
+  // API pública
+  // ------------------------------------------------------------
+  return {
+    init,
+    toggle
+  };
 
-    document.getElementById("voiceToggleBtn").addEventListener("click", () => {
-      setAutoListen(!ORB.autoListen);
-      // Podés implementar auto-escucha continua si querés
-    });
-  }
-
-  function init() {
-    initRecognition();
-    initEvents();
-  }
-
-  return { init };
 })();
+
+
+// Inicializar al cargar
+window.addEventListener("DOMContentLoaded", () => {
+  ORB_VOZ.init();
+});
