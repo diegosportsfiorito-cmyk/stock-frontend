@@ -6,6 +6,9 @@ const voiceSearchButton = document.getElementById("btnSearch");
 let recognition = null;
 let listening = false;
 
+// ============================================================
+// CONFIGURACIÓN DE VOZ
+// ============================================================
 if ("webkitSpeechRecognition" in window || "SpeechRecognition" in window) {
   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
   recognition = new SpeechRecognition();
@@ -39,6 +42,9 @@ if ("webkitSpeechRecognition" in window || "SpeechRecognition" in window) {
   btnVoice.disabled = true;
 }
 
+// ============================================================
+// BOTÓN DE VOZ
+// ============================================================
 btnVoice.addEventListener("click", () => {
   if (!recognition) return;
   if (listening) {
