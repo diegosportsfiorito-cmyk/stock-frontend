@@ -53,27 +53,17 @@
             <button class="chip-btn scanner-mode" data-mode="completo">Completo</button>
             <button class="chip-btn scanner-mode" data-mode="auto">Auto</button>
           </div>
-          <button id="btnOpenScanner" class="icon-btn" title="Abrir cámara">
-            📷
-          </button>
+          <button id="btnOpenScanner" class="icon-btn" title="Abrir cámara">📷</button>
         </div>
 
         <div class="filters-row">
-          <select id="marcaFilter">
-            <option value="">Marca</option>
-          </select>
-          <select id="rubroFilter">
-            <option value="">Rubro</option>
-          </select>
-          <select id="talleFilter">
-            <option value="">Talle</option>
-          </select>
+          <select id="marcaFilter"><option value="">Marca</option></select>
+          <select id="rubroFilter"><option value="">Rubro</option></select>
+          <select id="talleFilter"><option value="">Talle</option></select>
         </div>
 
         <div class="options-row">
-          <button id="btnSoloStock" class="toggle-btn">
-            Mostrar solo con stock
-          </button>
+          <button id="btnSoloStock" class="toggle-btn">Mostrar solo con stock</button>
           <div class="order-select">
             <label for="orderSelect">Orden:</label>
             <select id="orderSelect">
@@ -86,9 +76,7 @@
         </div>
 
         <div class="voice-row">
-          <button id="btnVoice" class="secondary-btn">
-            Hablar
-          </button>
+          <button id="btnVoice" class="secondary-btn">Hablar</button>
           <span id="voiceStatus" class="voice-status">Voz inactiva</span>
         </div>
       </section>
@@ -98,12 +86,8 @@
         <p class="panel-subtitle">Favoritos, exportación y vistas</p>
 
         <div class="actions-row">
-          <button id="btnFavoritos" class="secondary-btn">
-            ★ Ver favoritos
-          </button>
-          <button id="btnExportCSV" class="secondary-btn">
-            ↓ Exportar CSV
-          </button>
+          <button id="btnFavoritos" class="secondary-btn">★ Ver favoritos</button>
+          <button id="btnExportCSV" class="secondary-btn">↓ Exportar CSV</button>
         </div>
 
         <div class="views-row">
@@ -132,31 +116,13 @@
         <p class="panel-subtitle">Resumen de la búsqueda actual</p>
 
         <div class="dashboard-cards">
-          <div class="dash-card">
-            <div class="dash-label">ARTÍCULOS</div>
-            <div id="dashArticulos" class="dash-value">0</div>
-            <div class="dash-caption">Encontrados</div>
-          </div>
-          <div class="dash-card">
-            <div class="dash-label">PARES</div>
-            <div id="dashPares" class="dash-value">0</div>
-            <div class="dash-caption">Totales</div>
-          </div>
-          <div class="dash-card">
-            <div class="dash-label">ALERTAS</div>
-            <div id="dashAlertas" class="dash-value">0</div>
-            <div class="dash-caption">Stock bajo</div>
-          </div>
-          <div class="dash-card">
-            <div class="dash-label">VALORIZADO</div>
-            <div id="dashValorizado" class="dash-value">$0</div>
-            <div class="dash-caption">Lista 1</div>
-          </div>
+          <div class="dash-card"><div class="dash-label">ARTÍCULOS</div><div id="dashArticulos" class="dash-value">0</div><div class="dash-caption">Encontrados</div></div>
+          <div class="dash-card"><div class="dash-label">PARES</div><div id="dashPares" class="dash-value">0</div><div class="dash-caption">Totales</div></div>
+          <div class="dash-card"><div class="dash-label">ALERTAS</div><div id="dashAlertas" class="dash-value">0</div><div class="dash-caption">Stock bajo</div></div>
+          <div class="dash-card"><div class="dash-label">VALORIZADO</div><div id="dashValorizado" class="dash-value">$0</div><div class="dash-caption">Lista 1</div></div>
         </div>
 
-        <div id="dashboardExtra" class="dashboard-extra">
-          <!-- Gráfico de torta y rubros -->
-        </div>
+        <div id="dashboardExtra" class="dashboard-extra"></div>
       </section>
     </main>
 
@@ -171,9 +137,7 @@
           </div>
         </div>
       </div>
-      <div id="resultsContainer" class="results-container">
-        <!-- Render dinámico -->
-      </div>
+      <div id="resultsContainer" class="results-container"></div>
     </section>
 
     <footer class="app-footer">
@@ -194,10 +158,11 @@
     </div>
   </div>
 
-  <script src="scanner.js"></script>
-  <script src="voz.js"></script>
-  <script src="backend.js"></script>
-  <script src="ui.js"></script>
-  <script src="app.js"></script>
+  <!-- CORRECCIÓN CRÍTICA: TODOS COMO MÓDULOS -->
+  <script type="module" src="scanner.js"></script>
+  <script type="module" src="voz.js"></script>
+  <script type="module" src="backend.js"></script>
+  <script type="module" src="ui.js"></script>
+  <script type="module" src="app.js"></script>
 </body>
 </html>
