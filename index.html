@@ -1,753 +1,979 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="UTF-8" />
-  <title>ORB Stock — V.26.02</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <style>
-    :root {
-      --bg: #05060a;
-      --bg-soft: #10121a;
-      --bg-softer: #181b26;
-      --accent: #4f8cff;
-      --accent-soft: rgba(79, 140, 255, 0.15);
-      --accent-strong: #ffcc33;
-      --text: #f5f7ff;
-      --text-soft: #a5acc7;
-      --danger: #ff4f6a;
-      --success: #3ddc97;
-      --border-soft: #262a3a;
-      --shadow-soft: 0 18px 45px rgba(0, 0, 0, 0.65);
-      --radius-lg: 18px;
-      --radius-md: 12px;
-      --radius-pill: 999px;
-      --transition-fast: 0.18s ease-out;
-      --transition-med: 0.25s ease-out;
-      --font-main: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text",
-        "Segoe UI", sans-serif;
-    }
-
-    [data-theme="light"] {
-      --bg: #f5f6fb;
-      --bg-soft: #ffffff;
-      --bg-softer: #eef0f8;
-      --text: #111322;
-      --text-soft: #5b6075;
-      --border-soft: #d4d7e5;
-      --shadow-soft: 0 12px 30px rgba(15, 23, 42, 0.12);
-    }
-
-    * {
-      box-sizing: border-box;
-    }
-
-    body {
-      margin: 0;
-      padding: 0;
-      font-family: var(--font-main);
-      background: radial-gradient(circle at top, #15192b 0, #05060a 55%);
-      color: var(--text);
-      min-height: 100vh;
-      display: flex;
-      justify-content: center;
-      align-items: stretch;
-    }
-
-    .app-shell {
-      width: 100%;
-      max-width: 1200px;
-      margin: 12px;
-      padding: 14px;
-      background: linear-gradient(145deg, rgba(255, 255, 255, 0.02), transparent);
-      border-radius: 22px;
-      border: 1px solid rgba(255, 255, 255, 0.04);
-      box-shadow: var(--shadow-soft);
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-
-    header.app-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 10px;
-    }
-
-    .brand-block {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .orb {
-      width: 42px;
-      height: 42px;
-      border-radius: 50%;
-      background: radial-gradient(circle at 30% 20%, #ffffff, #ffcc33 35%, #ff4f6a 70%, #05060a 100%);
-      box-shadow: 0 0 25px rgba(255, 204, 51, 0.7);
-      position: relative;
-      overflow: hidden;
-      animation: orbPulse 3.2s ease-in-out infinite;
-    }
-
-    .orb::after {
-      content: "D";
-      position: absolute;
-      inset: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: 800;
-      font-size: 20px;
-      color: #05060a;
-      text-shadow: 0 0 8px rgba(255, 255, 255, 0.7);
-    }
-
-    @keyframes orbPulse {
-      0%, 100% { transform: scale(1); box-shadow: 0 0 22px rgba(255, 204, 51, 0.7); }
-      50% { transform: scale(1.06); box-shadow: 0 0 32px rgba(255, 204, 51, 0.9); }
-    }
-
-    .brand-text {
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-    }
-
-    .brand-title {
-      font-weight: 700;
-      letter-spacing: 0.06em;
-      font-size: 14px;
-      text-transform: uppercase;
-      color: var(--text);
-    }
-
-    .brand-subtitle {
-      font-size: 11px;
-      color: var(--text-soft);
-    }
-
-    .header-right {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .status-pill {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      padding: 6px 10px;
-      border-radius: 999px;
-      background: rgba(61, 220, 151, 0.08);
-      border: 1px solid rgba(61, 220, 151, 0.4);
-      font-size: 11px;
-      color: var(--text-soft);
-    }
-
-    .status-dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: var(--success);
-      box-shadow: 0 0 8px rgba(61, 220, 151, 0.9);
-    }
-
-    .status-label {
-      font-weight: 600;
-      color: var(--success);
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-    }
-
-    .toggle-group {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .toggle {
-      position: relative;
-      width: 44px;
-      height: 24px;
-      border-radius: 999px;
-      background: rgba(255, 255, 255, 0.06);
-      border: 1px solid rgba(255, 255, 255, 0.12);
-      cursor: pointer;
-      transition: background var(--transition-fast), border var(--transition-fast);
-    }
-
-    .toggle-knob {
-      position: absolute;
-      top: 2px;
-      left: 2px;
-      width: 18px;
-      height: 18px;
-      border-radius: 50%;
-      background: #ffffff;
-      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
-      transition: transform var(--transition-fast);
-    }
-
-    .toggle.on {
-      background: var(--accent-soft);
-      border-color: var(--accent);
-    }
-
-    .toggle.on .toggle-knob {
-      transform: translateX(18px);
-    }
-
-    .toggle-label {
-      font-size: 11px;
-      color: var(--text-soft);
-    }
-
-    main {
-      display: grid;
-      grid-template-columns: minmax(0, 2.1fr) minmax(0, 1.4fr);
-      gap: 12px;
-    }
-
-    @media (max-width: 900px) {
-      main {
-        grid-template-columns: minmax(0, 1fr);
-      }
-    }
-
-    .panel {
-      background: radial-gradient(circle at top left, rgba(255, 255, 255, 0.03), transparent 55%);
-      border-radius: var(--radius-lg);
-      border: 1px solid var(--border-soft);
-      padding: 12px;
-      box-shadow: 0 14px 35px rgba(0, 0, 0, 0.55);
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-
-    .panel-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 8px;
-    }
-
-    .panel-title {
-      font-size: 13px;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      color: var(--text-soft);
-    }
-
-    .panel-subtitle {
-      font-size: 11px;
-      color: var(--text-soft);
-    }
-
-    .search-row {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-
-    .search-input-row {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .search-input-wrapper {
-      flex: 1;
-      position: relative;
-    }
-
-    .search-input {
-      width: 100%;
-      padding: 10px 12px 10px 32px;
-      border-radius: var(--radius-md);
-      border: 1px solid var(--border-soft);
-      background: rgba(5, 6, 10, 0.85);
-      color: var(--text);
-      font-size: 13px;
-      outline: none;
-      transition: border var(--transition-fast), box-shadow var(--transition-fast), background var(--transition-fast);
-    }
-
-    [data-theme="light"] .search-input {
-      background: #ffffff;
-    }
-
-    .search-input:focus {
-      border-color: var(--accent);
-      box-shadow: 0 0 0 1px rgba(79, 140, 255, 0.4);
-    }
-
-    .search-icon {
-      position: absolute;
-      left: 10px;
-      top: 50%;
-      transform: translateY(-50%);
-      font-size: 13px;
-      opacity: 0.7;
-    }
-
-    .search-actions {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .btn {
-      border-radius: var(--radius-pill);
-      border: 1px solid rgba(255, 255, 255, 0.12);
-      background: rgba(255, 255, 255, 0.04);
-      color: var(--text);
-      font-size: 11px;
-      padding: 7px 10px;
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      cursor: pointer;
-      transition: background var(--transition-fast), transform var(--transition-fast), box-shadow var(--transition-fast), border var(--transition-fast);
-      white-space: nowrap;
-    }
-
-    .btn-primary {
-      background: linear-gradient(135deg, #4f8cff, #7f5dff);
-      border-color: rgba(255, 255, 255, 0.18);
-      box-shadow: 0 10px 22px rgba(79, 140, 255, 0.45);
-    }
-
-    .btn-primary:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 14px 28px rgba(79, 140, 255, 0.6);
-    }
-
-    .btn-icon {
-      font-size: 13px;
-    }
-
-    .quick-controls {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      align-items: center;
-      justify-content: space-between;
-    }
-
-    .quick-left,
-    .quick-right {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      align-items: center;
-    }
-
-    .chip-toggle {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      padding: 6px 10px;
-      border-radius: var(--radius-pill);
-      border: 1px solid var(--border-soft);
-      background: rgba(255, 255, 255, 0.02);
-      font-size: 11px;
-      color: var(--text-soft);
-      cursor: pointer;
-      transition: background var(--transition-fast), border var(--transition-fast), color var(--transition-fast), box-shadow var(--transition-fast);
-    }
-
-    .chip-toggle.active {
-      background: var(--accent-soft);
-      border-color: var(--accent);
-      color: var(--accent-strong);
-      box-shadow: 0 0 0 1px rgba(79, 140, 255, 0.4);
-    }
-
-    .chip-dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: rgba(255, 255, 255, 0.18);
-    }
-
-    .chip-toggle.active .chip-dot {
-      background: var(--accent);
-      box-shadow: 0 0 8px rgba(79, 140, 255, 0.9);
-    }
-
-    .scanner-mode-block {
-      margin-top: 4px;
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-
-    .scanner-mode-label {
-      font-size: 11px;
-      color: var(--text-soft);
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-    }
-
-    .scanner-segments {
-      display: inline-flex;
-      border-radius: var(--radius-pill);
-      background: rgba(5, 6, 10, 0.9);
-      border: 1px solid var(--border-soft);
-      overflow: hidden;
-    }
-
-    [data-theme="light"] .scanner-segments {
-      background: #ffffff;
-    }
-
-    .scanner-segment {
-      padding: 6px 10px;
-      font-size: 11px;
-      color: var(--text-soft);
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-      cursor: pointer;
-      border-right: 1px solid rgba(255, 255, 255, 0.06);
-      transition: background var(--transition-fast), color var(--transition-fast), box-shadow var(--transition-fast), transform var(--transition-fast);
-    }
-
-    .scanner-segment:last-child {
-      border-right: none;
-    }
-
-    .scanner-segment-icon {
-      font-size: 13px;
-    }
-
-    .scanner-segment.active {
-      background: linear-gradient(135deg, rgba(79, 140, 255, 0.18), rgba(127, 93, 255, 0.22));
-      color: var(--accent-strong);
-      box-shadow: 0 0 0 1px rgba(79, 140, 255, 0.5);
-      transform: translateY(-0.5px);
-    }
-
-    .scanner-mode-hint {
-      font-size: 10px;
-      color: var(--text-soft);
-      opacity: 0.8;
-    }
-
-    .filters-advanced-toggle {
-      font-size: 11px;
-      color: var(--accent-strong);
-      cursor: pointer;
-      text-decoration: underline;
-      text-underline-offset: 3px;
-    }
-
-    .filters-advanced-panel {
-      margin-top: 6px;
-      padding: 8px;
-      border-radius: var(--radius-md);
-      background: rgba(5, 6, 10, 0.85);
-      border: 1px dashed var(--border-soft);
-      display: none;
-      flex-direction: column;
-      gap: 6px;
-    }
-
-    [data-theme="light"] .filters-advanced-panel {
-      background: #ffffff;
-    }
-
-    .filters-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-    }
-
-    .filter-select {
-      min-width: 120px;
-      flex: 1;
-      padding: 6px 8px;
-      border-radius: 999px;
-      border: 1px solid var(--border-soft);
-      background: rgba(5, 6, 10, 0.9);
-      color: var(--text-soft);
-      font-size: 11px;
-      outline: none;
-    }
-
-    [data-theme="light"] .filter-select {
-      background: #ffffff;
-    }
-
-    .results-panel {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      max-height: 420px;
-      overflow: hidden;
-    }
-
-    .results-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 8px;
-    }
-
-    .results-summary {
-      font-size: 11px;
-      color: var(--text-soft);
-    }
-
-    .results-view-tabs {
-      display: inline-flex;
-      border-radius: var(--radius-pill);
-      background: rgba(5, 6, 10, 0.9);
-      border: 1px solid var(--border-soft);
-      overflow: hidden;
-    }
-
-    [data-theme="light"] .results-view-tabs {
-      background: #ffffff;
-    }
-
-    .results-view-tab {
-      padding: 5px 9px;
-      font-size: 10px;
-      color: var(--text-soft);
-      cursor: pointer;
-      border-right: 1px solid rgba(255, 255, 255, 0.06);
-      transition: background var(--transition-fast), color var(--transition-fast);
-    }
-
-    .results-view-tab:last-child {
-      border-right: none;
-    }
-
-    .results-view-tab.active {
-      background: rgba(79, 140, 255, 0.18);
-      color: var(--accent-strong);
-    }
-
-    .results-body {
-      flex: 1;
-      min-height: 160px;
-      border-radius: var(--radius-md);
-      background: rgba(5, 6, 10, 0.85);
-      border: 1px solid var(--border-soft);
-      overflow: hidden;
-      display: flex;
-      flex-direction: column;
-    }
-
-    [data-theme="light"] .results-body {
-      background: #ffffff;
-    }
-
-    .results-scroll {
-      flex: 1;
-      overflow: auto;
-      padding: 6px;
-    }
-
-    .results-table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 11px;
-      min-width: 520px;
-    }
-
-    .results-table thead {
-      position: sticky;
-      top: 0;
-      background: rgba(5, 6, 10, 0.98);
-      z-index: 2;
-    }
-
-    [data-theme="light"] .results-table thead {
-      background: #f5f6fb;
-    }
-
-    .results-table th,
-    .results-table td {
-      padding: 6px 8px;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-      text-align: left;
-      white-space: nowrap;
-    }
-
-    .results-table th {
-      font-weight: 600;
-      color: var(--text-soft);
-      font-size: 10px;
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
-    }
-
-    .results-table tbody tr:nth-child(even) {
-      background: rgba(255, 255, 255, 0.02);
-    }
-
-    .results-table tbody tr:hover {
-      background: rgba(79, 140, 255, 0.08);
-    }
-
-    .stock-ok {
-      color: var(--success);
-      font-weight: 600;
-    }
-
-    .stock-low {
-      color: var(--danger);
-      font-weight: 600;
-    }
-
-    .right-panel-section {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-
-    .voice-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 8px;
-    }
-
-    .voice-status {
-      font-size: 11px;
-      color: var(--text-soft);
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .voice-dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: var(--accent);
-      box-shadow: 0 0 8px rgba(79, 140, 255, 0.9);
-      opacity: 0;
-      transform: scale(0.6);
-      transition: opacity var(--transition-fast), transform var(--transition-fast);
-    }
-
-    .voice-dot.listening {
-      opacity: 1;
+<style>
+  :root {
+    --bg: #05060a;
+    --bg-soft: #10121a;
+    --bg-softer: #181b26;
+    --accent: #4f8cff;
+    --accent-soft: rgba(79, 140, 255, 0.15);
+    --accent-strong: #ffcc33;
+    --text: #f5f7ff;
+    --text-soft: #a5acc7;
+    --danger: #ff4f6a;
+    --success: #3ddc97;
+    --border-soft: #262a3a;
+    --shadow-soft: 0 18px 45px rgba(0, 0, 0, 0.65);
+    --radius-lg: 18px;
+    --radius-md: 12px;
+    --radius-pill: 999px;
+    --transition-fast: 0.18s ease-out;
+    --transition-med: 0.25s ease-out;
+    --font-main: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text",
+      "SF Pro Display", "Segoe UI", sans-serif;
+  }
+
+  [data-theme="light"] {
+    --bg: #f5f6fb;
+    --bg-soft: #ffffff;
+    --bg-softer: #eef0f8;
+    --text: #111322;
+    --text-soft: #5b6075;
+    --border-soft: #d4d7e5;
+    --shadow-soft: 0 12px 30px rgba(15, 23, 42, 0.12);
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  html,
+  body {
+    margin: 0;
+    padding: 0;
+  }
+
+  body {
+    font-family: var(--font-main);
+    background: radial-gradient(circle at top, #15192b 0, #05060a 55%);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: stretch;
+  }
+
+  .app-shell {
+    width: 100%;
+    max-width: 1200px;
+    margin: 12px;
+    padding: 14px;
+    background: linear-gradient(145deg, rgba(255, 255, 255, 0.02), transparent);
+    border-radius: 22px;
+    border: 1px solid rgba(255, 255, 255, 0.04);
+    box-shadow: var(--shadow-soft);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  /* HEADER */
+
+  header.app-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+  }
+
+  .brand-block {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .orb {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 30% 20%, #ffffff, #ffcc33 35%, #ff4f6a 70%, #05060a 100%);
+    box-shadow: 0 0 25px rgba(255, 204, 51, 0.7);
+    position: relative;
+    overflow: hidden;
+    animation: orbPulse 3.2s ease-in-out infinite;
+  }
+
+  .orb::after {
+    content: "D";
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 20px;
+    color: #05060a;
+    text-shadow: 0 0 8px rgba(255, 255, 255, 0.7);
+  }
+
+  @keyframes orbPulse {
+    0%, 100% {
       transform: scale(1);
+      box-shadow: 0 0 22px rgba(255, 204, 51, 0.7);
     }
-
-    .dashboard-body {
-      min-height: 160px;
-      border-radius: var(--radius-md);
-      background: rgba(5, 6, 10, 0.85);
-      border: 1px solid var(--border-soft);
-      padding: 8px;
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
+    50% {
+      transform: scale(1.06);
+      box-shadow: 0 0 32px rgba(255, 204, 51, 0.9);
     }
+  }
 
-    [data-theme="light"] .dashboard-body {
-      background: #ffffff;
+  .brand-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .brand-title {
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    font-size: 14px;
+    text-transform: uppercase;
+    color: var(--text);
+  }
+
+  .brand-subtitle {
+    font-size: 11px;
+    color: var(--text-soft);
+  }
+
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .status-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 10px;
+    border-radius: 999px;
+    background: rgba(61, 220, 151, 0.08);
+    border: 1px solid rgba(61, 220, 151, 0.4);
+    font-size: 11px;
+    color: var(--text-soft);
+  }
+
+  .status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--success);
+    box-shadow: 0 0 8px rgba(61, 220, 151, 0.9);
+  }
+
+  .status-label {
+    font-weight: 600;
+    color: var(--success);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  .toggle-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .toggle {
+    position: relative;
+    width: 44px;
+    height: 24px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    cursor: pointer;
+    transition: background var(--transition-fast), border var(--transition-fast);
+  }
+
+  .toggle-knob {
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #ffffff;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+    transition: transform var(--transition-fast);
+  }
+
+  .toggle.on {
+    background: var(--accent-soft);
+    border-color: var(--accent);
+  }
+
+  .toggle.on .toggle-knob {
+    transform: translateX(18px);
+  }
+
+  .toggle-label {
+    font-size: 11px;
+    color: var(--text-soft);
+  }
+
+  /* LAYOUT PRINCIPAL */
+
+  main {
+    display: grid;
+    grid-template-columns: minmax(0, 2.1fr) minmax(0, 1.4fr);
+    gap: 12px;
+  }
+
+  @media (max-width: 900px) {
+    main {
+      grid-template-columns: minmax(0, 1fr);
     }
+  }
 
+  .panel {
+    background: radial-gradient(circle at top left, rgba(255, 255, 255, 0.03), transparent 55%);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border-soft);
+    padding: 12px;
+    box-shadow: 0 14px 35px rgba(0, 0, 0, 0.55);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  .panel-title {
+    font-size: 13px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-soft);
+  }
+
+  .panel-subtitle {
+    font-size: 11px;
+    color: var(--text-soft);
+  }
+
+  /* BUSCADOR + CONTROLES */
+
+  .search-row {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .search-input-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .search-input-wrapper {
+    flex: 1;
+    position: relative;
+  }
+
+  .search-input {
+    width: 100%;
+    padding: 10px 12px 10px 32px;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-soft);
+    background: rgba(5, 6, 10, 0.85);
+    color: var(--text);
+    font-size: 13px;
+    outline: none;
+    transition: border var(--transition-fast), box-shadow var(--transition-fast), background var(--transition-fast);
+  }
+
+  [data-theme="light"] .search-input {
+    background: #ffffff;
+  }
+
+  .search-input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 1px rgba(79, 140, 255, 0.4);
+  }
+
+  .search-icon {
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 13px;
+    opacity: 0.7;
+  }
+
+  .search-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .btn {
+    border-radius: var(--radius-pill);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: rgba(255, 255, 255, 0.04);
+    color: var(--text);
+    font-size: 11px;
+    padding: 7px 10px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    transition: background var(--transition-fast), transform var(--transition-fast), box-shadow var(--transition-fast), border var(--transition-fast);
+    white-space: nowrap;
+  }
+
+  .btn:hover {
+    background: rgba(255, 255, 255, 0.08);
+    transform: translateY(-0.5px);
+  }
+
+  .btn-primary {
+    background: linear-gradient(135deg, #4f8cff, #7f5dff);
+    border-color: rgba(255, 255, 255, 0.18);
+    box-shadow: 0 10px 22px rgba(79, 140, 255, 0.45);
+  }
+
+  .btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 14px 28px rgba(79, 140, 255, 0.6);
+  }
+
+  .btn-icon {
+    font-size: 13px;
+  }
+
+  .quick-controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .quick-left,
+  .quick-right {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .chip-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 10px;
+    border-radius: var(--radius-pill);
+    border: 1px solid var(--border-soft);
+    background: rgba(255, 255, 255, 0.02);
+    font-size: 11px;
+    color: var(--text-soft);
+    cursor: pointer;
+    transition: background var(--transition-fast), border var(--transition-fast), color var(--transition-fast), box-shadow var(--transition-fast);
+  }
+
+  .chip-toggle.active {
+    background: var(--accent-soft);
+    border-color: var(--accent);
+    color: var(--accent-strong);
+    box-shadow: 0 0 0 1px rgba(79, 140, 255, 0.4);
+  }
+
+  .chip-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.18);
+  }
+
+  .chip-toggle.active .chip-dot {
+    background: var(--accent);
+    box-shadow: 0 0 8px rgba(79, 140, 255, 0.9);
+  }
+
+  /* SCANNER MODES */
+
+  .scanner-mode-block {
+    margin-top: 4px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .scanner-mode-label {
+    font-size: 11px;
+    color: var(--text-soft);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  .scanner-segments {
+    display: inline-flex;
+    border-radius: var(--radius-pill);
+    background: rgba(5, 6, 10, 0.9);
+    border: 1px solid var(--border-soft);
+    overflow: hidden;
+  }
+
+  [data-theme="light"] .scanner-segments {
+    background: #ffffff;
+  }
+
+  .scanner-segment {
+    padding: 6px 10px;
+    font-size: 11px;
+    color: var(--text-soft);
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    cursor: pointer;
+    border-right: 1px solid rgba(255, 255, 255, 0.06);
+    transition: background var(--transition-fast), color var(--transition-fast), box-shadow var(--transition-fast), transform var(--transition-fast);
+  }
+
+  .scanner-segment:last-child {
+    border-right: none;
+  }
+
+  .scanner-segment-icon {
+    font-size: 13px;
+  }
+
+  .scanner-segment.active {
+    background: linear-gradient(135deg, rgba(79, 140, 255, 0.18), rgba(127, 93, 255, 0.22));
+    color: var(--accent-strong);
+    box-shadow: 0 0 0 1px rgba(79, 140, 255, 0.5);
+    transform: translateY(-0.5px);
+  }
+
+  .scanner-mode-hint {
+    font-size: 10px;
+    color: var(--text-soft);
+    opacity: 0.8;
+  }
+
+  /* FILTROS AVANZADOS */
+
+  .filters-advanced-toggle {
+    font-size: 11px;
+    color: var(--accent-strong);
+    cursor: pointer;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  .filters-advanced-panel {
+    margin-top: 6px;
+    padding: 8px;
+    border-radius: var(--radius-md);
+    background: rgba(5, 6, 10, 0.85);
+    border: 1px dashed var(--border-soft);
+    display: none;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  [data-theme="light"] .filters-advanced-panel {
+    background: #ffffff;
+  }
+
+  .filters-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .filter-select {
+    min-width: 120px;
+    flex: 1;
+    padding: 6px 8px;
+    border-radius: 999px;
+    border: 1px solid var(--border-soft);
+    background: rgba(5, 6, 10, 0.9);
+    color: var(--text-soft);
+    font-size: 11px;
+    outline: none;
+  }
+
+  [data-theme="light"] .filter-select {
+    background: #ffffff;
+  }
+
+  /* RESULTADOS */
+
+  .results-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-height: 420px;
+    overflow: hidden;
+  }
+
+  .results-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  .results-summary {
+    font-size: 11px;
+    color: var(--text-soft);
+  }
+
+  .results-view-tabs {
+    display: inline-flex;
+    border-radius: var(--radius-pill);
+    background: rgba(5, 6, 10, 0.9);
+    border: 1px solid var(--border-soft);
+    overflow: hidden;
+  }
+
+  [data-theme="light"] .results-view-tabs {
+    background: #ffffff;
+  }
+
+  .results-view-tab {
+    padding: 5px 9px;
+    font-size: 10px;
+    color: var(--text-soft);
+    cursor: pointer;
+    border-right: 1px solid rgba(255, 255, 255, 0.06);
+    transition: background var(--transition-fast), color var(--transition-fast);
+  }
+
+  .results-view-tab:last-child {
+    border-right: none;
+  }
+
+  .results-view-tab.active {
+    background: rgba(79, 140, 255, 0.18);
+    color: var(--accent-strong);
+  }
+
+  .results-body {
+    flex: 1;
+    min-height: 160px;
+    border-radius: var(--radius-md);
+    background: rgba(5, 6, 10, 0.85);
+    border: 1px solid var(--border-soft);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  [data-theme="light"] .results-body {
+    background: #ffffff;
+  }
+
+  .results-scroll {
+    flex: 1;
+    overflow: auto;
+    padding: 6px;
+  }
+
+  .results-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 11px;
+    min-width: 520px;
+  }
+
+  .results-table thead {
+    position: sticky;
+    top: 0;
+    background: rgba(5, 6, 10, 0.98);
+    z-index: 2;
+  }
+
+  [data-theme="light"] .results-table thead {
+    background: #f5f6fb;
+  }
+
+  .results-table th,
+  .results-table td {
+    padding: 6px 8px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    text-align: left;
+    white-space: nowrap;
+  }
+
+  .results-table th {
+    font-weight: 600;
+    color: var(--text-soft);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  .results-table tbody tr:nth-child(even) {
+    background: rgba(255, 255, 255, 0.02);
+  }
+
+  .results-table tbody tr:hover {
+    background: rgba(79, 140, 255, 0.08);
+  }
+
+  .stock-ok {
+    color: var(--success);
+    font-weight: 600;
+  }
+
+  .stock-low {
+    color: var(--danger);
+    font-weight: 600;
+  }
+
+  /* PANEL DERECHO: VOZ + DASHBOARD + ADMIN */
+
+  .right-panel-section {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .voice-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  .voice-status {
+    font-size: 11px;
+    color: var(--text-soft);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .voice-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 8px rgba(79, 140, 255, 0.9);
+    opacity: 0;
+    transform: scale(0.6);
+    transition: opacity var(--transition-fast), transform var(--transition-fast);
+  }
+
+  .voice-dot.listening {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  .dashboard-body {
+    min-height: 160px;
+    border-radius: var(--radius-md);
+    background: rgba(5, 6, 10, 0.85);
+    border: 1px solid var(--border-soft);
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  [data-theme="light"] .dashboard-body {
+    background: #ffffff;
+  }
+
+  .dashboard-metrics {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 6px;
+  }
+
+  @media (max-width: 900px) {
     .dashboard-metrics {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 6px;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
     }
+  }
 
-    @media (max-width: 900px) {
-      .dashboard-metrics {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-      }
-    }
+  .metric-card {
+    border-radius: 12px;
+    background: radial-gradient(circle at top left, rgba(79, 140, 255, 0.18), transparent 60%);
+    border: 1px solid var(--border-soft);
+    padding: 6px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    font-size: 11px;
+  }
 
-    .metric-card {
-      border-radius: 12px;
-      background: radial-gradient(circle at top left, rgba(79, 140, 255, 0.18), transparent 60%);
-      border: 1px solid var(--border-soft);
-      padding: 6px;
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-      font-size: 11px;
-    }
+  .metric-label {
+    color: var(--text-soft);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
 
-    .metric-label {
-      color: var(--text-soft);
-      font-size: 10px;
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
-    }
+  .metric-value {
+    font-weight: 600;
+    font-size: 13px;
+  }
 
-    .metric-value {
-      font-weight: 600;
-      font-size: 13px;
-    }
+  .metric-sub {
+    font-size: 10px;
+    color: var(--text-soft);
+  }
 
-    .metric-sub {
-      font-size: 10px;
-      color: var(--text-soft);
-    }
+  .admin-secret {
+    font-size: 10px;
+    color: rgba(255, 255, 255, 0.12);
+    text-align: right;
+    cursor: default;
+    user-select: none;
+  }
 
-    .admin-secret {
-      font-size: 10px;
-      color: rgba(255, 255, 255, 0.12);
-      text-align: right;
-      cursor: default;
-      user-select: none;
-    }
+  .admin-panel {
+    display: none;
+    margin-top: 6px;
+    padding: 8px;
+    border-radius: var(--radius-md);
+    background: rgba(5, 6, 10, 0.9);
+    border: 1px dashed var(--border-soft);
+    font-size: 11px;
+    color: var(--text-soft);
+  }
 
-    .admin-panel {
-      display: none;
-      margin-top: 6px;
-      padding: 8px;
-      border-radius: var(--radius-md);
-      background: rgba(5, 6, 10, 0.9);
-      border: 1px dashed var(--border-soft);
-      font-size: 11px;
-      color: var(--text-soft);
-    }
+  [data-theme="light"] .admin-panel {
+    background: #ffffff;
+  }
 
-    [data-theme="light"] .admin-panel {
-      background: #ffffff;
-    }
+  .admin-panel h4 {
+    margin: 0 0 4px;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--accent-strong);
+  }
 
-    .admin-panel h4 {
-      margin: 0 0 4px;
-      font-size: 11px;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      color: var(--accent-strong);
-    }
+  .admin-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 4px;
+  }
 
-    .admin-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-      margin-top: 4px;
-    }
+  .admin-row .btn {
+    font-size: 10px;
+    padding: 5px 8px;
+  }
 
-    .admin-row .btn {
-      font-size: 10px;
-      padding: 5px 8px;
-    }
+  /* SCANNER OVERLAY FULL */
 
-    .hidden {
-      display: none !important;
+  .scanner-overlay {
+    position: fixed;
+    inset: 0;
+    background: radial-gradient(circle at top, rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.96));
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+  }
+
+  .scanner-overlay.visible {
+    display: flex;
+  }
+
+  .scanner-frame {
+    width: min(480px, 92vw);
+    max-height: 80vh;
+    border-radius: 18px;
+    background: rgba(5, 6, 10, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.9);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .scanner-header {
+    padding: 10px 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .scanner-header-left {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .scanner-title {
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+  .scanner-subtitle {
+    font-size: 11px;
+    color: var(--text-soft);
+  }
+
+  .scanner-header-right {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .scanner-close-btn {
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--text);
+    font-size: 11px;
+    padding: 4px 8px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    cursor: pointer;
+    transition: background var(--transition-fast), transform var(--transition-fast);
+  }
+
+  .scanner-close-btn:hover {
+    background: rgba(255, 255, 255, 0.12);
+    transform: translateY(-0.5px);
+  }
+
+  .scanner-body {
+    position: relative;
+    flex: 1;
+    background: #000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .scanner-video-wrapper {
+    position: relative;
+    width: 100%;
+    padding-top: 70%;
+    overflow: hidden;
+  }
+
+  .scanner-video {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transform: scaleX(-1);
+  }
+
+  .scanner-overlay-frame {
+    position: absolute;
+    inset: 12%;
+    border-radius: 16px;
+    border: 2px solid rgba(255, 255, 255, 0.7);
+    box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.55);
+    pointer-events: none;
+  }
+
+  .scanner-overlay-frame::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    border: 2px solid var(--accent-strong);
+    border-style: dashed;
+    opacity: 0.7;
+    animation: scannerBorderPulse 2.4s ease-in-out infinite;
+  }
+
+  @keyframes scannerBorderPulse {
+    0%, 100% {
+      opacity: 0.4;
     }
-  </style>
-</head>
+    50% {
+      opacity: 1;
+    }
+  }
+
+  .scanner-line {
+    position: absolute;
+    left: 12%;
+    right: 12%;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, #ff4f6a, #ffcc33, transparent);
+    border-radius: 999px;
+    animation: scannerLineMove 2.2s linear infinite;
+  }
+
+  @keyframes scannerLineMove {
+    0% {
+      top: 14%;
+    }
+    50% {
+      top: 86%;
+    }
+    100% {
+      top: 14%;
+    }
+  }
+
+  .scanner-footer {
+    padding: 8px 10px;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    font-size: 11px;
+    color: var(--text-soft);
+  }
+
+  .scanner-footer-left {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .scanner-footer-right {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .scanner-status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 8px rgba(79, 140, 255, 0.9);
+  }
+
+  .scanner-device-select {
+    min-width: 140px;
+    padding: 4px 8px;
+    border-radius: 999px;
+    border: 1px solid var(--border-soft);
+    background: rgba(5, 6, 10, 0.9);
+    color: var(--text-soft);
+    font-size: 11px;
+    outline: none;
+  }
+
+  [data-theme="light"] .scanner-device-select {
+    background: #ffffff;
+  }
+
+  /* UTILIDADES */
+
+  .hidden {
+    display: none !important;
+  }
+</style>
 <body data-theme="dark">
   <div class="app-shell">
+
+    <!-- HEADER -->
     <header class="app-header">
       <div class="brand-block">
         <div class="orb"></div>
@@ -756,6 +982,7 @@
           <div class="brand-subtitle">Scanner · Voz · Dashboard</div>
         </div>
       </div>
+
       <div class="header-right">
         <div class="status-pill" id="connectionStatus">
           <div class="status-dot"></div>
@@ -764,6 +991,7 @@
             <div style="font-size:10px;">Backend online</div>
           </div>
         </div>
+
         <div class="toggle-group">
           <div class="toggle-label">Claro</div>
           <div class="toggle" id="themeToggle">
@@ -773,8 +1001,12 @@
       </div>
     </header>
 
+    <!-- MAIN LAYOUT -->
     <main>
+
+      <!-- PANEL IZQUIERDO -->
       <section class="panel">
+
         <div class="panel-header">
           <div>
             <div class="panel-title">Búsqueda y scanner</div>
@@ -782,34 +1014,36 @@
           </div>
         </div>
 
+        <!-- BUSCADOR -->
         <div class="search-row">
+
           <div class="search-input-row">
             <div class="search-input-wrapper">
               <span class="search-icon">🔍</span>
-              <input
-                id="queryInput"
-                class="search-input"
-                type="text"
-                placeholder="Artículo, artículo/color/talle o texto libre"
-                autocomplete="off"
-              />
+              <input id="queryInput" class="search-input" type="text"
+                placeholder="Artículo, artículo/color/talle o texto libre" autocomplete="off" />
             </div>
+
             <div class="search-actions">
               <button class="btn" id="scanBtn" title="Activar scanner">
                 <span class="btn-icon">📷</span>
               </button>
+
               <button class="btn" id="voiceBtn" title="Hablar">
                 <span class="btn-icon">🎙️</span>
               </button>
+
               <button class="btn btn-primary" id="searchBtn">
-                <span class="btn-icon">➡️</span>
-                Buscar
+                <span class="btn-icon">➡️</span> Buscar
               </button>
             </div>
           </div>
 
+          <!-- CONTROLES RÁPIDOS -->
           <div class="quick-controls">
+
             <div class="quick-left">
+
               <div class="chip-toggle" id="stockOnlyToggle">
                 <div class="chip-dot"></div>
                 <span>Mostrar solo con stock</span>
@@ -817,22 +1051,27 @@
 
               <div class="scanner-mode-block">
                 <div class="scanner-mode-label">Modo de scanner</div>
+
                 <div class="scanner-segments" id="scannerSegments">
                   <div class="scanner-segment" data-mode="1">
                     <span class="scanner-segment-icon">📦</span>
                     <span>Solo</span>
                   </div>
+
                   <div class="scanner-segment" data-mode="2">
                     <span class="scanner-segment-icon">🎨</span>
                     <span>Completo</span>
                   </div>
+
                   <div class="scanner-segment" data-mode="3">
                     <span class="scanner-segment-icon">🤖</span>
                     <span>Auto</span>
                   </div>
                 </div>
+
                 <div class="scanner-mode-hint">Solo · Completo · Auto</div>
               </div>
+
             </div>
 
             <div class="quick-right">
@@ -840,31 +1079,40 @@
                 Filtros avanzados
               </span>
             </div>
+
           </div>
 
+          <!-- FILTROS AVANZADOS -->
           <div class="filters-advanced-panel" id="advancedFiltersPanel">
             <div class="filters-row">
               <select id="filterMarca" class="filter-select">
                 <option value="">Marca</option>
               </select>
+
               <select id="filterRubro" class="filter-select">
                 <option value="">Rubro</option>
               </select>
+
               <select id="filterTalle" class="filter-select">
                 <option value="">Talle</option>
               </select>
             </div>
+
             <div class="filters-row">
               <button class="btn" id="resetFiltersBtn">Limpiar filtros</button>
             </div>
           </div>
+
         </div>
 
+        <!-- RESULTADOS -->
         <div class="results-panel">
+
           <div class="results-header">
             <div class="results-summary" id="resultsSummary">
               Sin resultados todavía.
             </div>
+
             <div class="results-view-tabs" id="viewTabs">
               <div class="results-view-tab active" data-view="resumen">Resumen</div>
               <div class="results-view-tab" data-view="tabla">Tabla</div>
@@ -873,15 +1121,19 @@
           </div>
 
           <div class="results-body">
-            <div class="results-scroll" id="resultsContainer">
-              <!-- Contenido dinámico -->
-            </div>
+            <div class="results-scroll" id="resultsContainer"></div>
           </div>
+
         </div>
+
       </section>
 
+      <!-- PANEL DERECHO -->
       <section class="panel">
+
         <div class="right-panel-section">
+
+          <!-- VOZ -->
           <div class="panel-header">
             <div>
               <div class="panel-title">Voz y estado</div>
@@ -894,12 +1146,13 @@
               <div class="voice-dot" id="voiceDot"></div>
               <span id="voiceStatusText">Voz en espera</span>
             </div>
+
             <button class="btn" id="voiceToggleBtn">
-              <span class="btn-icon">🎧</span>
-              Auto-escucha
+              <span class="btn-icon">🎧</span> Auto-escucha
             </button>
           </div>
 
+          <!-- DASHBOARD -->
           <div class="panel-header">
             <div>
               <div class="panel-title">Dashboard</div>
@@ -909,508 +1162,562 @@
 
           <div class="dashboard-body">
             <div class="dashboard-metrics">
+
               <div class="metric-card">
                 <div class="metric-label">Artículos</div>
                 <div class="metric-value" id="metricArticulos">0</div>
                 <div class="metric-sub">Encontrados</div>
               </div>
+
               <div class="metric-card">
                 <div class="metric-label">Pares</div>
                 <div class="metric-value" id="metricPares">0</div>
                 <div class="metric-sub">Totales</div>
               </div>
+
               <div class="metric-card">
                 <div class="metric-label">Alertas</div>
                 <div class="metric-value" id="metricAlertas">0</div>
                 <div class="metric-sub">Stock bajo</div>
               </div>
+
             </div>
           </div>
 
-          <div class="admin-secret" id="adminSecret">
-            .
-          </div>
+          <!-- ADMIN -->
+          <div class="admin-secret" id="adminSecret">.</div>
 
           <div class="admin-panel" id="adminPanel">
             <h4>Panel administrador</h4>
             <div>Comandos internos, pruebas y herramientas.</div>
+
             <div class="admin-row">
               <button class="btn" id="adminPingBtn">Ping backend</button>
               <button class="btn" id="adminDummyDataBtn">Cargar datos demo</button>
               <button class="btn" id="adminClearBtn">Limpiar resultados</button>
             </div>
           </div>
+
         </div>
+
       </section>
+
     </main>
   </div>
 
-  <script>
-    // ---------------------------
-    // Estado global
-    // ---------------------------
-    let scannerMode = localStorage.getItem("scannerMode") || "3";
-    let stockOnly = localStorage.getItem("stockOnly") === "true";
-    let autoListen = localStorage.getItem("autoListen") === "true";
-    let theme = localStorage.getItem("theme") || "dark";
-    let currentView = "resumen";
-    let resultsData = [];
-    let adminTapCount = 0;
-    let adminTapTimer = null;
+  <!-- SCANNER OVERLAY FULL -->
+  <div class="scanner-overlay" id="scannerOverlay">
 
-    // ---------------------------
-    // Utilidades
-    // ---------------------------
-    function setTheme(mode) {
-      theme = mode;
-      document.body.setAttribute("data-theme", mode);
-      localStorage.setItem("theme", mode);
-      const toggle = document.getElementById("themeToggle");
-      if (mode === "light") {
-        toggle.classList.add("on");
-      } else {
-        toggle.classList.remove("on");
-      }
-    }
+    <div class="scanner-frame">
 
-    function setScannerMode(mode) {
-      scannerMode = mode;
-      localStorage.setItem("scannerMode", mode);
-      document.querySelectorAll(".scanner-segment").forEach(btn => {
-        btn.classList.toggle("active", btn.dataset.mode === mode);
-      });
-    }
+      <div class="scanner-header">
+        <div class="scanner-header-left">
+          <div class="scanner-title">Scanner activo</div>
+          <div class="scanner-subtitle">Apuntá al código · Auto-detección</div>
+        </div>
 
-    function setStockOnly(on) {
-      stockOnly = on;
-      localStorage.setItem("stockOnly", on ? "true" : "false");
-      const chip = document.getElementById("stockOnlyToggle");
-      chip.classList.toggle("active", on);
-    }
+        <div class="scanner-header-right">
+          <button class="scanner-close-btn" id="scannerCloseBtn">✖ Cerrar</button>
+        </div>
+      </div>
 
-    function setAutoListen(on) {
-      autoListen = on;
-      localStorage.setItem("autoListen", on ? "true" : "false");
-      const btn = document.getElementById("voiceToggleBtn");
-      btn.classList.toggle("active", on);
-    }
+      <div class="scanner-body">
+        <div class="scanner-video-wrapper">
+          <video id="scannerVideo" class="scanner-video" autoplay playsinline></video>
 
-    function setConnectionStatus(online) {
-      const pill = document.getElementById("connectionStatus");
-      const label = pill.querySelector(".status-label");
-      const sub = pill.querySelector("div div:nth-child(2)");
-      const dot = pill.querySelector(".status-dot");
-      if (online) {
-        label.textContent = "Conectado";
-        sub.textContent = "Backend online";
-        dot.style.background = "var(--success)";
-        dot.style.boxShadow = "0 0 8px rgba(61, 220, 151, 0.9)";
-      } else {
-        label.textContent = "Desconectado";
-        sub.textContent = "Sin respuesta";
-        dot.style.background = "var(--danger)";
-        dot.style.boxShadow = "0 0 8px rgba(255, 79, 106, 0.9)";
-      }
-    }
+          <div class="scanner-overlay-frame"></div>
+          <div class="scanner-line"></div>
+        </div>
+      </div>
 
-    function setView(view) {
-      currentView = view;
-      document.querySelectorAll(".results-view-tab").forEach(tab => {
-        tab.classList.toggle("active", tab.dataset.view === view);
-      });
-      renderResults();
-    }
+      <div class="scanner-footer">
+        <div class="scanner-footer-left">
+          <span>Dispositivo</span>
+        </div>
 
-    function setVoiceListening(listening) {
-      const dot = document.getElementById("voiceDot");
-      const text = document.getElementById("voiceStatusText");
-      if (listening) {
-        dot.classList.add("listening");
-        text.textContent = "Escuchando…";
-      } else {
-        dot.classList.remove("listening");
-        text.textContent = "Voz en espera";
-      }
-    }
+        <div class="scanner-footer-right">
+          <div class="scanner-status-dot"></div>
+          <select id="scannerDeviceSelect" class="scanner-device-select"></select>
+        </div>
+      </div>
 
-    function normalizeText(text) {
-      if (!text) return "";
-      let t = text.toLowerCase();
-      t = t.replace(/\bvendas\b/g, "ventas");
-      t = t.replace(/\bvenda\b/g, "venta");
-      return t;
-    }
+    </div>
 
-    // ---------------------------
-    // Scanner: parseo de código
-    // ---------------------------
-    function procesarCodigoEscaneado(raw) {
-      if (!raw) return "";
-      const partes = raw.trim().split(/\s+/);
-      const articulo = partes[0] || "";
-      let color = null;
-      let talle = null;
+  </div>
+</body>
+<script>
+// ======================================================
+// ORB STOCK — JS FULL VERSION
+// Scanner real (ZXing + BarcodeDetector), voz real,
+// fetch backend, dashboard, filtros, vistas, admin.
+// ======================================================
 
-      for (const p of partes) {
-        if (/^\d+([.,]\d+)?$/.test(p)) {
-          talle = p.replace(",", ".");
-        }
-      }
+// ---------------------------
+// ESTADO GLOBAL
+// ---------------------------
+let scannerMode = localStorage.getItem("scannerMode") || "3";
+let stockOnly = localStorage.getItem("stockOnly") === "true";
+let autoListen = localStorage.getItem("autoListen") === "true";
+let theme = localStorage.getItem("theme") || "dark";
+let currentView = "resumen";
+let resultsData = [];
+let adminTapCount = 0;
+let adminTapTimer = null;
 
-      for (const p of partes) {
-        if (!/^\d/.test(p) && p !== articulo) {
-          color = p.toUpperCase();
-        }
-      }
+// Scanner
+let scannerStream = null;
+let scannerActive = false;
+let scannerDevices = [];
+let currentDeviceId = null;
+let zxingReader = null;
+let barcodeDetector = null;
+let scannerLoopActive = false;
 
-      if (scannerMode === "1") {
-        return articulo;
-      }
+// Voz
+let recognition = null;
+let voiceActive = false;
 
-      if (scannerMode === "2") {
-        return `${articulo}/${color || ""}/${talle || ""}`;
-      }
+// Sonido beep
+const beep = new Audio();
+beep.src = "data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABAAZGF0YQAAAAA=";
 
-      if (scannerMode === "3") {
-        if (talle || color) {
-          return `${articulo}/${color || ""}/${talle || ""}`;
-        }
-        return articulo;
-      }
+// ---------------------------
+// UTILIDADES
+// ---------------------------
+function setTheme(mode) {
+  theme = mode;
+  document.body.setAttribute("data-theme", mode);
+  localStorage.setItem("theme", mode);
+  const toggle = document.getElementById("themeToggle");
+  if (mode === "light") toggle.classList.add("on");
+  else toggle.classList.remove("on");
+}
 
-      return articulo;
-    }
+function setScannerMode(mode) {
+  scannerMode = mode;
+  localStorage.setItem("scannerMode", mode);
+  document.querySelectorAll(".scanner-segment").forEach(btn => {
+    btn.classList.toggle("active", btn.dataset.mode === mode);
+  });
+}
 
-    // ---------------------------
-    // Render de resultados
-    // ---------------------------
-    function renderResults() {
-      const container = document.getElementById("resultsContainer");
-      const summary = document.getElementById("resultsSummary");
-      const metricArt = document.getElementById("metricArticulos");
-      const metricPares = document.getElementById("metricPares");
-      const metricAlertas = document.getElementById("metricAlertas");
+function setStockOnly(on) {
+  stockOnly = on;
+  localStorage.setItem("stockOnly", on ? "true" : "false");
+  const chip = document.getElementById("stockOnlyToggle");
+  chip.classList.toggle("active", on);
+}
 
-      if (!resultsData || resultsData.length === 0) {
-        container.innerHTML = `<div style="font-size:11px;color:var(--text-soft);padding:6px;">Sin resultados todavía. Probá buscar un artículo o usar el scanner.</div>`;
-        summary.textContent = "Sin resultados.";
-        metricArt.textContent = "0";
-        metricPares.textContent = "0";
-        metricAlertas.textContent = "0";
-        return;
-      }
+function setAutoListen(on) {
+  autoListen = on;
+  localStorage.setItem("autoListen", on ? "true" : "false");
+  const btn = document.getElementById("voiceToggleBtn");
+  btn.classList.toggle("active", on);
+}
 
-      const filtered = stockOnly
-        ? resultsData.filter(r => (r.stock || 0) > 0)
-        : resultsData.slice();
+function setConnectionStatus(online) {
+  const pill = document.getElementById("connectionStatus");
+  const label = pill.querySelector(".status-label");
+  const sub = pill.querySelector("div div:nth-child(2)");
+  const dot = pill.querySelector(".status-dot");
+  if (online) {
+    label.textContent = "Conectado";
+    sub.textContent = "Backend online";
+    dot.style.background = "var(--success)";
+  } else {
+    label.textContent = "Desconectado";
+    sub.textContent = "Sin respuesta";
+    dot.style.background = "var(--danger)";
+  }
+}
 
-      const totalArt = filtered.length;
-      const totalPares = filtered.reduce((acc, r) => acc + (r.stock || 0), 0);
-      const alertas = filtered.filter(r => (r.stock || 0) > 0 && (r.stock || 0) <= 2).length;
+function setView(view) {
+  currentView = view;
+  document.querySelectorAll(".results-view-tab").forEach(tab => {
+    tab.classList.toggle("active", tab.dataset.view === view);
+  });
+  renderResults();
+}
 
-      summary.textContent = `${totalArt} artículos · ${totalPares} pares · ${alertas} alertas`;
+function setVoiceListening(listening) {
+  const dot = document.getElementById("voiceDot");
+  const text = document.getElementById("voiceStatusText");
+  if (listening) {
+    dot.classList.add("listening");
+    text.textContent = "Escuchando…";
+  } else {
+    dot.classList.remove("listening");
+    text.textContent = "Voz en espera";
+  }
+}
 
-      metricArt.textContent = String(totalArt);
-      metricPares.textContent = String(totalPares);
-      metricAlertas.textContent = String(alertas);
+function normalizeText(text) {
+  if (!text) return "";
+  let t = text.toLowerCase();
+  t = t.replace(/\bvendas\b/g, "ventas");
+  t = t.replace(/\bvenda\b/g, "venta");
+  return t;
+}
 
-      if (currentView === "resumen") {
-        container.innerHTML = filtered
-          .map(r => {
-            const stockClass = (r.stock || 0) <= 2 ? "stock-low" : "stock-ok";
-            return `
-              <div style="padding:6px 8px;border-radius:10px;border:1px solid var(--border-soft);margin-bottom:4px;background:rgba(255,255,255,0.02);display:flex;justify-content:space-between;align-items:center;gap:8px;">
-                <div style="font-size:11px;">
-                  <div style="font-weight:600;">${r.articulo || ""} ${r.color || ""}</div>
-                  <div style="font-size:10px;color:var(--text-soft);">Talle ${r.talle || "-"} · ${r.marca || ""} · ${r.rubro || ""}</div>
-                </div>
-                <div style="text-align:right;font-size:11px;">
-                  <div class="${stockClass}">${r.stock || 0} pares</div>
-                  <div style="font-size:10px;color:var(--text-soft);">Depósito</div>
-                </div>
-              </div>
-            `;
-          })
-          .join("");
-        return;
-      }
+// ---------------------------
+// PARSEO DE CÓDIGO ESCANEADO
+// ---------------------------
+function procesarCodigoEscaneado(raw) {
+  if (!raw) return "";
+  const partes = raw.trim().split(/\s+/);
+  const articulo = partes[0] || "";
+  let color = null;
+  let talle = null;
 
-      if (currentView === "tabla") {
-        const rows = filtered
-          .map(r => {
-            const stockClass = (r.stock || 0) <= 2 ? "stock-low" : "stock-ok";
-            return `
-              <tr>
-                <td>${r.articulo || ""}</td>
-                <td>${r.color || ""}</td>
-                <td>${r.talle || ""}</td>
-                <td>${r.marca || ""}</td>
-                <td>${r.rubro || ""}</td>
-                <td class="${stockClass}">${r.stock || 0}</td>
-              </tr>
-            `;
-          })
-          .join("");
+  for (const p of partes) {
+    if (/^\d+([.,]\d+)?$/.test(p)) talle = p.replace(",", ".");
+  }
 
-        container.innerHTML = `
-          <div style="overflow:auto;">
-            <table class="results-table">
-              <thead>
-                <tr>
-                  <th>Artículo</th>
-                  <th>Color</th>
-                  <th>Talle</th>
-                  <th>Marca</th>
-                  <th>Rubro</th>
-                  <th>Stock</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${rows}
-              </tbody>
-            </table>
+  for (const p of partes) {
+    if (!/^\d/.test(p) && p !== articulo) color = p.toUpperCase();
+  }
+
+  if (scannerMode === "1") return articulo;
+  if (scannerMode === "2") return `${articulo}/${color || ""}/${talle || ""}`;
+  if (scannerMode === "3") {
+    if (talle || color) return `${articulo}/${color || ""}/${talle || ""}`;
+    return articulo;
+  }
+  return articulo;
+}
+
+// ---------------------------
+// RENDER DE RESULTADOS
+// ---------------------------
+function renderResults() {
+  const container = document.getElementById("resultsContainer");
+  const summary = document.getElementById("resultsSummary");
+  const metricArt = document.getElementById("metricArticulos");
+  const metricPares = document.getElementById("metricPares");
+  const metricAlertas = document.getElementById("metricAlertas");
+
+  if (!resultsData || resultsData.length === 0) {
+    container.innerHTML = `<div style="font-size:11px;color:var(--text-soft);padding:6px;">Sin resultados todavía.</div>`;
+    summary.textContent = "Sin resultados.";
+    metricArt.textContent = "0";
+    metricPares.textContent = "0";
+    metricAlertas.textContent = "0";
+    return;
+  }
+
+  const filtered = stockOnly
+    ? resultsData.filter(r => (r.stock || 0) > 0)
+    : resultsData.slice();
+
+  const totalArt = filtered.length;
+  const totalPares = filtered.reduce((acc, r) => acc + (r.stock || 0), 0);
+  const alertas = filtered.filter(r => (r.stock || 0) > 0 && (r.stock || 0) <= 2).length;
+
+  summary.textContent = `${totalArt} artículos · ${totalPares} pares · ${alertas} alertas`;
+
+  metricArt.textContent = String(totalArt);
+  metricPares.textContent = String(totalPares);
+  metricAlertas.textContent = String(alertas);
+
+  if (currentView === "resumen") {
+    container.innerHTML = filtered
+      .map(r => {
+        const stockClass = (r.stock || 0) <= 2 ? "stock-low" : "stock-ok";
+        return `
+          <div style="padding:6px 8px;border-radius:10px;border:1px solid var(--border-soft);margin-bottom:4px;background:rgba(255,255,255,0.02);display:flex;justify-content:space-between;align-items:center;gap:8px;">
+            <div style="font-size:11px;">
+              <div style="font-weight:600;">${r.articulo || ""} ${r.color || ""}</div>
+              <div style="font-size:10px;color:var(--text-soft);">Talle ${r.talle || "-"} · ${r.marca || ""} · ${r.rubro || ""}</div>
+            </div>
+            <div style="text-align:right;font-size:11px;">
+              <div class="${stockClass}">${r.stock || 0} pares</div>
+              <div style="font-size:10px;color:var(--text-soft);">Depósito</div>
+            </div>
           </div>
         `;
-        return;
-      }
+      })
+      .join("");
+    return;
+  }
 
-      if (currentView === "talles") {
-        const porTalle = {};
-        for (const r of filtered) {
-          const key = r.talle || "-";
-          porTalle[key] = (porTalle[key] || 0) + (r.stock || 0);
-        }
-        const tallesOrdenados = Object.keys(porTalle).sort((a, b) => {
-          const na = parseFloat(a.replace(",", ".")) || 0;
-          const nb = parseFloat(b.replace(",", ".")) || 0;
-          return na - nb;
-        });
-
-        const rows = tallesOrdenados
-          .map(t => {
-            const stock = porTalle[t];
-            const stockClass = stock <= 2 ? "stock-low" : "stock-ok";
-            return `
-              <tr>
-                <td>${t}</td>
-                <td class="${stockClass}">${stock}</td>
-              </tr>
-            `;
-          })
-          .join("");
-
-        container.innerHTML = `
-          <div style="overflow:auto;">
-            <table class="results-table">
-              <thead>
-                <tr>
-                  <th>Talle</th>
-                  <th>Stock total</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${rows}
-              </tbody>
-            </table>
-          </div>
+  if (currentView === "tabla") {
+    const rows = filtered
+      .map(r => {
+        const stockClass = (r.stock || 0) <= 2 ? "stock-low" : "stock-ok";
+        return `
+          <tr>
+            <td>${r.articulo || ""}</td>
+            <td>${r.color || ""}</td>
+            <td>${r.talle || ""}</td>
+            <td>${r.marca || ""}</td>
+            <td>${r.rubro || ""}</td>
+            <td class="${stockClass}">${r.stock || 0}</td>
+          </tr>
         `;
-        return;
-      }
+      })
+      .join("");
+
+    container.innerHTML = `
+      <div style="overflow:auto;">
+        <table class="results-table">
+          <thead>
+            <tr>
+              <th>Artículo</th>
+              <th>Color</th>
+              <th>Talle</th>
+              <th>Marca</th>
+              <th>Rubro</th>
+              <th>Stock</th>
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>
+    `;
+    return;
+  }
+
+  if (currentView === "talles") {
+    const porTalle = {};
+    for (const r of filtered) {
+      const key = r.talle || "-";
+      porTalle[key] = (porTalle[key] || 0) + (r.stock || 0);
     }
 
-    // ---------------------------
-    // Búsqueda (dummy / integrar backend)
-    // ---------------------------
-    async function doSearch() {
-      const input = document.getElementById("queryInput");
-      let query = input.value.trim();
-      if (!query) return;
-
-      query = normalizeText(query);
-
-      // Acá iría la llamada real al backend.
-      // Por ahora, datos demo para que veas el flujo completo.
-      const demo = [
-        { articulo: "04501-4", color: "NEGRO", talle: "38", marca: "Marca A", rubro: "Zapatilla", stock: 3 },
-        { articulo: "04501-4", color: "NEGRO", talle: "39", marca: "Marca A", rubro: "Zapatilla", stock: 1 },
-        { articulo: "04501-4", color: "BLANCO", talle: "38", marca: "Marca A", rubro: "Zapatilla", stock: 0 },
-        { articulo: "12345-1", color: "ROJO", talle: "40", marca: "Marca B", rubro: "Zapato", stock: 5 }
-      ];
-
-      resultsData = demo;
-      populateFiltersFromResults();
-      renderResults();
-    }
-
-    function populateFiltersFromResults() {
-      const marcaSel = document.getElementById("filterMarca");
-      const rubroSel = document.getElementById("filterRubro");
-      const talleSel = document.getElementById("filterTalle");
-
-      const marcas = new Set();
-      const rubros = new Set();
-      const talles = new Set();
-
-      for (const r of resultsData) {
-        if (r.marca) marcas.add(r.marca);
-        if (r.rubro) rubros.add(r.rubro);
-        if (r.talle) talles.add(r.talle);
-      }
-
-      function fillSelect(sel, values, label) {
-        const current = sel.value;
-        sel.innerHTML = `<option value="">${label}</option>`;
-        Array.from(values)
-          .sort()
-          .forEach(v => {
-            const opt = document.createElement("option");
-            opt.value = v;
-            opt.textContent = v;
-            sel.appendChild(opt);
-          });
-        if (Array.from(values).includes(current)) {
-          sel.value = current;
-        }
-      }
-
-      fillSelect(marcaSel, marcas, "Marca");
-      fillSelect(rubroSel, rubros, "Rubro");
-      fillSelect(talleSel, talles, "Talle");
-    }
-
-    // ---------------------------
-    // Voz (placeholder)
-    // ---------------------------
-    function startVoiceOnce() {
-      setVoiceListening(true);
-      setTimeout(() => {
-        setVoiceListening(false);
-        // Simular que dijo algo:
-        // document.getElementById("queryInput").value = "04501-4";
-        // doSearch();
-      }, 1500);
-    }
-
-    // ---------------------------
-    // Scanner (placeholder)
-    // ---------------------------
-    function startScannerOnce() {
-      const raw = "04501-4 NEGRO 38";
-      const parsed = procesarCodigoEscaneado(raw);
-      document.getElementById("queryInput").value = parsed;
-      doSearch();
-    }
-
-    // ---------------------------
-    // Admin oculto
-    // ---------------------------
-    function handleAdminTap() {
-      adminTapCount++;
-      if (adminTapTimer) clearTimeout(adminTapTimer);
-      adminTapTimer = setTimeout(() => {
-        adminTapCount = 0;
-      }, 1200);
-
-      if (adminTapCount >= 5) {
-        adminTapCount = 0;
-        const panel = document.getElementById("adminPanel");
-        panel.style.display = panel.style.display === "none" || panel.style.display === "" ? "block" : "none";
-      }
-    }
-
-    // ---------------------------
-    // Init
-    // ---------------------------
-    document.addEventListener("DOMContentLoaded", () => {
-      // Tema
-      setTheme(theme);
-
-      // Scanner mode
-      setScannerMode(scannerMode);
-      document.querySelectorAll(".scanner-segment").forEach(btn => {
-        btn.addEventListener("click", () => setScannerMode(btn.dataset.mode));
-      });
-
-      // Stock only
-      setStockOnly(stockOnly);
-      document.getElementById("stockOnlyToggle").addEventListener("click", () => {
-        setStockOnly(!stockOnly);
-        renderResults();
-      });
-
-      // Auto listen
-      setAutoListen(autoListen);
-
-      // Theme toggle
-      document.getElementById("themeToggle").addEventListener("click", () => {
-        setTheme(theme === "dark" ? "light" : "dark");
-      });
-
-      // Advanced filters
-      const advToggle = document.getElementById("advancedFiltersToggle");
-      const advPanel = document.getElementById("advancedFiltersPanel");
-      advToggle.addEventListener("click", () => {
-        const visible = advPanel.style.display === "flex";
-        advPanel.style.display = visible ? "none" : "flex";
-      });
-
-      document.getElementById("resetFiltersBtn").addEventListener("click", () => {
-        document.getElementById("filterMarca").value = "";
-        document.getElementById("filterRubro").value = "";
-        document.getElementById("filterTalle").value = "";
-        renderResults();
-      });
-
-      document.getElementById("filterMarca").addEventListener("change", renderResults);
-      document.getElementById("filterRubro").addEventListener("change", renderResults);
-      document.getElementById("filterTalle").addEventListener("change", renderResults);
-
-      // View tabs
-      document.querySelectorAll(".results-view-tab").forEach(tab => {
-        tab.addEventListener("click", () => setView(tab.dataset.view));
-      });
-
-      // Search
-      document.getElementById("searchBtn").addEventListener("click", doSearch);
-      document.getElementById("queryInput").addEventListener("keydown", e => {
-        if (e.key === "Enter") doSearch();
-      });
-
-      // Voice
-      document.getElementById("voiceBtn").addEventListener("click", startVoiceOnce);
-      document.getElementById("voiceToggleBtn").addEventListener("click", () => {
-        setAutoListen(!autoListen);
-      });
-
-      // Scanner
-      document.getElementById("scanBtn").addEventListener("click", startScannerOnce);
-
-      // Admin
-      document.getElementById("adminSecret").addEventListener("click", handleAdminTap);
-      document.getElementById("adminPanel").style.display = "none";
-
-      document.getElementById("adminPingBtn").addEventListener("click", () => {
-        alert("Ping backend (placeholder).");
-      });
-      document.getElementById("adminDummyDataBtn").addEventListener("click", () => {
-        resultsData = [
-          { articulo: "04501-4", color: "NEGRO", talle: "38", marca: "Marca A", rubro: "Zapatilla", stock: 3 },
-          { articulo: "04501-4", color: "NEGRO", talle: "39", marca: "Marca A", rubro: "Zapatilla", stock: 1 },
-          { articulo: "04501-4", color: "BLANCO", talle: "38", marca: "Marca A", rubro: "Zapatilla", stock: 0 },
-          { articulo: "12345-1", color: "ROJO", talle: "40", marca: "Marca B", rubro: "Zapato", stock: 5 }
-        ];
-        populateFiltersFromResults();
-        renderResults();
-      });
-      document.getElementById("adminClearBtn").addEventListener("click", () => {
-        resultsData = [];
-        renderResults();
-      });
-
-      // Estado inicial
-      setConnectionStatus(true);
-      renderResults();
+    const tallesOrdenados = Object.keys(porTalle).sort((a, b) => {
+      const na = parseFloat(a.replace(",", ".")) || 0;
+      const nb = parseFloat(b.replace(",", ".")) || 0;
+      return na - nb;
     });
-  </script>
+
+    const rows = tallesOrdenados
+      .map(t => {
+        const stock = porTalle[t];
+        const stockClass = stock <= 2 ? "stock-low" : "stock-ok";
+        return `
+          <tr>
+            <td>${t}</td>
+            <td class="${stockClass}">${stock}</td>
+          </tr>
+        `;
+      })
+      .join("");
+
+    container.innerHTML = `
+      <div style="overflow:auto;">
+        <table class="results-table">
+          <thead>
+            <tr>
+              <th>Talle</th>
+              <th>Stock total</th>
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>
+    `;
+    return;
+  }
+}
+</script>
+// ======================================================
+// SCANNER REAL (ZXing + BarcodeDetector)
+// Selección de cámaras · Overlay · Loop · Vibración + beep
+// ======================================================
+
+async function initScannerEngines() {
+  // BarcodeDetector nativo
+  if ("BarcodeDetector" in window) {
+    try {
+      barcodeDetector = new BarcodeDetector({
+        formats: ["ean_13", "ean_8", "code_128", "code_39", "upc_a", "upc_e", "qr_code"]
+      });
+      console.log("[SCANNER] BarcodeDetector disponible");
+    } catch (e) {
+      console.warn("[SCANNER] Error inicializando BarcodeDetector:", e);
+      barcodeDetector = null;
+    }
+  }
+
+  // ZXing (requiere que cargues el script de ZXing antes)
+  if (window.ZXing && window.ZXing.BrowserMultiFormatReader) {
+    zxingReader = new ZXing.BrowserMultiFormatReader();
+    console.log("[SCANNER] ZXing disponible");
+  } else {
+    console.warn("[SCANNER] ZXing no encontrado en window.ZXing");
+  }
+}
+
+async function listarDispositivosVideo() {
+  try {
+    const devices = await navigator.mediaDevices.enumerateDevices();
+    scannerDevices = devices.filter(d => d.kind === "videoinput");
+    const select = document.getElementById("scannerDeviceSelect");
+    select.innerHTML = "";
+
+    scannerDevices.forEach((dev, idx) => {
+      const opt = document.createElement("option");
+      opt.value = dev.deviceId;
+      opt.textContent = dev.label || `Cámara ${idx + 1}`;
+      select.appendChild(opt);
+    });
+
+    if (scannerDevices.length > 0) {
+      currentDeviceId = scannerDevices[0].deviceId;
+      select.value = currentDeviceId;
+    }
+  } catch (e) {
+    console.error("[SCANNER] Error listando dispositivos:", e);
+  }
+}
+
+async function abrirScannerOverlay() {
+  const overlay = document.getElementById("scannerOverlay");
+  const video = document.getElementById("scannerVideo");
+
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    alert("Este dispositivo no soporta cámara.");
+    return;
+  }
+
+  overlay.classList.add("visible");
+  scannerActive = true;
+
+  try {
+    await listarDispositivosVideo();
+    await iniciarStreamScanner(currentDeviceId);
+    iniciarLoopDeteccion(video);
+  } catch (e) {
+    console.error("[SCANNER] Error al iniciar scanner:", e);
+    cerrarScannerOverlay();
+  }
+}
+
+async function iniciarStreamScanner(deviceId) {
+  const video = document.getElementById("scannerVideo");
+
+  if (scannerStream) {
+    scannerStream.getTracks().forEach(t => t.stop());
+    scannerStream = null;
+  }
+
+  const constraints = {
+    audio: false,
+    video: {
+      deviceId: deviceId ? { exact: deviceId } : undefined,
+      facingMode: deviceId ? undefined : "environment"
+    }
+  };
+
+  scannerStream = await navigator.mediaDevices.getUserMedia(constraints);
+  video.srcObject = scannerStream;
+}
+
+function cerrarScannerOverlay() {
+  const overlay = document.getElementById("scannerOverlay");
+  overlay.classList.remove("visible");
+  scannerActive = false;
+  scannerLoopActive = false;
+
+  if (scannerStream) {
+    scannerStream.getTracks().forEach(t => t.stop());
+    scannerStream = null;
+  }
+}
+
+function manejarResultadoScan(texto) {
+  if (!texto) return;
+  try {
+    navigator.vibrate && navigator.vibrate(80);
+  } catch (_) {}
+
+  try {
+    beep.currentTime = 0;
+    beep.play().catch(() => {});
+  } catch (_) {}
+
+  const procesado = procesarCodigoEscaneado(texto);
+  const input = document.getElementById("queryInput");
+  input.value = procesado;
+  cerrarScannerOverlay();
+
+  // Disparar búsqueda automática si querés:
+  const btn = document.getElementById("searchBtn");
+  btn.click();
+}
+
+function iniciarLoopDeteccion(videoEl) {
+  if (!scannerStream) return;
+  scannerLoopActive = true;
+
+  const usarBarcodeDetector = !!barcodeDetector;
+
+  const canvas = document.createElement("canvas");
+  const ctx = canvas.getContext("2d");
+
+  const loop = async () => {
+    if (!scannerLoopActive || !scannerActive) return;
+
+    if (videoEl.readyState === videoEl.HAVE_ENOUGH_DATA) {
+      canvas.width = videoEl.videoWidth;
+      canvas.height = videoEl.videoHeight;
+      ctx.drawImage(videoEl, 0, 0, canvas.width, canvas.height);
+
+      try {
+        if (usarBarcodeDetector) {
+          const bitmap = await createImageBitmap(canvas);
+          const codes = await barcodeDetector.detect(bitmap);
+          if (codes && codes.length > 0) {
+            const raw = codes[0].rawValue || codes[0].rawData || "";
+            console.log("[SCANNER] Detectado (BarcodeDetector):", raw);
+            manejarResultadoScan(raw);
+            return;
+          }
+        } else if (zxingReader) {
+          const luminanceSource = new ZXing.HTMLCanvasElementLuminanceSource(canvas);
+          const binaryBitmap = new ZXing.BinaryBitmap(new ZXing.HybridBinarizer(luminanceSource));
+          const result = zxingReader.decode(binaryBitmap);
+          if (result && result.text) {
+            console.log("[SCANNER] Detectado (ZXing):", result.text);
+            manejarResultadoScan(result.text);
+            return;
+          }
+        }
+      } catch (e) {
+        // ZXing lanza excepciones cuando no encuentra código, es normal
+      }
+    }
+
+    requestAnimationFrame(loop);
+  };
+
+  requestAnimationFrame(loop);
+}
+
+// ------------------------------------------------------
+// EVENTOS SCANNER
+// ------------------------------------------------------
+document.getElementById("scanBtn").addEventListener("click", async () => {
+  await initScannerEngines();
+  abrirScannerOverlay();
+});
+
+document.getElementById("scannerCloseBtn").addEventListener("click", () => {
+  cerrarScannerOverlay();
+});
+
+document.getElementById("scannerDeviceSelect").addEventListener("change", async (e) => {
+  currentDeviceId = e.target.value;
+  if (scannerActive) {
+    try {
+      await iniciarStreamScanner(currentDeviceId);
+      const video = document.getElementById("scannerVideo");
+      iniciarLoopDeteccion(video);
+    } catch (err) {
+      console.error("[SCANNER] Error cambiando de cámara:", err);
+    }
+  }
+});
+</script>
 </body>
 </html>
