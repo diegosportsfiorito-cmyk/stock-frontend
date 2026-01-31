@@ -1,241 +1,238 @@
 <!DOCTYPE html>
-<html lang="es" data-theme="dark">
+<html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <title>ORB STOCK</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Consulta de Stock - ORB STOCK</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
+  <!-- Fuentes e íconos básicos -->
   <link rel="stylesheet" href="styles.css" />
-
-  <!-- ZXing para scanner -->
-  <script src="https://unpkg.com/@zxing/library@latest"></script>
 </head>
 <body>
-  <div class="app-shell">
-    <header class="app-header">
-      <div class="brand-block">
-        <div class="orb"></div>
-        <div class="brand-text">
-          <div class="brand-title">ORB STOCK</div>
-          <div class="brand-subtitle">Scanner · Voz · Dashboard</div>
+  <div id="app">
+    <!-- HEADER SUPERIOR -->
+    <header class="top-bar">
+      <div class="top-left">
+        <div class="orb-logo">
+          <div class="orb-pulse"></div>
+          <div class="orb-core"></div>
+        </div>
+        <div class="top-title">
+          <div class="app-name">ORB STOCK</div>
+          <div class="app-subtitle">Consulta de stock unificada</div>
         </div>
       </div>
 
-      <div class="header-right">
-        <div class="status-pill" id="connectionStatus">
+      <div class="top-right">
+        <div id="connectionStatus" class="status-pill">
           <div class="status-dot"></div>
           <div>
-            <div class="status-label">Conectado</div>
-            <div style="font-size:10px;">Backend online</div>
-          </div>
-        </div>
-
-        <div class="toggle-group">
-          <div class="toggle-label">Claro</div>
-          <div class="toggle" id="themeToggle">
-            <div class="toggle-knob"></div>
+            <div class="status-label">Desconectado</div>
+            <div class="status-sub">Sin respuesta</div>
           </div>
         </div>
       </div>
     </header>
 
-    <main>
-      <!-- PANEL IZQUIERDO -->
-      <section class="panel">
-        <div class="panel-header">
-          <div>
-            <div class="panel-title">Búsqueda y scanner</div>
-            <div class="panel-subtitle">Artículo, color, talle · Scanner · Voz</div>
+    <!-- CONTENIDO PRINCIPAL -->
+    <main class="main-layout">
+      <!-- COLUMNA IZQUIERDA: BÚSQUEDA, SCANNER, VOZ -->
+      <section class="left-panel">
+        <!-- BLOQUE BÚSQUEDA + AUTOCOMPLETE -->
+        <section class="card">
+          <div class="card-header">
+            <div class="card-title">Búsqueda y scanner</div>
+            <div class="card-subtitle">Artículo, descripción, marca, rubro, color, talle</div>
           </div>
-        </div>
 
-        <div class="search-row">
-          <div class="search-input-row">
+          <div class="search-row">
             <div class="search-input-wrapper">
-              <span class="search-icon">🔍</span>
-              <input id="queryInput" class="search-input" type="text"
-                     placeholder="Artículo, artículo/color/talle o texto libre" autocomplete="off" />
-            </div>
-
-            <div class="search-actions">
-              <button class="btn" id="scanBtn" title="Activar scanner">
-                <span class="btn-icon">📷</span>
+              <input
+                id="searchInput"
+                type="text"
+                placeholder="Escribí o escaneá un artículo, nombre, marca, rubro..."
+                autocomplete="off"
+              />
+              <button id="btnClearSearch" class="icon-btn" title="Limpiar">
+                ✕
               </button>
-              <button class="btn" id="voiceBtn" title="Hablar">
-                <span class="btn-icon">🎙️</span>
-              </button>
-              <button class="btn btn-primary" id="searchBtn">
-                <span class="btn-icon">➡️</span> Buscar
-              </button>
+              <button id="btnSearch" class="primary-btn">Buscar</button>
+
+              <div id="autocompleteBox" class="autocomplete-box"></div>
             </div>
           </div>
 
-          <div class="quick-controls">
-            <div class="quick-left">
-              <div class="chip-toggle" id="stockOnlyToggle">
-                <div class="chip-dot"></div>
-                <span>Mostrar solo con stock</span>
-              </div>
-
-              <div class="scanner-mode-block">
-                <div class="scanner-mode-label">Modo de scanner</div>
-                <div class="scanner-segments" id="scannerSegments">
-                  <div class="scanner-segment" data-mode="1">
-                    <span class="scanner-segment-icon">📦</span><span>Solo</span>
-                  </div>
-                  <div class="scanner-segment" data-mode="2">
-                    <span class="scanner-segment-icon">🎨</span><span>Completo</span>
-                  </div>
-                  <div class="scanner-segment" data-mode="3">
-                    <span class="scanner-segment-icon">🤖</span><span>Auto</span>
-                  </div>
-                </div>
-                <div class="scanner-mode-hint">Solo · Completo · Auto</div>
-              </div>
-            </div>
-
-            <div class="quick-right">
-              <span class="filters-advanced-toggle" id="advancedFiltersToggle">
-                Filtros avanzados
-              </span>
-            </div>
+          <!-- FILTROS AVANZADOS -->
+          <div class="filters-row">
+            <select id="filterMarca">
+              <option value="">Marca</option>
+            </select>
+            <select id="filterRubro">
+              <option value="">Rubro</option>
+            </select>
+            <select id="filterTalle">
+              <option value="">Talle</option>
+            </select>
           </div>
 
-          <div class="filters-advanced-panel" id="advancedFiltersPanel">
-            <div class="filters-row">
-              <select id="filterMarca" class="filter-select">
-                <option value="">Marca</option>
-              </select>
-              <select id="filterRubro" class="filter-select">
-                <option value="">Rubro</option>
-              </select>
-              <select id="filterTalle" class="filter-select">
-                <option value="">Talle</option>
-              </select>
-            </div>
-            <div class="filters-row">
-              <button class="btn" id="resetFiltersBtn">Limpiar filtros</button>
-            </div>
-          </div>
-        </div>
+          <!-- MODO SOLO STOCK + ORDENAMIENTO -->
+          <div class="options-row">
+            <button id="stockOnlyToggle" class="toggle-btn">
+              <span class="toggle-dot"></span>
+              Mostrar solo con stock
+            </button>
 
-        <div class="results-panel">
-          <div class="results-header">
-            <div class="results-summary" id="resultsSummary">
-              Sin resultados todavía.
-            </div>
-            <div class="results-view-tabs" id="viewTabs">
-              <div class="results-view-tab active" data-view="resumen">Resumen</div>
-              <div class="results-view-tab" data-view="tabla">Tabla</div>
-              <div class="results-view-tab" data-view="talles">Por talle</div>
-            </div>
+            <select id="sortSelect" class="sort-select">
+              <option value="descripcion:asc">Orden: Descripción ↑</option>
+              <option value="descripcion:desc">Orden: Descripción ↓</option>
+              <option value="stock:desc">Orden: Stock ↓</option>
+              <option value="precio:desc">Orden: Precio ↓</option>
+              <option value="valorizado:desc">Orden: Valorizado ↓</option>
+            </select>
           </div>
 
-          <div class="results-body">
-            <div class="results-scroll" id="resultsContainer"></div>
-          </div>
-        </div>
-      </section>
-
-      <!-- PANEL DERECHO -->
-      <section class="panel">
-        <div class="right-panel-section">
-          <div class="panel-header">
-            <div>
-              <div class="panel-title">Voz y estado</div>
-              <div class="panel-subtitle">Comandos por voz · Estado</div>
+          <!-- SCANNER -->
+          <div class="scanner-row">
+            <div class="scanner-modes">
+              <span class="scanner-label">Scanner:</span>
+              <button class="chip-btn scanner-mode active" data-mode="solo">Solo</button>
+              <button class="chip-btn scanner-mode" data-mode="completo">Completo</button>
+              <button class="chip-btn scanner-mode" data-mode="auto">Auto</button>
             </div>
-          </div>
-
-          <div class="voice-row">
-            <div class="voice-status">
-              <div class="voice-dot" id="voiceDot"></div>
-              <span id="voiceStatusText">Voz en espera</span>
-            </div>
-            <button class="btn" id="voiceToggleBtn">
-              <span class="btn-icon">🎧</span> Auto-escucha
+            <button id="btnOpenScanner" class="secondary-btn">
+              📷 Abrir cámara
             </button>
           </div>
 
-          <div class="panel-header">
-            <div>
-              <div class="panel-title">Dashboard</div>
-              <div class="panel-subtitle">Totales · Stock · Alertas</div>
+          <!-- VOZ -->
+          <div class="voice-row">
+            <button id="btnVoice" class="secondary-btn">
+              🎙️ Hablar
+            </button>
+            <div id="voiceStatus" class="voice-status">Voz inactiva</div>
+          </div>
+        </section>
+
+        <!-- BLOQUE ESTADO / ACCIONES -->
+        <section class="card">
+          <div class="card-header">
+            <div class="card-title">Acciones</div>
+            <div class="card-subtitle">Favoritos, exportación y vistas</div>
+          </div>
+
+          <div class="actions-row">
+            <button id="btnShowFavorites" class="chip-btn">
+              ★ Ver favoritos
+            </button>
+            <button id="btnExport" class="chip-btn">
+              ⬇ Exportar CSV
+            </button>
+          </div>
+
+          <div class="views-row">
+            <button class="tab-btn view-tab active" data-view="resumen">Resumen</button>
+            <button class="tab-btn view-tab" data-view="lista">Lista</button>
+            <button class="tab-btn view-tab" data-view="tabla">Tabla</button>
+            <button class="tab-btn view-tab" data-view="marca">Por marca</button>
+            <button class="tab-btn view-tab" data-view="articulo">Por artículo</button>
+            <button class="tab-btn view-tab" data-view="dashboard">Dashboard</button>
+          </div>
+        </section>
+      </section>
+
+      <!-- COLUMNA DERECHA: RESULTADOS + DASHBOARD -->
+      <section class="right-panel">
+        <!-- DASHBOARD SUPERIOR -->
+        <section class="card">
+          <div class="card-header">
+            <div class="card-title">Dashboard</div>
+            <div class="card-subtitle">Resumen de la búsqueda actual</div>
+          </div>
+
+          <div class="dashboard-grid">
+            <div class="dash-card">
+              <div class="dash-label">ARTÍCULOS</div>
+              <div id="dashArticulos" class="dash-value">0</div>
+              <div id="dashArticulosSub" class="dash-sub">Encontrados</div>
+            </div>
+            <div class="dash-card">
+              <div class="dash-label">PARES</div>
+              <div id="dashPares" class="dash-value">0</div>
+              <div id="dashParesSub" class="dash-sub">Totales</div>
+            </div>
+            <div class="dash-card">
+              <div class="dash-label">ALERTAS</div>
+              <div id="dashAlertas" class="dash-value">0</div>
+              <div id="dashAlertasSub" class="dash-sub">Stock bajo</div>
+            </div>
+            <div class="dash-card">
+              <div class="dash-label">VALORIZADO</div>
+              <div id="dashValorizado" class="dash-value">$0</div>
+              <div id="dashValorizadoSub" class="dash-sub">Lista 1</div>
             </div>
           </div>
 
-          <div class="dashboard-body">
-            <div class="dashboard-metrics">
-              <div class="metric-card">
-                <div class="metric-label">Artículos</div>
-                <div class="metric-value" id="metricArticulos">0</div>
-                <div class="metric-sub">Encontrados</div>
-              </div>
-              <div class="metric-card">
-                <div class="metric-label">Pares</div>
-                <div class="metric-value" id="metricPares">0</div>
-                <div class="metric-sub">Totales</div>
-              </div>
-              <div class="metric-card">
-                <div class="metric-label">Alertas</div>
-                <div class="metric-value" id="metricAlertas">0</div>
-                <div class="metric-sub">Stock bajo</div>
-              </div>
+          <div class="dashboard-extra">
+            <div class="dash-block">
+              <div class="dash-block-title">Top rubros por pares</div>
+              <div id="dashRubros" class="dash-rubros"></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- RESULTADOS -->
+        <section class="card results-card">
+          <div class="card-header">
+            <div class="card-title">Resultados</div>
+            <div class="card-subtitle" id="resultsSubtitle">
+              Sin resultados. Hacé una búsqueda para empezar.
             </div>
           </div>
 
-          <div class="admin-secret" id="adminSecret">.</div>
-          <div class="admin-panel" id="adminPanel">
-            <h4>Panel administrador</h4>
-            <div>Comandos internos, pruebas y herramientas.</div>
-            <div class="admin-row">
-              <button class="btn" id="adminPingBtn">Ping backend</button>
-              <button class="btn" id="adminDummyDataBtn">Cargar datos demo</button>
-              <button class="btn" id="adminClearBtn">Limpiar resultados</button>
-            </div>
+          <!-- CONTENEDOR PRINCIPAL DE RESULTADOS -->
+          <div id="resultsContainer" class="results-container">
+            <!-- Se llena desde app.js / ui.js -->
           </div>
-        </div>
+
+          <!-- PAGINACIÓN -->
+          <div class="pagination-row">
+            <button id="pagePrev" class="icon-btn">‹</button>
+            <span id="pageInfo" class="page-info">0 / 0 (0 resultados)</span>
+            <button id="pageNext" class="icon-btn">›</button>
+          </div>
+        </section>
       </section>
     </main>
   </div>
 
-  <!-- SCANNER OVERLAY -->
-  <div class="scanner-overlay" id="scannerOverlay">
-    <div class="scanner-frame">
+  <!-- OVERLAY SCANNER -->
+  <div id="scannerOverlay" class="scanner-overlay hidden">
+    <div class="scanner-modal">
       <div class="scanner-header">
-        <div class="scanner-header-left">
-          <div class="scanner-title">Scanner activo</div>
-          <div class="scanner-subtitle">Apuntá al código · Auto-detección</div>
+        <div>
+          <div class="scanner-title">Scanner de código</div>
+          <div class="scanner-subtitle">Apuntá al código de barras o QR</div>
         </div>
-        <div class="scanner-header-right">
-          <button class="scanner-close-btn" id="scannerCloseBtn">✖ Cerrar</button>
-        </div>
+        <button id="btnCloseScanner" class="icon-btn">✕</button>
       </div>
 
       <div class="scanner-body">
-        <div class="scanner-video-wrapper">
-          <video id="scannerVideo" class="scanner-video" autoplay playsinline></video>
-          <div class="scanner-overlay-frame"></div>
-          <div class="scanner-line"></div>
-        </div>
+        <video id="scannerVideo" autoplay playsinline></video>
+        <div class="scanner-frame"></div>
       </div>
 
       <div class="scanner-footer">
-        <div class="scanner-footer-left">
-          <span>Dispositivo</span>
-        </div>
-        <div class="scanner-footer-right">
-          <div class="scanner-status-dot"></div>
-          <select id="scannerDeviceSelect" class="scanner-device-select"></select>
-        </div>
+        <select id="cameraSelect"></select>
+        <button id="btnToggleTorch" class="chip-btn">Linterna</button>
       </div>
     </div>
   </div>
 
-  <script src="ui.js"></script>
+  <!-- SCRIPTS -->
+  <script src="backend.js"></script>
   <script src="scanner.js"></script>
   <script src="voz.js"></script>
-  <script src="backend.js"></script>
   <script src="app.js"></script>
+  <script src="ui.js"></script>
 </body>
 </html>
