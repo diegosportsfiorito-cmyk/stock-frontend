@@ -1,11 +1,16 @@
 window.ORB_BACKEND = (function () {
+  // URL REAL DEL BACKEND
   const API_URL = "https://stock-backend-1-0upi.onrender.com/query";
 
+  // ---------------------------------------------------------
+  // ESTADO DE CONEXIÓN
+  // ---------------------------------------------------------
   function setConnectionStatus(online) {
     const pill = document.getElementById("connectionStatus");
     const label = pill.querySelector(".status-label");
     const sub = pill.querySelector("div div:nth-child(2)");
     const dot = pill.querySelector(".status-dot");
+
     if (online) {
       label.textContent = "Conectado";
       sub.textContent = "Backend online";
@@ -17,6 +22,9 @@ window.ORB_BACKEND = (function () {
     }
   }
 
+  // ---------------------------------------------------------
+  // EXPANSIÓN DE ITEMS (1 ARTÍCULO → N TALLES)
+  // ---------------------------------------------------------
   function expandItems(items) {
     const out = [];
 
@@ -39,6 +47,9 @@ window.ORB_BACKEND = (function () {
     return out;
   }
 
+  // ---------------------------------------------------------
+  // BÚSQUEDA REAL
+  // ---------------------------------------------------------
   async function buscar(query) {
     try {
       const res = await fetch(API_URL, {
@@ -46,7 +57,7 @@ window.ORB_BACKEND = (function () {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           question: query,
-          solo_stock: false
+          solo_stock: ORB.stockOnly   // ← ahora sí funciona REAL
         })
       });
 
@@ -54,6 +65,7 @@ window.ORB_BACKEND = (function () {
 
       const data = await res.json();
 
+      // Validación del formato esperado
       if (data.tipo === "lista" && Array.isArray(data.items)) {
         ORB.results = expandItems(data.items);
       } else {
@@ -66,12 +78,32 @@ window.ORB_BACKEND = (function () {
     } catch (e) {
       console.error("[BACKEND] Error:", e);
       setConnectionStatus(false);
+
+      // No cargamos dummy data para no confundir stock real
       ORB.results = [];
       renderResults();
     }
   }
 
-  function init() {}
+  // ---------------------------------------------------------
+  // PING (opcional)
+  // ---------------------------------------------------------
+  async function ping() {
+    try {
+      const res = await fetch(API_URL.replace("/query", "/"));
+      setConnectionStatus(res.ok);
+    } catch {
+      setConnectionStatus(false);
+    }
+  }
 
-  return { init, buscar };
+  // ---------------------------------------------------------
+  // INIT
+  // ---------------------------------------------------------
+  function init() {
+    // Podés activar un ping inicial si querés
+    // ping();
+  }
+
+  return { init, buscar, ping };
 })();
