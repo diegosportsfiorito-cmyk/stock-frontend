@@ -1,215 +1,418 @@
-// Estado global
+// ============================================================
+// ESTADO GLOBAL ORB
+// ============================================================
 window.ORB = {
-  theme: localStorage.getItem("theme") || "dark",
-  scannerMode: localStorage.getItem("scannerMode") || "3",
+  results: [],
+  view: "resumen",
   stockOnly: localStorage.getItem("stockOnly") === "true",
-  autoListen: localStorage.getItem("autoListen") === "true",
-  currentView: "resumen",
-  results: []
+  favorites: new Set(JSON.parse(localStorage.getItem("favorites") || "[]")),
+  sort: { field: "descripcion", dir: "asc" },
+  page: 1,
+  pageSize: 30,
 };
 
-const beep = new Audio();
-beep.src = "data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABAAZGF0YQAAAAA=";
 
-function setTheme(mode) {
-  ORB.theme = mode;
-  document.documentElement.setAttribute("data-theme", mode);
-  localStorage.setItem("theme", mode);
-  const toggle = document.getElementById("themeToggle");
-  if (mode === "light") toggle.classList.add("on");
-  else toggle.classList.remove("on");
+// ============================================================
+// UTILIDADES
+// ============================================================
+function favKey(r) {
+  return `${r.articulo || r.codigo}-${r.talle}`;
 }
 
-function setScannerMode(mode) {
-  ORB.scannerMode = mode;
-  localStorage.setItem("scannerMode", mode);
-  document.querySelectorAll(".scanner-segment").forEach(btn => {
-    btn.classList.toggle("active", btn.dataset.mode === mode);
-  });
-}
-
-function setStockOnly(on) {
-  ORB.stockOnly = on;
-  localStorage.setItem("stockOnly", on ? "true" : "false");
-  document.getElementById("stockOnlyToggle").classList.toggle("active", on);
-}
-
-function setAutoListen(on) {
-  ORB.autoListen = on;
-  localStorage.setItem("autoListen", on ? "true" : "false");
-  document.getElementById("voiceToggleBtn").classList.toggle("active", on);
-}
-
-function setView(view) {
-  ORB.currentView = view;
-  document.querySelectorAll(".results-view-tab").forEach(tab => {
-    tab.classList.toggle("active", tab.dataset.view === view);
-  });
+function toggleFavorite(r) {
+  const key = favKey(r);
+  if (ORB.favorites.has(key)) {
+    ORB.favorites.delete(key);
+  } else {
+    ORB.favorites.add(key);
+  }
+  localStorage.setItem("favorites", JSON.stringify(Array.from(ORB.favorites)));
   renderResults();
 }
 
-function normalizeText(text) {
-  if (!text) return "";
-  let t = text.toLowerCase();
-  t = t.replace(/\bvendas\b/g, "ventas");
-  t = t.replace(/\bvenda\b/g, "venta");
-  return t;
+function formatNumber(n) {
+  return Number(n || 0).toLocaleString("es-AR");
 }
 
-function procesarCodigoEscaneado(raw) {
-  if (!raw) return "";
-  const partes = raw.trim().split(/\s+/);
-  const articulo = partes[0] || "";
-  let color = null;
-  let talle = null;
 
-  for (const p of partes) {
-    if (/^\d+([.,]\d+)?$/.test(p)) talle = p.replace(",", ".");
-  }
-  for (const p of partes) {
-    if (!/^\d/.test(p) && p !== articulo) color = p.toUpperCase();
+// ============================================================
+// FILTROS
+// ============================================================
+function applyFilters(data) {
+  const marca = document.getElementById("filterMarca").value || "";
+  const rubro = document.getElementById("filterRubro").value || "";
+  const talle = document.getElementById("filterTalle").value || "";
+
+  let out = data.slice();
+
+  if (marca) out = out.filter(r => r.marca === marca);
+  if (rubro) out = out.filter(r => r.rubro === rubro);
+  if (talle) out = out.filter(r => r.talle === talle);
+
+  if (ORB.stockOnly) {
+    out = out.filter(r => Number(r.stock) > 0);
   }
 
-  if (ORB.scannerMode === "1") return articulo;
-  if (ORB.scannerMode === "2") return `${articulo}/${color || ""}/${talle || ""}`;
-  if (ORB.scannerMode === "3") {
-    if (talle || color) return `${articulo}/${color || ""}/${talle || ""}`;
-    return articulo;
-  }
-  return articulo;
+  return out;
 }
 
-function renderResults() {
-  const container = document.getElementById("resultsContainer");
-  const summary = document.getElementById("resultsSummary");
-  const metricArt = document.getElementById("metricArticulos");
-  const metricPares = document.getElementById("metricPares");
-  const metricAlertas = document.getElementById("metricAlertas");
+function updateFilterOptions(data) {
+  const marcas = new Set();
+  const rubros = new Set();
+  const talles = new Set();
 
-  const data = ORB.results || [];
-  if (!data.length) {
-    container.innerHTML = `<div style="font-size:11px;color:var(--text-soft);padding:6px;">Sin resultados todavía.</div>`;
-    summary.textContent = "Sin resultados.";
-    metricArt.textContent = "0";
-    metricPares.textContent = "0";
-    metricAlertas.textContent = "0";
-    return;
+  for (const r of data) {
+    if (r.marca) marcas.add(r.marca);
+    if (r.rubro) rubros.add(r.rubro);
+    if (r.talle) talles.add(r.talle);
   }
 
-  const filtered = ORB.stockOnly ? data.filter(r => (r.stock || 0) > 0) : data.slice();
-  const totalArt = filtered.length;
-  const totalPares = filtered.reduce((acc, r) => acc + (r.stock || 0), 0);
-  const alertas = filtered.filter(r => (r.stock || 0) > 0 && (r.stock || 0) <= 2).length;
+  const selMarca = document.getElementById("filterMarca");
+  const selRubro = document.getElementById("filterRubro");
+  const selTalle = document.getElementById("filterTalle");
 
-  summary.textContent = `${totalArt} artículos · ${totalPares} pares · ${alertas} alertas`;
-  metricArt.textContent = String(totalArt);
-  metricPares.textContent = String(totalPares);
-  metricAlertas.textContent = String(alertas);
+  const prevMarca = selMarca.value;
+  const prevRubro = selRubro.value;
+  const prevTalle = selTalle.value;
 
-  if (ORB.currentView === "resumen") {
-    container.innerHTML = filtered.map(r => {
-      const stockClass = (r.stock || 0) <= 2 ? "stock-low" : "stock-ok";
-      return `
-        <div style="padding:6px 8px;border-radius:10px;border:1px solid var(--border-soft);margin-bottom:4px;background:rgba(255,255,255,0.02);display:flex;justify-content:space-between;align-items:center;gap:8px;">
-          <div style="font-size:11px;">
-            <div style="font-weight:600;">${r.articulo || ""} ${r.color || ""}</div>
-            <div style="font-size:10px;color:var(--text-soft);">Talle ${r.talle || "-"} · ${r.marca || ""} · ${r.rubro || ""}</div>
-          </div>
-          <div style="text-align:right;font-size:11px;">
-            <div class="${stockClass}">${r.stock || 0} pares</div>
-            <div style="font-size:10px;color:var(--text-soft);">Depósito</div>
+  selMarca.innerHTML = `<option value="">Marca</option>` +
+    Array.from(marcas).sort().map(m => `<option value="${m}">${m}</option>`).join("");
+
+  selRubro.innerHTML = `<option value="">Rubro</option>` +
+    Array.from(rubros).sort().map(r => `<option value="${r}">${r}</option>`).join("");
+
+  selTalle.innerHTML = `<option value="">Talle</option>` +
+    Array.from(talles).sort((a,b)=>parseFloat(a)-parseFloat(b)).map(t => `<option value="${t}">${t}</option>`).join("");
+
+  if (prevMarca) selMarca.value = prevMarca;
+  if (prevRubro) selRubro.value = prevRubro;
+  if (prevTalle) selTalle.value = prevTalle;
+}
+
+
+// ============================================================
+// ORDENAMIENTO
+// ============================================================
+function sortData(data) {
+  const { field, dir } = ORB.sort;
+  const mult = dir === "asc" ? 1 : -1;
+
+  return data.slice().sort((a, b) => {
+    let va = a[field];
+    let vb = b[field];
+
+    if (["stock", "precio", "valorizado"].includes(field)) {
+      va = Number(va) || 0;
+      vb = Number(vb) || 0;
+    } else {
+      va = (va || "").toString().toUpperCase();
+      vb = (vb || "").toString().toUpperCase();
+    }
+
+    if (va < vb) return -1 * mult;
+    if (va > vb) return 1 * mult;
+    return 0;
+  });
+}
+
+
+// ============================================================
+// PAGINACIÓN
+// ============================================================
+function paginate(data) {
+  const total = data.length;
+  const totalPages = Math.max(1, Math.ceil(total / ORB.pageSize));
+
+  if (ORB.page > totalPages) ORB.page = totalPages;
+
+  const start = (ORB.page - 1) * ORB.pageSize;
+  const end = start + ORB.pageSize;
+
+  const pageData = data.slice(start, end);
+
+  document.getElementById("pageInfo").textContent =
+    `${ORB.page} / ${totalPages} (${total} resultados)`;
+
+  return pageData;
+}
+
+
+// ============================================================
+// ESTADÍSTICAS POR RUBRO
+// ============================================================
+function computeStatsByRubro(data) {
+  const map = new Map();
+
+  for (const r of data) {
+    const rubro = r.rubro || "SIN RUBRO";
+    const stock = Number(r.stock) || 0;
+
+    if (!map.has(rubro)) {
+      map.set(rubro, { rubro, articulos: new Set(), pares: 0 });
+    }
+
+    const obj = map.get(rubro);
+    obj.articulos.add(r.articulo || r.codigo);
+    obj.pares += stock;
+  }
+
+  return Array.from(map.values()).map(x => ({
+    rubro: x.rubro,
+    articulos: x.articulos.size,
+    pares: x.pares
+  }));
+}
+
+
+// ============================================================
+// RENDERIZADORES DE VISTAS
+// ============================================================
+function renderResumen(data) {
+  const cont = document.getElementById("resultsContainer");
+  cont.innerHTML = data.map(r => {
+    const key = favKey(r);
+    const isFav = ORB.favorites.has(key);
+    const stock = Number(r.stock) || 0;
+
+    const stockClass =
+      stock <= 2 && stock > 0 ? "stock-low" :
+      stock > 2 ? "stock-ok" : "";
+
+    return `
+      <div class="result-item">
+        <div class="result-left">
+          <div><strong>${r.articulo}</strong> - ${r.descripcion}</div>
+          <div style="font-size:12px;color:#9aa2b4;">
+            ${r.marca} · ${r.rubro} · Talle ${r.talle}
           </div>
         </div>
-      `;
-    }).join("");
-    return;
-  }
 
-  if (ORB.currentView === "tabla") {
-    const rows = filtered.map(r => {
-      const stockClass = (r.stock || 0) <= 2 ? "stock-low" : "stock-ok";
-      return `
-        <tr>
-          <td>${r.articulo || ""}</td>
-          <td>${r.color || ""}</td>
-          <td>${r.talle || ""}</td>
-          <td>${r.marca || ""}</td>
-          <td>${r.rubro || ""}</td>
-          <td class="${stockClass}">${r.stock || 0}</td>
-        </tr>
-      `;
-    }).join("");
-
-    container.innerHTML = `
-      <div style="overflow:auto;">
-        <table class="results-table">
-          <thead>
-            <tr>
-              <th>Artículo</th>
-              <th>Color</th>
-              <th>Talle</th>
-              <th>Marca</th>
-              <th>Rubro</th>
-              <th>Stock</th>
-            </tr>
-          </thead>
-          <tbody>${rows}</tbody>
-        </table>
+        <div class="result-right">
+          <div class="${stockClass}">${stock} pares</div>
+          <div style="font-size:12px;color:#9aa2b4;">
+            $${formatNumber(r.precio)} · $${formatNumber(r.valorizado)}
+          </div>
+          <button class="fav-btn ${isFav ? "on" : ""}" data-key="${key}">★</button>
+        </div>
       </div>
     `;
-    return;
-  }
-
-  if (ORB.currentView === "talles") {
-    const porTalle = {};
-    for (const r of filtered) {
-      const key = r.talle || "-";
-      porTalle[key] = (porTalle[key] || 0) + (r.stock || 0);
-    }
-    const tallesOrdenados = Object.keys(porTalle).sort((a, b) => {
-      const na = parseFloat(a.replace(",", ".")) || 0;
-      const nb = parseFloat(b.replace(",", ".")) || 0;
-      return na - nb;
-    });
-
-    const rows = tallesOrdenados.map(t => {
-      const stock = porTalle[t];
-      const stockClass = stock <= 2 ? "stock-low" : "stock-ok";
-      return `
-        <tr>
-          <td>${t}</td>
-          <td class="${stockClass}">${stock}</td>
-        </tr>
-      `;
-    }).join("");
-
-    container.innerHTML = `
-      <div style="overflow:auto;">
-        <table class="results-table">
-          <thead>
-            <tr>
-              <th>Talle</th>
-              <th>Stock total</th>
-            </tr>
-          </thead>
-          <tbody>${rows}</tbody>
-        </table>
-      </div>
-    `;
-  }
+  }).join("");
 }
 
-// Init
+function renderLista(data) {
+  const cont = document.getElementById("resultsContainer");
+  cont.innerHTML = data.map(r => `
+    <div class="group-item">
+      ${r.articulo} - ${r.descripcion} · ${r.marca} · ${r.rubro} · Talle ${r.talle} · ${r.stock} pares
+    </div>
+  `).join("");
+}
+
+function renderTabla(data) {
+  const cont = document.getElementById("resultsContainer");
+
+  let html = `
+    <table class="table-view">
+      <thead>
+        <tr>
+          <th>Artículo</th>
+          <th>Descripción</th>
+          <th>Marca</th>
+          <th>Rubro</th>
+          <th>Color</th>
+          <th>Talle</th>
+          <th>Stock</th>
+          <th>Precio</th>
+          <th>Valorizado</th>
+        </tr>
+      </thead>
+      <tbody>
+  `;
+
+  for (const r of data) {
+    html += `
+      <tr>
+        <td>${r.articulo}</td>
+        <td>${r.descripcion}</td>
+        <td>${r.marca}</td>
+        <td>${r.rubro}</td>
+        <td>${r.color}</td>
+        <td>${r.talle}</td>
+        <td>${r.stock}</td>
+        <td>$${formatNumber(r.precio)}</td>
+        <td>$${formatNumber(r.valorizado)}</td>
+      </tr>
+    `;
+  }
+
+  html += "</tbody></table>";
+  cont.innerHTML = html;
+}
+
+function groupBy(arr, key) {
+  const map = new Map();
+  for (const r of arr) {
+    const k = r[key] || "SIN " + key.toUpperCase();
+    if (!map.has(k)) map.set(k, []);
+    map.get(k).push(r);
+  }
+  return map;
+}
+
+function renderPorMarca(data) {
+  const cont = document.getElementById("resultsContainer");
+  const groups = groupBy(data, "marca");
+
+  let html = "";
+  for (const [marca, items] of groups.entries()) {
+    const totalPares = items.reduce((a, r) => a + (Number(r.stock) || 0), 0);
+
+    html += `
+      <div class="group-block">
+        <div class="group-header">
+          <span>${marca}</span>
+          <span>${items.length} artículos · ${totalPares} pares</span>
+        </div>
+        <div class="group-body">
+          ${items.map(r => `
+            <div class="group-item">
+              ${r.articulo} - ${r.descripcion} · Talle ${r.talle} · ${r.stock} pares
+            </div>
+          `).join("")}
+        </div>
+      </div>
+    `;
+  }
+
+  cont.innerHTML = html || "<div class='empty'>Sin resultados</div>";
+}
+
+function renderPorArticulo(data) {
+  const cont = document.getElementById("resultsContainer");
+  const groups = groupBy(data, "articulo");
+
+  let html = "";
+  for (const [art, items] of groups.entries()) {
+    const totalPares = items.reduce((a, r) => a + (Number(r.stock) || 0), 0);
+
+    html += `
+      <div class="group-block">
+        <div class="group-header">
+          <span>${art}</span>
+          <span>${items.length} talles · ${totalPares} pares</span>
+        </div>
+        <div class="group-body">
+          ${items.map(r => `
+            <div class="group-item">
+              Talle ${r.talle} · ${r.stock} pares · ${r.marca} · ${r.rubro}
+            </div>
+          `).join("")}
+        </div>
+      </div>
+    `;
+  }
+
+  cont.innerHTML = html || "<div class='empty'>Sin resultados</div>";
+}
+
+function renderDashboard(data) {
+  const cont = document.getElementById("resultsContainer");
+
+  const stats = computeStatsByRubro(data)
+    .sort((a,b) => b.pares - a.pares)
+    .slice(0, 10);
+
+  cont.innerHTML = `
+    <div class="dash-block">
+      <div class="dash-block-title">Top rubros por pares</div>
+      ${stats.map(s => `
+        <div class="dash-rubro-item">
+          <div>${s.rubro}</div>
+          <div>${s.articulos} artículos · ${s.pares} pares</div>
+        </div>
+      `).join("")}
+    </div>
+  `;
+}
+
+
+// ============================================================
+// RENDER PRINCIPAL
+// ============================================================
+function renderResults() {
+  const subtitle = document.getElementById("resultsSubtitle");
+
+  if (!ORB.results.length) {
+    subtitle.textContent = "Sin resultados. Hacé una búsqueda para empezar.";
+    document.getElementById("resultsContainer").innerHTML = "";
+    return;
+  }
+
+  let data = ORB.results.slice();
+
+  updateFilterOptions(data);
+  data = applyFilters(data);
+  data = sortData(data);
+
+  // DASHBOARD
+  const totalArt = data.length;
+  const totalPares = data.reduce((a, r) => a + (Number(r.stock) || 0), 0);
+  const alertas = data.filter(r => Number(r.stock) > 0 && Number(r.stock) <= 2).length;
+  const totalVal = data.reduce((a, r) => a + (Number(r.valorizado) || 0), 0);
+
+  document.getElementById("dashArticulos").textContent = totalArt;
+  document.getElementById("dashPares").textContent = totalPares;
+  document.getElementById("dashAlertas").textContent = alertas;
+  document.getElementById("dashValorizado").textContent = "$" + formatNumber(totalVal);
+
+  // PAGINACIÓN
+  const pageData = paginate(data);
+
+  subtitle.textContent = `${data.length} resultados filtrados`;
+
+  // VISTA
+  if (ORB.view === "resumen") renderResumen(pageData);
+  else if (ORB.view === "lista") renderLista(pageData);
+  else if (ORB.view === "tabla") renderTabla(pageData);
+  else if (ORB.view === "marca") renderPorMarca(data);
+  else if (ORB.view === "articulo") renderPorArticulo(data);
+  else if (ORB.view === "dashboard") renderDashboard(data);
+}
+
+
+// ============================================================
+// EXPORTAR CSV
+// ============================================================
+function exportToCSV(data) {
+  if (!data || !data.length) return;
+
+  const headers = [
+    "articulo", "descripcion", "marca", "rubro",
+    "color", "talle", "stock", "precio", "valorizado"
+  ];
+
+  const rows = data.map(r => headers.map(h => (r[h] != null ? r[h] : "")));
+
+  let csv = headers.join(";") + "\n";
+  csv += rows.map(row => row.join(";")).join("\n");
+
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "stock_export.csv";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+window.exportToCSV = exportToCSV;
+
+
+// ============================================================
+// INICIALIZACIÓN
+// ============================================================
 window.addEventListener("DOMContentLoaded", () => {
-  setTheme(ORB.theme);
-  setScannerMode(ORB.scannerMode);
-  setStockOnly(ORB.stockOnly);
-  setAutoListen(ORB.autoListen);
-
-  ORB_UI.init();
-  ORB_SCANNER.init();
-  ORB_VOZ.init();
-  ORB_BACKEND.init();
-
   renderResults();
 });
