@@ -9,15 +9,12 @@ window.ORB_VOZ = (function () {
 
   const statusEl = document.getElementById("voiceStatus");
 
-  // ------------------------------------------------------------
-  // Inicializar reconocimiento
-  // ------------------------------------------------------------
   function init() {
     const SpeechRecognition =
       window.SpeechRecognition || window.webkitSpeechRecognition;
 
     if (!SpeechRecognition) {
-      statusEl.textContent = "Voz no soportada";
+      if (statusEl) statusEl.textContent = "Voz no soportada";
       return;
     }
 
@@ -28,22 +25,22 @@ window.ORB_VOZ = (function () {
 
     recognition.onstart = () => {
       active = true;
-      statusEl.textContent = "Escuchando…";
+      if (statusEl) statusEl.textContent = "Escuchando…";
     };
 
     recognition.onend = () => {
       active = false;
-      statusEl.textContent = "Voz inactiva";
+      if (statusEl) statusEl.textContent = "Voz inactiva";
     };
 
     recognition.onerror = () => {
       active = false;
-      statusEl.textContent = "Error de voz";
+      if (statusEl) statusEl.textContent = "Error de voz";
     };
 
     recognition.onresult = (event) => {
       const text = event.results[0][0].transcript.trim();
-      statusEl.textContent = `Escuchado: "${text}"`;
+      if (statusEl) statusEl.textContent = `Escuchado: "${text}"`;
 
       if (text) {
         document.getElementById("searchInput").value = text;
@@ -53,27 +50,21 @@ window.ORB_VOZ = (function () {
     };
   }
 
-  // ------------------------------------------------------------
-  // Alternar voz
-  // ------------------------------------------------------------
   function toggle() {
     if (!recognition) {
-      statusEl.textContent = "Voz no soportada";
+      if (statusEl) statusEl.textContent = "Voz no soportada";
       return;
     }
 
     if (active) {
       recognition.stop();
       active = false;
-      statusEl.textContent = "Voz inactiva";
+      if (statusEl) statusEl.textContent = "Voz inactiva";
     } else {
       recognition.start();
     }
   }
 
-  // ------------------------------------------------------------
-  // API pública
-  // ------------------------------------------------------------
   return {
     init,
     toggle
@@ -81,8 +72,6 @@ window.ORB_VOZ = (function () {
 
 })();
 
-
-// Inicializar al cargar
 window.addEventListener("DOMContentLoaded", () => {
   ORB_VOZ.init();
 });
