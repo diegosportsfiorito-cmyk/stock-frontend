@@ -1,128 +1,138 @@
-import { backendCatalogos } from "./backend.js";
+/* ============================================================
+   UI.JS — PANEL ADMIN + CONFIGURACIÓN DEL ORB
+============================================================ */
 
-export let currentView = "resumen";
-export let soloStock = false;
-export let adminMode = false;
+/* ELEMENTOS */
+const adminPanel = document.getElementById("admin-panel");
+const adminSave = document.getElementById("admin-save");
+const adminClose = document.getElementById("admin-close");
 
-const btnSoloStock = document.getElementById("btnSoloStock");
-const viewButtons = document.querySelectorAll(".view-btn");
-const adminPanel = document.getElementById("adminPanel");
-const orbLogo = document.getElementById("orbLogo");
-const searchInput = document.getElementById("searchInput");
-const modeSwitch = document.getElementById("modeSwitch");
-const modeLabel = document.getElementById("modeLabel");
-const backendStatusDot = document.getElementById("backendStatusDot");
-const backendStatusText = document.getElementById("backendStatusText");
-const footerStatus = document.getElementById("footerStatus");
+const inputColorDia = document.getElementById("orb-color-dia");
+const inputColorNoche = document.getElementById("orb-color-noche");
+const inputSize = document.getElementById("orb-size");
+const inputPulse = document.getElementById("orb-pulse");
+const inputSpin = document.getElementById("orb-spin");
+const inputHalo = document.getElementById("orb-halo");
+const inputResp = document.getElementById("orb-respiracion");
+const inputOverlay = document.getElementById("orb-overlay");
+const inputVoz = document.getElementById("orb-voz");
 
-const marcaFilter = document.getElementById("marcaFilter");
-const rubroFilter = document.getElementById("rubroFilter");
-const talleFilter = document.getElementById("talleFilter");
+/* ============================================================
+   CONFIGURACIÓN POR DEFECTO
+============================================================ */
+const defaultConfig = {
+    colorDia: "#4fc3f7",
+    colorNoche: "#7c4dff",
+    tamano: 140,
+    pulso: 3,
+    giro: 1,
+    halo: true,
+    respiracion: true,
+    overlay: true,
+    voz: true
+};
 
-let orbClickCount = 0;
-let orbClickTimer = null;
+/* ============================================================
+   CARGAR CONFIGURACIÓN
+============================================================ */
+function cargarConfigORB() {
+    const cfg = JSON.parse(localStorage.getItem("orbConfig"));
+    return cfg || defaultConfig;
+}
 
-// ============================================================
-// SOLO STOCK
-// ============================================================
-btnSoloStock.addEventListener("click", () => {
-  soloStock = !soloStock;
-  btnSoloStock.classList.toggle("active", soloStock);
+/* ============================================================
+   GUARDAR CONFIGURACIÓN
+============================================================ */
+function guardarConfigORB(cfg) {
+    localStorage.setItem("orbConfig", JSON.stringify(cfg));
+}
+
+/* ============================================================
+   APLICAR CONFIGURACIÓN AL ORB
+============================================================ */
+function aplicarConfigORB() {
+    const cfg = cargarConfigORB();
+
+    // Colores
+    document.documentElement.style.setProperty("--orb-color", cfg.colorDia);
+    document.documentElement.style.setProperty("--orb-color-dark", cfg.colorDia);
+
+    // Tamaño
+    orb.style.width = cfg.tamano + "px";
+    orb.style.height = cfg.tamano + "px";
+
+    // Pulso
+    orb.style.animationDuration = `${cfg.pulso}s`;
+
+    // Giro
+    orb.style.setProperty("--orb-spin-speed", cfg.giro);
+
+    // Halo
+    orb.style.boxShadow = cfg.halo ? `0 0 35px var(--orb-color)` : "none";
+
+    // Respiración
+    if (cfg.respiracion) {
+        orb.classList.add("orb-breathe");
+    } else {
+        orb.classList.remove("orb-breathe");
+    }
+
+    // Overlay
+    overlay.style.display = cfg.overlay ? "none" : "none"; // se activa desde app.js
+
+    // Voz
+    vozActiva = cfg.voz;
+}
+
+/* ============================================================
+   MOSTRAR PANEL ADMIN
+============================================================ */
+document.getElementById("open-admin").addEventListener("click", () => {
+    const cfg = cargarConfigORB();
+
+    inputColorDia.value = cfg.colorDia;
+    inputColorNoche.value = cfg.colorNoche;
+    inputSize.value = cfg.tamano;
+    inputPulse.value = cfg.pulso;
+    inputSpin.value = cfg.giro;
+    inputHalo.checked = cfg.halo;
+    inputResp.checked = cfg.respiracion;
+    inputOverlay.checked = cfg.overlay;
+    inputVoz.checked = cfg.voz;
+
+    adminPanel.style.display = "block";
 });
 
-// ============================================================
-// CAMBIO DE VISTA
-// ============================================================
-viewButtons.forEach((btn) => {
-  btn.addEventListener("click", () => {
-    viewButtons.forEach((b) => b.classList.remove("active"));
-    btn.classList.add("active");
-    currentView = btn.dataset.view;
-    document.dispatchEvent(new CustomEvent("viewChanged", { detail: { view: currentView } }));
-  });
+/* ============================================================
+   CERRAR PANEL ADMIN
+============================================================ */
+adminClose.addEventListener("click", () => {
+    adminPanel.style.display = "none";
 });
 
-// ============================================================
-// MODO ADMIN (5 clics + ADMIN en input)
-// ============================================================
-orbLogo.addEventListener("click", () => {
-  orbClickCount += 1;
+/* ============================================================
+   GUARDAR CONFIGURACIÓN DESDE ADMIN
+============================================================ */
+adminSave.addEventListener("click", () => {
+    const nuevaConfig = {
+        colorDia: inputColorDia.value,
+        colorNoche: inputColorNoche.value,
+        tamano: parseInt(inputSize.value),
+        pulso: parseInt(inputPulse.value),
+        giro: parseInt(inputSpin.value),
+        halo: inputHalo.checked,
+        respiracion: inputResp.checked,
+        overlay: inputOverlay.checked,
+        voz: inputVoz.checked
+    };
 
-  if (orbClickTimer) clearTimeout(orbClickTimer);
-  orbClickTimer = setTimeout(() => {
-    orbClickCount = 0;
-  }, 3000);
+    guardarConfigORB(nuevaConfig);
+    aplicarConfigORB();
 
-  if (orbClickCount >= 5 && searchInput.value.trim().toUpperCase() === "ADMIN") {
-    adminMode = !adminMode;
-    adminPanel.style.display = adminMode ? "block" : "none";
-    footerStatus.textContent = adminMode ? "Modo administrador activado" : "Modo administrador desactivado";
-    orbClickCount = 0;
-  }
+    adminPanel.style.display = "none";
 });
 
-// ============================================================
-// MODO DÍA / NOCHE
-// ============================================================
-modeSwitch.addEventListener("change", () => {
-  const isNight = modeSwitch.checked;
-  document.body.classList.toggle("night-mode", isNight);
-  modeLabel.textContent = isNight ? "Modo noche" : "Modo día";
-});
-
-// ============================================================
-// ESTADO BACKEND
-// ============================================================
-export function setBackendStatus(online) {
-  backendStatusDot.classList.toggle("online", online);
-  backendStatusDot.classList.toggle("offline", !online);
-  backendStatusText.textContent = online ? "Conectado" : "Desconectado";
-}
-
-export function setFooterStatus(text) {
-  footerStatus.textContent = text;
-}
-
-// ============================================================
-// CARGA DE CATÁLOGOS
-// ============================================================
-export async function loadCatalogosIntoFilters() {
-  const data = await backendCatalogos();
-  if (!data) return;
-
-  fillSelect(marcaFilter, data.marcas, "Marca");
-  fillSelect(rubroFilter, data.rubros, "Rubro");
-  fillSelect(talleFilter, data.talles, "Talle");
-}
-
-function fillSelect(select, items, label) {
-  const current = select.value;
-  select.innerHTML = "";
-  const opt = document.createElement("option");
-  opt.value = "";
-  opt.textContent = label;
-  select.appendChild(opt);
-
-  items.forEach((item) => {
-    if (!item) return;
-    const o = document.createElement("option");
-    o.value = item;
-    o.textContent = item;
-    select.appendChild(o);
-  });
-
-  if (items.includes(current)) {
-    select.value = current;
-  }
-}
-
-// ============================================================
-// OBTENER FILTROS ACTIVOS
-// ============================================================
-export function getFilters() {
-  return {
-    marca: marcaFilter.value || "",
-    rubro: rubroFilter.value || "",
-    talle: talleFilter.value || "",
-  };
-}
+/* ============================================================
+   APLICAR CONFIGURACIÓN AL INICIAR
+============================================================ */
+aplicarConfigORB();
