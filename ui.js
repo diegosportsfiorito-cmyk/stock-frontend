@@ -55,16 +55,16 @@ function aplicarConfigORB() {
 
     // Colores
     document.documentElement.style.setProperty("--orb-color", cfg.colorDia);
-    document.documentElement.style.setProperty("--orb-color-dark", cfg.colorDia);
+    document.documentElement.style.setProperty("--orb-color-dark", cfg.colorNoche);
 
     // Tamaño
     orb.style.width = cfg.tamano + "px";
     orb.style.height = cfg.tamano + "px";
 
-    // Pulso
+    // Pulso (si tu animación usa duration)
     orb.style.animationDuration = `${cfg.pulso}s`;
 
-    // Giro
+    // Giro (si tu CSS usa esta variable)
     orb.style.setProperty("--orb-spin-speed", cfg.giro);
 
     // Halo
@@ -77,11 +77,8 @@ function aplicarConfigORB() {
         orb.classList.remove("orb-breathe");
     }
 
-    // Overlay
-    overlay.style.display = cfg.overlay ? "none" : "none"; // se activa desde app.js
-
-    // Voz
-    vozActiva = cfg.voz;
+    // Overlay → NO se controla desde aquí
+    // Voz → NO se controla desde aquí
 }
 
 /* ============================================================
