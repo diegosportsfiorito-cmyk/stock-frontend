@@ -42,10 +42,12 @@ function orbStopLoading() {
 
 function orbMoveToTop() {
     orbContainer.classList.add("orb-top");
+    document.body.classList.add("orb-top-active");
 }
 
 function orbMoveToCenter() {
     orbContainer.classList.remove("orb-top");
+    document.body.classList.remove("orb-top-active");
 }
 
 /* ============================================================
