@@ -1,123 +1,195 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>ORB STOCK — Premium UI</title>
-    <link rel="stylesheet" href="styles.css" />
+  <meta charset="UTF-8" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+  />
+  <title>STOCK IA PRO — Asistente inteligente de stock</title>
+  <link rel="stylesheet" href="styles.css" />
 </head>
-
 <body>
 
-    <!-- ORB SIEMPRE VISIBLE -->
-    <div id="orb-container">
-        <div id="orb"></div>
-    </div>
+  <!-- ORB SIEMPRE VISIBLE -->
+  <div class="app-shell">
+    <div class="app-container">
 
-    <!-- OVERLAY DE BÚSQUEDA -->
-    <div id="loading-overlay">
-        <div id="loading-text">Buscando…</div>
-    </div>
+      <div class="app-header">
+        <div class="branding">
+          <div class="orb-wrapper">
+            <div class="orb">IA PRO</div>
+          </div>
+          <div>
+            <div class="brand-title">STOCK IA PRO</div>
+            <div class="brand-subtitle">Asistente inteligente de stock</div>
+          </div>
+        </div>
 
-    <!-- CONTENEDOR PRINCIPAL -->
-    <div id="app-container">
+        <div class="header-right">
+          <div class="connection-indicator">
+            <div class="connection-dot"></div>
+            <span>Estado conexión</span>
+          </div>
+        </div>
+      </div>
 
-        <!-- HEADER SUPERIOR -->
-        <header id="top-bar">
-            <div id="logo">ORB STOCK</div>
-
-            <div id="top-actions">
-                <button id="toggle-dark">Modo Día/Noche</button>
-                <button id="open-admin">Admin</button>
-                <button id="toggle-voice">Voz</button>
-            </div>
-        </header>
-
-        <!-- PANEL DE BÚSQUEDA -->
-        <section id="search-panel">
-            <input id="search-input" type="text" placeholder="Buscar artículo, marca o rubro…" />
-            <button id="search-btn">Buscar</button>
-            <label class="checkbox">
-                <input type="checkbox" id="solo-stock" />
-                Mostrar solo con stock
+      <!-- Barra superior de controles -->
+      <div class="top-controls">
+        <div class="top-left">
+          <button class="mode-toggle" id="toggle-dark">Modo Día/Noche</button>
+          <button class="admin-btn" id="open-admin">Admin</button>
+          <button class="voice-btn" id="toggle-voice">Voz</button>
+        </div>
+        <div class="top-right">
+          <div class="switch-row">
+            <span>Manos libres</span>
+            <label class="switch">
+              <input type="checkbox" id="handsfree-toggle" />
+              <span class="slider"></span>
             </label>
+          </div>
+        </div>
+      </div>
+
+      <!-- Panel de búsqueda -->
+      <section class="search-card">
+        <div class="search-row">
+          <div class="search-input-wrapper">
+            <input
+              id="search-input"
+              class="search-input"
+              type="text"
+              placeholder="Buscar artículo, marca o rubro…"
+              autocomplete="off"
+            />
+            <span class="search-icon">🔍</span>
+          </div>
+          <button class="btn-primary" id="btn-search">
+            Buscar
+          </button>
+        </div>
+
+        <div class="actions-row">
+          <label class="solo-stock">
+            <input type="checkbox" id="chk-solo-stock" />
+            Mostrar solo con stock
+          </label>
+
+          <button class="btn-secondary" id="btn-scan">Leer código de barras</button>
+          <button class="btn-secondary" id="btn-clear">Limpiar pantalla</button>
+          <button class="btn-secondary" id="btn-copy">Copiar resultado</button>
+          <button class="btn-secondary" id="btn-filtros">Filtros avanzados</button>
+          <button class="btn-ghost" id="btn-stop">STOP</button>
+        </div>
+
+        <!-- Métricas -->
+        <div class="metrics-row">
+          <div class="metric-card">
+            <div class="metric-label">ARTÍCULOS</div>
+            <div class="metric-value" id="metric-articulos">0</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-label">PARES</div>
+            <div class="metric-value" id="metric-pares">0</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-label">ALERTAS</div>
+            <div class="metric-value" id="metric-alertas">0</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-label">VALORIZADO</div>
+            <div class="metric-value" id="metric-valorizado">$0</div>
+          </div>
+        </div>
+
+        <!-- Filtros avanzados -->
+        <div class="filtros-panel" id="filtros-panel">
+          <div class="filtros-row">
+            <select id="filtro-marca" class="filtro-select"></select>
+            <select id="filtro-rubro" class="filtro-select"></select>
+            <select id="filtro-talle" class="filtro-select"></select>
+          </div>
+        </div>
+      </section>
+
+      <!-- Resultados + Dashboard -->
+      <div class="main-row">
+        <!-- Resultados -->
+        <section class="results-card">
+          <div class="results-header">
+            <div class="results-title">Resultados</div>
+            <div class="results-status" id="results-status">Esperando consulta</div>
+          </div>
+          <div id="results-container">
+            <!-- items -->
+          </div>
         </section>
 
-        <!-- DASHBOARD -->
-        <section id="dashboard">
-            <div class="dash-card">
-                <h3>ARTÍCULOS</h3>
-                <p id="dash-articulos">0</p>
-            </div>
-            <div class="dash-card">
-                <h3>PARES</h3>
-                <p id="dash-pares">0</p>
-            </div>
-            <div class="dash-card">
-                <h3>ALERTAS</h3>
-                <p id="dash-alertas">0</p>
-            </div>
-            <div class="dash-card">
-                <h3>VALORIZADO</h3>
-                <p id="dash-valorizado">$0</p>
-            </div>
+        <!-- Dashboard -->
+        <section class="dashboard-card">
+          <div class="dashboard-header">
+            <div class="dashboard-title">Visión rápida</div>
+            <div class="dashboard-subtitle">Distribución por talle</div>
+          </div>
+          <canvas id="stockChart"></canvas>
         </section>
-
-        <!-- RESULTADOS -->
-        <section id="results-container">
-            <h2 id="results-title">Resultados</h2>
-            <div id="results-list"></div>
-        </section>
+      </div>
 
     </div>
+  </div>
 
-    <!-- PANEL ADMINISTRADOR -->
-    <div id="admin-panel">
-        <h2>Configuración del ORB</h2>
+  <!-- Overlay de búsqueda -->
+  <div id="loading-overlay">
+    <div id="loading-text">Buscando…</div>
+  </div>
 
-        <label>Color Día</label>
-        <input type="color" id="orb-color-dia" />
+  <!-- Panel administrador ORB (se mantiene tu lógica) -->
+  <div id="admin-panel">
+    <h2>Configuración del ORB</h2>
 
-        <label>Color Noche</label>
-        <input type="color" id="orb-color-noche" />
+    <label>Color Día</label>
+    <input type="color" id="orb-color-dia" />
 
-        <label>Tamaño del ORB</label>
-        <input type="range" id="orb-size" min="60" max="200" />
+    <label>Color Noche</label>
+    <input type="color" id="orb-color-noche" />
 
-        <label>Intensidad del Pulso</label>
-        <input type="range" id="orb-pulse" min="1" max="10" />
+    <label>Tamaño del ORB</label>
+    <input type="range" id="orb-size" min="60" max="200" />
 
-        <label>Velocidad del Giro</label>
-        <input type="range" id="orb-spin" min="1" max="10" />
+    <label>Intensidad del Pulso</label>
+    <input type="range" id="orb-pulse" min="1" max="10" />
 
-        <label>
-            <input type="checkbox" id="orb-halo" checked />
-            Halo Activo
-        </label>
+    <label>Velocidad del Giro</label>
+    <input type="range" id="orb-spin" min="1" max="10" />
 
-        <label>
-            <input type="checkbox" id="orb-respiracion" checked />
-            Respiración Activa
-        </label>
+    <label>
+      <input type="checkbox" id="orb-halo" checked />
+      Halo Activo
+    </label>
 
-        <label>
-            <input type="checkbox" id="orb-overlay" checked />
-            Overlay de Búsqueda
-        </label>
+    <label>
+      <input type="checkbox" id="orb-respiracion" checked />
+      Respiración Activa
+    </label>
 
-        <label>
-            <input type="checkbox" id="orb-voz" checked />
-            Voz Activa
-        </label>
+    <label>
+      <input type="checkbox" id="orb-overlay" checked />
+      Overlay de Búsqueda
+    </label>
 
-        <button id="admin-save">Guardar</button>
-        <button id="admin-close">Cerrar</button>
-    </div>
+    <label>
+      <input type="checkbox" id="orb-voz" checked />
+      Voz Activa
+    </label>
 
-    <script src="backend.js"></script>
-    <script src="voz.js"></script>
-    <script src="ui.js"></script>
-    <script src="app.js"></script>
+    <button id="admin-save">Guardar</button>
+    <button id="admin-close">Cerrar</button>
+  </div>
 
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Lógica principal -->
+  <script src="app.js"></script>
 </body>
 </html>
