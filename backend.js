@@ -1,40 +1,69 @@
-const BACKEND_BASE = "https://stock-backend-1-0upi.onrender.com";
+/* ============================================================
+   BACKEND.JS — COMUNICACIÓN CON EL SERVIDOR
+   Integración premium con ORB + voz + UI moderna
+============================================================ */
 
-// ============================================================
-// CONSULTA PRINCIPAL
-// ============================================================
-export async function backendQuery({ q, soloStock }) {
-  const params = new URLSearchParams();
-  params.set("q", q);
-  params.set("solo_stock", soloStock ? "true" : "false");
+const API_URL = "https://stock-backend-1-0upi.onrender.com";
 
-  const url = `${BACKEND_BASE}/query?${params.toString()}`;
-  const res = await fetch(url);
+/* ============================================================
+   CONSULTA AL BACKEND
+============================================================ */
+async function consultarBackend(query, soloStock = false) {
+    try {
+        orbStartLoading();
+        orbMoveToCenter();
+        hablarBuscando(query);
 
-  if (!res.ok) throw new Error("Error en backend");
-  return await res.json();
+        const response = await fetch(`${API_URL}/query`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                question: query,
+                solo_stock: soloStock
+            })
+        });
+
+        const data = await response.json();
+
+        orbStopLoading();
+
+        if (data.error) {
+            hablarError();
+            return { error: true };
+        }
+
+        if (data.items && data.items.length > 0) {
+            orbMoveToTop();
+            hablarResultados(data.items.length);
+        } else {
+            orbMoveToCenter();
+        }
+
+        return data;
+
+    } catch (error) {
+        console.error("Error al consultar backend:", error);
+
+        orbStopLoading();
+        orbMoveToCenter();
+        hablarError();
+
+        return { error: true };
+    }
 }
 
-// ============================================================
-// AUTOCOMPLETE
-// ============================================================
-export async function backendAutocomplete(q) {
-  const url = `${BACKEND_BASE}/autocomplete?q=${encodeURIComponent(q)}`;
-  const res = await fetch(url);
-  if (!res.ok) return { suggestions: [] };
-  return await res.json();
+/* ============================================================
+   FUNCIÓN PRINCIPAL DE BÚSQUEDA
+============================================================ */
+async function buscar(q, soloStock = false) {
+    if (!q || q.trim().length === 0) {
+        return { error: true, message: "Consulta vacía" };
+    }
+
+    return await consultarBackend(q.trim(), soloStock);
 }
 
-// ============================================================
-// CATÁLOGOS
-// ============================================================
-export async function backendCatalogos() {
-  try {
-    const url = `${BACKEND_BASE}/catalogos`;
-    const res = await fetch(url);
-    if (!res.ok) return null;
-    return await res.json();
-  } catch {
-    return null;
-  }
-}
+/* ============================================================
+   EXPORTAR FUNCIONES (si se usa en módulos)
+============================================================ */
+// window.buscar = buscar;
