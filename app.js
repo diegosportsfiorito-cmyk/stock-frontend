@@ -1,443 +1,219 @@
-import { backendQuery } from "./backend.js";
-import {
-  currentView,
-  soloStock,
-  setBackendStatus,
-  setFooterStatus,
-  loadCatalogosIntoFilters,
-  getFilters,
-} from "./ui.js";
+/* ============================================================
+   CONFIGURACIÓN
+============================================================ */
+const BACKEND_URL = "https://stock-backend-1-0upi.onrender.com";
 
-const searchInput = document.getElementById("searchInput");
-const btnSearch = document.getElementById("btnSearch");
-const resultsContainer = document.getElementById("resultsContainer");
-const resultsCount = document.getElementById("resultsCount");
-const dashArticulos = document.getElementById("dashArticulos");
-const dashPares = document.getElementById("dashPares");
-const dashAlertas = document.getElementById("dashAlertas");
-const dashValorizado = document.getElementById("dashValorizado");
-const dashboardExtra = document.getElementById("dashboardExtra");
-const btnPrev = document.getElementById("btnPrev");
-const btnNext = document.getElementById("btnNext");
+/* ============================================================
+   ELEMENTOS DEL DOM
+============================================================ */
+const orb = document.getElementById("orb");
+const orbContainer = document.getElementById("orb-container");
+const overlay = document.getElementById("loading-overlay");
 
-let lastResult = null;
-let currentPage = 0;
-const PAGE_SIZE = 20;
+const searchInput = document.getElementById("search-input");
+const searchBtn = document.getElementById("search-btn");
+const soloStock = document.getElementById("solo-stock");
 
-// ============================================================
-// INIT
-// ============================================================
-async function init() {
-  setBackendStatus(false);
-  setFooterStatus("Cargando catálogos...");
-  await loadCatalogosIntoFilters();
-  setFooterStatus("Listo para buscar");
-  setBackendStatus(true);
+const resultsList = document.getElementById("results-list");
+const resultsTitle = document.getElementById("results-title");
+
+const dashArticulos = document.getElementById("dash-articulos");
+const dashPares = document.getElementById("dash-pares");
+const dashAlertas = document.getElementById("dash-alertas");
+const dashValorizado = document.getElementById("dash-valorizado");
+
+const toggleDark = document.getElementById("toggle-dark");
+const toggleVoice = document.getElementById("toggle-voice");
+const openAdmin = document.getElementById("open-admin");
+
+/* ============================================================
+   ORB — CONTROL DE ESTADOS
+============================================================ */
+function orbStartLoading() {
+    overlay.style.display = "flex";
+    orb.classList.add("orb-loading");
+    hablarBuscando(searchInput.value);
 }
 
-init();
-
-// ============================================================
-// EVENTOS DE BÚSQUEDA
-// ============================================================
-btnSearch.addEventListener("click", () => {
-  doSearch();
-});
-
-searchInput.addEventListener("keydown", (e) => {
-  if (e.key === "Enter") {
-    e.preventDefault();
-    doSearch();
-  }
-});
-
-// ============================================================
-// PAGINACIÓN
-// ============================================================
-btnPrev.addEventListener("click", () => {
-  if (!lastResult) return;
-  if (currentPage > 0) {
-    currentPage--;
-    renderResults(lastResult);
-  }
-});
-
-btnNext.addEventListener("click", () => {
-  if (!lastResult) return;
-  const totalPages = Math.ceil(lastResult.items.length / PAGE_SIZE);
-  if (currentPage < totalPages - 1) {
-    currentPage++;
-    renderResults(lastResult);
-  }
-});
-
-// ============================================================
-// CAMBIO DE VISTA
-// ============================================================
-document.addEventListener("viewChanged", () => {
-  if (lastResult) renderResults(lastResult);
-});
-
-// ============================================================
-// EJECUTAR BÚSQUEDA
-// ============================================================
-async function doSearch() {
-  const q = searchInput.value.trim();
-  if (!q) return;
-
-  setFooterStatus("Buscando...");
-  btnSearch.disabled = true;
-
-  try {
-    const data = await backendQuery({ q, soloStock });
-    lastResult = data;
-    currentPage = 0;
-    renderResults(data);
-    setFooterStatus("Búsqueda completada");
-    setBackendStatus(true);
-  } catch (err) {
-    console.error(err);
-    setFooterStatus("Error al consultar backend");
-    setBackendStatus(false);
-  } finally {
-    btnSearch.disabled = false;
-  }
+function orbStopLoading() {
+    overlay.style.display = "none";
+    orb.classList.remove("orb-loading");
 }
 
-// ============================================================
-// RENDER PRINCIPAL
-// ============================================================
-function renderResults(data) {
-  if (!data || !data.items) {
-    resultsContainer.innerHTML = "<p>Sin resultados.</p>";
-    resultsCount.textContent = "0 resultados";
-    updateDashboard([]);
-    return;
-  }
+function orbMoveToTop() {
+    orbContainer.classList.add("orb-top");
+}
 
-  const items = data.items;
-  resultsCount.textContent = `${items.length} resultados`;
+function orbMoveToCenter() {
+    orbContainer.classList.remove("orb-top");
+}
 
-  updateDashboard(items);
+/* ============================================================
+   BÚSQUEDA AL BACKEND
+============================================================ */
+async function buscarArticulo(q, soloStockFlag = false) {
+    try {
+        orbStartLoading();
+        orbMoveToCenter();
 
-  // FILTROS
-  const filters = getFilters();
-  let filtered = items.filter((r) => {
-    if (filters.marca && String(r.marca || "").toUpperCase() !== filters.marca.toUpperCase()) return false;
-    if (filters.rubro && String(r.rubro || "").toUpperCase() !== filters.rubro.toUpperCase()) return false;
-    if (filters.talle) {
-      const hasTalle = (r.talles || []).some((t) => String(t.talle) === filters.talle);
-      if (!hasTalle) return false;
+        const response = await fetch(`${BACKEND_URL}/query`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                question: q,
+                solo_stock: soloStockFlag
+            })
+        });
+
+        const data = await response.json();
+
+        orbStopLoading();
+
+        if (data.error) {
+            hablarError();
+            mostrarError("Error al consultar backend");
+            return;
+        }
+
+        renderResultados(data);
+        actualizarDashboard(data);
+
+        if (data.items && data.items.length > 0) {
+            orbMoveToTop();
+            hablarResultados(data.items.length);
+        } else {
+            orbMoveToCenter();
+        }
+
+    } catch (err) {
+        orbStopLoading();
+        orbMoveToCenter();
+        hablarError();
+        mostrarError("Error de conexión");
+        console.error(err);
     }
-    return true;
-  });
-
-  // COINCIDENCIA EXACTA POR ARTÍCULO
-  const q = searchInput.value.trim().toUpperCase();
-  if (q) {
-    const exact = filtered.filter((r) => String(r.codigo || "").toUpperCase() === q);
-    if (exact.length > 0) {
-      filtered = exact;
-    }
-  }
-
-  // PAGINACIÓN
-  const start = currentPage * PAGE_SIZE;
-  const pageItems = filtered.slice(start, start + PAGE_SIZE);
-
-  // VISTAS
-  if (currentView === "resumen") {
-    renderResumen(pageItems);
-  } else if (currentView === "lista") {
-    renderLista(filtered);
-  } else if (currentView === "tabla") {
-    renderTabla(filtered);
-  } else if (currentView === "marca") {
-    renderPorMarca(filtered);
-  } else if (currentView === "articulo") {
-    renderPorArticulo(filtered);
-  } else if (currentView === "dashboard") {
-    renderDashboardView(filtered);
-  } else {
-    renderResumen(pageItems);
-  }
 }
 
-// ============================================================
-// DASHBOARD
-// ============================================================
-function updateDashboard(items) {
-  const articulos = items.length;
-  let pares = 0;
-  let valorizado = 0;
-  let alertas = 0;
+/* ============================================================
+   RENDER DE RESULTADOS
+============================================================ */
+function renderResultados(data) {
+    resultsList.innerHTML = "";
 
-  items.forEach((r) => {
-    (r.talles || []).forEach((t) => {
-      const stock = Number(t.stock) || 0;
-      pares += stock;
-      if (stock > 0 && stock <= 2) alertas += 1;
+    if (!data.items || data.items.length === 0) {
+        resultsTitle.textContent = "Sin resultados";
+        return;
+    }
+
+    resultsTitle.textContent = "Resultados";
+
+    data.items.forEach(item => {
+        const card = document.createElement("div");
+        card.className = "result-card";
+
+        card.innerHTML = `
+            <div class="result-header">
+                <div>
+                    <div class="result-title">${item.codigo}</div>
+                    <div class="result-sub">${item.descripcion}</div>
+                </div>
+                <div>
+                    <strong>$${item.precio}</strong>
+                </div>
+            </div>
+
+            <div class="result-sub">Marca: ${item.marca} — Rubro: ${item.rubro} — Color: ${item.color}</div>
+
+            <div class="talle-list">
+                ${item.talles.map(t => `
+                    <div class="talle-item">${t.talle}: ${t.stock}</div>
+                `).join("")}
+            </div>
+
+            <div class="result-sub" style="margin-top:10px;">
+                Valorizado total: <strong>$${item.valorizado}</strong>
+            </div>
+        `;
+
+        resultsList.appendChild(card);
     });
-    valorizado += Number(r.valorizado) || 0;
-  });
-
-  dashArticulos.textContent = articulos;
-  dashPares.textContent = pares;
-  dashAlertas.textContent = alertas;
-  dashValorizado.textContent = `$${valorizado.toLocaleString("es-AR")}`;
-
-  renderDashboardPie(items);
 }
 
-function renderDashboardPie(items) {
-  const byRubro = computeStatsByRubro(items);
-  const total = byRubro.reduce((a, s) => a + s.pares, 0) || 1;
-
-  let angle = 0;
-  const segments = [];
-
-  byRubro.forEach((s, i) => {
-    const pct = (s.pares / total) * 360;
-    const color = `hsl(${i * 40}, 70%, 60%)`;
-    segments.push(`${color} ${angle}deg ${angle + pct}deg`);
-    angle += pct;
-  });
-
-  dashboardExtra.innerHTML = `
-    <div class="pie-chart" style="--segments: ${segments.join(",")}"></div>
-    <div class="dash-rubros">
-      ${byRubro
-        .map((s) => `<div class="dash-rubro-item">${s.rubro || "Sin rubro"} — ${s.pares} pares</div>`)
-        .join("")}
-    </div>
-  `;
-}
-
-function computeStatsByRubro(items) {
-  const map = new Map();
-  items.forEach((r) => {
-    const rubro = r.rubro || "Sin rubro";
-    let entry = map.get(rubro);
-    if (!entry) {
-      entry = { rubro, pares: 0 };
-      map.set(rubro, entry);
+/* ============================================================
+   DASHBOARD
+============================================================ */
+function actualizarDashboard(data) {
+    if (!data.items) {
+        dashArticulos.textContent = "0";
+        dashPares.textContent = "0";
+        dashAlertas.textContent = "0";
+        dashValorizado.textContent = "$0";
+        return;
     }
-    (r.talles || []).forEach((t) => {
-      entry.pares += Number(t.stock) || 0;
+
+    dashArticulos.textContent = data.items.length;
+
+    let totalPares = 0;
+    let totalVal = 0;
+    let alertas = 0;
+
+    data.items.forEach(item => {
+        item.talles.forEach(t => {
+            totalPares += t.stock;
+            if (t.stock < 2) alertas++;
+        });
+        totalVal += item.valorizado;
     });
-  });
-  return Array.from(map.values()).sort((a, b) => b.pares - a.pares);
+
+    dashPares.textContent = totalPares;
+    dashAlertas.textContent = alertas;
+    dashValorizado.textContent = "$" + totalVal;
 }
 
-// ============================================================
-// VISTA RESUMEN
-// ============================================================
-function renderResumen(items) {
-  resultsContainer.innerHTML = items
-    .map((r) => {
-      const pares = (r.talles || []).reduce((a, t) => a + (Number(t.stock) || 0), 0);
-      return `
-      <div class="result-card">
-        <div class="result-main-line">
-          ${r.codigo || ""} - ${r.descripcion || ""}
+/* ============================================================
+   ERRORES
+============================================================ */
+function mostrarError(msg) {
+    resultsList.innerHTML = `
+        <div class="result-card">
+            <div class="result-title" style="color:red;">${msg}</div>
         </div>
-        <div class="result-sub-line">
-          ${r.marca || ""} - ${r.rubro || ""} - ${r.color || ""}
-        </div>
-        <div class="result-meta-line">
-          ${pares} pares · $${(r.precio || 0).toLocaleString("es-AR")} · $${(r.valorizado || 0).toLocaleString("es-AR")}
-        </div>
-      </div>
     `;
-    })
-    .join("");
 }
 
-// ============================================================
-// VISTA LISTA
-// ============================================================
-function renderLista(items) {
-  const groups = groupBy(items, "codigo");
+/* ============================================================
+   EVENTOS
+============================================================ */
+searchBtn.addEventListener("click", () => {
+    const q = searchInput.value.trim();
+    if (q.length === 0) return;
+    buscarArticulo(q, soloStock.checked);
+});
 
-  let html = `
-    <table class="table-view">
-      <thead>
-        <tr>
-          <th>Artículo</th>
-          <th>Descripción</th>
-          <th>Total pares</th>
-        </tr>
-      </thead>
-      <tbody>
-  `;
-
-  for (const [art, rows] of groups.entries()) {
-    const descripcion = rows[0].descripcion || "";
-    const totalPares = rows.reduce(
-      (a, r) => a + (r.talles || []).reduce((x, t) => x + (Number(t.stock) || 0), 0),
-      0
-    );
-
-    html += `
-      <tr>
-        <td>${art}</td>
-        <td>${descripcion}</td>
-        <td>${totalPares}</td>
-      </tr>
-    `;
-  }
-
-  html += "</tbody></table>";
-  resultsContainer.innerHTML = html;
-}
-
-// ============================================================
-// VISTA TABLA
-// ============================================================
-function renderTabla(items) {
-  let html = `
-    <table class="table-view">
-      <thead>
-        <tr>
-          <th>Artículo</th>
-          <th>Descripción</th>
-          <th>Marca</th>
-          <th>Rubro</th>
-          <th>Color</th>
-          <th>Pares</th>
-          <th>Lista</th>
-          <th>Valorizado</th>
-        </tr>
-      </thead>
-      <tbody>
-  `;
-
-  items.forEach((r) => {
-    const pares = (r.talles || []).reduce((a, t) => a + (Number(t.stock) || 0), 0);
-    html += `
-      <tr>
-        <td>${r.codigo || ""}</td>
-        <td>${r.descripcion || ""}</td>
-        <td>${r.marca || ""}</td>
-        <td>${r.rubro || ""}</td>
-        <td>${r.color || ""}</td>
-        <td>${pares}</td>
-        <td>$${(r.precio || 0).toLocaleString("es-AR")}</td>
-        <td>$${(r.valorizado || 0).toLocaleString("es-AR")}</td>
-      </tr>
-    `;
-  });
-
-  html += "</tbody></table>";
-  resultsContainer.innerHTML = html;
-}
-
-// ============================================================
-// VISTA POR MARCA
-// ============================================================
-function renderPorMarca(items) {
-  const map = new Map();
-  items.forEach((r) => {
-    const marca = r.marca || "Sin marca";
-    let entry = map.get(marca);
-    if (!entry) {
-      entry = { marca, pares: 0, valorizado: 0 };
-      map.set(marca, entry);
+searchInput.addEventListener("keydown", e => {
+    if (e.key === "Enter") {
+        searchBtn.click();
     }
-    (r.talles || []).forEach((t) => {
-      entry.pares += Number(t.stock) || 0;
-    });
-    entry.valorizado += Number(r.valorizado) || 0;
-  });
+});
 
-  const rows = Array.from(map.values()).sort((a, b) => b.pares - a.pares);
+/* ============================================================
+   MODO DÍA / NOCHE
+============================================================ */
+toggleDark.addEventListener("click", () => {
+    document.body.classList.toggle("dark");
+});
 
-  let html = `
-    <table class="table-view">
-      <thead>
-        <tr>
-          <th>Marca</th>
-          <th>Pares</th>
-          <th>Valorizado</th>
-        </tr>
-      </thead>
-      <tbody>
-  `;
+/* ============================================================
+   VOZ
+============================================================ */
+toggleVoice.addEventListener("click", () => {
+    vozActiva = !vozActiva;
+    toggleVoice.textContent = vozActiva ? "Voz ON" : "Voz OFF";
+});
 
-  rows.forEach((r) => {
-    html += `
-      <tr>
-        <td>${r.marca}</td>
-        <td>${r.pares}</td>
-        <td>$${r.valorizado.toLocaleString("es-AR")}</td>
-      </tr>
-    `;
-  });
-
-  html += "</tbody></table>";
-  resultsContainer.innerHTML = html;
-}
-
-// ============================================================
-// VISTA POR ARTÍCULO
-// ============================================================
-function renderPorArticulo(items) {
-  const groups = groupBy(items, "codigo");
-
-  let html = `
-    <table class="table-view">
-      <thead>
-        <tr>
-          <th>Artículo</th>
-          <th>Descripción</th>
-          <th>Pares</th>
-          <th>Valorizado</th>
-        </tr>
-      </thead>
-      <tbody>
-  `;
-
-  for (const [art, rows] of groups.entries()) {
-    const descripcion = rows[0].descripcion || "";
-    let pares = 0;
-    let valorizado = 0;
-    rows.forEach((r) => {
-      (r.talles || []).forEach((t) => {
-        pares += Number(t.stock) || 0;
-      });
-      valorizado += Number(r.valorizado) || 0;
-    });
-
-    html += `
-      <tr>
-        <td>${art}</td>
-        <td>${descripcion}</td>
-        <td>${pares}</td>
-        <td>$${valorizado.toLocaleString("es-AR")}</td>
-      </tr>
-    `;
-  }
-
-  html += "</tbody></table>";
-  resultsContainer.innerHTML = html;
-}
-
-// ============================================================
-// VISTA DASHBOARD
-// ============================================================
-function renderDashboardView(items) {
-  renderResumen(items);
-}
-
-// ============================================================
-// UTILIDAD
-// ============================================================
-function groupBy(items, key) {
-  const map = new Map();
-  items.forEach((r) => {
-    const k = r[key] || "";
-    if (!map.has(k)) map.set(k, []);
-    map.get(k).push(r);
-  });
-  return map;
-}
+/* ============================================================
+   ADMIN
+============================================================ */
+openAdmin.addEventListener("click", () => {
+    document.getElementById("admin-panel").style.display = "block";
+});
