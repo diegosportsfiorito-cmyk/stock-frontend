@@ -37,6 +37,13 @@ const els = {
   btnStop: document.getElementById("btn-stop"),
   btnScan: document.getElementById("btn-scan"),
   stockChartCanvas: document.getElementById("stockChart"),
+  loadingOverlay: document.getElementById("loading-overlay"),
+  toggleDark: document.getElementById("toggle-dark"),
+  openAdmin: document.getElementById("open-admin"),
+  adminPanel: document.getElementById("admin-panel"),
+  adminClose: document.getElementById("admin-close"),
+  adminSave: document.getElementById("admin-save"),
+  orb: document.querySelector(".orb"),
 };
 
 // ============================
@@ -44,6 +51,7 @@ const els = {
 // ============================
 
 function formatNumber(n) {
+  if (typeof n !== "number") return n;
   return n.toLocaleString("es-AR");
 }
 
@@ -62,6 +70,15 @@ function setResultsPresence(hasResults) {
     els.appContainer.classList.add("has-results");
   } else {
     els.appContainer.classList.remove("has-results");
+  }
+}
+
+function showLoading(show) {
+  if (!els.loadingOverlay) return;
+  if (show) {
+    els.loadingOverlay.classList.add("visible");
+  } else {
+    els.loadingOverlay.classList.remove("visible");
   }
 }
 
@@ -166,7 +183,6 @@ function renderResultados(items) {
 // ============================
 
 function buildChartData(items) {
-  // Ejemplo: distribución por talle (pares totales)
   const mapTalle = new Map();
   items.forEach((item) => {
     item.talles.forEach((t) => {
@@ -182,7 +198,7 @@ function buildChartData(items) {
 }
 
 function renderChart(items) {
-  if (!els.stockChartCanvas) return;
+  if (!els.stockChartCanvas || typeof Chart === "undefined") return;
 
   const { labels, data } = buildChartData(items);
 
@@ -347,6 +363,7 @@ async function buscar() {
 
   if (els.resultsStatus) els.resultsStatus.textContent = "Buscando...";
   setConnectionStatus(true);
+  showLoading(true);
 
   try {
     const resp = await fetch(API_URL, {
@@ -379,11 +396,13 @@ async function buscar() {
         '<div class="results-error">Error de conexión</div>';
     }
     if (els.resultsStatus) els.resultsStatus.textContent = "Error de conexión";
+  } finally {
+    showLoading(false);
   }
 }
 
 // ============================
-// MANOS LIBRES / STOP (hooks)
+// MANOS LIBRES / STOP (voz)
 // ============================
 
 let recognition = null;
@@ -439,8 +458,34 @@ function stopTodo() {
 // ============================
 
 function iniciarScanner() {
-  // Acá solo dejamos el hook. Podés integrar BarcodeDetector o librería externa.
   alert("Scanner de código de barras: hook listo para integrar BarcodeDetector.");
+}
+
+// ============================
+// MODO DÍA/NOCHE (simple toggle de clase)
+// ============================
+
+function toggleDarkMode() {
+  document.body.classList.toggle("light-mode");
+}
+
+// ============================
+// ADMIN ORB (solo muestra/oculta panel)
+// ============================
+
+function openAdminPanel() {
+  if (!els.adminPanel) return;
+  els.adminPanel.style.display = "flex";
+}
+
+function closeAdminPanel() {
+  if (!els.adminPanel) return;
+  els.adminPanel.style.display = "none";
+}
+
+function saveAdminConfig() {
+  // Hook para guardar configuración del ORB (podés persistir en localStorage)
+  closeAdminPanel();
 }
 
 // ============================
@@ -465,6 +510,11 @@ function initEvents() {
   );
   els.btnStop?.addEventListener("click", stopTodo);
   els.btnScan?.addEventListener("click", iniciarScanner);
+
+  els.toggleDark?.addEventListener("click", toggleDarkMode);
+  els.openAdmin?.addEventListener("click", openAdminPanel);
+  els.adminClose?.addEventListener("click", closeAdminPanel);
+  els.adminSave?.addEventListener("click", saveAdminConfig);
 }
 
 function init() {
