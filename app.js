@@ -1,6 +1,4 @@
-// ============================================================
-// APP.JS — LÓGICA PRINCIPAL DE STOCK IA PRO
-// ============================================================
+// APP.JS — LÓGICA PRINCIPAL
 
 const API_URL = "https://stock-backend-1-0upi.onrender.com/query";
 
@@ -11,9 +9,11 @@ const state = {
   filtros: {
     marca: "",
     rubro: "",
-    talle: "",
+    talleDesde: "",
+    talleHasta: "",
   },
   chart: null,
+  lastActivity: Date.now(),
 };
 
 const els = {
@@ -32,19 +32,20 @@ const els = {
   filtrosPanel: document.getElementById("filtros-panel"),
   filtroMarca: document.getElementById("filtro-marca"),
   filtroRubro: document.getElementById("filtro-rubro"),
-  filtroTalle: document.getElementById("filtro-talle"),
+  filtroTalleDesde: document.getElementById("filtro-talle-desde"),
+  filtroTalleHasta: document.getElementById("filtro-talle-hasta"),
+  btnAplicarFiltros: document.getElementById("btn-aplicar-filtros"),
   connectionDot: document.querySelector(".connection-dot"),
   handsfreeToggle: document.getElementById("handsfree-toggle"),
   btnStop: document.getElementById("btn-stop"),
   btnScan: document.getElementById("btn-scan"),
   stockChartCanvas: document.getElementById("stockChart"),
-  loadingOverlay: document.getElementById("loading-overlay"),
   orb: document.getElementById("orb"),
+  toast: document.getElementById("toast"),
+  adminPanel: document.getElementById("admin-panel"),
 };
 
-// ============================================================
-// ORB ANIMATIONS
-// ============================================================
+// ORB
 
 function orbSetReady(active) {
   if (active) els.orb.classList.add("orb-ready");
@@ -63,9 +64,7 @@ function orbSetError(active) {
   else els.orb.classList.remove("orb-error");
 }
 
-// ============================================================
 // UTILIDADES
-// ============================================================
 
 function formatNumber(n) {
   if (typeof n !== "number") return n;
@@ -77,27 +76,37 @@ function setConnectionStatus(online) {
   els.connectionDot.classList.toggle("online", online);
 }
 
-function showLoading(show) {
-  els.loadingOverlay.classList.toggle("visible", show);
+function showToast(msg) {
+  if (!els.toast) return;
+  els.toast.textContent = msg;
+  els.toast.classList.add("visible");
+  setTimeout(() => {
+    els.toast.classList.remove("visible");
+  }, 2500);
 }
 
 function setResultsPresence(hasResults) {
   els.appContainer.classList.toggle("has-results", hasResults);
 }
 
-// ============================================================
-// FILTROS
-// ============================================================
+// FILTROS (sobre items ya cargados)
 
-function aplicarFiltros(items) {
-  const { marca, rubro, talle } = state.filtros;
+function aplicarFiltrosLocales(items) {
+  const { marca, rubro, talleDesde, talleHasta } = state.filtros;
   return items.filter((item) => {
     if (marca && item.marca !== marca) return false;
     if (rubro && item.rubro !== rubro) return false;
-    if (talle) {
-      const tiene = item.talles.some((t) => String(t.talle) === String(talle));
-      if (!tiene) return false;
+
+    if (talleDesde || talleHasta) {
+      const min = talleDesde ? Number(talleDesde) : -Infinity;
+      const max = talleHasta ? Number(talleHasta) : Infinity;
+      const tieneEnRango = item.talles.some((t) => {
+        const tt = Number(t.talle);
+        return tt >= min && tt <= max;
+      });
+      if (!tieneEnRango) return false;
     }
+
     return true;
   });
 }
@@ -105,12 +114,10 @@ function aplicarFiltros(items) {
 function poblarFiltros(items) {
   const marcas = new Set();
   const rubros = new Set();
-  const talles = new Set();
 
   items.forEach((item) => {
     if (item.marca) marcas.add(item.marca);
     if (item.rubro) rubros.add(item.rubro);
-    item.talles.forEach((t) => talles.add(String(t.talle)));
   });
 
   function fill(select, values, placeholder) {
@@ -125,23 +132,21 @@ function poblarFiltros(items) {
 
   fill(els.filtroMarca, marcas, "Marca");
   fill(els.filtroRubro, rubros, "Rubro");
-  fill(els.filtroTalle, talles, "Talle");
 }
 
 function actualizarFiltrosDesdeUI() {
   state.filtros.marca = els.filtroMarca.value;
   state.filtros.rubro = els.filtroRubro.value;
-  state.filtros.talle = els.filtroTalle.value;
+  state.filtros.talleDesde = els.filtroTalleDesde.value;
+  state.filtros.talleHasta = els.filtroTalleHasta.value;
 
-  const filtrados = aplicarFiltros(state.items);
+  const filtrados = aplicarFiltrosLocales(state.items);
   renderResultados(filtrados);
   renderMetricas(filtrados);
   renderChart(filtrados);
 }
 
-// ============================================================
 // MÉTRICAS
-// ============================================================
 
 function calcularMetricas(items) {
   let articulos = items.length;
@@ -171,9 +176,7 @@ function renderMetricas(items) {
   els.metricValorizado.textContent = "$" + formatNumber(valorizado);
 }
 
-// ============================================================
 // RESULTADOS
-// ============================================================
 
 function renderResultados(items) {
   els.resultsContainer.innerHTML = "";
@@ -221,9 +224,7 @@ function renderResultados(items) {
   });
 }
 
-// ============================================================
 // DASHBOARD
-// ============================================================
 
 function buildChartData(items) {
   const map = new Map();
@@ -286,9 +287,7 @@ function renderChart(items) {
   });
 }
 
-// ============================================================
-// COPIAR RESULTADOS
-// ============================================================
+// COPIAR
 
 function buildCopyText(items) {
   if (!items.length) return "Sin resultados.";
@@ -314,17 +313,15 @@ function buildCopyText(items) {
 
 async function copiarResultados() {
   try {
-    const text = buildCopyText(aplicarFiltros(state.items));
+    const text = buildCopyText(aplicarFiltrosLocales(state.items));
     await navigator.clipboard.writeText(text);
-    alert("Resultados copiados.");
+    showToast("Resultados copiados.");
   } catch (e) {
-    alert("No se pudo copiar.");
+    showToast("No se pudo copiar.");
   }
 }
 
-// ============================================================
 // LIMPIAR
-// ============================================================
 
 function limpiarPantalla() {
   state.items = [];
@@ -337,9 +334,7 @@ function limpiarPantalla() {
   els.resultsStatus.textContent = "Esperando consulta";
 }
 
-// ============================================================
-// BÚSQUEDA PRINCIPAL (ORB ES EL BOTÓN)
-// ============================================================
+// BÚSQUEDA PRINCIPAL
 
 async function buscar() {
   const q = els.searchInput.value.trim();
@@ -350,17 +345,25 @@ async function buscar() {
 
   els.resultsStatus.textContent = "Buscando...";
   setConnectionStatus(true);
-  showLoading(true);
   orbSetLoading(true);
 
+  state.lastActivity = Date.now();
+
   try {
+    const body = {
+      question: q,
+      solo_stock: state.soloStock,
+      filtros_globales: true,
+      marca: state.filtros.marca || null,
+      rubro: state.filtros.rubro || null,
+      talle_desde: state.filtros.talleDesde || null,
+      talle_hasta: state.filtros.talleHasta || null,
+    };
+
     const resp = await fetch(API_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        question: q,
-        solo_stock: state.soloStock,
-      }),
+      body: JSON.stringify(body),
     });
 
     if (!resp.ok) throw new Error("Error en el servidor");
@@ -368,7 +371,7 @@ async function buscar() {
     const data = await resp.json();
     state.items = data.items || [];
 
-    const filtrados = aplicarFiltros(state.items);
+    const filtrados = aplicarFiltrosLocales(state.items);
     renderResultados(filtrados);
     renderMetricas(filtrados);
     renderChart(filtrados);
@@ -385,14 +388,14 @@ async function buscar() {
     orbSetError(true);
     setTimeout(() => orbSetError(false), 2500);
   } finally {
-    showLoading(false);
     orbSetLoading(false);
   }
 }
 
-// ============================================================
-// MANOS LIBRES / STOP
-// ============================================================
+// Exponer para scanner.js
+window.buscar = buscar;
+
+// MANOS LIBRES / VOZ
 
 let recognition = null;
 let manosLibresActivo = false;
@@ -411,6 +414,8 @@ function initVoice() {
     const last = event.results[event.results.length - 1];
     const text = last[0].transcript.trim();
     els.searchInput.value = text;
+    const evt = new Event("input");
+    els.searchInput.dispatchEvent(evt);
     orbSetReady(true);
     buscar();
   };
@@ -423,8 +428,13 @@ function initVoice() {
 function toggleManosLibres(checked) {
   manosLibresActivo = checked;
   if (!recognition) return;
-  if (checked) recognition.start();
-  else recognition.stop();
+  if (checked) {
+    recognition.start();
+    showToast("Manos libres activado");
+  } else {
+    recognition.stop();
+    showToast("Manos libres desactivado");
+  }
 }
 
 function stopTodo() {
@@ -432,28 +442,54 @@ function stopTodo() {
   els.handsfreeToggle.checked = false;
   if (recognition) recognition.stop();
   window.speechSynthesis.cancel();
+  showToast("STOP ejecutado");
 }
 
-// ============================================================
-// SCANNER (hook)
-// ============================================================
+// VOZ botón (una sola escucha)
 
-function iniciarScanner() {
-  alert("Scanner listo para integrar BarcodeDetector.");
+function escucharUnaVez() {
+  if (!recognition) {
+    showToast("Voz no disponible en este dispositivo.");
+    return;
+  }
+  manosLibresActivo = false;
+  recognition.stop();
+  recognition.continuous = false;
+  recognition.start();
+  showToast("Escuchando una consulta…");
 }
 
-// ============================================================
+// TIMEOUT MANOS LIBRES
+
+setInterval(() => {
+  if (!manosLibresActivo) return;
+  const diff = Date.now() - state.lastActivity;
+  if (diff > 30000) {
+    toggleManosLibres(false);
+    els.handsfreeToggle.checked = false;
+    showToast("Manos libres desactivado por inactividad");
+  }
+}, 5000);
+
 // EVENTOS
-// ============================================================
 
 function initEvents() {
   // ORB como botón principal
   els.orb.addEventListener("click", buscar);
 
-  // Input activa modo READY
+  // Input → READY + clave ADMIN
   els.searchInput.addEventListener("input", () => {
-    const hasText = els.searchInput.value.trim().length > 0;
+    const val = els.searchInput.value.trim();
+    const hasText = val.length > 0;
     orbSetReady(hasText);
+
+    if (val.toUpperCase() === "ADMIN") {
+      els.searchInput.value = "";
+      orbSetReady(false);
+      if (els.adminPanel) {
+        els.adminPanel.style.display = "flex";
+      }
+    }
   });
 
   els.btnClear.addEventListener("click", limpiarPantalla);
@@ -464,19 +500,37 @@ function initEvents() {
 
   els.filtroMarca.addEventListener("change", actualizarFiltrosDesdeUI);
   els.filtroRubro.addEventListener("change", actualizarFiltrosDesdeUI);
-  els.filtroTalle.addEventListener("change", actualizarFiltrosDesdeUI);
+  els.filtroTalleDesde.addEventListener("change", actualizarFiltrosDesdeUI);
+  els.filtroTalleHasta.addEventListener("change", actualizarFiltrosDesdeUI);
+
+  els.btnAplicarFiltros.addEventListener("click", () => {
+    actualizarFiltrosDesdeUI();
+    buscar();
+  });
 
   els.handsfreeToggle.addEventListener("change", (e) =>
     toggleManosLibres(e.target.checked)
   );
 
   els.btnStop.addEventListener("click", stopTodo);
-  els.btnScan.addEventListener("click", iniciarScanner);
+
+  if (els.btnScan) {
+    els.btnScan.addEventListener("click", () => {
+      if (typeof window.iniciarScanner === "function") {
+        window.iniciarScanner();
+      } else {
+        alert("Scanner no disponible.");
+      }
+    });
+  }
+
+  const btnVoice = document.getElementById("toggle-voice");
+  if (btnVoice) {
+    btnVoice.addEventListener("click", escucharUnaVez);
+  }
 }
 
-// ============================================================
 // INIT
-// ============================================================
 
 function init() {
   initEvents();
