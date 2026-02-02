@@ -25,7 +25,7 @@ const els = {
   scannerModeCompleto: document.getElementById("scanner-mode-completo"),
 };
 
-const API_URL = "/query";
+const API_URL = "https://stock-backend-1-0upi.onrender.com/query";
 
 // ============================================================
 // ESTADO GLOBAL
