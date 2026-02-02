@@ -8,14 +8,14 @@
   />
   <title>STOCK IA PRO — Asistente inteligente de stock</title>
 
-  <!-- ORB CSS (módulo premium) -->
+  <!-- ORB CSS -->
   <link rel="stylesheet" href="orb.css" />
 
   <!-- Estilos generales -->
   <link rel="stylesheet" href="styles.css" />
 </head>
 
-<body>
+<body class="orb-center orb-b2">
 
   <div class="app-shell">
     <div class="app-container">
@@ -24,7 +24,7 @@
       <div class="app-header">
         <div class="branding">
           <div class="orb-wrapper">
-            <div class="orb">IA PRO</div>
+            <div class="orb" id="orb">IA PRO</div>
           </div>
           <div>
             <div class="brand-title">STOCK IA PRO</div>
@@ -72,7 +72,6 @@
             />
             <span class="search-icon">🔍</span>
           </div>
-          <button class="btn-primary" id="btn-search">Buscar</button>
         </div>
 
         <div class="actions-row">
@@ -168,15 +167,19 @@
     <label>Velocidad del Giro</label>
     <input type="range" id="orb-spin" min="1" max="10" />
 
-    <label>
-      <input type="checkbox" id="orb-halo" checked />
-      Halo Activo
-    </label>
+    <label>Posición del ORB</label>
+    <select id="orb-pos">
+      <option value="left">Izquierda</option>
+      <option value="center" selected>Centrado</option>
+      <option value="floating">Flotante</option>
+    </select>
 
-    <label>
-      <input type="checkbox" id="orb-respiracion" checked />
-      Respiración Activa
-    </label>
+    <label>Tamaño del modo centrado</label>
+    <select id="orb-center-size">
+      <option value="b1">Pequeño (B1)</option>
+      <option value="b2" selected>Medio (B2)</option>
+      <option value="b3">Grande (B3)</option>
+    </select>
 
     <button id="admin-save">Guardar</button>
     <button id="admin-close">Cerrar</button>
