@@ -1,211 +1,134 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>STOCK IA PRO — Asistente inteligente de stock</title>
-
-  <link rel="stylesheet" href="orb.css" />
-  <link rel="stylesheet" href="styles.css" />
+    <meta charset="UTF-8" />
+    <title>STOCK IA PRO</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="styles.css" />
 </head>
+<body>
+    <div id="app">
 
-<body class="orb-center orb-b2">
-  <div class="app-shell">
-    <div class="app-container">
+        <!-- HEADER SIMPLE -->
+        <header class="header">
+            <h1>STOCK IA PRO</h1>
+        </header>
 
-      <div class="app-header">
-        <div class="branding">
-          <div>
-            <div class="brand-title">STOCK IA PRO</div>
-            <div class="brand-subtitle">Asistente inteligente de stock</div>
-          </div>
+        <!-- CONTENEDOR PRINCIPAL -->
+        <main class="main-container">
+
+            <!-- BLOQUE BUSCADOR -->
+            <section class="search-section">
+                <label for="search-input" class="search-label">Buscar artículo / descripción</label>
+
+                <div class="search-input-wrapper orb-tooltip-wrapper">
+                    <input
+                        id="search-input"
+                        type="text"
+                        placeholder="Escribí o escaneá un código..."
+                        autocomplete="off"
+                    />
+
+                    <!-- ÍCONO CÁMARA DENTRO DEL INPUT -->
+                    <button id="btn-scanner" class="scanner-icon-btn" type="button" aria-label="Escanear código">
+                        <span class="scanner-icon-camera"></span>
+                    </button>
+
+                    <!-- ORB -->
+                    <button id="orb-button" class="orb-button orb-tooltip-halo" type="button" aria-label="Buscar">
+                        <span class="orb-core"></span>
+                    </button>
+                </div>
+
+                <!-- SWITCH MODO SCANNER (A2: debajo del input) -->
+                <div class="scanner-mode-switch">
+                    <span class="switch-label">Modo scanner:</span>
+                    <label class="switch">
+                        <input type="checkbox" id="scanner-mode-switch" />
+                        <span class="slider"></span>
+                    </label>
+                    <span id="scanner-mode-text">Solo artículo</span>
+                </div>
+
+                <!-- OPCIONES BÁSICAS -->
+                <div class="search-options">
+                    <label class="checkbox-inline">
+                        <input type="checkbox" id="solo-stock" />
+                        Solo stock
+                    </label>
+                </div>
+            </section>
+
+            <!-- FILTROS AVANZADOS -->
+            <section class="filters-section">
+                <h2>Filtros avanzados</h2>
+
+                <div class="filters-grid">
+                    <div class="filter-item">
+                        <label for="filtro-marca">Marca</label>
+                        <select id="filtro-marca">
+                            <option value="">Todas</option>
+                        </select>
+                    </div>
+
+                    <div class="filter-item">
+                        <label for="filtro-rubro">Rubro</label>
+                        <select id="filtro-rubro">
+                            <option value="">Todos</option>
+                        </select>
+                    </div>
+
+                    <div class="filter-item">
+                        <label for="filtro-talle-desde">Talle desde</label>
+                        <input id="filtro-talle-desde" type="number" min="0" />
+                    </div>
+
+                    <div class="filter-item">
+                        <label for="filtro-talle-hasta">Talle hasta</label>
+                        <input id="filtro-talle-hasta" type="number" min="0" />
+                    </div>
+                </div>
+
+                <div class="filters-actions">
+                    <button id="btn-aplicar-filtros" type="button">Aplicar filtros</button>
+                    <button id="btn-limpiar-filtros" type="button">Limpiar filtros</button>
+                </div>
+            </section>
+
+            <!-- RESULTADOS -->
+            <section class="results-section">
+                <h2>Resultados</h2>
+                <div id="results-container"></div>
+            </section>
+
+        </main>
+
+        <!-- PANEL ADMIN (OCULTO POR COMBINACIÓN DE TECLAS O BOTÓN) -->
+        <aside id="admin-panel" class="admin-panel hidden">
+            <h2>Panel admin</h2>
+
+            <div class="admin-item">
+                <label for="orb-tooltip-mode">Modo tooltip ORB</label>
+                <select id="orb-tooltip-mode">
+                    <option value="halo">Halo direccional (por defecto)</option>
+                    <option value="pulse">Pulse hint</option>
+                    <option value="hover">Hover glow</option>
+                </select>
+            </div>
+        </aside>
+
+        <!-- OVERLAY SCANNER -->
+        <div id="scanner-overlay" class="scanner-overlay">
+            <div class="scanner-content">
+                <video id="scanner-video" autoplay playsinline></video>
+                <div class="scanner-frame"></div>
+                <button id="scanner-close" type="button" class="scanner-close-btn">Cerrar</button>
+            </div>
         </div>
-
-        <div class="header-right">
-          <div class="connection-indicator">
-            <div class="connection-dot"></div>
-            <span>Estado conexión</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- ORB SOBRE EL INPUT + TOOLTIP -->
-      <div class="orb-zone">
-        <div class="orb-wrapper">
-          <div class="orb" id="orb">IA PRO</div>
-          <div class="orb-tooltip" id="orb-tooltip">
-            <span class="orb-tooltip-arrow"></span>
-            <span class="orb-tooltip-text">Tocá para buscar</span>
-          </div>
-        </div>
-      </div>
-
-      <div class="top-controls">
-        <button class="mode-toggle" id="toggle-dark">Modo Día/Noche</button>
-
-        <!-- Botón Admin oculto (solo se abre por clave ADMIN) -->
-        <button class="admin-btn admin-hidden" id="open-admin">Admin</button>
-
-        <div class="top-right-group">
-          <div class="switch-row">
-            <span>Manos libres</span>
-            <label class="switch">
-              <input type="checkbox" id="handsfree-toggle" />
-              <span class="slider"></span>
-            </label>
-          </div>
-
-          <button class="voice-btn" id="toggle-voice">Voz</button>
-        </div>
-      </div>
-
-      <section class="search-card">
-        <div class="search-row">
-          <div class="search-input-wrapper">
-            <input
-              id="search-input"
-              class="search-input"
-              type="text"
-              placeholder="Buscar artículo, marca o rubro…"
-              autocomplete="off"
-            />
-            <!-- Ícono de scanner dentro del input -->
-            <span class="icon-scanner scanner-trigger" title="Leer código"></span>
-          </div>
-        </div>
-
-        <div class="actions-row">
-          <label class="solo-stock">
-            <input type="checkbox" id="chk-solo-stock" />
-            Mostrar solo con stock
-          </label>
-
-          <div class="actions-right">
-            <button class="btn-secondary" id="btn-clear">Limpiar</button>
-            <button class="btn-secondary" id="btn-copy">Copiar</button>
-            <button class="btn-secondary" id="btn-filtros">Filtros</button>
-            <button class="btn-ghost" id="btn-stop">STOP</button>
-          </div>
-        </div>
-
-        <div class="metrics-row">
-          <div class="metric-card">
-            <div class="metric-label">ARTÍCULOS</div>
-            <div class="metric-value" id="metric-articulos">0</div>
-          </div>
-          <div class="metric-card">
-            <div class="metric-label">PARES</div>
-            <div class="metric-value" id="metric-pares">0</div>
-          </div>
-          <div class="metric-card">
-            <div class="metric-label">ALERTAS</div>
-            <div class="metric-value" id="metric-alertas">0</div>
-          </div>
-          <div class="metric-card">
-            <div class="metric-label">VALORIZADO</div>
-            <div class="metric-value" id="metric-valorizado">$0</div>
-          </div>
-        </div>
-
-        <!-- FILTROS AVANZADOS -->
-        <div class="filtros-panel" id="filtros-panel">
-          <div class="filtros-row">
-            <select id="filtro-marca" class="filtro-select"></select>
-            <select id="filtro-rubro" class="filtro-select"></select>
-          </div>
-          <div class="filtros-row">
-            <input
-              type="number"
-              id="filtro-talle-desde"
-              class="filtro-input"
-              placeholder="Talle desde"
-            />
-            <input
-              type="number"
-              id="filtro-talle-hasta"
-              class="filtro-input"
-              placeholder="Talle hasta"
-            />
-          </div>
-          <div class="filtros-row filtros-actions">
-            <button class="btn-secondary" id="btn-aplicar-filtros">Aplicar filtros</button>
-          </div>
-        </div>
-      </section>
-
-      <div class="main-row">
-        <section class="results-card">
-          <div class="results-header">
-            <div class="results-title">Resultados</div>
-            <div class="results-status" id="results-status">Esperando consulta</div>
-          </div>
-          <div id="results-container"></div>
-        </section>
-
-        <section class="dashboard-card">
-          <div class="dashboard-header">
-            <div class="dashboard-title">Visión rápida</div>
-            <div class="dashboard-subtitle">Distribución por talle</div>
-          </div>
-          <canvas id="stockChart"></canvas>
-        </section>
-      </div>
 
     </div>
-  </div>
 
-  <!-- Notificación suave -->
-  <div id="toast" class="toast"></div>
-
-  <!-- Panel Admin -->
-  <div id="admin-panel">
-    <h2>Configuración del ORB</h2>
-
-    <label>Color Día</label>
-    <input type="color" id="orb-color-dia" />
-
-    <label>Color Noche</label>
-    <input type="color" id="orb-color-noche" />
-
-    <label>Tamaño del ORB (A/C)</label>
-    <input type="range" id="orb-size" min="60" max="200" />
-
-    <label>Velocidad del pulso</label>
-    <input type="range" id="orb-pulse" min="1" max="10" />
-
-    <label>Velocidad del giro</label>
-    <input type="range" id="orb-spin" min="1" max="10" />
-
-    <label>Posición del ORB</label>
-    <select id="orb-pos">
-      <option value="left">Izquierda</option>
-      <option value="center" selected>Centrado</option>
-      <option value="floating">Flotante</option>
-    </select>
-
-    <label>Tamaño del modo centrado</label>
-    <select id="orb-center-size">
-      <option value="b1">Pequeño (B1)</option>
-      <option value="b2" selected>Medio (B2)</option>
-      <option value="b3">Grande (B3)</option>
-    </select>
-
-    <button id="admin-save">Guardar</button>
-    <button id="admin-close">Cerrar</button>
-  </div>
-
-  <!-- Overlay scanner -->
-  <div id="scanner-overlay" class="scanner-overlay">
-    <div class="scanner-inner">
-      <video id="scanner-video" autoplay playsinline></video>
-      <div class="scanner-frame"></div>
-      <button id="scanner-close" class="btn-ghost scanner-close">Cancelar</button>
-    </div>
-  </div>
-
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="scanner.js"></script>
-  <script src="ui.js"></script>
-  <script src="app.js"></script>
+    <script src="scanner.js"></script>
+    <script src="app.js"></script>
 </body>
 </html>
