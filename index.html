@@ -7,14 +7,20 @@
     content="width=device-width, initial-scale=1.0, viewport-fit=cover"
   />
   <title>STOCK IA PRO — Asistente inteligente de stock</title>
+
+  <!-- ORB CSS (módulo premium) -->
+  <link rel="stylesheet" href="orb.css" />
+
+  <!-- Estilos generales -->
   <link rel="stylesheet" href="styles.css" />
 </head>
+
 <body>
 
-  <!-- ORB SIEMPRE VISIBLE -->
   <div class="app-shell">
     <div class="app-container">
 
+      <!-- HEADER -->
       <div class="app-header">
         <div class="branding">
           <div class="orb-wrapper">
@@ -34,13 +40,14 @@
         </div>
       </div>
 
-      <!-- Barra superior de controles -->
+      <!-- CONTROLES SUPERIORES -->
       <div class="top-controls">
         <div class="top-left">
           <button class="mode-toggle" id="toggle-dark">Modo Día/Noche</button>
           <button class="admin-btn" id="open-admin">Admin</button>
           <button class="voice-btn" id="toggle-voice">Voz</button>
         </div>
+
         <div class="top-right">
           <div class="switch-row">
             <span>Manos libres</span>
@@ -52,7 +59,7 @@
         </div>
       </div>
 
-      <!-- Panel de búsqueda -->
+      <!-- PANEL DE BÚSQUEDA -->
       <section class="search-card">
         <div class="search-row">
           <div class="search-input-wrapper">
@@ -65,9 +72,7 @@
             />
             <span class="search-icon">🔍</span>
           </div>
-          <button class="btn-primary" id="btn-search">
-            Buscar
-          </button>
+          <button class="btn-primary" id="btn-search">Buscar</button>
         </div>
 
         <div class="actions-row">
@@ -76,14 +81,14 @@
             Mostrar solo con stock
           </label>
 
-          <button class="btn-secondary" id="btn-scan">Leer código de barras</button>
-          <button class="btn-secondary" id="btn-clear">Limpiar pantalla</button>
-          <button class="btn-secondary" id="btn-copy">Copiar resultado</button>
-          <button class="btn-secondary" id="btn-filtros">Filtros avanzados</button>
+          <button class="btn-secondary" id="btn-scan">Leer código</button>
+          <button class="btn-secondary" id="btn-clear">Limpiar</button>
+          <button class="btn-secondary" id="btn-copy">Copiar</button>
+          <button class="btn-secondary" id="btn-filtros">Filtros</button>
           <button class="btn-ghost" id="btn-stop">STOP</button>
         </div>
 
-        <!-- Métricas -->
+        <!-- MÉTRICAS -->
         <div class="metrics-row">
           <div class="metric-card">
             <div class="metric-label">ARTÍCULOS</div>
@@ -103,7 +108,7 @@
           </div>
         </div>
 
-        <!-- Filtros avanzados -->
+        <!-- FILTROS AVANZADOS -->
         <div class="filtros-panel" id="filtros-panel">
           <div class="filtros-row">
             <select id="filtro-marca" class="filtro-select"></select>
@@ -113,20 +118,19 @@
         </div>
       </section>
 
-      <!-- Resultados + Dashboard -->
+      <!-- RESULTADOS + DASHBOARD -->
       <div class="main-row">
-        <!-- Resultados -->
+
+        <!-- RESULTADOS -->
         <section class="results-card">
           <div class="results-header">
             <div class="results-title">Resultados</div>
             <div class="results-status" id="results-status">Esperando consulta</div>
           </div>
-          <div id="results-container">
-            <!-- items -->
-          </div>
+          <div id="results-container"></div>
         </section>
 
-        <!-- Dashboard -->
+        <!-- DASHBOARD -->
         <section class="dashboard-card">
           <div class="dashboard-header">
             <div class="dashboard-title">Visión rápida</div>
@@ -134,17 +138,18 @@
           </div>
           <canvas id="stockChart"></canvas>
         </section>
+
       </div>
 
     </div>
   </div>
 
-  <!-- Overlay de búsqueda -->
+  <!-- OVERLAY DE BÚSQUEDA -->
   <div id="loading-overlay">
     <div id="loading-text">Buscando…</div>
   </div>
 
-  <!-- Panel administrador ORB (se mantiene tu lógica) -->
+  <!-- PANEL ADMIN -->
   <div id="admin-panel">
     <h2>Configuración del ORB</h2>
 
@@ -173,23 +178,16 @@
       Respiración Activa
     </label>
 
-    <label>
-      <input type="checkbox" id="orb-overlay" checked />
-      Overlay de Búsqueda
-    </label>
-
-    <label>
-      <input type="checkbox" id="orb-voz" checked />
-      Voz Activa
-    </label>
-
     <button id="admin-save">Guardar</button>
     <button id="admin-close">Cerrar</button>
   </div>
 
   <!-- Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <!-- Lógica principal -->
+
+  <!-- Scripts -->
+  <script src="ui.js"></script>
   <script src="app.js"></script>
+
 </body>
 </html>
