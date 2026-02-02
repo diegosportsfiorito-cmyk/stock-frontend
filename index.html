@@ -43,6 +43,7 @@
       <div class="top-controls">
         <button class="mode-toggle" id="toggle-dark">Modo Día/Noche</button>
 
+        <!-- Botón Admin oculto (solo se abre por clave ADMIN) -->
         <button class="admin-btn admin-hidden" id="open-admin">Admin</button>
 
         <div class="top-right-group">
@@ -59,11 +60,8 @@
       </div>
 
       <section class="search-card">
-
-        <!-- NUEVO BLOQUE: INPUT + SCANNER + SWITCH -->
-        <div class="search-row search-flex">
-
-          <div class="search-input-wrapper search-input-small">
+        <div class="search-row">
+          <div class="search-input-wrapper">
             <input
               id="search-input"
               class="search-input"
@@ -71,18 +69,9 @@
               placeholder="Buscar artículo, marca o rubro…"
               autocomplete="off"
             />
+            <!-- Ícono de scanner dentro del input -->
+            <span class="icon-scanner scanner-trigger" title="Leer código"></span>
           </div>
-
-          <button id="btn-scanner" class="scanner-btn" title="Escanear código"></button>
-
-          <div class="scanner-mode-switch-inline">
-            <label class="switch">
-              <input type="checkbox" id="scanner-mode-switch" />
-              <span class="slider"></span>
-            </label>
-            <span id="scanner-mode-text">Solo artículo</span>
-          </div>
-
         </div>
 
         <div class="actions-row">
@@ -125,8 +114,18 @@
             <select id="filtro-rubro" class="filtro-select"></select>
           </div>
           <div class="filtros-row">
-            <input type="number" id="filtro-talle-desde" class="filtro-input" placeholder="Talle desde" />
-            <input type="number" id="filtro-talle-hasta" class="filtro-input" placeholder="Talle hasta" />
+            <input
+              type="number"
+              id="filtro-talle-desde"
+              class="filtro-input"
+              placeholder="Talle desde"
+            />
+            <input
+              type="number"
+              id="filtro-talle-hasta"
+              class="filtro-input"
+              placeholder="Talle hasta"
+            />
           </div>
           <div class="filtros-row filtros-actions">
             <button class="btn-secondary" id="btn-aplicar-filtros">Aplicar filtros</button>
@@ -155,8 +154,10 @@
     </div>
   </div>
 
+  <!-- Notificación suave -->
   <div id="toast" class="toast"></div>
 
+  <!-- Panel Admin -->
   <div id="admin-panel">
     <h2>Configuración del ORB</h2>
 
