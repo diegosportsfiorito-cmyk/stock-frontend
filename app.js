@@ -19,7 +19,6 @@ const state = {
 const els = {
   appContainer: document.querySelector(".app-container"),
   searchInput: document.getElementById("search-input"),
-  btnSearch: document.getElementById("btn-search"),
   chkSoloStock: document.getElementById("chk-solo-stock"),
   metricArticulos: document.getElementById("metric-articulos"),
   metricPares: document.getElementById("metric-pares"),
@@ -40,12 +39,20 @@ const els = {
   btnScan: document.getElementById("btn-scan"),
   stockChartCanvas: document.getElementById("stockChart"),
   loadingOverlay: document.getElementById("loading-overlay"),
-  orb: document.querySelector(".orb"),
+  orb: document.getElementById("orb"),
 };
 
 // ============================================================
 // ORB ANIMATIONS
 // ============================================================
+
+function orbSetReady(active) {
+  if (active) {
+    els.orb.classList.add("orb-ready");
+  } else {
+    els.orb.classList.remove("orb-ready");
+  }
+}
 
 function orbSetLoading(active) {
   els.orb.classList.remove("orb-error");
@@ -358,7 +365,160 @@ function limpiarPantalla() {
   state.items = [];
   state.lastQuery = "";
   els.searchInput.value = "";
+  orbSetReady(false);
   renderResultados([]);
   renderMetricas([]);
   renderChart([]);
-  els
+  els.resultsStatus.textContent = "Esperando consulta";
+}
+
+// ============================================================
+// BÚSQUEDA PRINCIPAL (ORB ES EL BOTÓN)
+// ============================================================
+
+async function buscar() {
+  const q = els.searchInput.value.trim();
+  if (!q) return;
+
+  state.lastQuery = q;
+  state.soloStock = !!els.chkSoloStock.checked;
+
+  els.resultsStatus.textContent = "Buscando...";
+  setConnectionStatus(true);
+  showLoading(true);
+  orbSetLoading(true);
+
+  try {
+    const resp = await fetch(API_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        question: q,
+        solo_stock: state.soloStock,
+      }),
+    });
+
+    if (!resp.ok) throw new Error("Error en el servidor");
+
+    const data = await resp.json();
+    state.items = data.items || [];
+
+    const filtrados = aplicarFiltros(state.items);
+    renderResultados(filtrados);
+    renderMetricas(filtrados);
+    renderChart(filtrados);
+    poblarFiltros(state.items);
+
+    setConnectionStatus(true);
+    orbSetError(false);
+  } catch (e) {
+    console.error(e);
+    setConnectionStatus(false);
+    els.resultsContainer.innerHTML =
+      '<div class="results-error">Error de conexión</div>';
+    els.resultsStatus.textContent = "Error de conexión";
+    orbSetError(true);
+    setTimeout(() => orbSetError(false), 2500);
+  } finally {
+    showLoading(false);
+    orbSetLoading(false);
+  }
+}
+
+// ============================================================
+// MANOS LIBRES / STOP
+// ============================================================
+
+let recognition = null;
+let manosLibresActivo = false;
+
+function initVoice() {
+  const SpeechRecognition =
+    window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SpeechRecognition) return;
+
+  recognition = new SpeechRecognition();
+  recognition.lang = "es-AR";
+  recognition.continuous = true;
+  recognition.interimResults = false;
+
+  recognition.onresult = (event) => {
+    const last = event.results[event.results.length - 1];
+    const text = last[0].transcript.trim();
+    els.searchInput.value = text;
+    orbSetReady(true);
+    buscar();
+  };
+
+  recognition.onend = () => {
+    if (manosLibresActivo) recognition.start();
+  };
+}
+
+function toggleManosLibres(checked) {
+  manosLibresActivo = checked;
+  if (!recognition) return;
+  if (checked) recognition.start();
+  else recognition.stop();
+}
+
+function stopTodo() {
+  manosLibresActivo = false;
+  els.handsfreeToggle.checked = false;
+  if (recognition) recognition.stop();
+  window.speechSynthesis.cancel();
+}
+
+// ============================================================
+// SCANNER (hook)
+// ============================================================
+
+function iniciarScanner() {
+  alert("Scanner listo para integrar BarcodeDetector.");
+}
+
+// ============================================================
+// EVENTOS
+// ============================================================
+
+function initEvents() {
+  // ORB como botón principal
+  els.orb.addEventListener("click", buscar);
+
+  // Input activa modo READY
+  els.searchInput.addEventListener("input", () => {
+    const hasText = els.searchInput.value.trim().length > 0;
+    orbSetReady(hasText);
+  });
+
+  els.btnClear.addEventListener("click", limpiarPantalla);
+  els.btnCopy.addEventListener("click", copiarResultados);
+  els.btnFiltros.addEventListener("click", () =>
+    els.filtrosPanel.classList.toggle("visible")
+  );
+
+  els.filtroMarca.addEventListener("change", actualizarFiltrosDesdeUI);
+  els.filtroRubro.addEventListener("change", actualizarFiltrosDesdeUI);
+  els.filtroTalle.addEventListener("change", actualizarFiltrosDesdeUI);
+
+  els.handsfreeToggle.addEventListener("change", (e) =>
+    toggleManosLibres(e.target.checked)
+  );
+
+  els.btnStop.addEventListener("click", stopTodo);
+  els.btnScan.addEventListener("click", iniciarScanner);
+}
+
+// ============================================================
+// INIT
+// ============================================================
+
+function init() {
+  initEvents();
+  initVoice();
+  renderResultados([]);
+  renderMetricas([]);
+  setConnectionStatus(false);
+}
+
+document.addEventListener("DOMContentLoaded", init);
