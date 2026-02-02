@@ -2,16 +2,10 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1.0, viewport-fit=cover"
-  />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>STOCK IA PRO — Asistente inteligente de stock</title>
 
-  <!-- ORB CSS -->
   <link rel="stylesheet" href="orb.css" />
-
-  <!-- Estilos generales -->
   <link rel="stylesheet" href="styles.css" />
 </head>
 
@@ -20,12 +14,8 @@
   <div class="app-shell">
     <div class="app-container">
 
-      <!-- HEADER -->
       <div class="app-header">
         <div class="branding">
-          <div class="orb-wrapper">
-            <div class="orb" id="orb">IA PRO</div>
-          </div>
           <div>
             <div class="brand-title">STOCK IA PRO</div>
             <div class="brand-subtitle">Asistente inteligente de stock</div>
@@ -40,36 +30,31 @@
         </div>
       </div>
 
-      <!-- CONTROLES SUPERIORES -->
-      <div class="top-controls">
-        <div class="top-left">
-          <button class="mode-toggle" id="toggle-dark">Modo Día/Noche</button>
-          <button class="admin-btn" id="open-admin">Admin</button>
-          <button class="voice-btn" id="toggle-voice">Voz</button>
-        </div>
-
-        <div class="top-right">
-          <div class="switch-row">
-            <span>Manos libres</span>
-            <label class="switch">
-              <input type="checkbox" id="handsfree-toggle" />
-              <span class="slider"></span>
-            </label>
-          </div>
+      <!-- ORB SOBRE EL INPUT -->
+      <div class="orb-zone">
+        <div class="orb-wrapper">
+          <div class="orb" id="orb">IA PRO</div>
         </div>
       </div>
 
-      <!-- PANEL DE BÚSQUEDA -->
+      <div class="top-controls">
+        <button class="mode-toggle" id="toggle-dark">Modo Día/Noche</button>
+        <button class="admin-btn" id="open-admin">Admin</button>
+        <button class="voice-btn" id="toggle-voice">Voz</button>
+
+        <div class="switch-row">
+          <span>Manos libres</span>
+          <label class="switch">
+            <input type="checkbox" id="handsfree-toggle" />
+            <span class="slider"></span>
+          </label>
+        </div>
+      </div>
+
       <section class="search-card">
         <div class="search-row">
           <div class="search-input-wrapper">
-            <input
-              id="search-input"
-              class="search-input"
-              type="text"
-              placeholder="Buscar artículo, marca o rubro…"
-              autocomplete="off"
-            />
+            <input id="search-input" class="search-input" type="text" placeholder="Buscar artículo, marca o rubro…" autocomplete="off" />
             <span class="search-icon">🔍</span>
           </div>
         </div>
@@ -87,27 +72,13 @@
           <button class="btn-ghost" id="btn-stop">STOP</button>
         </div>
 
-        <!-- MÉTRICAS -->
         <div class="metrics-row">
-          <div class="metric-card">
-            <div class="metric-label">ARTÍCULOS</div>
-            <div class="metric-value" id="metric-articulos">0</div>
-          </div>
-          <div class="metric-card">
-            <div class="metric-label">PARES</div>
-            <div class="metric-value" id="metric-pares">0</div>
-          </div>
-          <div class="metric-card">
-            <div class="metric-label">ALERTAS</div>
-            <div class="metric-value" id="metric-alertas">0</div>
-          </div>
-          <div class="metric-card">
-            <div class="metric-label">VALORIZADO</div>
-            <div class="metric-value" id="metric-valorizado">$0</div>
-          </div>
+          <div class="metric-card"><div class="metric-label">ARTÍCULOS</div><div class="metric-value" id="metric-articulos">0</div></div>
+          <div class="metric-card"><div class="metric-label">PARES</div><div class="metric-value" id="metric-pares">0</div></div>
+          <div class="metric-card"><div class="metric-label">ALERTAS</div><div class="metric-value" id="metric-alertas">0</div></div>
+          <div class="metric-card"><div class="metric-label">VALORIZADO</div><div class="metric-value" id="metric-valorizado">$0</div></div>
         </div>
 
-        <!-- FILTROS AVANZADOS -->
         <div class="filtros-panel" id="filtros-panel">
           <div class="filtros-row">
             <select id="filtro-marca" class="filtro-select"></select>
@@ -117,10 +88,7 @@
         </div>
       </section>
 
-      <!-- RESULTADOS + DASHBOARD -->
       <div class="main-row">
-
-        <!-- RESULTADOS -->
         <section class="results-card">
           <div class="results-header">
             <div class="results-title">Resultados</div>
@@ -129,7 +97,6 @@
           <div id="results-container"></div>
         </section>
 
-        <!-- DASHBOARD -->
         <section class="dashboard-card">
           <div class="dashboard-header">
             <div class="dashboard-title">Visión rápida</div>
@@ -137,18 +104,13 @@
           </div>
           <canvas id="stockChart"></canvas>
         </section>
-
       </div>
 
     </div>
   </div>
 
-  <!-- OVERLAY DE BÚSQUEDA -->
-  <div id="loading-overlay">
-    <div id="loading-text">Buscando…</div>
-  </div>
+  <div id="loading-overlay"><div id="loading-text">Buscando…</div></div>
 
-  <!-- PANEL ADMIN -->
   <div id="admin-panel">
     <h2>Configuración del ORB</h2>
 
@@ -185,10 +147,7 @@
     <button id="admin-close">Cerrar</button>
   </div>
 
-  <!-- Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-  <!-- Scripts -->
   <script src="ui.js"></script>
   <script src="app.js"></script>
 
