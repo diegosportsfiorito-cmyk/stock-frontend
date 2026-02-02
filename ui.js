@@ -19,6 +19,7 @@ const inputPos = document.getElementById("orb-pos");
 const inputCenterSize = document.getElementById("orb-center-size");
 
 const orb = document.getElementById("orb");
+const toggleDark = document.getElementById("toggle-dark");
 
 /* ============================================================
    CONFIGURACIÓN POR DEFECTO
@@ -26,15 +27,16 @@ const orb = document.getElementById("orb");
 const defaultConfig = {
     colorDia: "#4fc3f7",
     colorNoche: "#7c4dff",
-    tamano: 110,          // tamaño base del ORB
+    tamano: 110,
     pulso: 3,
     giro: 6,
     halo: true,
     respiracion: true,
 
-    // NUEVO: posición del ORB
     posicion: "center",   // left | center | floating
-    centerSize: "b2"      // b1 | b2 | b3
+    centerSize: "b2",     // b1 | b2 | b3
+
+    modoClaro: false
 };
 
 /* ============================================================
@@ -101,6 +103,16 @@ function aplicarConfigORB() {
     if (cfg.posicion === "center") {
         document.body.classList.add("orb-" + cfg.centerSize);
     }
+
+    // ============================================================
+    // MODO DÍA / NOCHE
+    // ============================================================
+
+    if (cfg.modoClaro) {
+        document.body.classList.add("light-mode");
+    } else {
+        document.body.classList.remove("light-mode");
+    }
 }
 
 /* ============================================================
@@ -144,13 +156,27 @@ adminSave.addEventListener("click", () => {
         respiracion: inputResp.checked,
 
         posicion: inputPos.value,
-        centerSize: inputCenterSize.value
+        centerSize: inputCenterSize.value,
+
+        modoClaro: document.body.classList.contains("light-mode")
     };
 
     guardarConfigORB(nuevaConfig);
     aplicarConfigORB();
 
     adminPanel.style.display = "none";
+});
+
+/* ============================================================
+   TOGGLE MODO DÍA/NOCHE
+============================================================ */
+toggleDark.addEventListener("click", () => {
+    const cfg = cargarConfigORB();
+
+    cfg.modoClaro = !cfg.modoClaro;
+
+    guardarConfigORB(cfg);
+    aplicarConfigORB();
 });
 
 /* ============================================================
