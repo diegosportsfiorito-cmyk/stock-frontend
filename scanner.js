@@ -1,68 +1,130 @@
-// ============================================================
-// SCANNER.JS — COMPLETO Y COMPATIBLE CON TU UI ORIGINAL
-// ============================================================
+// scanner.js
 
 let scannerStream = null;
 let scannerActive = false;
 let barcodeDetector = null;
 
-// ------------------------------------------------------------
-// MODO SCANNER (SOLO ARTÍCULO / COMPLETO)
-// ------------------------------------------------------------
+// IDs esperados en el DOM:
+// - input de búsqueda:        #search-input
+// - overlay del scanner:      #scanner-overlay
+// - video del scanner:        #scanner-video
+// - botón cerrar/cancelar:    #scanner-close
+// - selector de modo scanner: #scanner-mode (values: "solo_articulo", "completo", "automatico")
 
-function isScannerModeCompleto() {
-    const sw = document.getElementById("scanner-mode-switch");
-    return sw ? sw.checked : false;
+function getScannerMode() {
+    const el = document.getElementById("scanner-mode");
+    if (!el) return "automatico";
+    const val = el.value || el.dataset.mode;
+    return val || "automatico";
 }
 
 // ------------------------------------------------------------
-// PROCESAR CÓDIGO LEÍDO
+// PARSEO DE CÓDIGOS SEGÚN LO QUE DEFINIMOS
 // ------------------------------------------------------------
 
-function procesarCodigoLeido(raw) {
-    const input = document.getElementById("search-input");
-    if (!input) return;
+function extraerArticuloDesdeCodigo(raw) {
+    if (!raw) return "";
 
-    const completo = isScannerModeCompleto();
-    let valor = raw.trim();
+    let codigo = String(raw).trim();
 
-    if (!completo) {
-        // SOLO ARTÍCULO
-        if (valor.includes("!!")) valor = valor.split("!!")[0];
-        else if (valor.includes("!")) valor = valor.split("!")[0];
-        else if (valor.includes("/")) valor = valor.split("/")[0];
+    // 1) Caso "!!" → artículo sin color, luego talle (con o sin decimales)
+    //    576609064!!28.5  → artículo = 576609064
+    if (codigo.includes("!!")) {
+        const partes = codigo.split("!!");
+        return partes[0].trim();
     }
 
-    input.value = valor;
+    // 2) Caso "!" → artículo!color!talle
+    //    C209964-C410!AZUL!39 → artículo = C209964-C410
+    if (codigo.includes("!")) {
+        const partes = codigo.split("!");
+        return partes[0].trim();
+    }
 
-    if (window.startSearch) startSearch();
+    // 3) Caso "/" → artículo/talle[/otra cosa]
+    //    ADYS700171-WG1/35   → artículo = ADYS700171-WG1
+    //    H02978/36.5         → artículo = H02978
+    //    CC35271/38/9        → artículo = CC35271
+    if (codigo.includes("/")) {
+        const partes = codigo.split("/");
+        return partes[0].trim();
+    }
+
+    // 4) Caso solo numérico largo (EAN, interno, etc.)
+    //    2521470219110, 2511470288124, 100201098
+    //    Lo dejamos tal cual, el backend matchea por Artículo.
+    return codigo;
+}
+
+// ------------------------------------------------------------
+// APLICAR MODO DE LECTURA
+// ------------------------------------------------------------
+
+function procesarCodigoLeido(rawCode) {
+    const mode = getScannerMode();
+    let valorParaInput = "";
+
+    switch (mode) {
+        case "completo":
+            // MODO COMPLETO: se carga TODO el contenido del código
+            valorParaInput = String(rawCode).trim();
+            break;
+
+        case "solo_articulo":
+            // MODO SOLO ARTÍCULO: se extrae solo el artículo
+            valorParaInput = extraerArticuloDesdeCodigo(rawCode);
+            break;
+
+        case "automatico":
+        default:
+            // MODO AUTOMÁTICO: detecta artículo y lo carga al input
+            // (la inteligencia fina la hace el backend con la búsqueda)
+            valorParaInput = extraerArticuloDesdeCodigo(rawCode);
+            break;
+    }
+
+    const input = document.getElementById("search-input");
+    if (input) {
+        input.value = valorParaInput;
+    }
+
+    // Disparar la búsqueda principal si existe
+    if (typeof window.buscar === "function") {
+        window.buscar();
+    } else if (typeof window.startSearch === "function") {
+        window.startSearch();
+    }
+
     cerrarScanner();
 }
 
 // ------------------------------------------------------------
-// ABRIR SCANNER
+// CONTROL DEL SCANNER (CÁMARA + OVERLAY)
 // ------------------------------------------------------------
 
 async function abrirScanner() {
+    if (scannerActive) return;
+
     const overlay = document.getElementById("scanner-overlay");
     const video = document.getElementById("scanner-video");
 
     if (!overlay || !video) {
-        console.error("Faltan elementos del scanner en el DOM.");
+        console.warn("Faltan elementos del DOM para el scanner.");
         return;
     }
 
     overlay.style.display = "flex";
 
     try {
-        // BarcodeDetector nativo
+        // BarcodeDetector si está disponible
         if ("BarcodeDetector" in window) {
             barcodeDetector = new BarcodeDetector({
                 formats: ["ean_13", "ean_8", "code_128", "code_39", "qr_code", "upc_a", "upc_e"]
             });
         } else {
             barcodeDetector = null;
-            console.warn("BarcodeDetector no soportado.");
+            console.warn("BarcodeDetector no soportado en este dispositivo.");
+            // Podrías mostrar un mensaje en pantalla si querés
         }
 
         scannerStream = await navigator.mediaDevices.getUserMedia({
@@ -74,17 +136,12 @@ async function abrirScanner() {
 
         scannerActive = true;
         loopScanner(video);
-
     } catch (err) {
         console.error("No se pudo acceder a la cámara:", err);
         overlay.style.display = "none";
         scannerActive = false;
     }
 }
-
-// ------------------------------------------------------------
-// CERRAR SCANNER
-// ------------------------------------------------------------
 
 function cerrarScanner() {
     const overlay = document.getElementById("scanner-overlay");
@@ -107,10 +164,6 @@ function cerrarScanner() {
     }
 }
 
-// ------------------------------------------------------------
-// LOOP DE DETECCIÓN
-// ------------------------------------------------------------
-
 async function loopScanner(video) {
     if (!scannerActive) return;
 
@@ -118,48 +171,44 @@ async function loopScanner(video) {
         try {
             const barcodes = await barcodeDetector.detect(video);
             if (barcodes && barcodes.length > 0) {
-                const rawCode = barcodes[0].rawValue || "";
+                const rawCode = barcodes[0].rawValue || barcodes[0].cornerPoints?.rawValue || "";
                 if (rawCode) {
                     procesarCodigoLeido(rawCode);
-                    return;
+                    return; // se cierra en procesarCodigoLeido
                 }
             }
         } catch (err) {
             console.error("Error en BarcodeDetector:", err);
         }
+    } else {
+        // Si no hay BarcodeDetector, podrías implementar otro método o mostrar mensaje.
     }
 
     requestAnimationFrame(() => loopScanner(video));
 }
 
 // ------------------------------------------------------------
-// BINDINGS
+// BINDINGS DE BOTONES
 // ------------------------------------------------------------
 
 function initScannerBindings() {
     const btnScanner = document.getElementById("btn-scanner");
     const btnClose = document.getElementById("scanner-close");
-    const modeSwitch = document.getElementById("scanner-mode-switch");
-    const modeText = document.getElementById("scanner-mode-text");
 
     if (btnScanner) {
-        btnScanner.addEventListener("click", abrirScanner);
+        btnScanner.addEventListener("click", () => {
+            abrirScanner();
+        });
     }
 
     if (btnClose) {
-        btnClose.addEventListener("click", cerrarScanner);
-    }
-
-    if (modeSwitch && modeText) {
-        modeSwitch.checked = false;
-        modeText.textContent = "Solo artículo";
-
-        modeSwitch.addEventListener("change", () => {
-            modeText.textContent = modeSwitch.checked ? "Completo" : "Solo artículo";
+        btnClose.addEventListener("click", () => {
+            cerrarScanner();
         });
     }
 }
 
+// Llamar a esto desde tu app.js cuando el DOM esté listo
 window.initScannerBindings = initScannerBindings;
 window.abrirScanner = abrirScanner;
 window.cerrarScanner = cerrarScanner;
