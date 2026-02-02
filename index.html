@@ -33,7 +33,10 @@
       <div class="orb-zone">
         <div class="orb-wrapper">
           <div class="orb" id="orb">IA PRO</div>
-          <div class="orb-tooltip" id="orb-tooltip">Tocá el ORB para buscar</div>
+          <div class="orb-tooltip" id="orb-tooltip">
+            <span class="orb-tooltip-arrow"></span>
+            <span class="orb-tooltip-text">Tocá para buscar</span>
+          </div>
         </div>
       </div>
 
@@ -43,14 +46,16 @@
         <!-- Botón Admin oculto (solo se abre por clave ADMIN) -->
         <button class="admin-btn admin-hidden" id="open-admin">Admin</button>
 
-        <button class="voice-btn" id="toggle-voice">Voz</button>
+        <div class="top-right-group">
+          <div class="switch-row">
+            <span>Manos libres</span>
+            <label class="switch">
+              <input type="checkbox" id="handsfree-toggle" />
+              <span class="slider"></span>
+            </label>
+          </div>
 
-        <div class="switch-row">
-          <span>Manos libres</span>
-          <label class="switch">
-            <input type="checkbox" id="handsfree-toggle" />
-            <span class="slider"></span>
-          </label>
+          <button class="voice-btn" id="toggle-voice">Voz</button>
         </div>
       </div>
 
@@ -64,7 +69,8 @@
               placeholder="Buscar artículo, marca o rubro…"
               autocomplete="off"
             />
-            <span class="search-icon">🔍</span>
+            <!-- Ícono de scanner dentro del input -->
+            <span class="icon-scanner scanner-trigger" title="Leer código"></span>
           </div>
         </div>
 
@@ -74,15 +80,12 @@
             Mostrar solo con stock
           </label>
 
-          <!-- Botón scanner con ícono -->
-          <button class="btn-secondary icon-btn" id="btn-scan" title="Leer código">
-            <span class="icon-scanner"></span>
-          </button>
-
-          <button class="btn-secondary" id="btn-clear">Limpiar</button>
-          <button class="btn-secondary" id="btn-copy">Copiar</button>
-          <button class="btn-secondary" id="btn-filtros">Filtros</button>
-          <button class="btn-ghost" id="btn-stop">STOP</button>
+          <div class="actions-right">
+            <button class="btn-secondary" id="btn-clear">Limpiar</button>
+            <button class="btn-secondary" id="btn-copy">Copiar</button>
+            <button class="btn-secondary" id="btn-filtros">Filtros</button>
+            <button class="btn-ghost" id="btn-stop">STOP</button>
+          </div>
         </div>
 
         <div class="metrics-row">
@@ -151,7 +154,7 @@
     </div>
   </div>
 
-  <!-- Notificación suave (para manos libres, etc.) -->
+  <!-- Notificación suave -->
   <div id="toast" class="toast"></div>
 
   <!-- Panel Admin -->
