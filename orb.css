@@ -15,6 +15,7 @@
   display: flex;
   justify-content: center;
   align-items: center;
+  position: relative;
 }
 
 .orb {
@@ -38,19 +39,20 @@
 /* POSICIONES */
 
 /* A — Izquierda */
+body.orb-left .orb-zone {
+  justify-content: flex-start;
+}
 body.orb-left .orb-wrapper {
-  position: relative;
   width: var(--orb-size-b1);
   height: var(--orb-size-b1);
-  margin-right: 10px;
 }
 
 /* B — Centrado sobre el input */
 body.orb-center .orb-zone {
   display: flex;
   justify-content: center;
-  margin-top: 10px;
-  margin-bottom: 12px;
+  margin-top: 6px;
+  margin-bottom: 10px;
 }
 
 /* B1/B2/B3 tamaños */
@@ -70,6 +72,9 @@ body.orb-b3 .orb {
 }
 
 /* C — Flotante */
+body.orb-floating .orb-zone {
+  display: none;
+}
 body.orb-floating .orb-wrapper {
   position: fixed;
   top: 50%;
@@ -140,4 +145,27 @@ body.orb-floating .orb-wrapper {
   box-shadow:
     0 0 35px #ff4f6a,
     0 0 80px rgba(255, 0, 0, 0.8);
+}
+
+/* TOOLTIP ORB */
+.orb-tooltip {
+  position: absolute;
+  bottom: -26px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(15, 23, 42, 0.95);
+  color: #e5e7eb;
+  font-size: 0.7rem;
+  padding: 4px 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.6);
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .25s ease, transform .25s ease;
+}
+
+.orb-tooltip.visible {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
 }
