@@ -1,90 +1,61 @@
-// scanner.js
+// ============================================================
+// SCANNER.JS — COMPLETO Y COMPATIBLE CON TU UI ORIGINAL
+// ============================================================
 
 let scannerStream = null;
 let scannerActive = false;
 let barcodeDetector = null;
 
-// MODO SCANNER: false = solo artículo, true = completo
+// ------------------------------------------------------------
+// MODO SCANNER (SOLO ARTÍCULO / COMPLETO)
+// ------------------------------------------------------------
+
 function isScannerModeCompleto() {
     const sw = document.getElementById("scanner-mode-switch");
     return sw ? sw.checked : false;
 }
 
 // ------------------------------------------------------------
-// PARSEO DE CÓDIGOS SEGÚN LO DEFINIDO
+// PROCESAR CÓDIGO LEÍDO
 // ------------------------------------------------------------
 
-function extraerArticuloDesdeCodigo(raw) {
-    if (!raw) return "";
-    let codigo = String(raw).trim();
-
-    // Caso "!!" → artículo!!talle (sin color)
-    if (codigo.includes("!!")) {
-        const partes = codigo.split("!!");
-        return partes[0].trim();
-    }
-
-    // Caso "!" → artículo!color!talle
-    if (codigo.includes("!")) {
-        const partes = codigo.split("!");
-        return partes[0].trim();
-    }
-
-    // Caso "/" → artículo/talle[/otra cosa]
-    if (codigo.includes("/")) {
-        const partes = codigo.split("/");
-        return partes[0].trim();
-    }
-
-    // Caso numérico largo o mixto → se usa tal cual
-    return codigo;
-}
-
-function procesarCodigoLeido(rawCode) {
-    const completo = isScannerModeCompleto();
+function procesarCodigoLeido(raw) {
     const input = document.getElementById("search-input");
-    if (!input) {
-        cerrarScanner();
-        return;
+    if (!input) return;
+
+    const completo = isScannerModeCompleto();
+    let valor = raw.trim();
+
+    if (!completo) {
+        // SOLO ARTÍCULO
+        if (valor.includes("!!")) valor = valor.split("!!")[0];
+        else if (valor.includes("!")) valor = valor.split("!")[0];
+        else if (valor.includes("/")) valor = valor.split("/")[0];
     }
 
-    let valorParaInput = "";
+    input.value = valor;
 
-    if (completo) {
-        // MODO COMPLETO: se carga TODO el contenido del código
-        valorParaInput = String(rawCode).trim();
-    } else {
-        // MODO SOLO ARTÍCULO: se extrae solo el artículo
-        valorParaInput = extraerArticuloDesdeCodigo(rawCode);
-    }
-
-    input.value = valorParaInput;
-
-    if (typeof window.startSearch === "function") {
-        window.startSearch();
-    }
-
+    if (window.startSearch) startSearch();
     cerrarScanner();
 }
 
 // ------------------------------------------------------------
-// CONTROL DEL SCANNER (CÁMARA + OVERLAY)
+// ABRIR SCANNER
 // ------------------------------------------------------------
 
 async function abrirScanner() {
-    if (scannerActive) return;
-
     const overlay = document.getElementById("scanner-overlay");
     const video = document.getElementById("scanner-video");
 
     if (!overlay || !video) {
-        console.warn("Faltan elementos del DOM para el scanner.");
+        console.error("Faltan elementos del scanner en el DOM.");
         return;
     }
 
     overlay.style.display = "flex";
 
     try {
+        // BarcodeDetector nativo
         if ("BarcodeDetector" in window) {
             barcodeDetector = new BarcodeDetector({
                 formats: ["ean_13", "ean_8", "code_128", "code_39", "qr_code", "upc_a", "upc_e"]
@@ -103,12 +74,17 @@ async function abrirScanner() {
 
         scannerActive = true;
         loopScanner(video);
+
     } catch (err) {
         console.error("No se pudo acceder a la cámara:", err);
         overlay.style.display = "none";
         scannerActive = false;
     }
 }
+
+// ------------------------------------------------------------
+// CERRAR SCANNER
+// ------------------------------------------------------------
 
 function cerrarScanner() {
     const overlay = document.getElementById("scanner-overlay");
@@ -130,6 +106,10 @@ function cerrarScanner() {
         overlay.style.display = "none";
     }
 }
+
+// ------------------------------------------------------------
+// LOOP DE DETECCIÓN
+// ------------------------------------------------------------
 
 async function loopScanner(video) {
     if (!scannerActive) return;
@@ -163,28 +143,19 @@ function initScannerBindings() {
     const modeText = document.getElementById("scanner-mode-text");
 
     if (btnScanner) {
-        btnScanner.addEventListener("click", () => {
-            abrirScanner();
-        });
+        btnScanner.addEventListener("click", abrirScanner);
     }
 
     if (btnClose) {
-        btnClose.addEventListener("click", () => {
-            cerrarScanner();
-        });
+        btnClose.addEventListener("click", cerrarScanner);
     }
 
     if (modeSwitch && modeText) {
-        // Por defecto: solo artículo (unchecked)
         modeSwitch.checked = false;
         modeText.textContent = "Solo artículo";
 
         modeSwitch.addEventListener("change", () => {
-            if (modeSwitch.checked) {
-                modeText.textContent = "Completo";
-            } else {
-                modeText.textContent = "Solo artículo";
-            }
+            modeText.textContent = modeSwitch.checked ? "Completo" : "Solo artículo";
         });
     }
 }
