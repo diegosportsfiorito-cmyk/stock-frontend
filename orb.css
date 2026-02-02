@@ -1,17 +1,3 @@
-/* ============================================================
-   ORB — Módulo visual premium para STOCK IA PRO
-   Incluye:
-   - respiración
-   - halo dinámico
-   - giro
-   - pulso
-   - modo ready
-   - modo loading
-   - modo error
-   - posiciones A / B1 / B2 / B3 / C
-============================================================ */
-
-/* Variables globales del ORB */
 :root {
   --orb-color: #4fc3f7;
   --orb-color-dark: #7c4dff;
@@ -24,15 +10,11 @@
   --orb-size-b3: 150px;
 }
 
-/* ============================================================
-   BASE DEL ORB
-============================================================ */
-
+/* ORB BASE */
 .orb-wrapper {
-  position: relative;
   display: flex;
-  align-items: center;
   justify-content: center;
+  align-items: center;
 }
 
 .orb {
@@ -49,19 +31,13 @@
   text-transform: uppercase;
   letter-spacing: 0.12em;
   border: 1px solid rgba(191, 219, 254, 0.4);
-  transition: 
-    transform 0.25s ease,
-    box-shadow 0.25s ease,
-    background 0.25s ease,
-    opacity 0.25s ease;
+  transition: transform .25s ease, box-shadow .25s ease, background .25s ease;
   cursor: pointer;
 }
 
-/* ============================================================
-   POSICIONES DEL ORB (A / B1 / B2 / B3 / C)
-============================================================ */
+/* POSICIONES */
 
-/* A — ORB a la izquierda del título */
+/* A — Izquierda */
 body.orb-left .orb-wrapper {
   position: relative;
   width: var(--orb-size-b1);
@@ -69,33 +45,31 @@ body.orb-left .orb-wrapper {
   margin-right: 10px;
 }
 
-/* B — ORB centrado arriba */
-body.orb-center .orb-wrapper {
-  position: absolute;
-  top: 10px;
-  left: 50%;
-  transform: translateX(-50%);
+/* B — Centrado sobre el input */
+body.orb-center .orb-zone {
+  display: flex;
+  justify-content: center;
+  margin-top: 10px;
+  margin-bottom: 12px;
 }
 
-/* B1 — pequeño */
+/* B1/B2/B3 tamaños */
 body.orb-b1 .orb {
   width: var(--orb-size-b1);
   height: var(--orb-size-b1);
 }
 
-/* B2 — mediano (DEFAULT) */
 body.orb-b2 .orb {
   width: var(--orb-size-b2);
   height: var(--orb-size-b2);
 }
 
-/* B3 — grande */
 body.orb-b3 .orb {
   width: var(--orb-size-b3);
   height: var(--orb-size-b3);
 }
 
-/* C — ORB flotante (modo holográfico) */
+/* C — Flotante */
 body.orb-floating .orb-wrapper {
   position: fixed;
   top: 50%;
@@ -104,43 +78,35 @@ body.orb-floating .orb-wrapper {
   z-index: 999;
 }
 
-/* ============================================================
-   ANIMACIONES
-============================================================ */
+/* ANIMACIONES */
 
-/* 1) RESPIRACIÓN */
+/* Respiración */
 @keyframes orb-breathe {
-  0%   { transform: scale(1); }
-  50%  { transform: scale(1.06); }
+  0% { transform: scale(1); }
+  50% { transform: scale(1.06); }
   100% { transform: scale(1); }
 }
-
 .orb-breathe {
   animation: orb-breathe var(--orb-pulse-speed) ease-in-out infinite;
 }
 
-/* 2) GIRO */
+/* Giro */
 @keyframes orb-spin {
   from { transform: rotate(0deg); }
-  to   { transform: rotate(360deg); }
+  to { transform: rotate(360deg); }
 }
-
 .orb-spin {
   animation: orb-spin var(--orb-spin-speed) linear infinite;
 }
 
-/* 3) HALO DINÁMICO */
+/* Halo */
 .orb-halo {
   box-shadow:
     0 0 35px var(--orb-color),
     0 0 80px var(--orb-color-dark);
 }
 
-/* ============================================================
-   ESTADOS DEL ORB
-============================================================ */
-
-/* READY — cuando hay texto en el input */
+/* READY */
 .orb-ready {
   transform: scale(1.08);
   box-shadow:
@@ -148,28 +114,26 @@ body.orb-floating .orb-wrapper {
     0 0 90px var(--orb-color-dark);
 }
 
-/* LOADING — buscando */
+/* LOADING */
 @keyframes orb-loading {
-  0%   { transform: scale(1) rotate(0deg); }
-  50%  { transform: scale(1.08) rotate(180deg); }
+  0% { transform: scale(1) rotate(0deg); }
+  50% { transform: scale(1.08) rotate(180deg); }
   100% { transform: scale(1) rotate(360deg); }
 }
-
 .orb-loading {
   animation: orb-loading 1.4s ease-in-out infinite;
   background: radial-gradient(circle at 30% 20%, #4f8cff, #2563eb 40%, #020617 100%);
 }
 
-/* ERROR — latido rojo */
+/* ERROR */
 @keyframes orb-heartbeat {
-  0%   { transform: scale(1); }
-  20%  { transform: scale(1.15); }
-  40%  { transform: scale(1); }
-  60%  { transform: scale(1.15); }
-  80%  { transform: scale(1); }
+  0% { transform: scale(1); }
+  20% { transform: scale(1.15); }
+  40% { transform: scale(1); }
+  60% { transform: scale(1.15); }
+  80% { transform: scale(1); }
   100% { transform: scale(1); }
 }
-
 .orb-error {
   animation: orb-heartbeat 1.2s ease-in-out infinite;
   background: radial-gradient(circle at 30% 20%, #ff4f6a, #b91c1c 40%, #020617 100%);
