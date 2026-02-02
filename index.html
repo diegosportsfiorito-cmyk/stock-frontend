@@ -10,7 +10,6 @@
 </head>
 
 <body class="orb-center orb-b2">
-
   <div class="app-shell">
     <div class="app-container">
 
@@ -30,16 +29,20 @@
         </div>
       </div>
 
-      <!-- ORB SOBRE EL INPUT -->
+      <!-- ORB SOBRE EL INPUT + TOOLTIP -->
       <div class="orb-zone">
         <div class="orb-wrapper">
           <div class="orb" id="orb">IA PRO</div>
+          <div class="orb-tooltip" id="orb-tooltip">Tocá el ORB para buscar</div>
         </div>
       </div>
 
       <div class="top-controls">
         <button class="mode-toggle" id="toggle-dark">Modo Día/Noche</button>
-        <button class="admin-btn" id="open-admin">Admin</button>
+
+        <!-- Botón Admin oculto (solo se abre por clave ADMIN) -->
+        <button class="admin-btn admin-hidden" id="open-admin">Admin</button>
+
         <button class="voice-btn" id="toggle-voice">Voz</button>
 
         <div class="switch-row">
@@ -54,7 +57,13 @@
       <section class="search-card">
         <div class="search-row">
           <div class="search-input-wrapper">
-            <input id="search-input" class="search-input" type="text" placeholder="Buscar artículo, marca o rubro…" autocomplete="off" />
+            <input
+              id="search-input"
+              class="search-input"
+              type="text"
+              placeholder="Buscar artículo, marca o rubro…"
+              autocomplete="off"
+            />
             <span class="search-icon">🔍</span>
           </div>
         </div>
@@ -65,7 +74,11 @@
             Mostrar solo con stock
           </label>
 
-          <button class="btn-secondary" id="btn-scan">Leer código</button>
+          <!-- Botón scanner con ícono -->
+          <button class="btn-secondary icon-btn" id="btn-scan" title="Leer código">
+            <span class="icon-scanner"></span>
+          </button>
+
           <button class="btn-secondary" id="btn-clear">Limpiar</button>
           <button class="btn-secondary" id="btn-copy">Copiar</button>
           <button class="btn-secondary" id="btn-filtros">Filtros</button>
@@ -73,17 +86,46 @@
         </div>
 
         <div class="metrics-row">
-          <div class="metric-card"><div class="metric-label">ARTÍCULOS</div><div class="metric-value" id="metric-articulos">0</div></div>
-          <div class="metric-card"><div class="metric-label">PARES</div><div class="metric-value" id="metric-pares">0</div></div>
-          <div class="metric-card"><div class="metric-label">ALERTAS</div><div class="metric-value" id="metric-alertas">0</div></div>
-          <div class="metric-card"><div class="metric-label">VALORIZADO</div><div class="metric-value" id="metric-valorizado">$0</div></div>
+          <div class="metric-card">
+            <div class="metric-label">ARTÍCULOS</div>
+            <div class="metric-value" id="metric-articulos">0</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-label">PARES</div>
+            <div class="metric-value" id="metric-pares">0</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-label">ALERTAS</div>
+            <div class="metric-value" id="metric-alertas">0</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-label">VALORIZADO</div>
+            <div class="metric-value" id="metric-valorizado">$0</div>
+          </div>
         </div>
 
+        <!-- FILTROS AVANZADOS -->
         <div class="filtros-panel" id="filtros-panel">
           <div class="filtros-row">
             <select id="filtro-marca" class="filtro-select"></select>
             <select id="filtro-rubro" class="filtro-select"></select>
-            <select id="filtro-talle" class="filtro-select"></select>
+          </div>
+          <div class="filtros-row">
+            <input
+              type="number"
+              id="filtro-talle-desde"
+              class="filtro-input"
+              placeholder="Talle desde"
+            />
+            <input
+              type="number"
+              id="filtro-talle-hasta"
+              class="filtro-input"
+              placeholder="Talle hasta"
+            />
+          </div>
+          <div class="filtros-row filtros-actions">
+            <button class="btn-secondary" id="btn-aplicar-filtros">Aplicar filtros</button>
           </div>
         </div>
       </section>
@@ -109,8 +151,10 @@
     </div>
   </div>
 
-  <div id="loading-overlay"><div id="loading-text">Buscando…</div></div>
+  <!-- Notificación suave (para manos libres, etc.) -->
+  <div id="toast" class="toast"></div>
 
+  <!-- Panel Admin -->
   <div id="admin-panel">
     <h2>Configuración del ORB</h2>
 
@@ -120,13 +164,13 @@
     <label>Color Noche</label>
     <input type="color" id="orb-color-noche" />
 
-    <label>Tamaño del ORB</label>
+    <label>Tamaño del ORB (A/C)</label>
     <input type="range" id="orb-size" min="60" max="200" />
 
-    <label>Intensidad del Pulso</label>
+    <label>Velocidad del pulso</label>
     <input type="range" id="orb-pulse" min="1" max="10" />
 
-    <label>Velocidad del Giro</label>
+    <label>Velocidad del giro</label>
     <input type="range" id="orb-spin" min="1" max="10" />
 
     <label>Posición del ORB</label>
@@ -147,9 +191,18 @@
     <button id="admin-close">Cerrar</button>
   </div>
 
+  <!-- Overlay scanner -->
+  <div id="scanner-overlay" class="scanner-overlay">
+    <div class="scanner-inner">
+      <video id="scanner-video" autoplay playsinline></video>
+      <div class="scanner-frame"></div>
+      <button id="scanner-close" class="btn-ghost scanner-close">Cancelar</button>
+    </div>
+  </div>
+
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="scanner.js"></script>
   <script src="ui.js"></script>
   <script src="app.js"></script>
-
 </body>
 </html>
