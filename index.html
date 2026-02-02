@@ -61,6 +61,8 @@
 
       <section class="search-card">
         <div class="search-row">
+
+          <!-- INPUT -->
           <div class="search-input-wrapper">
             <input
               id="search-input"
@@ -69,9 +71,17 @@
               placeholder="Buscar artículo, marca o rubro…"
               autocomplete="off"
             />
-            <!-- Ícono de scanner dentro del input -->
-            <span class="icon-scanner scanner-trigger" title="Leer código"></span>
           </div>
+
+          <!-- BOTÓN CÁMARA -->
+          <button id="btn-scanner" class="scanner-btn" title="Escanear"></button>
+
+          <!-- SWITCH SIMPLE / COMPLETO -->
+          <div class="scanner-mode-switch">
+            <div id="scanner-mode-simple" class="scanner-mode-option active">Simple</div>
+            <div id="scanner-mode-completo" class="scanner-mode-option">Completo</div>
+          </div>
+
         </div>
 
         <div class="actions-row">
@@ -114,18 +124,8 @@
             <select id="filtro-rubro" class="filtro-select"></select>
           </div>
           <div class="filtros-row">
-            <input
-              type="number"
-              id="filtro-talle-desde"
-              class="filtro-input"
-              placeholder="Talle desde"
-            />
-            <input
-              type="number"
-              id="filtro-talle-hasta"
-              class="filtro-input"
-              placeholder="Talle hasta"
-            />
+            <input type="number" id="filtro-talle-desde" class="filtro-input" placeholder="Talle desde" />
+            <input type="number" id="filtro-talle-hasta" class="filtro-input" placeholder="Talle hasta" />
           </div>
           <div class="filtros-row filtros-actions">
             <button class="btn-secondary" id="btn-aplicar-filtros">Aplicar filtros</button>
@@ -137,8 +137,13 @@
         <section class="results-card">
           <div class="results-header">
             <div class="results-title">Resultados</div>
+
+            <!-- BOTÓN VISTA TABLA -->
+            <button id="btn-tabla" class="btn-secondary">Vista tabla</button>
+
             <div class="results-status" id="results-status">Esperando consulta</div>
           </div>
+
           <div id="results-container"></div>
         </section>
 
