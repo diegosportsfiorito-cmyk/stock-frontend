@@ -25,7 +25,7 @@ const els = {
   scannerModeCompleto: document.getElementById("scanner-mode-completo"),
 };
 
-const API_URL = "/api/query";
+const API_URL = "/query";
 
 // ============================================================
 // ESTADO GLOBAL
