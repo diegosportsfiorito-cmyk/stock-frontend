@@ -1,4 +1,6 @@
-// app.js
+// ============================================================
+// APP.JS — LÓGICA PRINCIPAL DE STOCK IA PRO
+// ============================================================
 
 const API_URL = "https://stock-backend-1-0upi.onrender.com/query";
 
@@ -38,17 +40,34 @@ const els = {
   btnScan: document.getElementById("btn-scan"),
   stockChartCanvas: document.getElementById("stockChart"),
   loadingOverlay: document.getElementById("loading-overlay"),
-  toggleDark: document.getElementById("toggle-dark"),
-  openAdmin: document.getElementById("open-admin"),
-  adminPanel: document.getElementById("admin-panel"),
-  adminClose: document.getElementById("admin-close"),
-  adminSave: document.getElementById("admin-save"),
   orb: document.querySelector(".orb"),
 };
 
-// ============================
+// ============================================================
+// ORB ANIMATIONS
+// ============================================================
+
+function orbSetLoading(active) {
+  els.orb.classList.remove("orb-error");
+  if (active) {
+    els.orb.classList.add("orb-loading");
+  } else {
+    els.orb.classList.remove("orb-loading");
+  }
+}
+
+function orbSetError(active) {
+  els.orb.classList.remove("orb-loading");
+  if (active) {
+    els.orb.classList.add("orb-error");
+  } else {
+    els.orb.classList.remove("orb-error");
+  }
+}
+
+// ============================================================
 // UTILIDADES
-// ============================
+// ============================================================
 
 function formatNumber(n) {
   if (typeof n !== "number") return n;
@@ -64,15 +83,6 @@ function setConnectionStatus(online) {
   }
 }
 
-function setResultsPresence(hasResults) {
-  if (!els.appContainer) return;
-  if (hasResults) {
-    els.appContainer.classList.add("has-results");
-  } else {
-    els.appContainer.classList.remove("has-results");
-  }
-}
-
 function showLoading(show) {
   if (!els.loadingOverlay) return;
   if (show) {
@@ -82,9 +92,18 @@ function showLoading(show) {
   }
 }
 
-// ============================
-// RENDER DE RESULTADOS
-// ============================
+function setResultsPresence(hasResults) {
+  if (!els.appContainer) return;
+  if (hasResults) {
+    els.appContainer.classList.add("has-results");
+  } else {
+    els.appContainer.classList.remove("has-results");
+  }
+}
+
+// ============================================================
+// FILTROS
+// ============================================================
 
 function aplicarFiltros(items) {
   const { marca, rubro, talle } = state.filtros;
@@ -99,6 +118,55 @@ function aplicarFiltros(items) {
   });
 }
 
+function poblarFiltros(items) {
+  const marcas = new Set();
+  const rubros = new Set();
+  const talles = new Set();
+
+  items.forEach((item) => {
+    if (item.marca) marcas.add(item.marca);
+    if (item.rubro) rubros.add(item.rubro);
+    item.talles.forEach((t) => talles.add(String(t.talle)));
+  });
+
+  function fill(select, values, placeholder) {
+    if (!select) return;
+    select.innerHTML = "";
+    const opt = document.createElement("option");
+    opt.value = "";
+    opt.textContent = placeholder;
+    select.appendChild(opt);
+
+    Array.from(values)
+      .sort()
+      .forEach((v) => {
+        const o = document.createElement("option");
+        o.value = v;
+        o.textContent = v;
+        select.appendChild(o);
+      });
+  }
+
+  fill(els.filtroMarca, marcas, "Marca");
+  fill(els.filtroRubro, rubros, "Rubro");
+  fill(els.filtroTalle, talles, "Talle");
+}
+
+function actualizarFiltrosDesdeUI() {
+  state.filtros.marca = els.filtroMarca.value || "";
+  state.filtros.rubro = els.filtroRubro.value || "";
+  state.filtros.talle = els.filtroTalle.value || "";
+
+  const filtrados = aplicarFiltros(state.items);
+  renderResultados(filtrados);
+  renderMetricas(filtrados);
+  renderChart(filtrados);
+}
+
+// ============================================================
+// MÉTRICAS
+// ============================================================
+
 function calcularMetricas(items) {
   let articulos = items.length;
   let pares = 0;
@@ -109,7 +177,7 @@ function calcularMetricas(items) {
     let totalStock = 0;
     item.talles.forEach((t) => {
       totalStock += t.stock;
-      if (t.stock <= 0) alertas += 1;
+      if (t.stock <= 0) alertas++;
     });
     pares += totalStock;
     valorizado += item.valorizado;
@@ -121,29 +189,29 @@ function calcularMetricas(items) {
 function renderMetricas(items) {
   const { articulos, pares, alertas, valorizado } = calcularMetricas(items);
 
-  if (els.metricArticulos) els.metricArticulos.textContent = formatNumber(articulos);
-  if (els.metricPares) els.metricPares.textContent = formatNumber(pares);
-  if (els.metricAlertas) els.metricAlertas.textContent = formatNumber(alertas);
-  if (els.metricValorizado)
-    els.metricValorizado.textContent = "$" + formatNumber(valorizado);
+  els.metricArticulos.textContent = formatNumber(articulos);
+  els.metricPares.textContent = formatNumber(pares);
+  els.metricAlertas.textContent = formatNumber(alertas);
+  els.metricValorizado.textContent = "$" + formatNumber(valorizado);
 }
 
-function renderResultados(items) {
-  if (!els.resultsContainer) return;
+// ============================================================
+// RESULTADOS
+// ============================================================
 
+function renderResultados(items) {
   els.resultsContainer.innerHTML = "";
 
   if (!items.length) {
     els.resultsContainer.innerHTML =
-      '<div class="results-empty">Sin resultados para la búsqueda actual.</div>';
+      '<div class="results-empty">Sin resultados.</div>';
     setResultsPresence(false);
-    if (els.resultsStatus) els.resultsStatus.textContent = "Sin resultados";
+    els.resultsStatus.textContent = "Sin resultados";
     return;
   }
 
   setResultsPresence(true);
-  if (els.resultsStatus)
-    els.resultsStatus.textContent = `${items.length} artículos encontrados`;
+  els.resultsStatus.textContent = `${items.length} artículos`;
 
   items.forEach((item) => {
     const div = document.createElement("div");
@@ -161,14 +229,15 @@ function renderResultados(items) {
         </div>
         <div class="result-price">$${formatNumber(item.precio)}</div>
       </div>
+
       <div class="result-meta">
         Marca: ${item.marca || "—"} &nbsp; Rubro: ${item.rubro || "—"} &nbsp; Color: ${
       item.color || "—"
     }
       </div>
-      <div class="result-talles">
-        ${tallesStr}
-      </div>
+
+      <div class="result-talles">${tallesStr}</div>
+
       <div class="result-total">
         Valorizado total: $${formatNumber(item.valorizado)}
       </div>
@@ -178,23 +247,23 @@ function renderResultados(items) {
   });
 }
 
-// ============================
+// ============================================================
 // DASHBOARD (CHART)
-// ============================
+// ============================================================
 
 function buildChartData(items) {
-  const mapTalle = new Map();
+  const map = new Map();
   items.forEach((item) => {
     item.talles.forEach((t) => {
       const key = String(t.talle);
-      mapTalle.set(key, (mapTalle.get(key) || 0) + t.stock);
+      map.set(key, (map.get(key) || 0) + t.stock);
     });
   });
 
-  const labels = Array.from(mapTalle.keys());
-  const data = Array.from(mapTalle.values());
-
-  return { labels, data };
+  return {
+    labels: Array.from(map.keys()),
+    data: Array.from(map.values()),
+  };
 }
 
 function renderChart(items) {
@@ -243,9 +312,9 @@ function renderChart(items) {
   });
 }
 
-// ============================
-// COPIAR RESULTADO
-// ============================
+// ============================================================
+// COPIAR RESULTADOS
+// ============================================================
 
 function buildCopyText(items) {
   if (!items.length) return "Sin resultados.";
@@ -275,254 +344,21 @@ async function copiarResultados() {
   try {
     const text = buildCopyText(aplicarFiltros(state.items));
     await navigator.clipboard.writeText(text);
-    alert("Resultados copiados al portapapeles.");
+    alert("Resultados copiados.");
   } catch (e) {
-    console.error(e);
-    alert("No se pudo copiar el resultado.");
+    alert("No se pudo copiar.");
   }
 }
 
-// ============================
-// LIMPIAR PANTALLA
-// ============================
+// ============================================================
+// LIMPIAR
+// ============================================================
 
 function limpiarPantalla() {
   state.items = [];
   state.lastQuery = "";
-  if (els.searchInput) els.searchInput.value = "";
+  els.searchInput.value = "";
   renderResultados([]);
   renderMetricas([]);
   renderChart([]);
-  if (els.resultsStatus) els.resultsStatus.textContent = "Esperando consulta";
-}
-
-// ============================
-// FILTROS AVANZADOS
-// ============================
-
-function toggleFiltrosPanel() {
-  if (!els.filtrosPanel) return;
-  els.filtrosPanel.classList.toggle("visible");
-}
-
-function actualizarFiltrosDesdeUI() {
-  if (els.filtroMarca) state.filtros.marca = els.filtroMarca.value || "";
-  if (els.filtroRubro) state.filtros.rubro = els.filtroRubro.value || "";
-  if (els.filtroTalle) state.filtros.talle = els.filtroTalle.value || "";
-
-  const filtrados = aplicarFiltros(state.items);
-  renderResultados(filtrados);
-  renderMetricas(filtrados);
-  renderChart(filtrados);
-}
-
-function poblarFiltros(items) {
-  const marcas = new Set();
-  const rubros = new Set();
-  const talles = new Set();
-
-  items.forEach((item) => {
-    if (item.marca) marcas.add(item.marca);
-    if (item.rubro) rubros.add(item.rubro);
-    item.talles.forEach((t) => talles.add(String(t.talle)));
-  });
-
-  function fillSelect(select, values, placeholder) {
-    if (!select) return;
-    select.innerHTML = "";
-    const optEmpty = document.createElement("option");
-    optEmpty.value = "";
-    optEmpty.textContent = placeholder;
-    select.appendChild(optEmpty);
-
-    Array.from(values)
-      .sort()
-      .forEach((v) => {
-        const opt = document.createElement("option");
-        opt.value = v;
-        opt.textContent = v;
-        select.appendChild(opt);
-      });
-  }
-
-  fillSelect(els.filtroMarca, marcas, "Marca");
-  fillSelect(els.filtroRubro, rubros, "Rubro");
-  fillSelect(els.filtroTalle, talles, "Talle");
-}
-
-// ============================
-// BÚSQUEDA
-// ============================
-
-async function buscar() {
-  const q = (els.searchInput?.value || "").trim();
-  if (!q) return;
-
-  state.lastQuery = q;
-  state.soloStock = !!els.chkSoloStock?.checked;
-
-  if (els.resultsStatus) els.resultsStatus.textContent = "Buscando...";
-  setConnectionStatus(true);
-  showLoading(true);
-
-  try {
-    const resp = await fetch(API_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        question: q,
-        solo_stock: state.soloStock,
-      }),
-    });
-
-    if (!resp.ok) {
-      throw new Error("Error en el servidor");
-    }
-
-    const data = await resp.json();
-    state.items = data.items || [];
-
-    const filtrados = aplicarFiltros(state.items);
-    renderResultados(filtrados);
-    renderMetricas(filtrados);
-    renderChart(filtrados);
-    poblarFiltros(state.items);
-    setConnectionStatus(true);
-  } catch (e) {
-    console.error(e);
-    setConnectionStatus(false);
-    if (els.resultsContainer) {
-      els.resultsContainer.innerHTML =
-        '<div class="results-error">Error de conexión</div>';
-    }
-    if (els.resultsStatus) els.resultsStatus.textContent = "Error de conexión";
-  } finally {
-    showLoading(false);
-  }
-}
-
-// ============================
-// MANOS LIBRES / STOP (voz)
-// ============================
-
-let recognition = null;
-let manosLibresActivo = false;
-
-function initVoice() {
-  const SpeechRecognition =
-    window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!SpeechRecognition) {
-    console.warn("SpeechRecognition no disponible en este navegador.");
-    return;
-  }
-  recognition = new SpeechRecognition();
-  recognition.lang = "es-AR";
-  recognition.continuous = true;
-  recognition.interimResults = false;
-
-  recognition.onresult = (event) => {
-    const last = event.results[event.results.length - 1];
-    const text = last[0].transcript.trim();
-    if (els.searchInput) {
-      els.searchInput.value = text;
-    }
-    buscar();
-  };
-
-  recognition.onend = () => {
-    if (manosLibresActivo) {
-      recognition.start();
-    }
-  };
-}
-
-function toggleManosLibres(checked) {
-  manosLibresActivo = checked;
-  if (!recognition) return;
-  if (checked) {
-    recognition.start();
-  } else {
-    recognition.stop();
-  }
-}
-
-function stopTodo() {
-  manosLibresActivo = false;
-  if (els.handsfreeToggle) els.handsfreeToggle.checked = false;
-  if (recognition) recognition.stop();
-  window.speechSynthesis.cancel();
-}
-
-// ============================
-// SCANNER (hook básico)
-// ============================
-
-function iniciarScanner() {
-  alert("Scanner de código de barras: hook listo para integrar BarcodeDetector.");
-}
-
-// ============================
-// MODO DÍA/NOCHE (simple toggle de clase)
-// ============================
-
-function toggleDarkMode() {
-  document.body.classList.toggle("light-mode");
-}
-
-// ============================
-// ADMIN ORB (solo muestra/oculta panel)
-// ============================
-
-function openAdminPanel() {
-  if (!els.adminPanel) return;
-  els.adminPanel.style.display = "flex";
-}
-
-function closeAdminPanel() {
-  if (!els.adminPanel) return;
-  els.adminPanel.style.display = "none";
-}
-
-function saveAdminConfig() {
-  // Hook para guardar configuración del ORB (podés persistir en localStorage)
-  closeAdminPanel();
-}
-
-// ============================
-// INIT
-// ============================
-
-function initEvents() {
-  els.btnSearch?.addEventListener("click", buscar);
-  els.searchInput?.addEventListener("keydown", (e) => {
-    if (e.key === "Enter") buscar();
-  });
-  els.btnClear?.addEventListener("click", limpiarPantalla);
-  els.btnCopy?.addEventListener("click", copiarResultados);
-  els.btnFiltros?.addEventListener("click", toggleFiltrosPanel);
-
-  els.filtroMarca?.addEventListener("change", actualizarFiltrosDesdeUI);
-  els.filtroRubro?.addEventListener("change", actualizarFiltrosDesdeUI);
-  els.filtroTalle?.addEventListener("change", actualizarFiltrosDesdeUI);
-
-  els.handsfreeToggle?.addEventListener("change", (e) =>
-    toggleManosLibres(e.target.checked)
-  );
-  els.btnStop?.addEventListener("click", stopTodo);
-  els.btnScan?.addEventListener("click", iniciarScanner);
-
-  els.toggleDark?.addEventListener("click", toggleDarkMode);
-  els.openAdmin?.addEventListener("click", openAdminPanel);
-  els.adminClose?.addEventListener("click", closeAdminPanel);
-  els.adminSave?.addEventListener("click", saveAdminConfig);
-}
-
-function init() {
-  initEvents();
-  initVoice();
-  renderResultados([]);
-  renderMetricas([]);
-  setConnectionStatus(false);
-}
-
-document.addEventListener("DOMContentLoaded", init);
+  els
