@@ -4,6 +4,7 @@ const API_URL = "https://stock-backend-1-0upi.onrender.com/query";
 
 const state = {
   items: [],
+  catalogItems: [],
   lastQuery: "",
   soloStock: false,
   filtros: {
@@ -14,6 +15,7 @@ const state = {
   },
   chart: null,
   lastActivity: Date.now(),
+  currentAbort: null,
 };
 
 const els = {
@@ -38,11 +40,11 @@ const els = {
   connectionDot: document.querySelector(".connection-dot"),
   handsfreeToggle: document.getElementById("handsfree-toggle"),
   btnStop: document.getElementById("btn-stop"),
-  btnScan: document.getElementById("btn-scan"),
   stockChartCanvas: document.getElementById("stockChart"),
   orb: document.getElementById("orb"),
   toast: document.getElementById("toast"),
   adminPanel: document.getElementById("admin-panel"),
+  scannerTrigger: document.querySelector(".scanner-trigger"),
 };
 
 // ORB
@@ -89,7 +91,7 @@ function setResultsPresence(hasResults) {
   els.appContainer.classList.toggle("has-results", hasResults);
 }
 
-// FILTROS (sobre items ya cargados)
+// FILTROS (sobre items ya cargados en state.items)
 
 function aplicarFiltrosLocales(items) {
   const { marca, rubro, talleDesde, talleHasta } = state.filtros;
@@ -114,15 +116,17 @@ function aplicarFiltrosLocales(items) {
 function poblarFiltros(items) {
   const marcas = new Set();
   const rubros = new Set();
+  const talles = new Set();
 
   items.forEach((item) => {
     if (item.marca) marcas.add(item.marca);
     if (item.rubro) rubros.add(item.rubro);
+    item.talles.forEach((t) => talles.add(Number(t.talle)));
   });
 
   function fill(select, values, placeholder) {
     select.innerHTML = `<option value="">${placeholder}</option>`;
-    [...values].sort().forEach((v) => {
+    [...values].sort((a, b) => (a > b ? 1 : -1)).forEach((v) => {
       const o = document.createElement("option");
       o.value = v;
       o.textContent = v;
@@ -132,6 +136,21 @@ function poblarFiltros(items) {
 
   fill(els.filtroMarca, marcas, "Marca");
   fill(els.filtroRubro, rubros, "Rubro");
+
+  const tallesOrdenados = [...talles].sort((a, b) => a - b);
+  els.filtroTalleDesde.innerHTML = `<option value="">Talle desde</option>`;
+  els.filtroTalleHasta.innerHTML = `<option value="">Talle hasta</option>`;
+  tallesOrdenados.forEach((t) => {
+    const o1 = document.createElement("option");
+    o1.value = t;
+    o1.textContent = t;
+    els.filtroTalleDesde.appendChild(o1);
+
+    const o2 = document.createElement("option");
+    o2.value = t;
+    o2.textContent = t;
+    els.filtroTalleHasta.appendChild(o2);
+  });
 }
 
 function actualizarFiltrosDesdeUI() {
@@ -139,11 +158,6 @@ function actualizarFiltrosDesdeUI() {
   state.filtros.rubro = els.filtroRubro.value;
   state.filtros.talleDesde = els.filtroTalleDesde.value;
   state.filtros.talleHasta = els.filtroTalleHasta.value;
-
-  const filtrados = aplicarFiltrosLocales(state.items);
-  renderResultados(filtrados);
-  renderMetricas(filtrados);
-  renderChart(filtrados);
 }
 
 // MÉTRICAS
@@ -313,7 +327,7 @@ function buildCopyText(items) {
 
 async function copiarResultados() {
   try {
-    const text = buildCopyText(aplicarFiltrosLocales(state.items));
+    const text = buildCopyText(state.items);
     await navigator.clipboard.writeText(text);
     showToast("Resultados copiados.");
   } catch (e) {
@@ -321,7 +335,7 @@ async function copiarResultados() {
   }
 }
 
-// LIMPIAR
+// LIMPIAR (solo resultados, no configuraciones)
 
 function limpiarPantalla() {
   state.items = [];
@@ -334,11 +348,11 @@ function limpiarPantalla() {
   els.resultsStatus.textContent = "Esperando consulta";
 }
 
-// BÚSQUEDA PRINCIPAL
+// BÚSQUEDA PRINCIPAL (texto + filtros globales si están seteados)
 
-async function buscar() {
+async function buscar(force = false) {
   const q = els.searchInput.value.trim();
-  if (!q) return;
+  if (!q && !force) return;
 
   state.lastQuery = q;
   state.soloStock = !!els.chkSoloStock.checked;
@@ -348,6 +362,13 @@ async function buscar() {
   orbSetLoading(true);
 
   state.lastActivity = Date.now();
+
+  // abortar petición anterior si existe
+  if (state.currentAbort) {
+    state.currentAbort.abort();
+  }
+  const controller = new AbortController();
+  state.currentAbort = controller;
 
   try {
     const body = {
@@ -364,6 +385,7 @@ async function buscar() {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
+      signal: controller.signal,
     });
 
     if (!resp.ok) throw new Error("Error en el servidor");
@@ -371,29 +393,130 @@ async function buscar() {
     const data = await resp.json();
     state.items = data.items || [];
 
-    const filtrados = aplicarFiltrosLocales(state.items);
-    renderResultados(filtrados);
-    renderMetricas(filtrados);
-    renderChart(filtrados);
-    poblarFiltros(state.items);
+    renderResultados(state.items);
+    renderMetricas(state.items);
+    renderChart(state.items);
 
     setConnectionStatus(true);
     orbSetError(false);
   } catch (e) {
-    console.error(e);
-    setConnectionStatus(false);
-    els.resultsContainer.innerHTML =
-      '<div class="results-error">Error de conexión</div>';
-    els.resultsStatus.textContent = "Error de conexión";
-    orbSetError(true);
-    setTimeout(() => orbSetError(false), 2500);
+    if (e.name === "AbortError") {
+      // STOP presionado
+      els.resultsStatus.textContent = "Consulta detenida";
+    } else {
+      console.error(e);
+      setConnectionStatus(false);
+      els.resultsContainer.innerHTML =
+        '<div class="results-error">Error de conexión</div>';
+      els.resultsStatus.textContent = "Error de conexión";
+      orbSetError(true);
+      setTimeout(() => orbSetError(false), 2500);
+    }
   } finally {
+    if (state.currentAbort === controller) {
+      state.currentAbort = null;
+    }
     orbSetLoading(false);
   }
 }
 
+// BÚSQUEDA SOLO POR FILTROS (sin texto)
+
+async function buscarPorFiltros() {
+  state.soloStock = !!els.chkSoloStock.checked;
+  els.resultsStatus.textContent = "Buscando por filtros...";
+  setConnectionStatus(true);
+  orbSetLoading(true);
+
+  state.lastActivity = Date.now();
+
+  if (state.currentAbort) {
+    state.currentAbort.abort();
+  }
+  const controller = new AbortController();
+  state.currentAbort = controller;
+
+  try {
+    const body = {
+      question: "",
+      solo_stock: state.soloStock,
+      filtros_globales: true,
+      marca: state.filtros.marca || null,
+      rubro: state.filtros.rubro || null,
+      talle_desde: state.filtros.talleDesde || null,
+      talle_hasta: state.filtros.talleHasta || null,
+    };
+
+    const resp = await fetch(API_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+      signal: controller.signal,
+    });
+
+    if (!resp.ok) throw new Error("Error en el servidor");
+
+    const data = await resp.json();
+    state.items = data.items || [];
+
+    renderResultados(state.items);
+    renderMetricas(state.items);
+    renderChart(state.items);
+
+    setConnectionStatus(true);
+    orbSetError(false);
+  } catch (e) {
+    if (e.name === "AbortError") {
+      els.resultsStatus.textContent = "Consulta detenida";
+    } else {
+      console.error(e);
+      setConnectionStatus(false);
+      els.resultsContainer.innerHTML =
+        '<div class="results-error">Error de conexión</div>';
+      els.resultsStatus.textContent = "Error de conexión";
+      orbSetError(true);
+      setTimeout(() => orbSetError(false), 2500);
+    }
+  } finally {
+    if (state.currentAbort === controller) {
+      state.currentAbort = null;
+    }
+    orbSetLoading(false);
+  }
+}
+
+// CARGAR CATÁLOGO COMPLETO PARA LLENAR FILTROS
+
+async function cargarCatalogo() {
+  try {
+    const body = {
+      question: "",
+      solo_stock: false,
+      filtros_globales: false,
+      marca: null,
+      rubro: null,
+      talle_desde: null,
+      talle_hasta: null,
+    };
+
+    const resp = await fetch(API_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+
+    if (!resp.ok) throw new Error("Error en el servidor");
+
+    const data = await resp.json();
+    state.catalogItems = data.items || [];
+    poblarFiltros(state.catalogItems);
+  } catch (e) {
+    console.error("Error cargando catálogo para filtros:", e);
+  }
+}
+
 // Exponer para scanner.js
-window.buscar = buscar;
+window.buscar = () => buscar(false);
 
 // MANOS LIBRES / VOZ
 
@@ -429,6 +552,7 @@ function toggleManosLibres(checked) {
   manosLibresActivo = checked;
   if (!recognition) return;
   if (checked) {
+    recognition.continuous = true;
     recognition.start();
     showToast("Manos libres activado");
   } else {
@@ -442,6 +566,11 @@ function stopTodo() {
   els.handsfreeToggle.checked = false;
   if (recognition) recognition.stop();
   window.speechSynthesis.cancel();
+  if (state.currentAbort) {
+    state.currentAbort.abort();
+    state.currentAbort = null;
+  }
+  orbSetLoading(false);
   showToast("STOP ejecutado");
 }
 
@@ -453,6 +582,7 @@ function escucharUnaVez() {
     return;
   }
   manosLibresActivo = false;
+  els.handsfreeToggle.checked = false;
   recognition.stop();
   recognition.continuous = false;
   recognition.start();
@@ -475,7 +605,7 @@ setInterval(() => {
 
 function initEvents() {
   // ORB como botón principal
-  els.orb.addEventListener("click", buscar);
+  els.orb.addEventListener("click", () => buscar(false));
 
   // Input → READY + clave ADMIN
   els.searchInput.addEventListener("input", () => {
@@ -498,14 +628,22 @@ function initEvents() {
     els.filtrosPanel.classList.toggle("visible")
   );
 
-  els.filtroMarca.addEventListener("change", actualizarFiltrosDesdeUI);
-  els.filtroRubro.addEventListener("change", actualizarFiltrosDesdeUI);
-  els.filtroTalleDesde.addEventListener("change", actualizarFiltrosDesdeUI);
-  els.filtroTalleHasta.addEventListener("change", actualizarFiltrosDesdeUI);
+  els.filtroMarca.addEventListener("change", () => {
+    actualizarFiltrosDesdeUI();
+  });
+  els.filtroRubro.addEventListener("change", () => {
+    actualizarFiltrosDesdeUI();
+  });
+  els.filtroTalleDesde.addEventListener("change", () => {
+    actualizarFiltrosDesdeUI();
+  });
+  els.filtroTalleHasta.addEventListener("change", () => {
+    actualizarFiltrosDesdeUI();
+  });
 
   els.btnAplicarFiltros.addEventListener("click", () => {
     actualizarFiltrosDesdeUI();
-    buscar();
+    buscarPorFiltros();
   });
 
   els.handsfreeToggle.addEventListener("change", (e) =>
@@ -514,8 +652,8 @@ function initEvents() {
 
   els.btnStop.addEventListener("click", stopTodo);
 
-  if (els.btnScan) {
-    els.btnScan.addEventListener("click", () => {
+  if (els.scannerTrigger) {
+    els.scannerTrigger.addEventListener("click", () => {
       if (typeof window.iniciarScanner === "function") {
         window.iniciarScanner();
       } else {
@@ -538,6 +676,7 @@ function init() {
   renderResultados([]);
   renderMetricas([]);
   setConnectionStatus(false);
+  cargarCatalogo();
 }
 
 document.addEventListener("DOMContentLoaded", init);
