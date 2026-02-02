@@ -47,29 +47,20 @@ const els = {
 // ============================================================
 
 function orbSetReady(active) {
-  if (active) {
-    els.orb.classList.add("orb-ready");
-  } else {
-    els.orb.classList.remove("orb-ready");
-  }
+  if (active) els.orb.classList.add("orb-ready");
+  else els.orb.classList.remove("orb-ready");
 }
 
 function orbSetLoading(active) {
   els.orb.classList.remove("orb-error");
-  if (active) {
-    els.orb.classList.add("orb-loading");
-  } else {
-    els.orb.classList.remove("orb-loading");
-  }
+  if (active) els.orb.classList.add("orb-loading");
+  else els.orb.classList.remove("orb-loading");
 }
 
 function orbSetError(active) {
   els.orb.classList.remove("orb-loading");
-  if (active) {
-    els.orb.classList.add("orb-error");
-  } else {
-    els.orb.classList.remove("orb-error");
-  }
+  if (active) els.orb.classList.add("orb-error");
+  else els.orb.classList.remove("orb-error");
 }
 
 // ============================================================
@@ -83,29 +74,15 @@ function formatNumber(n) {
 
 function setConnectionStatus(online) {
   if (!els.connectionDot) return;
-  if (online) {
-    els.connectionDot.classList.add("online");
-  } else {
-    els.connectionDot.classList.remove("online");
-  }
+  els.connectionDot.classList.toggle("online", online);
 }
 
 function showLoading(show) {
-  if (!els.loadingOverlay) return;
-  if (show) {
-    els.loadingOverlay.classList.add("visible");
-  } else {
-    els.loadingOverlay.classList.remove("visible");
-  }
+  els.loadingOverlay.classList.toggle("visible", show);
 }
 
 function setResultsPresence(hasResults) {
-  if (!els.appContainer) return;
-  if (hasResults) {
-    els.appContainer.classList.add("has-results");
-  } else {
-    els.appContainer.classList.remove("has-results");
-  }
+  els.appContainer.classList.toggle("has-results", hasResults);
 }
 
 // ============================================================
@@ -115,11 +92,11 @@ function setResultsPresence(hasResults) {
 function aplicarFiltros(items) {
   const { marca, rubro, talle } = state.filtros;
   return items.filter((item) => {
-    if (marca && item.marca && item.marca !== marca) return false;
-    if (rubro && item.rubro && item.rubro !== rubro) return false;
+    if (marca && item.marca !== marca) return false;
+    if (rubro && item.rubro !== rubro) return false;
     if (talle) {
-      const tieneTalle = item.talles.some((t) => String(t.talle) === String(talle));
-      if (!tieneTalle) return false;
+      const tiene = item.talles.some((t) => String(t.talle) === String(talle));
+      if (!tiene) return false;
     }
     return true;
   });
@@ -137,21 +114,13 @@ function poblarFiltros(items) {
   });
 
   function fill(select, values, placeholder) {
-    if (!select) return;
-    select.innerHTML = "";
-    const opt = document.createElement("option");
-    opt.value = "";
-    opt.textContent = placeholder;
-    select.appendChild(opt);
-
-    Array.from(values)
-      .sort()
-      .forEach((v) => {
-        const o = document.createElement("option");
-        o.value = v;
-        o.textContent = v;
-        select.appendChild(o);
-      });
+    select.innerHTML = `<option value="">${placeholder}</option>`;
+    [...values].sort().forEach((v) => {
+      const o = document.createElement("option");
+      o.value = v;
+      o.textContent = v;
+      select.appendChild(o);
+    });
   }
 
   fill(els.filtroMarca, marcas, "Marca");
@@ -160,9 +129,9 @@ function poblarFiltros(items) {
 }
 
 function actualizarFiltrosDesdeUI() {
-  state.filtros.marca = els.filtroMarca.value || "";
-  state.filtros.rubro = els.filtroRubro.value || "";
-  state.filtros.talle = els.filtroTalle.value || "";
+  state.filtros.marca = els.filtroMarca.value;
+  state.filtros.rubro = els.filtroRubro.value;
+  state.filtros.talle = els.filtroTalle.value;
 
   const filtrados = aplicarFiltros(state.items);
   renderResultados(filtrados);
@@ -238,9 +207,7 @@ function renderResultados(items) {
       </div>
 
       <div class="result-meta">
-        Marca: ${item.marca || "—"} &nbsp; Rubro: ${item.rubro || "—"} &nbsp; Color: ${
-      item.color || "—"
-    }
+        Marca: ${item.marca || "—"} &nbsp; Rubro: ${item.rubro || "—"} &nbsp; Color: ${item.color || "—"}
       </div>
 
       <div class="result-talles">${tallesStr}</div>
@@ -255,7 +222,7 @@ function renderResultados(items) {
 }
 
 // ============================================================
-// DASHBOARD (CHART)
+// DASHBOARD
 // ============================================================
 
 function buildChartData(items) {
@@ -268,8 +235,8 @@ function buildChartData(items) {
   });
 
   return {
-    labels: Array.from(map.keys()),
-    data: Array.from(map.values()),
+    labels: [...map.keys()],
+    data: [...map.values()],
   };
 }
 
@@ -334,9 +301,7 @@ function buildCopyText(items) {
     lines.push(`${item.codigo} - ${item.descripcion}`);
     lines.push(`Precio: $${formatNumber(item.precio)}`);
     lines.push(
-      `Marca: ${item.marca || "—"} | Rubro: ${item.rubro || "—"} | Color: ${
-        item.color || "—"
-      }`
+      `Marca: ${item.marca || "—"} | Rubro: ${item.rubro || "—"} | Color: ${item.color || "—"}`
     );
     const talles = item.talles.map((t) => `${t.talle}: ${t.stock}`).join(" | ");
     lines.push(`Talles: ${talles}`);
