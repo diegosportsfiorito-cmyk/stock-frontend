@@ -1,3 +1,8 @@
+/* ============================================================
+   STYLES.CSS — STOCK IA PRO
+   UI general (el ORB está en orb.css)
+============================================================ */
+
 :root {
   --bg-dark: #050814;
   --bg-dark-soft: #0b1020;
@@ -18,7 +23,7 @@
   --transition-med: 0.25s ease-out;
 }
 
-/* Reset básico */
+/* Reset */
 *,
 *::before,
 *::after {
@@ -38,9 +43,13 @@ body {
   background: radial-gradient(circle at top, #111827 0, #020617 55%, #000 100%);
   color: var(--text-main);
   -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
 }
 
-/* Contenedor principal */
+/* ============================================================
+   CONTENEDOR PRINCIPAL
+============================================================ */
+
 .app-shell {
   min-height: 100vh;
   display: flex;
@@ -64,12 +73,16 @@ body {
   overflow: hidden;
 }
 
-/* Header / Branding */
+/* ============================================================
+   HEADER
+============================================================ */
+
 .app-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
+  position: relative;
 }
 
 .branding {
@@ -91,41 +104,10 @@ body {
   color: var(--text-muted);
 }
 
-/* ORB */
-.orb-wrapper {
-  position: relative;
-  width: 70px;
-  height: 70px;
-  flex-shrink: 0;
-}
+/* ============================================================
+   INDICADOR DE CONEXIÓN
+============================================================ */
 
-.orb {
-  position: absolute;
-  inset: 0;
-  border-radius: 50%;
-  background: radial-gradient(circle at 30% 20%, #4f8cff, #1d4ed8 40%, #020617 100%);
-  box-shadow:
-    0 0 25px rgba(79, 140, 255, 0.7),
-    0 0 60px rgba(37, 99, 235, 0.9);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #e5e7eb;
-  font-size: 0.7rem;
-  text-transform: uppercase;
-  letter-spacing: 0.12em;
-  border: 1px solid rgba(191, 219, 254, 0.4);
-  transform: translateY(0);
-  transition: transform var(--transition-med), box-shadow var(--transition-med),
-    background var(--transition-med);
-}
-
-/* Cuando hay resultados, el ORB se eleva un poco para no tapar texto */
-.app-container.has-results .orb {
-  transform: translateY(-8px);
-}
-
-/* Indicador de conexión */
 .connection-indicator {
   display: flex;
   align-items: center;
@@ -148,7 +130,10 @@ body {
   box-shadow: 0 0 10px rgba(52, 211, 153, 0.9);
 }
 
-/* Barra superior de controles */
+/* ============================================================
+   CONTROLES SUPERIORES
+============================================================ */
+
 .top-controls {
   display: flex;
   align-items: center;
@@ -182,7 +167,10 @@ body {
   transform: translateY(-1px);
 }
 
-/* Zona de búsqueda */
+/* ============================================================
+   PANEL DE BÚSQUEDA
+============================================================ */
+
 .search-card {
   background: var(--card-bg);
   border-radius: var(--radius-lg);
@@ -236,28 +224,9 @@ body {
   color: #6b7280;
 }
 
-.btn-primary {
-  border-radius: var(--radius-md);
-  border: none;
-  background: linear-gradient(135deg, #4f46e5, #2563eb);
-  color: white;
-  padding: 9px 14px;
-  font-size: 0.85rem;
-  font-weight: 600;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  box-shadow: 0 10px 25px rgba(37, 99, 235, 0.45);
-  transition: transform var(--transition-fast), box-shadow var(--transition-fast),
-    filter var(--transition-fast);
-}
-
-.btn-primary:hover {
-  transform: translateY(-1px);
-  filter: brightness(1.05);
-  box-shadow: 0 14px 30px rgba(37, 99, 235, 0.6);
-}
+/* ============================================================
+   BOTONES SECUNDARIOS
+============================================================ */
 
 .btn-secondary,
 .btn-ghost {
@@ -282,7 +251,10 @@ body {
   transform: translateY(-1px);
 }
 
-/* Checkbox solo stock */
+/* ============================================================
+   CHECKBOX SOLO STOCK
+============================================================ */
+
 .solo-stock {
   display: inline-flex;
   align-items: center;
@@ -291,7 +263,10 @@ body {
   color: var(--text-muted);
 }
 
-/* Métricas */
+/* ============================================================
+   MÉTRICAS
+============================================================ */
+
 .metrics-row {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -321,15 +296,46 @@ body {
   color: #e5e7eb;
 }
 
-/* Panel de acciones */
-.actions-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
+/* ============================================================
+   FILTROS AVANZADOS
+============================================================ */
+
+.filtros-panel {
   margin-top: 4px;
+  padding: 6px 8px;
+  border-radius: 10px;
+  border: 1px dashed rgba(55, 65, 81, 0.9);
+  background: rgba(15, 23, 42, 0.9);
+  display: none;
+  flex-direction: column;
+  gap: 6px;
 }
 
-/* Resultados + Dashboard layout */
+.filtros-panel.visible {
+  display: flex;
+}
+
+.filtros-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.filtro-select {
+  flex: 1;
+  min-width: 90px;
+  border-radius: 999px;
+  border: 1px solid rgba(55, 65, 81, 0.9);
+  background: #020617;
+  color: var(--text-main);
+  font-size: 0.75rem;
+  padding: 4px 8px;
+}
+
+/* ============================================================
+   RESULTADOS
+============================================================ */
+
 .main-row {
   display: grid;
   grid-template-columns: minmax(0, 2.1fr) minmax(260px, 1.2fr);
@@ -337,7 +343,6 @@ body {
   align-items: flex-start;
 }
 
-/* Resultados */
 .results-card {
   background: var(--card-bg);
   border-radius: var(--radius-lg);
@@ -433,20 +438,10 @@ body {
   color: #f97316;
 }
 
-/* Mensajes de error / vacío */
-.results-empty {
-  font-size: 0.8rem;
-  color: var(--text-muted);
-  padding: 8px 0;
-}
+/* ============================================================
+   DASHBOARD
+============================================================ */
 
-.results-error {
-  font-size: 0.8rem;
-  color: #fecaca;
-  padding: 8px 0;
-}
-
-/* Dashboard */
 .dashboard-card {
   background: var(--card-bg);
   border-radius: var(--radius-lg);
@@ -479,90 +474,10 @@ body {
   max-height: 220px;
 }
 
-/* Filtros avanzados */
-.filtros-panel {
-  margin-top: 4px;
-  padding: 6px 8px;
-  border-radius: 10px;
-  border: 1px dashed rgba(55, 65, 81, 0.9);
-  background: rgba(15, 23, 42, 0.9);
-  display: none;
-  flex-direction: column;
-  gap: 6px;
-}
+/* ============================================================
+   OVERLAY DE BÚSQUEDA
+============================================================ */
 
-.filtros-panel.visible {
-  display: flex;
-}
-
-.filtros-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-}
-
-.filtro-select {
-  flex: 1;
-  min-width: 90px;
-  border-radius: 999px;
-  border: 1px solid rgba(55, 65, 81, 0.9);
-  background: #020617;
-  color: var(--text-main);
-  font-size: 0.75rem;
-  padding: 4px 8px;
-}
-
-/* Manos libres / switches */
-.switch-row {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 0.75rem;
-  color: var(--text-muted);
-}
-
-.switch {
-  position: relative;
-  width: 34px;
-  height: 18px;
-}
-
-.switch input {
-  opacity: 0;
-  width: 0;
-  height: 0;
-}
-
-.slider {
-  position: absolute;
-  cursor: pointer;
-  inset: 0;
-  background-color: #4b5563;
-  transition: 0.2s;
-  border-radius: 999px;
-}
-
-.slider:before {
-  position: absolute;
-  content: "";
-  height: 14px;
-  width: 14px;
-  left: 2px;
-  top: 2px;
-  background-color: white;
-  transition: 0.2s;
-  border-radius: 50%;
-}
-
-.switch input:checked + .slider {
-  background-color: #22c55e;
-}
-
-.switch input:checked + .slider:before {
-  transform: translateX(16px);
-}
-
-/* Overlay de búsqueda */
 #loading-overlay {
   position: fixed;
   inset: 0;
@@ -586,7 +501,10 @@ body {
   border: 1px solid rgba(129, 140, 248, 0.8);
 }
 
-/* Panel admin ORB (simple overlay) */
+/* ============================================================
+   PANEL ADMIN
+============================================================ */
+
 #admin-panel {
   position: fixed;
   right: 16px;
@@ -616,7 +534,8 @@ body {
 }
 
 #admin-panel input[type="color"],
-#admin-panel input[type="range"] {
+#admin-panel input[type="range"],
+#admin-panel select {
   width: 100%;
 }
 
@@ -635,26 +554,15 @@ body {
   background: rgba(30, 64, 175, 0.9);
 }
 
-/* Mobile */
+/* ============================================================
+   MOBILE
+============================================================ */
+
 @media (max-width: 768px) {
   .app-container {
     border-radius: 0;
     max-width: 100%;
     padding: 12px 10px 14px;
-  }
-
-  .app-header {
-    flex-direction: row;
-    align-items: center;
-  }
-
-  .brand-title {
-    font-size: 0.95rem;
-  }
-
-  .orb-wrapper {
-    width: 60px;
-    height: 60px;
   }
 
   .main-row {
@@ -670,7 +578,10 @@ body {
   }
 }
 
-/* Scrollbar */
+/* ============================================================
+   SCROLLBAR
+============================================================ */
+
 .results-card::-webkit-scrollbar {
   width: 6px;
 }
