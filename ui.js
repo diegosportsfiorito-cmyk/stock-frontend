@@ -21,7 +21,7 @@ if (orb) {
 }
 
 // ============================================================
-// SCANNER
+// SCANNER (QUAGGA2)
 // ============================================================
 
 const scannerBtn = document.getElementById("btn-scanner");
@@ -37,7 +37,8 @@ if (scannerBtn) {
 
 if (scannerClose) {
   scannerClose.addEventListener("click", () => {
-    cerrarScanner();
+    cerrarScannerQuagga();
+    scannerOverlay.style.display = "none";
   });
 }
 
@@ -50,13 +51,13 @@ const btnCompleto = document.getElementById("scanner-mode-completo");
 
 if (btnSimple && btnCompleto) {
   btnSimple.addEventListener("click", () => {
-    modoScanner = "simple";
+    setModoScanner("simple");
     btnSimple.classList.add("active");
     btnCompleto.classList.remove("active");
   });
 
   btnCompleto.addEventListener("click", () => {
-    modoScanner = "completo";
+    setModoScanner("completo");
     btnCompleto.classList.add("active");
     btnSimple.classList.remove("active");
   });
