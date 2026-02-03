@@ -4,10 +4,7 @@
 
 let modoScanner = "simple";
 
-// ------------------------------------------------------------
-// PROCESAR CÓDIGO
-// ------------------------------------------------------------
-
+// Procesar código
 function procesarCodigo(codigo) {
   let resultado = codigo;
 
@@ -37,10 +34,7 @@ function cargarEnInput(texto) {
   input.dispatchEvent(new Event("input"));
 }
 
-// ------------------------------------------------------------
-// PROCESAR RETORNO DE BARCODE SCANNER+
-// ------------------------------------------------------------
-
+// Procesar retorno de Barcode Scanner+
 (function procesarRetornoNativo() {
   const params = new URLSearchParams(window.location.search);
   const code = params.get("code");
