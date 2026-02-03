@@ -9,7 +9,7 @@
   <link rel="stylesheet" href="styles.css" />
 
   <style>
-    /* 🔥 Ajuste definitivo para eliminar zoom del scanner web */
+    /* 🔥 Ajuste definitivo para eliminar zoom y evitar mitad negra */
     #scanner-container {
       display: flex;
       align-items: center;
@@ -23,8 +23,8 @@
     #scanner-container video,
     #scanner-container canvas {
       width: 100% !important;
-      height: auto !important;
-      object-fit: contain !important;
+      height: 100% !important;
+      object-fit: cover !important; /* 🔥 CLAVE */
       transform: none !important;
     }
   </style>
@@ -51,17 +51,6 @@
           <div class="connection-indicator">
             <div class="connection-dot"></div>
             <span>Estado conexión</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- ORB -->
-      <div class="orb-zone">
-        <div class="orb-wrapper">
-          <div class="orb" id="orb">IA PRO</div>
-          <div class="orb-tooltip" id="orb-tooltip">
-            <span class="orb-tooltip-arrow"></span>
-            <span class="orb-tooltip-text">Tocá para buscar</span>
           </div>
         </div>
       </div>
@@ -107,7 +96,7 @@
     </div>
   </div>
 
-  <!-- ⭐ OVERLAY SCANNER WEB -->
+  <!-- ⭐ OVERLAY SCANNER WEB (CORREGIDO) -->
   <div id="scanner-overlay" style="
     position:fixed;
     inset:0;
@@ -120,7 +109,7 @@
     <div style="
       width:90%;
       max-width:420px;
-      aspect-ratio:3/4;
+      height:80vh;                 /* 🔥 SIN aspect-ratio */
       background:rgba(0,0,0,0.9);
       border-radius:16px;
       border:2px solid #00e0ff;
