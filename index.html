@@ -5,22 +5,20 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>STOCK IA PRO — Asistente inteligente</title>
 
-  <!-- Estilos principales -->
   <link rel="stylesheet" href="styles.css" />
   <link rel="stylesheet" href="orb.css" />
 </head>
 
-<body class="orb-center orb-b2">
+<body>
 
-  <!-- Banner temporal de versión -->
-  <div style="background:#d60000;color:white;padding:10px;font-size:18px;text-align:center;">
-    VERSION RESTAURADA — PASO 1 (ESTRUCTURA BASE)
+  <div style="background:#d60000;color:white;padding:10px;font-size:14px;text-align:center;">
+    VERSION RESTAURADA — ORB 3D ULTRA + SCANNER AVANZADO
   </div>
 
   <div class="app-shell">
     <div class="app-container">
 
-      <!-- ENCABEZADO -->
+      <!-- HEADER -->
       <div class="app-header">
         <div class="branding">
           <div>
@@ -31,7 +29,7 @@
 
         <div class="header-right">
           <div class="connection-indicator">
-            <div class="connection-dot"></div>
+            <div class="connection-dot" id="connection-dot"></div>
             <span>Estado conexión</span>
           </div>
         </div>
@@ -40,10 +38,9 @@
       <!-- ORB -->
       <div class="orb-zone">
         <div class="orb-wrapper">
-          <div class="orb" id="orb">IA PRO</div>
+          <div class="orb orb-ultra" id="orb">IA PRO</div>
           <div class="orb-tooltip" id="orb-tooltip">
-            <span class="orb-tooltip-arrow"></span>
-            <span class="orb-tooltip-text">Tocá para buscar</span>
+            Tocá para buscar
           </div>
         </div>
       </div>
@@ -62,8 +59,8 @@
             />
           </div>
 
-          <!-- Scanner avanzado (único activo) -->
-          <button id="btn-scanner-nativo" class="scanner-btn" title="Lector avanzado">📱</button>
+          <!-- Scanner avanzado -->
+          <button id="btn-scanner-nativo" class="scanner-btn" title="Lector avanzado"></button>
 
           <!-- Modo simple / completo -->
           <div class="scanner-mode-switch">
@@ -71,6 +68,54 @@
             <div id="scanner-mode-completo" class="scanner-mode-option">Completo</div>
           </div>
 
+        </div>
+
+        <!-- Métricas -->
+        <div class="metrics-row">
+          <div class="metric-card">
+            <div class="metric-label">Artículos</div>
+            <div class="metric-value" id="metric-articulos">0</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-label">Stock total</div>
+            <div class="metric-value" id="metric-stock">0</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-label">Marcas</div>
+            <div class="metric-value" id="metric-marcas">0</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-label">Rubro activo</div>
+            <div class="metric-value" id="metric-rubro">–</div>
+          </div>
+        </div>
+
+        <!-- Filtros avanzados -->
+        <div class="filtros-panel" id="filtros-panel">
+          <div class="filtros-row">
+            <select id="filtro-rubro" class="filtro-select">
+              <option value="">Rubro</option>
+            </select>
+            <select id="filtro-marca" class="filtro-select">
+              <option value="">Marca</option>
+            </select>
+            <input id="filtro-talle" class="filtro-input" placeholder="Talle" />
+          </div>
+        </div>
+
+        <div class="actions-row">
+          <div class="solo-stock">
+            <label class="switch">
+              <input type="checkbox" id="solo-stock">
+              <span class="slider"></span>
+            </label>
+            <span>Solo con stock</span>
+          </div>
+
+          <div class="actions-right">
+            <button class="btn-secondary" id="btn-filtros">Filtros</button>
+            <button class="btn-ghost" id="btn-limpiar">Limpiar</button>
+          </div>
         </div>
       </section>
 
@@ -101,10 +146,48 @@
     </div>
   </div>
 
-  <!-- Scripts principales -->
-  <script src="ui.js"></script>
-  <script src="scanner.js"></script>
-  <script src="app_v2.js"></script>
+  <!-- PANEL ADMIN -->
+  <div id="admin-panel">
+    <h2>Modo administrador</h2>
 
+    <h3>Configuración del ORB</h3>
+
+    <label>Color principal</label>
+    <input type="color" id="orb-color" value="#4fc3f7">
+
+    <label>Color secundario</label>
+    <input type="color" id="orb-color-dark" value="#7c4dff">
+
+    <label>Tamaño del ORB</label>
+    <input type="range" id="orb-size" min="80" max="160" value="130">
+
+    <label>Intensidad del halo</label>
+    <input type="range" id="orb-halo" min="0" max="100" value="60">
+
+    <label>Modo visual</label>
+    <select id="orb-mode">
+      <option value="classic">Clásico</option>
+      <option value="3d">3D</option>
+      <option value="ultra" selected>3D Ultra</option>
+    </select>
+
+    <h3>Presets del ORB</h3>
+    <select id="orb-presets">
+      <option value="default">Energía Azul</option>
+      <option value="plasma">Plasma Violeta</option>
+      <option value="fuego">Fuego</option>
+      <option value="neon">Neón Verde</option>
+      <option value="minimal">Minimalista</option>
+    </select>
+
+    <button id="orb-reset">Restablecer valores</button>
+  </div>
+
+  <!-- TOAST -->
+  <div class="toast" id="toast"></div>
+
+  <script src="scanner.js"></script>
+  <script src="ui.js"></script>
+  <script src="app_v2.js"></script>
 </body>
 </html>
