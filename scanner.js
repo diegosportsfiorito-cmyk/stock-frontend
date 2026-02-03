@@ -6,7 +6,7 @@ let scannerActivo = false;
 let modoScanner = "simple";
 
 // ------------------------------------------------------------
-// INICIAR SCANNER WEB (SIN ZOOM)
+// INICIAR SCANNER WEB (SIN ZOOM, SIN MITAD NEGRA)
 // ------------------------------------------------------------
 
 async function iniciarScanner() {
@@ -24,8 +24,8 @@ async function iniciarScanner() {
         target: container,
         constraints: {
           facingMode: "environment",
-          width: { ideal: 960 },
-          height: { ideal: 540 }
+          width: { ideal: 1280 },
+          height: { ideal: 720 }
         }
       },
       decoder: {
