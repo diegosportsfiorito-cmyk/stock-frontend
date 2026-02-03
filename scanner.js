@@ -1,88 +1,75 @@
 // ============================================================
-// SCANNER — Versión definitiva con Cámara + Modos
+// SCANNER ZXING — LECTOR ROBUSTO MULTI-FORMATO
 // ============================================================
 
 let scannerActivo = false;
-let modoScanner = "simple"; 
-// valores posibles: "simple" o "completo"
-
-const soportaBarcode = ("BarcodeDetector" in window);
+let modoScanner = "simple"; // "simple" o "completo"
+let zxingReader = null;
+let currentStream = null;
 
 // ------------------------------------------------------------
-// INICIAR SCANNER (abre cámara + detector)
+// INICIAR SCANNER (ZXing)
 // ------------------------------------------------------------
 
 async function iniciarScanner() {
-  if (!soportaBarcode) {
-    console.warn("BarcodeDetector no disponible en este navegador.");
+  const video = document.getElementById("scanner-video");
+  if (!video) {
+    console.error("No se encontró #scanner-video");
     return;
   }
 
-  try {
-    const video = document.getElementById("scanner-video");
+  // Si ya hay un stream viejo, lo cortamos
+  if (currentStream) {
+    currentStream.getTracks().forEach((t) => t.stop());
+    currentStream = null;
+  }
 
-    // === ACTIVAR CÁMARA ===
+  try {
+    // Pedir cámara trasera
     const stream = await navigator.mediaDevices.getUserMedia({
       video: { facingMode: "environment" },
+      audio: false,
     });
-    video.srcObject = stream;
 
+    currentStream = stream;
+    video.srcObject = stream;
     await video.play();
 
-    // Esperar a que el video tenga dimensiones reales
-    await new Promise((resolve) => {
-      if (video.readyState >= 1 && video.videoWidth > 0) {
-        resolve();
-      } else {
-        video.onloadedmetadata = () => resolve();
-      }
-    });
-
-    // Ajustar tamaño real del frame
-    video.width = video.videoWidth;
-    video.height = video.videoHeight;
-    // =======================
-
-    const detector = new BarcodeDetector({
-      formats: [
-        "aztec",
-        "code_128",
-        "code_39",
-        "code_93",
-        "codabar",
-        "data_matrix",
-        "ean_13",
-        "ean_8",
-        "itf",
-        "pdf417",
-        "qr_code",
-        "upc_a",
-        "upc_e",
-      ],
-    });
+    // Crear lector ZXing si no existe
+    if (!zxingReader) {
+      zxingReader = new ZXing.BrowserMultiFormatReader();
+    }
 
     scannerActivo = true;
 
-    async function escanear() {
-      if (!scannerActivo) return;
-
-      try {
-        const barcodes = await detector.detect(video);
-
-        if (barcodes.length > 0) {
-          const codigo = barcodes[0].rawValue.trim();
-          procesarCodigo(codigo);
-        }
-      } catch (err) {
-        console.error("Error detectando:", err);
-      }
-
-      requestAnimationFrame(escanear);
-    }
-
-    escanear();
+    // Loop de lectura
+    leerLoopZXing(video);
   } catch (err) {
-    console.error("Error iniciando cámara:", err);
+    console.error("Error iniciando cámara ZXing:", err);
+  }
+}
+
+// ------------------------------------------------------------
+// LOOP DE LECTURA ZXING
+// ------------------------------------------------------------
+
+async function leerLoopZXing(video) {
+  if (!scannerActivo || !zxingReader) return;
+
+  try {
+    const result = await zxingReader.decodeOnceFromVideoElement(video);
+    if (result && result.text) {
+      const codigo = result.text.trim();
+      procesarCodigo(codigo);
+    }
+  } catch (err) {
+    // ZXing tira error cuando no encuentra nada en un frame, es normal.
+    // No lo logueamos para no ensuciar la consola.
+  }
+
+  if (scannerActivo) {
+    // Volvemos a intentar
+    leerLoopZXing(video);
   }
 }
 
@@ -122,6 +109,7 @@ function extraerArticulo(codigo) {
 
 function cargarEnInput(texto) {
   const input = document.getElementById("search-input");
+  if (!input) return;
   input.value = texto;
   input.dispatchEvent(new Event("input"));
 }
@@ -132,4 +120,16 @@ function cargarEnInput(texto) {
 
 function setModoScanner(nuevoModo) {
   modoScanner = nuevoModo;
+}
+
+// ------------------------------------------------------------
+// CERRAR SCANNER (lo llama ui.js al cerrar overlay)
+// ------------------------------------------------------------
+
+function cerrarScannerZXing() {
+  scannerActivo = false;
+  if (currentStream) {
+    currentStream.getTracks().forEach((t) => t.stop());
+    currentStream = null;
+  }
 }
