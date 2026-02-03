@@ -101,7 +101,7 @@ orb.addEventListener("mouseleave", () => {
 });
 
 // ============================================================
-// INTEGRACIÓN DEL SCANNER
+// INTEGRACIÓN DEL SCANNER (ZXING)
 // ============================================================
 
 const scannerOverlay = document.getElementById("scanner-overlay");
@@ -111,12 +111,12 @@ const scannerBtn = document.getElementById("btn-scanner");
 // Abrir scanner
 function abrirScanner() {
   scannerOverlay.classList.add("visible");
-  iniciarScanner(); // función de scanner.js
+  iniciarScanner(); // función del nuevo scanner.js (ZXing)
 }
 
 // Cerrar scanner
 function cerrarScanner() {
-  scannerActivo = false; // variable de scanner.js
+  cerrarScannerZXing(); // función del nuevo scanner.js
   scannerOverlay.classList.remove("visible");
 }
 
@@ -128,9 +128,9 @@ if (scannerCloseBtn) {
   scannerCloseBtn.addEventListener("click", cerrarScanner);
 }
 
-// ------------------------------------------------------------
+// ============================================================
 // MODO SIMPLE / COMPLETO (con scanner.js)
-// ------------------------------------------------------------
+// ============================================================
 
 const btnSimple = document.getElementById("scanner-mode-simple");
 const btnCompleto = document.getElementById("scanner-mode-completo");
