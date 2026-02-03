@@ -21,7 +21,7 @@ if (orb) {
 }
 
 // ============================================================
-// SCANNER (QUAGGA2)
+// SCANNER WEB (QUAGGA2)
 // ============================================================
 
 const scannerBtn = document.getElementById("btn-scanner");
@@ -39,6 +39,20 @@ if (scannerClose) {
   scannerClose.addEventListener("click", () => {
     cerrarScannerQuagga();
     scannerOverlay.style.display = "none";
+  });
+}
+
+// ============================================================
+// SCANNER NATIVO (Barcode Scanner+)
+// ============================================================
+
+const scannerNativoBtn = document.getElementById("btn-scanner-nativo");
+
+if (scannerNativoBtn) {
+  scannerNativoBtn.addEventListener("click", () => {
+    const retUrl = encodeURIComponent(window.location.origin + window.location.pathname + "?code={CODE}");
+    const intent = `intent://scan/?ret=${retUrl}#Intent;scheme=zxing;package=com.srowen.bs.android;end;`;
+    window.location.href = intent;
   });
 }
 
