@@ -12,7 +12,7 @@
 <body class="orb-center orb-b2">
 
   <div style="background:red;color:white;padding:10px;font-size:20px;">
-    VERSION TEST 999 — QUAGGA2 WASM
+    VERSION TEST 999 — SCANNER MIXTO
   </div>
 
   <div class="app-shell">
@@ -45,23 +45,6 @@
         </div>
       </div>
 
-      <div class="top-controls">
-        <button class="mode-toggle" id="toggle-dark">Modo Día/Noche</button>
-        <button class="admin-btn admin-hidden" id="open-admin">Admin</button>
-
-        <div class="top-right-group">
-          <div class="switch-row">
-            <span>Manos libres</span>
-            <label class="switch">
-              <input type="checkbox" id="handsfree-toggle" />
-              <span class="slider"></span>
-            </label>
-          </div>
-
-          <button class="voice-btn" id="toggle-voice">Voz</button>
-        </div>
-      </div>
-
       <section class="search-card">
         <div class="search-row">
 
@@ -75,8 +58,11 @@
             />
           </div>
 
-          <!-- BOTÓN SCAN -->
+          <!-- BOTÓN SCAN WEB -->
           <button id="btn-scanner" class="scanner-btn" title="Escanear">📸</button>
+
+          <!-- BOTÓN SCAN NATIVO -->
+          <button id="btn-scanner-nativo" class="scanner-btn" title="Lector avanzado">📱</button>
 
           <div class="scanner-mode-switch">
             <div id="scanner-mode-simple" class="scanner-mode-option active">Simple</div>
@@ -118,19 +104,6 @@
           </div>
         </div>
 
-        <div class="filtros-panel" id="filtros-panel">
-          <div class="filtros-row">
-            <select id="filtro-marca" class="filtro-select"></select>
-            <select id="filtro-rubro" class="filtro-select"></select>
-          </div>
-          <div class="filtros-row">
-            <input type="number" id="filtro-talle-desde" class="filtro-input" placeholder="Talle desde" />
-            <input type="number" id="filtro-talle-hasta" class="filtro-input" placeholder="Talle hasta" />
-          </div>
-          <div class="filtros-row filtros-actions">
-            <button class="btn-secondary" id="btn-aplicar-filtros">Aplicar filtros</button>
-          </div>
-        </div>
       </section>
 
       <div class="main-row">
@@ -156,14 +129,7 @@
     </div>
   </div>
 
-  <div id="toast" class="toast"></div>
-
-  <!-- PANEL ADMIN (tu contenido original) -->
-  <div id="admin-panel" class="admin-panel">
-    <!-- acá va el panel admin que ya tenías -->
-  </div>
-
-  <!-- ⭐ OVERLAY SCANNER MODERNO PARA QUAGGA2 -->
+  <!-- OVERLAY SCANNER WEB -->
   <div id="scanner-overlay" class="scanner-overlay" style="
     position:fixed;
     inset:0;
@@ -195,7 +161,6 @@
         z-index:2;
       "></div>
 
-      <!-- Contenedor donde Quagga2 dibuja el video/canvas -->
       <div id="scanner-container" style="
         width:100%;
         height:100%;
@@ -221,9 +186,7 @@
     </div>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-  <!-- ⭐ QUAGGA2 WASM -->
+  <!-- QUAGGA2 -->
   <script src="https://unpkg.com/@ericblade/quagga2@1.2.6/dist/quagga.js"></script>
 
   <script src="scanner.js"></script>
