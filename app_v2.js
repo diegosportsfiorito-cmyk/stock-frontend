@@ -21,8 +21,6 @@ const els = {
   orb: document.getElementById("orb"),
   stockChartCanvas: document.getElementById("stockChart"),
   btnTabla: document.getElementById("btn-tabla"),
-  scannerModeSimple: document.getElementById("scanner-mode-simple"),
-  scannerModeCompleto: document.getElementById("scanner-mode-completo"),
 };
 
 const API_URL = "https://stock-backend-1-0upi.onrender.com/query";
@@ -46,7 +44,6 @@ const state = {
     talleHasta: null,
   },
   modoTabla: false,
-  scannerMode: "solo_articulo",
 };
 
 // ============================================================
@@ -266,7 +263,6 @@ function renderChart(items) {
     },
   });
 }
-
 // ============================================================
 // COPIAR RESULTADOS
 // ============================================================
@@ -650,19 +646,12 @@ function initEvents() {
     renderResultados(state.items);
   });
 
-  // SWITCH SCANNER SIMPLE / COMPLETO
-  els.scannerModeSimple.addEventListener("click", () => {
-    state.scannerMode = "solo_articulo";
-    els.scannerModeSimple.classList.add("active");
-    els.scannerModeCompleto.classList.remove("active");
-  });
-
-  els.scannerModeCompleto.addEventListener("click", () => {
-    state.scannerMode = "completo";
-    els.scannerModeCompleto.classList.add("active");
-    els.scannerModeSimple.classList.remove("active");
-  });
-
+  // Manos libres toggle (si existe)
+  if (els.handsfreeToggle) {
+    els.handsfreeToggle.addEventListener("change", (e) => {
+      toggleManosLibres(e.target.checked);
+    });
+  }
 }
 
 // ============================================================
@@ -678,6 +667,7 @@ async function init() {
 }
 
 document.addEventListener("DOMContentLoaded", init);
+
 // ============================================================
 // PANEL ADMIN — CONFIGURACIÓN DEL ORB
 // ============================================================
