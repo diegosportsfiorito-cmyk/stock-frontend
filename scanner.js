@@ -26,7 +26,7 @@ async function iniciarScanner() {
         type: "LiveStream",
         target: videoEl,
         constraints: {
-          facingMode: "environment",
+          facingMode: "user",
         },
       },
       decoder: {
