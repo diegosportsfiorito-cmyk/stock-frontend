@@ -6,7 +6,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>STOCK IA PRO — Asistente inteligente de stock</title>
+  <title>STOCK IA PRO — Scanner en vivo</title>
 
   <link rel="stylesheet" href="orb.css" />
   <link rel="stylesheet" href="styles.css" />
@@ -14,8 +14,9 @@
 
 <body class="orb-center orb-b2">
 
+  <!-- TEST VISUAL -->
   <div style="background:red;color:white;padding:10px;font-size:20px;">
-    VERSION TEST 996 — SCANNER HÍBRIDO
+    VERSION TEST 995 — SCANNER EN VIVO
   </div>
 
   <div class="app-shell">
@@ -86,16 +87,31 @@
     </div>
   </div>
 
-  <!-- ⭐ INPUT DE CÁMARA NATIVA (HÍBRIDO) -->
-  <input
-    id="camera-input"
-    type="file"
-    accept="image/*"
-    capture="environment"
-    style="display:none;"
-  />
+  <!-- ⭐ OVERLAY SCANNER — VIDEO DIRECTO SIN DISTORSIÓN -->
+  <div id="scanner-overlay" style="
+    position:fixed;
+    top:0; left:0;
+    width:100%; height:100%;
+    background:black;
+    display:none;
+    flex-direction:column;
+    z-index:9999;
+  ">
+    <video id="scanner-video" autoplay playsinline style="
+      width:100%;
+      height:auto;
+      background:black;
+      flex-grow:1;
+    "></video>
 
-  <script src="https://unpkg.com/@zxing/library@latest"></script>
+    <button id="scanner-close" style="
+      padding:20px;
+      font-size:20px;
+      background:white;
+      border:none;
+      width:100%;
+    ">Cerrar</button>
+  </div>
 
   <script src="scanner.js"></script>
   <script src="ui.js"></script>
