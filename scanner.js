@@ -22,11 +22,10 @@ async function iniciarScanner() {
         name: "Live",
         type: "LiveStream",
         target: container,
-        constraints: {
-          facingMode: "environment",
-          width: { ideal: 1280 },
-          height: { ideal: 720 }
-        }
+        constraints: { facingMode: "environment", 
+                      width: { ideal: 640 }, 
+                      height: { ideal: 480 }, 
+                      aspectRatio: { ideal: 1.333 } // 4:3 estable }  
       },
       decoder: {
         readers: [
