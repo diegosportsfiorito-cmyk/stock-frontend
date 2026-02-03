@@ -1,111 +1,98 @@
 // ============================================================
-// SCANNER ZXING — LECTOR ROBUSTO MULTI-FORMATO
+// SCANNER — Quagga (lector robusto multi-formato)
 // ============================================================
 
 let scannerActivo = false;
 let modoScanner = "simple"; // "simple" o "completo"
-let zxingReader = null;
-let currentStream = null;
 
 // ------------------------------------------------------------
-// INICIAR SCANNER (ZXing)
+// INICIAR SCANNER
 // ------------------------------------------------------------
 
 async function iniciarScanner() {
-  const video = document.getElementById("scanner-video");
-  if (!video) {
+  const videoEl = document.getElementById("scanner-video");
+  if (!videoEl) {
     console.error("No se encontró #scanner-video");
     return;
   }
 
-  // Si ya hay un stream viejo, lo cortamos
-  if (currentStream) {
-    currentStream.getTracks().forEach((t) => t.stop());
-    currentStream = null;
-  }
+  if (scannerActivo) cerrarScannerQuagga();
+  scannerActivo = true;
 
-  try {
-    // Pedir cámara trasera
-    const stream = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode: "environment" },
-      audio: false,
-    });
-
-    currentStream = stream;
-    video.srcObject = stream;
-    await video.play();
-
-    // Crear lector ZXing si no existe
-    if (!zxingReader) {
-      zxingReader = new ZXing.BrowserMultiFormatReader();
+  Quagga.init(
+    {
+      inputStream: {
+        name: "Live",
+        type: "LiveStream",
+        target: videoEl,
+        constraints: {
+          facingMode: "environment",
+        },
+      },
+      decoder: {
+        readers: [
+          "ean_reader",
+          "ean_8_reader",
+          "upc_reader",
+          "upc_e_reader",
+          "code_128_reader",
+          "code_39_reader",
+          "code_93_reader",
+          "itf_reader",
+          "codabar_reader",
+        ],
+      },
+      locate: true,
+    },
+    function (err) {
+      if (err) {
+        console.error("Error iniciando Quagga:", err);
+        scannerActivo = false;
+        return;
+      }
+      Quagga.start();
     }
+  );
 
-    scannerActivo = true;
-
-    // Loop de lectura
-    leerLoopZXing(video);
-  } catch (err) {
-    console.error("Error iniciando cámara ZXing:", err);
-  }
+  Quagga.offDetected(onDetectedHandler);
+  Quagga.onDetected(onDetectedHandler);
 }
 
 // ------------------------------------------------------------
-// LOOP DE LECTURA ZXING
+// HANDLER DE DETECCIÓN
 // ------------------------------------------------------------
 
-async function leerLoopZXing(video) {
-  if (!scannerActivo || !zxingReader) return;
+function onDetectedHandler(result) {
+  if (!scannerActivo) return;
+  if (!result || !result.codeResult || !result.codeResult.code) return;
 
-  try {
-    const result = await zxingReader.decodeOnceFromVideoElement(video);
-    if (result && result.text) {
-      const codigo = result.text.trim();
-      procesarCodigo(codigo);
-    }
-  } catch (err) {
-    // ZXing tira error cuando no encuentra nada en un frame, es normal.
-    // No lo logueamos para no ensuciar la consola.
-  }
+  const codigo = result.codeResult.code.trim();
+  procesarCodigo(codigo);
 
-  if (scannerActivo) {
-    // Volvemos a intentar
-    leerLoopZXing(video);
-  }
+  // Si querés que cierre después de leer uno:
+  // cerrarScannerQuagga();
+  // document.getElementById("scanner-overlay").classList.remove("visible");
 }
 
 // ------------------------------------------------------------
-// PROCESAR CÓDIGO SEGÚN MODO
+// PROCESAR CÓDIGO
 // ------------------------------------------------------------
 
 function procesarCodigo(codigo) {
   let resultado = codigo;
-
-  if (modoScanner === "simple") {
-    resultado = extraerArticulo(codigo);
-  }
-
+  if (modoScanner === "simple") resultado = extraerArticulo(codigo);
   cargarEnInput(resultado);
 }
-
-// ------------------------------------------------------------
-// EXTRAER SOLO ARTÍCULO (antes de / o !)
-// ------------------------------------------------------------
 
 function extraerArticulo(codigo) {
   const separadores = ["/", "!"];
   let corte = codigo.length;
-
   separadores.forEach((sep) => {
     const pos = codigo.indexOf(sep);
     if (pos !== -1 && pos < corte) corte = pos;
   });
-
   return codigo.substring(0, corte);
 }
-
-// ------------------------------------------------------------
-// CARGAR RESULTADO EN EL INPUT PRINCIPAL
-// ------------------------------------------------------------
 
 function cargarEnInput(texto) {
   const input = document.getElementById("search-input");
@@ -114,22 +101,19 @@ function cargarEnInput(texto) {
   input.dispatchEvent(new Event("input"));
 }
 
-// ------------------------------------------------------------
-// CAMBIAR MODO DESDE UI
-// ------------------------------------------------------------
-
 function setModoScanner(nuevoModo) {
   modoScanner = nuevoModo;
 }
 
 // ------------------------------------------------------------
-// CERRAR SCANNER (lo llama ui.js al cerrar overlay)
+// CERRAR SCANNER
 // ------------------------------------------------------------
 
-function cerrarScannerZXing() {
+function cerrarScannerQuagga() {
   scannerActivo = false;
-  if (currentStream) {
-    currentStream.getTracks().forEach((t) => t.stop());
-    currentStream = null;
+  try {
+    Quagga.stop();
+  } catch (e) {
+    console.warn("Quagga ya estaba detenido:", e);
   }
 }
