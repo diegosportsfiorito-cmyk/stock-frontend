@@ -14,11 +14,18 @@ async function iniciarScanner() {
 
   try {
     stream = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode: "environment" }
+      video: {
+        facingMode: "environment",
+        width: { ideal: 1920 },
+        height: { ideal: 1080 },
+        advanced: [
+          { focusMode: "continuous" }
+        ]
+      }
     });
 
     video.srcObject = stream;
-    video.play();
+    await video.play();
 
     detectarLoop(video);
 
@@ -33,6 +40,11 @@ async function iniciarScanner() {
 // ------------------------------------------------------------
 
 async function detectarLoop(video) {
+  if (!("BarcodeDetector" in window)) {
+    alert("BarcodeDetector no está soportado en este navegador.");
+    return;
+  }
+
   const detector = new BarcodeDetector({
     formats: ["ean_13", "ean_8", "code_128", "code_39", "upc_a", "upc_e"]
   });
@@ -82,6 +94,7 @@ function extraerArticulo(codigo) {
 
 function cargarEnInput(texto) {
   const input = document.getElementById("search-input");
+  if (!input) return;
   input.value = texto;
   input.dispatchEvent(new Event("input"));
 }
