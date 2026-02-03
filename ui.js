@@ -5,10 +5,6 @@
 const orb = document.getElementById("orb");
 const orbTooltip = document.getElementById("orb-tooltip");
 
-// ------------------------------------------------------------
-// TOOLTIP DEL ORB
-// ------------------------------------------------------------
-
 let tooltipTimeout = null;
 
 function showOrbTooltip() {
@@ -22,10 +18,6 @@ function showOrbTooltip() {
 orb.addEventListener("mouseenter", showOrbTooltip);
 orb.addEventListener("click", showOrbTooltip);
 
-// ------------------------------------------------------------
-// AJUSTE DE TAMAÑO SEGÚN CLASES DEL BODY (orb-b1 / orb-b2 / orb-b3)
-// ------------------------------------------------------------
-
 function applyOrbSizeFromBody() {
   if (document.body.classList.contains("orb-b1")) {
     orb.style.width = "70px";
@@ -38,28 +30,20 @@ function applyOrbSizeFromBody() {
     orb.style.height = "160px";
   }
 }
-
 applyOrbSizeFromBody();
-
-// ------------------------------------------------------------
-// AJUSTE DE POSICIÓN SEGÚN CONFIGURACIÓN DEL ADMIN PANEL
-// ------------------------------------------------------------
 
 function applyOrbPosition() {
   const pos = document.body.dataset.orbPos;
-
   if (!pos || pos === "center") {
     orb.style.position = "relative";
     orb.style.margin = "0 auto";
     return;
   }
-
   if (pos === "left") {
     orb.style.position = "relative";
     orb.style.margin = "0 auto 0 0";
     return;
   }
-
   if (pos === "floating") {
     orb.style.position = "fixed";
     orb.style.bottom = "20px";
@@ -67,69 +51,50 @@ function applyOrbPosition() {
     orb.style.margin = "0";
   }
 }
-
 applyOrbPosition();
-
-// ------------------------------------------------------------
-// OBSERVADOR PARA CAMBIOS EN EL BODY
-// ------------------------------------------------------------
 
 const bodyObserver = new MutationObserver(() => {
   applyOrbSizeFromBody();
   applyOrbPosition();
 });
-
 bodyObserver.observe(document.body, {
   attributes: true,
   attributeFilter: ["class", "data-orb-pos"],
 });
 
-// ------------------------------------------------------------
-// EFECTO VISUAL AL HACER CLICK EN EL ORB
-// ------------------------------------------------------------
-
 orb.addEventListener("mousedown", () => {
   orb.style.transform = "scale(0.92)";
 });
-
 orb.addEventListener("mouseup", () => {
   orb.style.transform = "scale(1)";
 });
-
 orb.addEventListener("mouseleave", () => {
   orb.style.transform = "scale(1)";
 });
 
 // ============================================================
-// INTEGRACIÓN DEL SCANNER (ZXING)
+// SCANNER (QUAGGA)
 // ============================================================
 
 const scannerOverlay = document.getElementById("scanner-overlay");
 const scannerCloseBtn = document.getElementById("scanner-close");
 const scannerBtn = document.getElementById("btn-scanner");
 
-// Abrir scanner
 function abrirScanner() {
   scannerOverlay.classList.add("visible");
-  iniciarScanner(); // función del nuevo scanner.js (ZXing)
+  iniciarScanner();
 }
 
-// Cerrar scanner
 function cerrarScanner() {
-  cerrarScannerZXing(); // función del nuevo scanner.js
+  cerrarScannerQuagga();
   scannerOverlay.classList.remove("visible");
 }
 
-// Eventos del scanner
-if (scannerBtn) {
-  scannerBtn.addEventListener("click", abrirScanner);
-}
-if (scannerCloseBtn) {
-  scannerCloseBtn.addEventListener("click", cerrarScanner);
-}
+if (scannerBtn) scannerBtn.addEventListener("click", abrirScanner);
+if (scannerCloseBtn) scannerCloseBtn.addEventListener("click", cerrarScanner);
 
 // ============================================================
-// MODO SIMPLE / COMPLETO (con scanner.js)
+// MODO SIMPLE / COMPLETO
 // ============================================================
 
 const btnSimple = document.getElementById("scanner-mode-simple");
@@ -150,5 +115,5 @@ if (btnSimple && btnCompleto) {
 }
 
 // ============================================================
-// FIN DEL ARCHIVO UI
+// FIN UI
 // ============================================================
