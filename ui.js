@@ -1,5 +1,5 @@
 // ============================================================
-// UI — ORB + SCANNER
+// UI — ORB, TOOLTIP, SCANNER, MODOS
 // ============================================================
 
 const orb = document.getElementById("orb");
@@ -15,8 +15,10 @@ function showOrbTooltip() {
   }, 2000);
 }
 
-orb.addEventListener("mouseenter", showOrbTooltip);
-orb.addEventListener("click", showOrbTooltip);
+if (orb) {
+  orb.addEventListener("mouseenter", showOrbTooltip);
+  orb.addEventListener("click", showOrbTooltip);
+}
 
 // ============================================================
 // SCANNER
@@ -24,15 +26,20 @@ orb.addEventListener("click", showOrbTooltip);
 
 const scannerBtn = document.getElementById("btn-scanner");
 const scannerClose = document.getElementById("scanner-close");
+const scannerOverlay = document.getElementById("scanner-overlay");
 
-scannerBtn.addEventListener("click", () => {
-  document.getElementById("scanner-overlay").style.display = "flex";
-  iniciarScanner();
-});
+if (scannerBtn) {
+  scannerBtn.addEventListener("click", () => {
+    scannerOverlay.style.display = "flex";
+    iniciarScanner();
+  });
+}
 
-scannerClose.addEventListener("click", () => {
-  cerrarScanner();
-});
+if (scannerClose) {
+  scannerClose.addEventListener("click", () => {
+    cerrarScanner();
+  });
+}
 
 // ============================================================
 // MODO SIMPLE / COMPLETO
@@ -41,14 +48,16 @@ scannerClose.addEventListener("click", () => {
 const btnSimple = document.getElementById("scanner-mode-simple");
 const btnCompleto = document.getElementById("scanner-mode-completo");
 
-btnSimple.addEventListener("click", () => {
-  modoScanner = "simple";
-  btnSimple.classList.add("active");
-  btnCompleto.classList.remove("active");
-});
+if (btnSimple && btnCompleto) {
+  btnSimple.addEventListener("click", () => {
+    modoScanner = "simple";
+    btnSimple.classList.add("active");
+    btnCompleto.classList.remove("active");
+  });
 
-btnCompleto.addEventListener("click", () => {
-  modoScanner = "completo";
-  btnCompleto.classList.add("active");
-  btnSimple.classList.remove("active");
-});
+  btnCompleto.addEventListener("click", () => {
+    modoScanner = "completo";
+    btnCompleto.classList.add("active");
+    btnSimple.classList.remove("active");
+  });
+}
