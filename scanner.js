@@ -1,15 +1,17 @@
-// ===============================
-//  SCANNER — Versión Definitiva
-// ===============================
+// ============================================================
+// SCANNER — Versión Definitiva con Cámara + Modos
+// ============================================================
 
 let scannerActivo = false;
 let modoScanner = "simple"; 
 // valores posibles: "simple" o "completo"
 
-// Detectar soporte
 const soportaBarcode = ('BarcodeDetector' in window);
 
-// Inicializar scanner
+// ------------------------------------------------------------
+// INICIAR SCANNER (abre cámara + detector)
+// ------------------------------------------------------------
+
 async function iniciarScanner() {
     if (!soportaBarcode) {
         console.warn("BarcodeDetector no disponible en este navegador.");
@@ -17,7 +19,19 @@ async function iniciarScanner() {
     }
 
     try {
-        const detector = new BarcodeDetector({ formats: ['code_128', 'ean_13', 'ean_8', 'code_39', 'qr_code'] });
+        const video = document.getElementById("scanner-video");
+
+        // === ACTIVAR CÁMARA ===
+        const stream = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode: "environment" }
+        });
+        video.srcObject = stream;
+        await video.play();
+        // =======================
+
+        const detector = new BarcodeDetector({
+            formats: ['code_128', 'ean_13', 'ean_8', 'code_39', 'qr_code']
+        });
 
         scannerActivo = true;
 
@@ -25,7 +39,6 @@ async function iniciarScanner() {
             if (!scannerActivo) return;
 
             try {
-                const video = document.querySelector("#scanner-video");
                 const barcodes = await detector.detect(video);
 
                 if (barcodes.length > 0) {
@@ -33,7 +46,7 @@ async function iniciarScanner() {
                     procesarCodigo(codigo);
                 }
             } catch (err) {
-                console.error("Error en detección:", err);
+                console.error("Error detectando:", err);
             }
 
             requestAnimationFrame(escanear);
@@ -42,11 +55,14 @@ async function iniciarScanner() {
         escanear();
 
     } catch (err) {
-        console.error("Error iniciando scanner:", err);
+        console.error("Error iniciando cámara:", err);
     }
 }
 
-// Procesar según modo
+// ------------------------------------------------------------
+// PROCESAR CÓDIGO SEGÚN MODO
+// ------------------------------------------------------------
+
 function procesarCodigo(codigo) {
     let resultado = codigo;
 
@@ -57,7 +73,10 @@ function procesarCodigo(codigo) {
     cargarEnInput(resultado);
 }
 
-// Extraer solo el artículo (antes del primer / o !)
+// ------------------------------------------------------------
+// EXTRAER SOLO ARTÍCULO (antes de / o !)
+// ------------------------------------------------------------
+
 function extraerArticulo(codigo) {
     const separadores = ['/', '!'];
     let corte = codigo.length;
@@ -70,14 +89,20 @@ function extraerArticulo(codigo) {
     return codigo.substring(0, corte);
 }
 
-// Cargar en el input principal
+// ------------------------------------------------------------
+// CARGAR RESULTADO EN EL INPUT PRINCIPAL
+// ------------------------------------------------------------
+
 function cargarEnInput(texto) {
-    const input = document.querySelector("#input-busqueda");
+    const input = document.getElementById("search-input");
     input.value = texto;
     input.dispatchEvent(new Event("input"));
 }
 
-// Cambiar modo desde UI
+// ------------------------------------------------------------
+// CAMBIAR MODO DESDE UI
+// ------------------------------------------------------------
+
 function setModoScanner(nuevoModo) {
-    modoScanner = nuevoModo; // "simple" o "completo"
+    modoScanner = nuevoModo;
 }
