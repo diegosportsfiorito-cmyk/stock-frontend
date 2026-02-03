@@ -6,7 +6,7 @@ let scannerActivo = false;
 let modoScanner = "simple";
 
 // ------------------------------------------------------------
-// INICIAR SCANNER WEB (SIN ZOOM, SIN MITAD NEGRA)
+// INICIAR SCANNER WEB (SIN ZOOM, SIN RECORTE, SIN LECTURAS FALSAS)
 // ------------------------------------------------------------
 
 async function iniciarScanner() {
