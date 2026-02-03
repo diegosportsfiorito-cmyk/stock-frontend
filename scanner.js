@@ -6,7 +6,7 @@ let scannerActivo = false;
 let modoScanner = "simple";
 
 // ------------------------------------------------------------
-// INICIAR SCANNER WEB
+// INICIAR SCANNER WEB (SIN ZOOM)
 // ------------------------------------------------------------
 
 async function iniciarScanner() {
@@ -22,12 +22,12 @@ async function iniciarScanner() {
         name: "Live",
         type: "LiveStream",
         target: container,
-        constraints: { 
+        constraints: {
           facingMode: "environment",
-          width: { ideal: 1280 },
-          height: { ideal: 720 }
-        }   // ⭐ ESTA LLAVE FALTABA
-      },    // ⭐ ESTA LLAVE TAMBIÉN FALTABA
+          width: { ideal: 960 },
+          height: { ideal: 540 }
+        }
+      },
       decoder: {
         readers: [
           "ean_reader",
@@ -44,6 +44,7 @@ async function iniciarScanner() {
       if (err) {
         console.error("Error iniciando Quagga2:", err);
         scannerActivo = false;
+        alert("No se pudo iniciar la cámara.");
         return;
       }
       Quagga.start();
