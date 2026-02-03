@@ -3,23 +3,17 @@
 // ============================================================
 
 let scannerActivo = false;
-let modoScanner = "simple"; // "simple" o "completo"
+let modoScanner = "simple";
 
 // ------------------------------------------------------------
-// INICIAR SCANNER
+// INICIAR SCANNER WEB
 // ------------------------------------------------------------
 
 async function iniciarScanner() {
   const container = document.getElementById("scanner-container");
-  if (!container) {
-    console.error("No se encontró #scanner-container");
-    return;
-  }
+  if (!container) return;
 
-  if (scannerActivo) {
-    cerrarScannerQuagga();
-  }
-
+  if (scannerActivo) cerrarScannerQuagga();
   scannerActivo = true;
 
   Quagga.init(
@@ -30,8 +24,8 @@ async function iniciarScanner() {
         target: container,
         constraints: {
           facingMode: "environment",
-          width: { ideal: 1920 },
-          height: { ideal: 1080 }
+          width: { ideal: 1280 },
+          height: { ideal: 720 }
         }
       },
       decoder: {
@@ -41,20 +35,15 @@ async function iniciarScanner() {
           "upc_reader",
           "upc_e_reader",
           "code_128_reader",
-          "code_39_reader",
-          "code_93_reader",
-          "itf_reader",
-          "codabar_reader"
+          "code_39_reader"
         ]
       },
-      locate: true,
-      numOfWorkers: 2
+      locate: true
     },
     function (err) {
       if (err) {
         console.error("Error iniciando Quagga2:", err);
         scannerActivo = false;
-        alert("No se pudo iniciar el scanner.");
         return;
       }
       Quagga.start();
@@ -66,23 +55,22 @@ async function iniciarScanner() {
 }
 
 // ------------------------------------------------------------
-// HANDLER DE DETECCIÓN
+// DETECCIÓN WEB
 // ------------------------------------------------------------
 
 function onDetectedHandler(result) {
   if (!scannerActivo) return;
-  if (!result || !result.codeResult || !result.codeResult.code) return;
+  if (!result?.codeResult?.code) return;
 
-  const codigoCrudo = result.codeResult.code.trim();
-  procesarCodigo(codigoCrudo);
+  const codigo = result.codeResult.code.trim();
+  procesarCodigo(codigo);
 
-  // Si querés que siga leyendo, comentá estas dos líneas:
   cerrarScannerQuagga();
   document.getElementById("scanner-overlay").style.display = "none";
 }
 
 // ------------------------------------------------------------
-// PROCESAR CÓDIGO SEGÚN MODO
+// PROCESAR CÓDIGO
 // ------------------------------------------------------------
 
 function procesarCodigo(codigo) {
@@ -115,22 +103,26 @@ function cargarEnInput(texto) {
 }
 
 // ------------------------------------------------------------
-// CAMBIAR MODO
-// ------------------------------------------------------------
-
-function setModoScanner(nuevoModo) {
-  modoScanner = nuevoModo;
-}
-
-// ------------------------------------------------------------
-// CERRAR SCANNER
+// CERRAR SCANNER WEB
 // ------------------------------------------------------------
 
 function cerrarScannerQuagga() {
   scannerActivo = false;
   try {
     Quagga.stop();
-  } catch (e) {
-    console.warn("Quagga ya estaba detenido:", e);
-  }
+  } catch (e) {}
 }
+
+// ------------------------------------------------------------
+// PROCESAR RETORNO DE BARCODE SCANNER+
+// ------------------------------------------------------------
+
+(function procesarRetornoNativo() {
+  const params = new URLSearchParams(window.location.search);
+  const code = params.get("code");
+
+  if (code) {
+    procesarCodigo(code);
+    history.replaceState({}, "", window.location.pathname);
+  }
+})();
