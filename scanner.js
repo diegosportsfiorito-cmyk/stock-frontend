@@ -1,116 +1,83 @@
-// ============================================================
-// SCANNER — Apertura, cámara, lectura y cierre
-// ============================================================
+// ===============================
+//  SCANNER — Versión Definitiva
+// ===============================
 
-let stream = null;
-let barcodeDetector = null;
+let scannerActivo = false;
+let modoScanner = "simple"; 
+// valores posibles: "simple" o "completo"
 
-const overlay = document.getElementById("scanner-overlay");
-const video = document.getElementById("scanner-video");
-const btnClose = document.getElementById("scanner-close");
+// Detectar soporte
+const soportaBarcode = ('BarcodeDetector' in window);
 
-// ------------------------------------------------------------
-// Inicializar BarcodeDetector (si está disponible)
-// ------------------------------------------------------------
-
-if ("BarcodeDetector" in window) {
-  try {
-    barcodeDetector = new BarcodeDetector({
-      formats: ["ean_13", "ean_8", "code_128", "code_39", "upc_a", "upc_e"],
-    });
-  } catch (e) {
-    console.warn("BarcodeDetector no soportado:", e);
-    barcodeDetector = null;
-  }
-} else {
-  console.warn("BarcodeDetector no disponible en este navegador.");
-  barcodeDetector = null;
-}
-
-// ------------------------------------------------------------
-// ABRIR SCANNER
-// ------------------------------------------------------------
-
-window.abrirScanner = async function (modo = "solo_articulo") {
-  try {
-    overlay.style.display = "flex";
-
-    stream = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode: "environment" },
-    });
-
-    video.srcObject = stream;
-    video.play();
-
-    escanearLoop(modo);
-  } catch (e) {
-    console.error("Error al abrir cámara:", e);
-    showToast("No se pudo acceder a la cámara");
-    cerrarScanner();
-  }
-};
-
-// ------------------------------------------------------------
-// LOOP DE ESCANEO
-// ------------------------------------------------------------
-
-async function escanearLoop(modo) {
-  if (!barcodeDetector) return;
-
-  try {
-    const barcodes = await barcodeDetector.detect(video);
-
-    if (barcodes.length > 0) {
-      const code = barcodes[0].rawValue.trim();
-      procesarCodigo(code, modo);
-      return; // Detener loop al detectar
+// Inicializar scanner
+async function iniciarScanner() {
+    if (!soportaBarcode) {
+        console.warn("BarcodeDetector no disponible en este navegador.");
+        return;
     }
-  } catch (e) {
-    console.warn("Error detectando código:", e);
-  }
 
-  requestAnimationFrame(() => escanearLoop(modo));
+    try {
+        const detector = new BarcodeDetector({ formats: ['code_128', 'ean_13', 'ean_8', 'code_39', 'qr_code'] });
+
+        scannerActivo = true;
+
+        async function escanear() {
+            if (!scannerActivo) return;
+
+            try {
+                const video = document.querySelector("#scanner-video");
+                const barcodes = await detector.detect(video);
+
+                if (barcodes.length > 0) {
+                    const codigo = barcodes[0].rawValue.trim();
+                    procesarCodigo(codigo);
+                }
+            } catch (err) {
+                console.error("Error en detección:", err);
+            }
+
+            requestAnimationFrame(escanear);
+        }
+
+        escanear();
+
+    } catch (err) {
+        console.error("Error iniciando scanner:", err);
+    }
 }
 
-// ------------------------------------------------------------
-// PROCESAR CÓDIGO DETECTADO
-// ------------------------------------------------------------
+// Procesar según modo
+function procesarCodigo(codigo) {
+    let resultado = codigo;
 
-function procesarCodigo(code, modo) {
-  cerrarScanner();
+    if (modoScanner === "simple") {
+        resultado = extraerArticulo(codigo);
+    }
 
-  els.searchInput.value = code;
-  orbSetReady(true);
-
-  if (modo === "solo_articulo") {
-    buscar(false);
-  } else if (modo === "completo") {
-    buscar(false);
-  }
+    cargarEnInput(resultado);
 }
 
-// ------------------------------------------------------------
-// CERRAR SCANNER
-// ------------------------------------------------------------
+// Extraer solo el artículo (antes del primer / o !)
+function extraerArticulo(codigo) {
+    const separadores = ['/', '!'];
+    let corte = codigo.length;
 
-function cerrarScanner() {
-  overlay.style.display = "none";
+    separadores.forEach(sep => {
+        const pos = codigo.indexOf(sep);
+        if (pos !== -1 && pos < corte) corte = pos;
+    });
 
-  if (stream) {
-    stream.getTracks().forEach((t) => t.stop());
-    stream = null;
-  }
-
-  video.pause();
-  video.srcObject = null;
+    return codigo.substring(0, corte);
 }
 
-// ------------------------------------------------------------
-// BOTÓN CERRAR
-// ------------------------------------------------------------
+// Cargar en el input principal
+function cargarEnInput(texto) {
+    const input = document.querySelector("#input-busqueda");
+    input.value = texto;
+    input.dispatchEvent(new Event("input"));
+}
 
-btnClose.addEventListener("click", cerrarScanner);
-
-// ------------------------------------------------------------
-// FIN DEL ARCHIVO SCANNER
-// ============================================================
+// Cambiar modo desde UI
+function setModoScanner(nuevoModo) {
+    modoScanner = nuevoModo; // "simple" o "completo"
+}
