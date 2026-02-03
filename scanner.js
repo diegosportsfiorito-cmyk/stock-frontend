@@ -1,74 +1,8 @@
 // ============================================================
-// SCANNER — Quagga2 WASM (lector robusto en vivo)
+// SCANNER AVANZADO — Barcode Scanner+
 // ============================================================
 
-let scannerActivo = false;
 let modoScanner = "simple";
-
-// ------------------------------------------------------------
-// INICIAR SCANNER WEB (SIN ZOOM, SIN RECORTE, SIN LECTURAS FALSAS)
-// ------------------------------------------------------------
-
-async function iniciarScanner() {
-  const container = document.getElementById("scanner-container");
-  if (!container) return;
-
-  if (scannerActivo) cerrarScannerQuagga();
-  scannerActivo = true;
-
-  Quagga.init(
-    {
-      inputStream: {
-        name: "Live",
-        type: "LiveStream",
-        target: container,
-        constraints: {
-          facingMode: "environment",
-          width: { ideal: 1280 },
-          height: { ideal: 720 }
-        }
-      },
-      decoder: {
-        readers: [
-          "ean_reader",
-          "ean_8_reader",
-          "upc_reader",
-          "upc_e_reader",
-          "code_128_reader",
-          "code_39_reader"
-        ]
-      },
-      locate: true
-    },
-    function (err) {
-      if (err) {
-        console.error("Error iniciando Quagga2:", err);
-        scannerActivo = false;
-        alert("No se pudo iniciar la cámara.");
-        return;
-      }
-      Quagga.start();
-    }
-  );
-
-  Quagga.offDetected(onDetectedHandler);
-  Quagga.onDetected(onDetectedHandler);
-}
-
-// ------------------------------------------------------------
-// DETECCIÓN WEB
-// ------------------------------------------------------------
-
-function onDetectedHandler(result) {
-  if (!scannerActivo) return;
-  if (!result?.codeResult?.code) return;
-
-  const codigo = result.codeResult.code.trim();
-  procesarCodigo(codigo);
-
-  cerrarScannerQuagga();
-  document.getElementById("scanner-overlay").style.display = "none";
-}
 
 // ------------------------------------------------------------
 // PROCESAR CÓDIGO
@@ -101,17 +35,6 @@ function cargarEnInput(texto) {
   if (!input) return;
   input.value = texto;
   input.dispatchEvent(new Event("input"));
-}
-
-// ------------------------------------------------------------
-// CERRAR SCANNER WEB
-// ------------------------------------------------------------
-
-function cerrarScannerQuagga() {
-  scannerActivo = false;
-  try {
-    Quagga.stop();
-  } catch (e) {}
 }
 
 // ------------------------------------------------------------
