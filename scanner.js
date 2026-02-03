@@ -30,8 +30,22 @@ async function iniciarScanner() {
         // =======================
 
         const detector = new BarcodeDetector({
-            formats: ['code_128', 'ean_13', 'ean_8', 'code_39', 'qr_code']
-        });
+    formats: [
+        'aztec',
+        'code_128',
+        'code_39',
+        'code_93',
+        'codabar',
+        'data_matrix',
+        'ean_13',
+        'ean_8',
+        'itf',
+        'pdf417',
+        'qr_code',
+        'upc_a',
+        'upc_e'
+    ]
+});
 
         scannerActivo = true;
 
