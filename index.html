@@ -15,7 +15,7 @@
 
   <!-- TEST VISUAL -->
   <div style="background:red;color:white;padding:10px;font-size:20px;">
-    VERSION TEST 999
+    VERSION TEST 998
   </div>
 
   <div class="app-shell">
@@ -161,23 +161,30 @@
 
   <div id="toast" class="toast"></div>
 
-  <!-- PANEL ADMIN -->
-  <div id="admin-panel">
-    <!-- contenido omitido por brevedad, igual al tuyo -->
-  </div>
+  <!-- PANEL ADMIN (igual que antes, omitido por brevedad) -->
 
-  <!-- OVERLAY SCANNER -->
+  <!-- ⭐ OVERLAY SCANNER — VIDEO DIRECTO SIN DISTORSIÓN -->
   <div id="scanner-overlay" class="scanner-overlay">
-    <div class="scanner-inner">
-      <video id="scanner-video" autoplay playsinline></video>
-      <div class="scanner-frame"></div>
-      <button id="scanner-close" class="btn-ghost scanner-close">Cancelar</button>
+    <div style="width:100%;height:100%;background:black;display:flex;flex-direction:column;">
+      
+      <!-- VIDEO SIN ESTILOS QUE DISTORSIONEN -->
+      <video id="scanner-video"
+             autoplay
+             playsinline
+             style="width:100%;height:auto;flex-grow:1;background:black;">
+      </video>
+
+      <button id="scanner-close"
+              class="btn-ghost scanner-close"
+              style="padding:20px;font-size:20px;">
+        Cerrar
+      </button>
     </div>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-  <!-- ⭐ LECTOR ROBUSTO QUAGGA -->
+  <!-- LECTOR QUAGGA -->
   <script src="https://unpkg.com/quagga@0.12.1/dist/quagga.min.js"></script>
 
   <script src="scanner.js"></script>
