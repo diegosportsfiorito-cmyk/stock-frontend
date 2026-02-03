@@ -1,5 +1,5 @@
 // ============================================================
-// UI — ORB, TOOLTIP, POSICIÓN, ANIMACIONES
+// UI — ORB + SCANNER
 // ============================================================
 
 const orb = document.getElementById("orb");
@@ -19,13 +19,19 @@ orb.addEventListener("mouseenter", showOrbTooltip);
 orb.addEventListener("click", showOrbTooltip);
 
 // ============================================================
-// SCANNER HÍBRIDO
+// SCANNER
 // ============================================================
 
 const scannerBtn = document.getElementById("btn-scanner");
+const scannerClose = document.getElementById("scanner-close");
 
 scannerBtn.addEventListener("click", () => {
+  document.getElementById("scanner-overlay").style.display = "flex";
   iniciarScanner();
+});
+
+scannerClose.addEventListener("click", () => {
+  cerrarScanner();
 });
 
 // ============================================================
@@ -36,13 +42,13 @@ const btnSimple = document.getElementById("scanner-mode-simple");
 const btnCompleto = document.getElementById("scanner-mode-completo");
 
 btnSimple.addEventListener("click", () => {
-  setModoScanner("simple");
+  modoScanner = "simple";
   btnSimple.classList.add("active");
   btnCompleto.classList.remove("active");
 });
 
 btnCompleto.addEventListener("click", () => {
-  setModoScanner("completo");
+  modoScanner = "completo";
   btnCompleto.classList.add("active");
   btnSimple.classList.remove("active");
 });
