@@ -9,22 +9,20 @@
   <link rel="stylesheet" href="styles.css" />
 
   <style>
-    /* 🔥 Ajuste definitivo para eliminar zoom y evitar mitad negra */
+    /* 🔥 Ajuste definitivo para evitar zoom y evitar mitad negra */
     #scanner-container {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      overflow: hidden;
-      background: black;
+      position: relative;
       width: 100%;
-      height: 100%;
+      height: auto;        /* 🔥 El contenedor se adapta al video */
+      background: black;
     }
 
     #scanner-container video,
     #scanner-container canvas {
-      width: 100% !important;
-      height: 100% !important;
-      object-fit: cover !important; /* 🔥 CLAVE */
+      position: relative;
+      width: auto !important;   /* 🔥 NO forzar ancho */
+      height: 100% !important;  /* 🔥 El alto manda */
+      object-fit: contain !important;
       transform: none !important;
     }
   </style>
@@ -109,15 +107,15 @@
     <div style="
       width:90%;
       max-width:420px;
-      height:80vh;                 /* 🔥 SIN aspect-ratio */
+      max-height:90vh;      /* 🔥 NO altura fija */
       background:rgba(0,0,0,0.9);
       border-radius:16px;
       border:2px solid #00e0ff;
       display:flex;
       flex-direction:column;
-      overflow:hidden;
       position:relative;
     ">
+
       <div style="
         position:absolute;
         inset:15%;
