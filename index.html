@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <div style="background:red;color:white;padding:10px;font-size:20px;">
     VERSION TEST 1001
+<!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
@@ -13,9 +14,8 @@
 
 <body class="orb-center orb-b2">
 
-  <!-- TEST VISUAL -->
   <div style="background:red;color:white;padding:10px;font-size:20px;">
-    VERSION TEST 997
+    VERSION TEST 996 — SCANNER HÍBRIDO
   </div>
 
   <div class="app-shell">
@@ -48,23 +48,6 @@
         </div>
       </div>
 
-      <div class="top-controls">
-        <button class="mode-toggle" id="toggle-dark">Modo Día/Noche</button>
-        <button class="admin-btn admin-hidden" id="open-admin">Admin</button>
-
-        <div class="top-right-group">
-          <div class="switch-row">
-            <span>Manos libres</span>
-            <label class="switch">
-              <input type="checkbox" id="handsfree-toggle" />
-              <span class="slider"></span>
-            </label>
-          </div>
-
-          <button class="voice-btn" id="toggle-voice">Voz</button>
-        </div>
-      </div>
-
       <section class="search-card">
         <div class="search-row">
 
@@ -87,105 +70,32 @@
           </div>
 
         </div>
-
-        <div class="actions-row">
-          <label class="solo-stock">
-            <input type="checkbox" id="chk-solo-stock" />
-            Mostrar solo con stock
-          </label>
-
-          <div class="actions-right">
-            <button class="btn-secondary" id="btn-clear">Limpiar</button>
-            <button class="btn-secondary" id="btn-copy">Copiar</button>
-            <button class="btn-secondary" id="btn-filtros">Filtros</button>
-            <button class="btn-ghost" id="btn-stop">STOP</button>
-          </div>
-        </div>
-
-        <div class="metrics-row">
-          <div class="metric-card">
-            <div class="metric-label">ARTÍCULOS</div>
-            <div class="metric-value" id="metric-articulos">0</div>
-          </div>
-          <div class="metric-card">
-            <div class="metric-label">PARES</div>
-            <div class="metric-value" id="metric-pares">0</div>
-          </div>
-          <div class="metric-card">
-            <div class="metric-label">ALERTAS</div>
-            <div class="metric-value" id="metric-alertas">0</div>
-          </div>
-          <div class="metric-card">
-            <div class="metric-label">VALORIZADO</div>
-            <div class="metric-value" id="metric-valorizado">$0</div>
-          </div>
-        </div>
-
-        <div class="filtros-panel" id="filtros-panel">
-          <div class="filtros-row">
-            <select id="filtro-marca" class="filtro-select"></select>
-            <select id="filtro-rubro" class="filtro-select"></select>
-          </div>
-          <div class="filtros-row">
-            <input type="number" id="filtro-talle-desde" class="filtro-input" placeholder="Talle desde" />
-            <input type="number" id="filtro-talle-hasta" class="filtro-input" placeholder="Talle hasta" />
-          </div>
-          <div class="filtros-row filtros-actions">
-            <button class="btn-secondary" id="btn-aplicar-filtros">Aplicar filtros</button>
-          </div>
-        </div>
       </section>
 
       <div class="main-row">
         <section class="results-card">
           <div class="results-header">
             <div class="results-title">Resultados</div>
-            <button id="btn-tabla" class="btn-secondary">Vista tabla</button>
             <div class="results-status" id="results-status">Esperando consulta</div>
           </div>
 
           <div id="results-container"></div>
-        </section>
-
-        <section class="dashboard-card">
-          <div class="dashboard-header">
-            <div class="dashboard-title">Visión rápida</div>
-            <div class="dashboard-subtitle">Distribución por talle</div>
-          </div>
-          <canvas id="stockChart"></canvas>
         </section>
       </div>
 
     </div>
   </div>
 
-  <div id="toast" class="toast"></div>
+  <!-- ⭐ INPUT DE CÁMARA NATIVA (HÍBRIDO) -->
+  <input
+    id="camera-input"
+    type="file"
+    accept="image/*"
+    capture="environment"
+    style="display:none;"
+  />
 
-  <!-- PANEL ADMIN (igual que antes, omitido por brevedad) -->
-
-  <!-- ⭐ OVERLAY SCANNER — VIDEO DIRECTO SIN DISTORSIÓN -->
-  <div id="scanner-overlay" class="scanner-overlay">
-    <div style="width:100%;height:100%;background:black;display:flex;flex-direction:column;">
-      
-      <!-- VIDEO SIN ESTILOS QUE DISTORSIONEN -->
-      <video id="scanner-video"
-             autoplay
-             playsinline
-             style="width:100%;height:auto;flex-grow:1;background:black;">
-      </video>
-
-      <button id="scanner-close"
-              class="btn-ghost scanner-close"
-              style="padding:20px;font-size:20px;">
-        Cerrar
-      </button>
-    </div>
-  </div>
-
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-  <!-- LECTOR QUAGGA -->
-  <script src="https://unpkg.com/quagga@0.12.1/dist/quagga.min.js"></script>
+  <script src="https://unpkg.com/@zxing/library@latest"></script>
 
   <script src="scanner.js"></script>
   <script src="ui.js"></script>
@@ -193,4 +103,3 @@
 
 </body>
 </html>
-
