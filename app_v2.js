@@ -663,10 +663,6 @@ function initEvents() {
     els.scannerModeSimple.classList.remove("active");
   });
 
-  // BOTÓN SCANNER
-  document.getElementById("btn-scanner").addEventListener("click", () => {
-    window.abrirScanner(state.scannerMode);
-  });
 }
 
 // ============================================================
