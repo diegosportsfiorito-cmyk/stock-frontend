@@ -22,10 +22,12 @@ async function iniciarScanner() {
         name: "Live",
         type: "LiveStream",
         target: container,
-        constraints: { facingMode: "environment", 
-                      width: { ideal: 1280 }, 
-                      height: { ideal: 720 }, 
-                     },
+        constraints: { 
+          facingMode: "environment",
+          width: { ideal: 1280 },
+          height: { ideal: 720 }
+        }   // ⭐ ESTA LLAVE FALTABA
+      },    // ⭐ ESTA LLAVE TAMBIÉN FALTABA
       decoder: {
         readers: [
           "ean_reader",
@@ -121,6 +123,6 @@ function cerrarScannerQuagga() {
 
   if (code) {
     procesarCodigo(code);
-    history.replaceState({}, "", window.location.pathname);
+    history.replaceState({}, "", window.location.origin + window.location.pathname);
   }
 })();
