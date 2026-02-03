@@ -1,77 +1,54 @@
-// ============================================================
-// SCANNER HÍBRIDO — FOTO + DECODIFICACIÓN ZXING
-// ============================================================
+let modoScanner = "simple";
+let stream = null;
 
-let modoScanner = "simple"; // simple o completo
-
-// ------------------------------------------------------------
-// INICIAR SCANNER (abre cámara nativa)
-// ------------------------------------------------------------
-
-function iniciarScanner() {
-  const inputCam = document.getElementById("camera-input");
-  inputCam.value = ""; // reset
-  inputCam.click();
-}
-
-// ------------------------------------------------------------
-// CUANDO EL USUARIO TOMA LA FOTO
-// ------------------------------------------------------------
-
-document.getElementById("camera-input").addEventListener("change", async function (e) {
-  const file = e.target.files[0];
-  if (!file) return;
-
-  const img = await fileToImage(file);
-  const codigo = await decodificarImagen(img);
-
-  if (codigo) {
-    procesarCodigo(codigo);
-  } else {
-    alert("No se pudo leer el código. Intentá acercar más la cámara.");
-  }
-});
-
-// ------------------------------------------------------------
-// DECODIFICAR IMAGEN CON ZXing
-// ------------------------------------------------------------
-
-async function decodificarImagen(img) {
-  const codeReader = new ZXing.BrowserMultiFormatReader();
+async function iniciarScanner() {
+  const video = document.getElementById("scanner-video");
 
   try {
-    const result = await codeReader.decodeFromImage(img);
-    return result.text.trim();
+    stream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: "environment" }
+    });
+
+    video.srcObject = stream;
+    video.play();
+
+    detectarLoop(video);
+
   } catch (err) {
-    console.warn("No se pudo decodificar:", err);
-    return null;
+    console.error("Error cámara:", err);
+    alert("No se pudo acceder a la cámara.");
   }
 }
 
-// ------------------------------------------------------------
-// UTILIDAD: convertir archivo a imagen
-// ------------------------------------------------------------
-
-function fileToImage(file) {
-  return new Promise((resolve) => {
-    const img = new Image();
-    img.onload = () => resolve(img);
-    img.src = URL.createObjectURL(file);
+async function detectarLoop(video) {
+  const detector = new BarcodeDetector({
+    formats: ["ean_13", "ean_8", "code_128", "code_39", "upc_a", "upc_e"]
   });
-}
 
-// ------------------------------------------------------------
-// PROCESAR CÓDIGO SEGÚN MODO
-// ------------------------------------------------------------
+  async function loop() {
+    if (!video.srcObject) return;
 
-function procesarCodigo(codigo) {
-  let resultado = codigo;
+    try {
+      const codes = await detector.detect(video);
 
-  if (modoScanner === "simple") {
-    resultado = extraerArticulo(codigo);
+      if (codes.length > 0) {
+        let codigo = codes[0].rawValue.trim();
+
+        if (modoScanner === "simple") {
+          codigo = extraerArticulo(codigo);
+        }
+
+        cargarEnInput(codigo);
+        return; // detener después de leer
+      }
+    } catch (e) {
+      console.warn("Error detectando:", e);
+    }
+
+    requestAnimationFrame(loop);
   }
 
-  cargarEnInput(resultado);
+  loop();
 }
 
 function extraerArticulo(codigo) {
@@ -92,6 +69,10 @@ function cargarEnInput(texto) {
   input.dispatchEvent(new Event("input"));
 }
 
-function setModoScanner(modo) {
-  modoScanner = modo;
+function cerrarScanner() {
+  const video = document.getElementById("scanner-video");
+  if (stream) {
+    stream.getTracks().forEach((t) => t.stop());
+  }
+  video.srcObject = null;
 }
