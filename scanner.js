@@ -23,10 +23,9 @@ async function iniciarScanner() {
         type: "LiveStream",
         target: container,
         constraints: { facingMode: "environment", 
-                      width: { ideal: 640 }, 
-                      height: { ideal: 480 }, 
-                      aspectRatio: { ideal: 1.333 } // 4:3 estable }  
-      },
+                      width: { ideal: 960 }, 
+                      height: { ideal: 540 }, 
+                     },
       decoder: {
         readers: [
           "ean_reader",
