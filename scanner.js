@@ -1,5 +1,13 @@
+// ============================================================
+// SCANNER EN VIVO — BarcodeDetector nativo
+// ============================================================
+
 let modoScanner = "simple";
 let stream = null;
+
+// ------------------------------------------------------------
+// INICIAR SCANNER
+// ------------------------------------------------------------
 
 async function iniciarScanner() {
   const video = document.getElementById("scanner-video");
@@ -20,6 +28,10 @@ async function iniciarScanner() {
   }
 }
 
+// ------------------------------------------------------------
+// LOOP DE DETECCIÓN
+// ------------------------------------------------------------
+
 async function detectarLoop(video) {
   const detector = new BarcodeDetector({
     formats: ["ean_13", "ean_8", "code_128", "code_39", "upc_a", "upc_e"]
@@ -39,7 +51,8 @@ async function detectarLoop(video) {
         }
 
         cargarEnInput(codigo);
-        return; // detener después de leer
+        cerrarScanner();
+        return;
       }
     } catch (e) {
       console.warn("Error detectando:", e);
@@ -50,6 +63,10 @@ async function detectarLoop(video) {
 
   loop();
 }
+
+// ------------------------------------------------------------
+// PROCESAR CÓDIGO
+// ------------------------------------------------------------
 
 function extraerArticulo(codigo) {
   const separadores = ["/", "!"];
@@ -69,10 +86,18 @@ function cargarEnInput(texto) {
   input.dispatchEvent(new Event("input"));
 }
 
+// ------------------------------------------------------------
+// CERRAR SCANNER
+// ------------------------------------------------------------
+
 function cerrarScanner() {
   const video = document.getElementById("scanner-video");
+  const overlay = document.getElementById("scanner-overlay");
+
   if (stream) {
     stream.getTracks().forEach((t) => t.stop());
   }
+
   video.srcObject = null;
+  overlay.style.display = "none";
 }
