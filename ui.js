@@ -101,10 +101,9 @@ orb.addEventListener("mouseleave", () => {
 });
 
 // ============================================================
-// INTEGRACIÓN DEL SCANNER — NUEVO BLOQUE
+// INTEGRACIÓN DEL SCANNER
 // ============================================================
 
-// Elementos del scanner
 const scannerOverlay = document.getElementById("scanner-overlay");
 const scannerCloseBtn = document.getElementById("scanner-close");
 const scannerBtn = document.getElementById("btn-scanner");
@@ -112,37 +111,43 @@ const scannerBtn = document.getElementById("btn-scanner");
 // Abrir scanner
 function abrirScanner() {
   scannerOverlay.classList.add("visible");
-  iniciarScanner(); // función del scanner.js
+  iniciarScanner(); // función de scanner.js
 }
 
 // Cerrar scanner
 function cerrarScanner() {
-  scannerActivo = false; // variable del scanner.js
+  scannerActivo = false; // variable de scanner.js
   scannerOverlay.classList.remove("visible");
 }
 
 // Eventos del scanner
-scannerBtn.addEventListener("click", abrirScanner);
-scannerCloseBtn.addEventListener("click", cerrarScanner);
+if (scannerBtn) {
+  scannerBtn.addEventListener("click", abrirScanner);
+}
+if (scannerCloseBtn) {
+  scannerCloseBtn.addEventListener("click", cerrarScanner);
+}
 
 // ------------------------------------------------------------
-// MODO SIMPLE / COMPLETO
+// MODO SIMPLE / COMPLETO (con scanner.js)
 // ------------------------------------------------------------
 
 const btnSimple = document.getElementById("scanner-mode-simple");
 const btnCompleto = document.getElementById("scanner-mode-completo");
 
-btnSimple.addEventListener("click", () => {
-  setModoScanner("simple");
-  btnSimple.classList.add("active");
-  btnCompleto.classList.remove("active");
-});
+if (btnSimple && btnCompleto) {
+  btnSimple.addEventListener("click", () => {
+    setModoScanner("simple");
+    btnSimple.classList.add("active");
+    btnCompleto.classList.remove("active");
+  });
 
-btnCompleto.addEventListener("click", () => {
-  setModoScanner("completo");
-  btnCompleto.classList.add("active");
-  btnSimple.classList.remove("active");
-});
+  btnCompleto.addEventListener("click", () => {
+    setModoScanner("completo");
+    btnCompleto.classList.add("active");
+    btnSimple.classList.remove("active");
+  });
+}
 
 // ============================================================
 // FIN DEL ARCHIVO UI
