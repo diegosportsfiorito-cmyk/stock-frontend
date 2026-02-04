@@ -28,17 +28,20 @@
   position: relative;
   overflow: visible;
 
+  /* Volumen 3D */
   background: radial-gradient(circle at 30% 30%,
       rgba(255, 255, 255, 0.95) 0%,
       var(--orb-color) 35%,
       var(--orb-color-dark) 100%
   );
 
+  /* Sombra profunda */
   box-shadow:
     0 15px 35px rgba(0, 0, 0, 0.55),
     inset 0 0 35px rgba(255, 255, 255, 0.25),
     inset 0 -20px 35px rgba(0, 0, 0, 0.45);
 
+  /* Texto */
   color: white;
   font-weight: 700;
   font-size: 1.15rem;
@@ -48,8 +51,10 @@
   justify-content: center;
   align-items: center;
 
+  /* Pulso respiratorio */
   animation: orbPulse 3.5s ease-in-out infinite;
 
+  /* Transiciones */
   transition: transform 0.25s ease, box-shadow 0.25s ease;
 }
 
@@ -67,7 +72,7 @@
     box-shadow:
       0 20px 45px rgba(0, 0, 0, 0.65),
       inset 0 0 45px rgba(255, 255, 255, 0.35),
-      inset 0 -25px 45px rgba(0, 0, 0, 0.55);
+      inset 0 -25px 45px rgba(255, 255, 255, 0.55);
   }
   100% {
     transform: scale(1);
@@ -141,7 +146,7 @@
   to { transform: rotate(360deg) translateX(0); }
 }
 
-/* Estado loading */
+/* Estado loading (giro 3D) */
 .orb-loading {
   animation: orbSpin var(--orb-spin-speed) linear infinite;
 }
@@ -186,7 +191,9 @@
   transform: translateX(-50%) translateY(0);
 }
 
-/* MODOS VISUALES */
+/* ============================================================
+   MODOS VISUALES
+   ============================================================ */
 
 .orb-classic {
   background: var(--orb-color);
