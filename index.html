@@ -5,8 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>STOCK IA PRO — Asistente inteligente</title>
 
-  <link rel="stylesheet" href="styles_v2.css" />
-  <link rel="stylesheet" href="orb_v2.css" />
+  <script>
+    // Cache Buster Automático
+    const v = Date.now();
+    document.write(`
+      <link rel="stylesheet" href="styles_v2.css?v=${v}">
+      <link rel="stylesheet" href="orb_v2.css?v=${v}">
+    `);
+  </script>
 </head>
 
 <body>
@@ -165,7 +171,7 @@
     </div>
   </div>
 
-  <!-- PANEL ADMIN NUEVO (solo ORB) -->
+  <!-- PANEL ADMIN -->
   <div id="admin-panel">
     <h2>Configuración del ORB</h2>
 
@@ -203,12 +209,15 @@
   <!-- TOAST -->
   <div class="toast" id="toast"></div>
 
-  <!-- SCRIPTS -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="scanner_v2.js"></script>
-  <script src="ui_v2.js"></script>
-  <script src="app_v3.js"></script>
+  <!-- SCRIPTS CON CACHE BUSTER -->
+  <script>
+    document.write(`
+      <script src="https://cdn.jsdelivr.net/npm/chart.js?v=${v}"><\/script>
+      <script src="scanner_v2.js?v=${v}"><\/script>
+      <script src="ui_v2.js?v=${v}"><\/script>
+      <script src="app_v3.js?v=${v}"><\/script>
+    `);
+  </script>
 
 </body>
 </html>
-
