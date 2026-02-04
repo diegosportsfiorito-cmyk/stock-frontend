@@ -4,7 +4,9 @@
 
 let modoScanner = "simple";
 
-// Procesar código
+// ------------------------------------------------------------
+// PROCESAR CÓDIGO
+// ------------------------------------------------------------
 function procesarCodigo(codigo) {
   let resultado = codigo;
 
@@ -15,6 +17,9 @@ function procesarCodigo(codigo) {
   cargarEnInput(resultado);
 }
 
+// ------------------------------------------------------------
+// EXTRAER ARTÍCULO (modo simple)
+// ------------------------------------------------------------
 function extraerArticulo(codigo) {
   const separadores = ["/", "!"];
   let corte = codigo.length;
@@ -27,6 +32,9 @@ function extraerArticulo(codigo) {
   return codigo.substring(0, corte);
 }
 
+// ------------------------------------------------------------
+// CARGAR EN INPUT
+// ------------------------------------------------------------
 function cargarEnInput(texto) {
   const input = document.getElementById("search-input");
   if (!input) return;
@@ -34,13 +42,17 @@ function cargarEnInput(texto) {
   input.dispatchEvent(new Event("input"));
 }
 
-// Procesar retorno de Barcode Scanner+
+// ------------------------------------------------------------
+// PROCESAR RETORNO DEL SCANNER NATIVO
+// ------------------------------------------------------------
 (function procesarRetornoNativo() {
   const params = new URLSearchParams(window.location.search);
   const code = params.get("code");
 
   if (code) {
     procesarCodigo(code);
+
+    // Limpiar la URL para evitar re-procesar
     history.replaceState({}, "", window.location.origin + window.location.pathname);
   }
 })();
