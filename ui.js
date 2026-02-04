@@ -6,15 +6,21 @@ const orb = document.getElementById("orb");
 const orbTooltip = document.getElementById("orb-tooltip");
 const filtrosPanel = document.getElementById("filtros-panel");
 const btnFiltros = document.getElementById("btn-filtros");
-const btnLimpiar = document.getElementById("btn-limpiar");
-const soloStockCheckbox = document.getElementById("solo-stock");
+const btnClear = document.getElementById("btn-clear");
+const btnCopy = document.getElementById("btn-copy");
+const btnStop = document.getElementById("btn-stop");
+const btnTabla = document.getElementById("btn-tabla");
+const soloStockCheckbox = document.getElementById("chk-solo-stock");
 const btnSimple = document.getElementById("scanner-mode-simple");
 const btnCompleto = document.getElementById("scanner-mode-completo");
 const scannerNativoBtn = document.getElementById("btn-scanner-nativo");
 const toastEl = document.getElementById("toast");
 const adminPanel = document.getElementById("admin-panel");
 
-// ORB click → foco en input
+// ============================================================
+// ORB — Interacción principal
+// ============================================================
+
 if (orb) {
   orb.addEventListener("click", () => {
     const input = document.getElementById("search-input");
@@ -34,16 +40,24 @@ if (orb) {
   });
 }
 
-// Scanner nativo
+// ============================================================
+// SCANNER NATIVO
+// ============================================================
+
 if (scannerNativoBtn) {
   scannerNativoBtn.addEventListener("click", () => {
-    const retUrl = encodeURIComponent(window.location.origin + window.location.pathname + "?code={CODE}");
+    const retUrl = encodeURIComponent(
+      window.location.origin + window.location.pathname + "?code={CODE}"
+    );
     const intent = `intent://scan/?ret=${retUrl}#Intent;scheme=zxing;package=com.srowen.bs.android;end;`;
     window.location.href = intent;
   });
 }
 
-// Modo simple / completo
+// ============================================================
+// MODO SIMPLE / COMPLETO
+// ============================================================
+
 if (btnSimple && btnCompleto) {
   btnSimple.addEventListener("click", () => {
     modoScanner = "simple";
@@ -60,16 +74,22 @@ if (btnSimple && btnCompleto) {
   });
 }
 
-// Filtros
+// ============================================================
+// FILTROS
+// ============================================================
+
 if (btnFiltros && filtrosPanel) {
   btnFiltros.addEventListener("click", () => {
     filtrosPanel.classList.toggle("visible");
   });
 }
 
-// Limpiar
-if (btnLimpiar) {
-  btnLimpiar.addEventListener("click", () => {
+// ============================================================
+// LIMPIAR
+// ============================================================
+
+if (btnClear) {
+  btnClear.addEventListener("click", () => {
     const input = document.getElementById("search-input");
     if (input) input.value = "";
     input?.dispatchEvent(new Event("input"));
@@ -77,7 +97,52 @@ if (btnLimpiar) {
   });
 }
 
-// Toast
+// ============================================================
+// COPIAR RESULTADOS
+// ============================================================
+
+if (btnCopy) {
+  btnCopy.addEventListener("click", () => {
+    copiarResultados();
+  });
+}
+
+// ============================================================
+// STOP
+// ============================================================
+
+if (btnStop) {
+  btnStop.addEventListener("click", () => {
+    stopTodo();
+  });
+}
+
+// ============================================================
+// VISTA TABLA
+// ============================================================
+
+if (btnTabla) {
+  btnTabla.addEventListener("click", () => {
+    state.modoTabla = !state.modoTabla;
+    btnTabla.textContent = state.modoTabla ? "Vista tarjetas" : "Vista tabla";
+    renderResultados(state.items);
+  });
+}
+
+// ============================================================
+// SOLO STOCK
+// ============================================================
+
+if (soloStockCheckbox) {
+  soloStockCheckbox.addEventListener("change", () => {
+    buscarPorFiltros();
+  });
+}
+
+// ============================================================
+// TOAST
+// ============================================================
+
 function showToast(msg) {
   if (!toastEl) return;
   toastEl.textContent = msg;
@@ -87,27 +152,36 @@ function showToast(msg) {
   }, 1800);
 }
 
-// Admin: triple click en brand-title
-const brandTitle = document.querySelector(".brand-title");
-if (brandTitle && adminPanel) {
-  let clicks = 0;
-  let timer = null;
+// ============================================================
+// ACCESO OCULTO AL PANEL ADMIN (clave: ADMIN)
+// ============================================================
 
-  brandTitle.addEventListener("click", () => {
-    clicks++;
-    if (clicks === 1) {
-      timer = setTimeout(() => { clicks = 0; }, 600);
-    } else if (clicks === 3) {
-      clearTimeout(timer);
-      clicks = 0;
-      adminPanel.style.display = adminPanel.style.display === "flex" ? "none" : "flex";
+const searchInput = document.getElementById("search-input");
+
+if (searchInput) {
+  searchInput.addEventListener("input", () => {
+    const val = searchInput.value.trim();
+
+    // Estado READY del ORB
+    orbSetReady(val.length > 0);
+
+    // Acceso oculto
+    if (val.toUpperCase() === "ADMIN") {
+      searchInput.value = "";
+      orbSetReady(false);
+      adminPanel.style.display = "flex";
       showToast("Modo administrador");
     }
+  });
+
+  // ENTER → buscar
+  searchInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") buscar(false);
   });
 }
 
 // ============================================================
-// CONFIGURACIÓN DEL ORB — ADMIN PANEL
+// PANEL ADMIN — CONFIGURACIÓN DEL ORB (nuevo sistema)
 // ============================================================
 
 const orbColorInput = document.getElementById("orb-color");
@@ -120,21 +194,21 @@ const orbResetBtn = document.getElementById("orb-reset");
 
 // Color principal
 if (orbColorInput) {
-  orbColorInput.addEventListener("input", e => {
+  orbColorInput.addEventListener("input", (e) => {
     document.documentElement.style.setProperty("--orb-color", e.target.value);
   });
 }
 
 // Color secundario
 if (orbColorDarkInput) {
-  orbColorDarkInput.addEventListener("input", e => {
+  orbColorDarkInput.addEventListener("input", (e) => {
     document.documentElement.style.setProperty("--orb-color-dark", e.target.value);
   });
 }
 
 // Tamaño
 if (orbSizeInput && orb) {
-  orbSizeInput.addEventListener("input", e => {
+  orbSizeInput.addEventListener("input", (e) => {
     const size = e.target.value + "px";
     orb.style.width = size;
     orb.style.height = size;
@@ -143,48 +217,26 @@ if (orbSizeInput && orb) {
 
 // Halo
 if (orbHaloInput && orb) {
-  orbHaloInput.addEventListener("input", e => {
-    const halo = e.target.value;
-    orb.style.setProperty("--orb-halo-strength", halo);
+  orbHaloInput.addEventListener("input", (e) => {
+    orb.style.setProperty("--orb-halo-strength", e.target.value);
   });
 }
 
 // Modo visual
 if (orbModeSelect && orb) {
-  orbModeSelect.addEventListener("change", e => {
+  orbModeSelect.addEventListener("change", (e) => {
     orb.classList.remove("orb-classic", "orb-3d", "orb-ultra");
     orb.classList.add("orb-" + e.target.value);
   });
 }
 
-// Reset
-if (orbResetBtn && orb) {
-  orbResetBtn.addEventListener("click", () => {
-    document.documentElement.style.setProperty("--orb-color", "#4fc3f7");
-    document.documentElement.style.setProperty("--orb-color-dark", "#7c4dff");
-
-    orb.style.width = "130px";
-    orb.style.height = "130px";
-
-    orb.style.setProperty("--orb-halo-strength", "60");
-
-    orb.classList.remove("orb-classic", "orb-3d", "orb-ultra");
-    orb.classList.add("orb-ultra");
-
-    if (orbModeSelect) orbModeSelect.value = "ultra";
-    if (orbPresetsSelect) orbPresetsSelect.value = "default";
-
-    showToast("ORB restaurado a valores predeterminados");
-  });
-}
-
-// PRESETS DEL ORB
+// Presets
 if (orbPresetsSelect && orb) {
-  orbPresetsSelect.addEventListener("change", e => {
+  orbPresetsSelect.addEventListener("change", (e) => {
     const preset = e.target.value;
 
     switch (preset) {
-      case "default": // Energía Azul
+      case "default":
         document.documentElement.style.setProperty("--orb-color", "#4fc3f7");
         document.documentElement.style.setProperty("--orb-color-dark", "#7c4dff");
         orb.style.setProperty("--orb-halo-strength", "60");
@@ -192,7 +244,7 @@ if (orbPresetsSelect && orb) {
         orb.classList.add("orb-ultra");
         break;
 
-      case "plasma": // Plasma Violeta
+      case "plasma":
         document.documentElement.style.setProperty("--orb-color", "#b44cff");
         document.documentElement.style.setProperty("--orb-color-dark", "#5a00a3");
         orb.style.setProperty("--orb-halo-strength", "80");
@@ -200,7 +252,7 @@ if (orbPresetsSelect && orb) {
         orb.classList.add("orb-ultra");
         break;
 
-      case "fuego": // Fuego
+      case "fuego":
         document.documentElement.style.setProperty("--orb-color", "#ff8a00");
         document.documentElement.style.setProperty("--orb-color-dark", "#b30000");
         orb.style.setProperty("--orb-halo-strength", "90");
@@ -208,7 +260,7 @@ if (orbPresetsSelect && orb) {
         orb.classList.add("orb-ultra");
         break;
 
-      case "neon": // Neón Verde
+      case "neon":
         document.documentElement.style.setProperty("--orb-color", "#3dff7d");
         document.documentElement.style.setProperty("--orb-color-dark", "#009933");
         orb.style.setProperty("--orb-halo-strength", "100");
@@ -216,7 +268,7 @@ if (orbPresetsSelect && orb) {
         orb.classList.add("orb-ultra");
         break;
 
-      case "minimal": // Minimalista
+      case "minimal":
         document.documentElement.style.setProperty("--orb-color", "#444");
         document.documentElement.style.setProperty("--orb-color-dark", "#111");
         orb.style.setProperty("--orb-halo-strength", "0");
@@ -226,5 +278,36 @@ if (orbPresetsSelect && orb) {
     }
 
     showToast("Preset aplicado");
+  });
+}
+
+// Reset
+if (orbResetBtn && orb) {
+  orbResetBtn.addEventListener("click", () => {
+    document.documentElement.style.setProperty("--orb-color", "#4fc3f7");
+    document.documentElement.style.setProperty("--orb-color-dark", "#7c4dff");
+    orb.style.width = "130px";
+    orb.style.height = "130px";
+    orb.style.setProperty("--orb-halo-strength", "60");
+
+    orb.classList.remove("orb-classic", "orb-3d", "orb-ultra");
+    orb.classList.add("orb-ultra");
+
+    if (orbModeSelect) orbModeSelect.value = "ultra";
+    if (orbPresetsSelect) orbPresetsSelect.value = "default";
+
+    showToast("ORB restaurado");
+  });
+}
+
+// ============================================================
+// TOGGLE DÍA/NOCHE
+// ============================================================
+
+const toggleDark = document.getElementById("toggle-dark");
+
+if (toggleDark) {
+  toggleDark.addEventListener("change", () => {
+    document.body.classList.toggle("light-mode");
   });
 }
