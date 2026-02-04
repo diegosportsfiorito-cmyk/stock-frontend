@@ -72,19 +72,19 @@ function setConnectionStatus(ok) {
 // ============================================================
 
 function orbSetReady(v) {
-  els.orb.classList.remove("orb-loading", "orb-error");
+  els.orb.classList.remove("orb-loading", "orb-error", "orb-boost");
   if (v) els.orb.classList.add("orb-ready");
   else els.orb.classList.remove("orb-ready");
 }
 
 function orbSetLoading(v) {
   els.orb.classList.remove("orb-ready", "orb-error");
-  if (v) els.orb.classList.add("orb-loading");
-  else els.orb.classList.remove("orb-loading");
+  if (v) els.orb.classList.add("orb-loading", "orb-boost");
+  else els.orb.classList.remove("orb-loading", "orb-boost");
 }
 
 function orbSetError(v) {
-  els.orb.classList.remove("orb-ready", "orb-loading");
+  els.orb.classList.remove("orb-ready", "orb-loading", "orb-boost");
   if (v) els.orb.classList.add("orb-error");
   else els.orb.classList.remove("orb-error");
 }
@@ -129,426 +129,209 @@ function renderResultados(items) {
     els.resultsContainer.appendChild(div);
   });
 }
-      const adminPanel = document.getElementById("admin-panel");
-      if (adminPanel) adminPanel.style.display = "flex";
-    }
-  });
-
-  // LIMPIAR
-  els.btnClear.addEventListener("click", limpiarPantalla);
-
-  // COPIAR
-  els.btnCopy.addEventListener("click", copiarResultados);
-
-  // STOP
-  els.btnStop.addEventListener("click", stopTodo);
-
-  // FILTROS
-  els.btnFiltros.addEventListener("click", () => {
-    els.filtrosPanel.classList.toggle("visible");
-  });
-
-  els.btnAplicarFiltros.addEventListener("click", () => {
-    actualizarFiltrosDesdeUI();
-    buscarPorFiltros();
-  });
-
-  // SOLO STOCK
-  els.chkSoloStock.addEventListener("change", () => {
-    buscarPorFiltros();
-  });
-
-  // VISTA TABLA
-  els.btnTabla.addEventListener("click", () => {
-    state.modoTabla = !state.modoTabla;
-    els.btnTabla.textContent = state.modoTabla ? "Vista tarjetas" : "Vista tabla";
-    renderResultados(state.items);
-  });
-
-  // Manos libres toggle (si existe)
-  if (els.handsfreeToggle) {
-    els.handsfreeToggle.addEventListener("change", (e) => {
-      toggleManosLibres(e.target.checked);
-    });
-  }
-}
 
 // ============================================================
-// INICIALIZACIÓN
+// RENDER RESULTADOS — TABLA
 // ============================================================
 
-async function init() {
-  initVoice();
-  initEvents();
-  await cargarCatalogo();
-  orbSetReady(false);
-  els.resultsStatus.textContent = "Esperando consulta";
-}
+function renderResultadosTabla(items) {
+  els.resultsContainer.innerHTML = "";
 
-document.addEventListener("DOMContentLoaded", init);
-
-// ============================================================
-// PANEL ADMIN — CONFIGURACIÓN DEL ORB (NUEVO SISTEMA)
-// ============================================================
-
-const adminPanel = document.getElementById("admin-panel");
-
-const orbColorDia = document.getElementById("orb-color");
-const orbColorNoche = document.getElementById("orb-color-dark");
-const orbSize = document.getElementById("orb-size");
-const orbHalo = document.getElementById("orb-halo");
-const orbMode = document.getElementById("orb-mode");
-const orbPresets = document.getElementById("orb-presets");
-const orbReset = document.getElementById("orb-reset");
-
-// Cargar valores actuales al panel
-function cargarConfigOrb() {
-  orbColorDia.value = getComputedStyle(document.documentElement)
-    .getPropertyValue("--orb-color")
-    .trim();
-
-  orbColorNoche.value = getComputedStyle(document.documentElement)
-    .getPropertyValue("--orb-color-dark")
-    .trim();
-
-  orbSize.value = parseInt(els.orb.style.width || 130);
-  orbHalo.value = parseInt(
-    getComputedStyle(document.documentElement)
-      .getPropertyValue("--orb-halo-strength")
-  );
-
-  // Detectar modo actual
-  if (els.orb.classList.contains("orb-classic")) orbMode.value = "classic";
-  else if (els.orb.classList.contains("orb-3d")) orbMode.value = "3d";
-  else orbMode.value = "ultra";
-}
-
-// Guardar configuración
-orbColorDia.addEventListener("input", () => {
-  document.documentElement.style.setProperty("--orb-color", orbColorDia.value);
-});
-
-orbColorNoche.addEventListener("input", () => {
-  document.documentElement.style.setProperty("--orb-color-dark", orbColorNoche.value);
-});
-
-orbSize.addEventListener("input", () => {
-  els.orb.style.width = orbSize.value + "px";
-  els.orb.style.height = orbSize.value + "px";
-});
-
-orbHalo.addEventListener("input", () => {
-  document.documentElement.style.setProperty("--orb-halo-strength", orbHalo.value);
-});
-
-orbMode.addEventListener("change", () => {
-  els.orb.classList.remove("orb-classic", "orb-3d", "orb-ultra");
-  els.orb.classList.add("orb-" + orbMode.value);
-});
-
-// Presets
-orbPresets.addEventListener("change", () => {
-  const preset = orbPresets.value;
-
-  switch (preset) {
-    case "default":
-      document.documentElement.style.setProperty("--orb-color", "#4fc3f7");
-      document.documentElement.style.setProperty("--orb-color-dark", "#7c4dff");
-      document.documentElement.style.setProperty("--orb-halo-strength", "60");
-      els.orb.classList.remove("orb-classic", "orb-3d");
-      els.orb.classList.add("orb-ultra");
-      break;
-
-    case "plasma":
-      document.documentElement.style.setProperty("--orb-color", "#b44cff");
-      document.documentElement.style.setProperty("--orb-color-dark", "#5a00a3");
-      document.documentElement.style.setProperty("--orb-halo-strength", "80");
-      els.orb.classList.remove("orb-classic", "orb-3d");
-      els.orb.classList.add("orb-ultra");
-      break;
-
-    case "fuego":
-      document.documentElement.style.setProperty("--orb-color", "#ff8a00");
-      document.documentElement.style.setProperty("--orb-color-dark", "#b30000");
-      document.documentElement.style.setProperty("--orb-halo-strength", "90");
-      els.orb.classList.remove("orb-classic", "orb-3d");
-      els.orb.classList.add("orb-ultra");
-      break;
-
-    case "neon":
-      document.documentElement.style.setProperty("--orb-color", "#3dff7d");
-      document.documentElement.style.setProperty("--orb-color-dark", "#009933");
-      document.documentElement.style.setProperty("--orb-halo-strength", "100");
-      els.orb.classList.remove("orb-classic", "orb-3d");
-      els.orb.classList.add("orb-ultra");
-      break;
-
-    case "minimal":
-      document.documentElement.style.setProperty("--orb-color", "#444");
-      document.documentElement.style.setProperty("--orb-color-dark", "#111");
-      document.documentElement.style.setProperty("--orb-halo-strength", "0");
-      els.orb.classList.remove("orb-ultra", "orb-3d");
-      els.orb.classList.add("orb-classic");
-      break;
-  }
-
-  showToast("Preset aplicado");
-});
-
-// Reset
-orbReset.addEventListener("click", () => {
-  document.documentElement.style.setProperty("--orb-color", "#4fc3f7");
-  document.documentElement.style.setProperty("--orb-color-dark", "#7c4dff");
-  document.documentElement.style.setProperty("--orb-halo-strength", "60");
-
-  els.orb.style.width = "130px";
-  els.orb.style.height = "130px";
-
-  els.orb.classList.remove("orb-classic", "orb-3d", "orb-ultra");
-  els.orb.classList.add("orb-ultra");
-
-  orbMode.value = "ultra";
-  orbPresets.value = "default";
-
-  showToast("ORB restaurado");
-});
-// ============================================================
-// MODO DÍA / NOCHE
-// ============================================================
-
-document.getElementById("toggle-dark").addEventListener("change", () => {
-  document.body.classList.toggle("light-mode");
-});
-
-// ============================================================
-// MANOS LIBRES / VOZ
-// ============================================================
-
-let recognition = null;
-let manosLibresActivo = false;
-
-function initVoice() {
-  const SpeechRecognition =
-    window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!SpeechRecognition) return;
-
-  recognition = new SpeechRecognition();
-  recognition.lang = "es-AR";
-  recognition.continuous = true;
-  recognition.interimResults = false;
-
-  recognition.onresult = (event) => {
-    const last = event.results[event.results.length - 1];
-    const text = last[0].transcript.trim();
-    els.searchInput.value = text;
-    const evt = new Event("input");
-    els.searchInput.dispatchEvent(evt);
-    orbSetReady(true);
-    buscar();
-  };
-
-  recognition.onend = () => {
-    if (manosLibresActivo) recognition.start();
-  };
-}
-
-function toggleManosLibres(checked) {
-  manosLibresActivo = checked;
-  if (!recognition) return;
-  if (checked) {
-    recognition.continuous = true;
-    recognition.start();
-    showToast("Manos libres activado");
-  } else {
-    recognition.stop();
-    showToast("Manos libres desactivado");
-  }
-}
-
-function stopTodo() {
-  manosLibresActivo = false;
-  if (els.handsfreeToggle) els.handsfreeToggle.checked = false;
-  if (recognition) recognition.stop();
-  window.speechSynthesis.cancel();
-  if (state.currentAbort) {
-    state.currentAbort.abort();
-    state.currentAbort = null;
-  }
-  orbSetLoading(false);
-  showToast("STOP ejecutado");
-}
-
-function escucharUnaVez() {
-  if (!recognition) {
-    showToast("Voz no disponible en este dispositivo.");
+  if (!items.length) {
+    els.resultsContainer.innerHTML =
+      '<div class="results-empty">Sin resultados.</div>';
     return;
   }
-  manosLibresActivo = false;
-  if (els.handsfreeToggle) els.handsfreeToggle.checked = false;
-  recognition.stop();
-  recognition.continuous = false;
-  recognition.start();
-  showToast("Escuchando una consulta…");
+
+  let html = `
+    <table class="tabla-resultados">
+      <thead>
+        <tr>
+          <th>Código</th>
+          <th>Descripción</th>
+          <th>Marca</th>
+          <th>Rubro</th>
+          <th>Color</th>
+          <th>Talles</th>
+          <th>Valorizado</th>
+        </tr>
+      </thead>
+      <tbody>
+  `;
+
+  items.forEach((item) => {
+    const talles = item.talles
+      .map((t) => `${t.talle}: ${t.stock}`)
+      .join(" | ");
+
+    html += `
+      <tr>
+        <td>${item.codigo}</td>
+        <td>${item.descripcion}</td>
+        <td>${item.marca || "—"}</td>
+        <td>${item.rubro || "—"}</td>
+        <td>${item.color || "—"}</td>
+        <td>${talles}</td>
+        <td>$${formatNumber(item.valorizado)}</td>
+      </tr>
+    `;
+  });
+
+  html += "</tbody></table>";
+  els.resultsContainer.innerHTML = html;
 }
 
 // ============================================================
-// TIMEOUT MANOS LIBRES
+// DASHBOARD
 // ============================================================
 
-setInterval(() => {
-  if (!manosLibresActivo) return;
-  const diff = Date.now() - state.lastActivity;
-  if (diff > 30000) {
-    toggleManosLibres(false);
-    if (els.handsfreeToggle) els.handsfreeToggle.checked = false;
-    showToast("Manos libres desactivado por inactividad");
-  }
-}, 5000);
+function actualizarDashboard(items) {
+  if (!els.stockChartCanvas) return;
 
-// ============================================================
-// EVENTOS
-// ============================================================
+  const tallesMap = {};
 
-function initEvents() {
-  // ORB como botón principal
-  els.orb.addEventListener("click", () => buscar(false));
-
-  // ENTER inicia búsqueda
-  els.searchInput.addEventListener("keydown", (e) => {
-    if (e.key === "Enter") buscar(false);
-  });
-
-  // Input → READY + clave ADMIN
-  els.searchInput.addEventListener("input", () => {
-    const val = els.searchInput.value.trim();
-    orbSetReady(val.length > 0);
-
-    if (val.toUpperCase() === "ADMIN") {
-      els.searchInput.value = "";
-      orbSetReady(false);
-      const adminPanel = document.getElementById("admin-panel");
-      if (adminPanel) adminPanel.style.display = "flex";
-      showToast("Modo administrador");
-    }
-  });
-
-  // LIMPIAR
-  els.btnClear.addEventListener("click", limpiarPantalla);
-
-  // COPIAR
-  els.btnCopy.addEventListener("click", copiarResultados);
-
-  // STOP
-  els.btnStop.addEventListener("click", stopTodo);
-
-  // FILTROS
-  els.btnFiltros.addEventListener("click", () => {
-    els.filtrosPanel.classList.toggle("visible");
-  });
-
-  els.btnAplicarFiltros.addEventListener("click", () => {
-    actualizarFiltrosDesdeUI();
-    buscarPorFiltros();
-  });
-
-  // SOLO STOCK
-  els.chkSoloStock.addEventListener("change", () => {
-    buscarPorFiltros();
-  });
-
-  // VISTA TABLA
-  els.btnTabla.addEventListener("click", () => {
-    state.modoTabla = !state.modoTabla;
-    els.btnTabla.textContent = state.modoTabla ? "Vista tarjetas" : "Vista tabla";
-    renderResultados(state.items);
-  });
-
-  // Manos libres toggle
-  if (els.handsfreeToggle) {
-    els.handsfreeToggle.addEventListener("change", (e) => {
-      toggleManosLibres(e.target.checked);
+  items.forEach((item) => {
+    item.talles.forEach((t) => {
+      tallesMap[t.talle] = (tallesMap[t.talle] || 0) + t.stock;
     });
+  });
+
+  const labels = Object.keys(tallesMap);
+  const data = Object.values(tallesMap);
+
+  if (state.chart) state.chart.destroy();
+
+  state.chart = new Chart(els.stockChartCanvas, {
+    type: "bar",
+    data: {
+      labels,
+      datasets: [
+        {
+          label: "Stock por talle",
+          data,
+          backgroundColor: "#4fc3f7",
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { display: false },
+      },
+    },
+  });
+}
+
+// ============================================================
+// BUSCAR
+// ============================================================
+
+async function buscar(force = false) {
+  const query = els.searchInput.value.trim();
+  if (!query) {
+    showToast("Ingresá un código o descripción");
+    return;
   }
-}
 
-// ============================================================
-// INICIALIZACIÓN
-// ============================================================
+  if (!force && query === state.lastQuery) return;
 
-async function init() {
-  initVoice();
-  initEvents();
-  await cargarCatalogo();
-  orbSetReady(false);
-  els.resultsStatus.textContent = "Esperando consulta";
-}
-
-document.addEventListener("DOMContentLoaded", init);
-// ============================================================
-// BÚSQUEDA SOLO POR FILTROS
-// ============================================================
-
-async function buscarPorFiltros() {
-  state.soloStock = !!els.chkSoloStock.checked;
-  els.resultsStatus.textContent = "Buscando por filtros...";
-  setConnectionStatus(true);
-  orbSetLoading(true);
-
-  state.lastActivity = Date.now();
+  state.lastQuery = query;
 
   if (state.currentAbort) state.currentAbort.abort();
-  const controller = new AbortController();
-  state.currentAbort = controller;
+  state.currentAbort = new AbortController();
+
+  orbSetLoading(true);
+  els.resultsStatus.textContent = "Buscando…";
 
   try {
     const body = {
-      question: "",
-      solo_stock: state.soloStock,
-      filtros_globales: true,
-      marca: state.filtros.marca || null,
-      rubro: state.filtros.rubro || null,
-      talle_desde: state.filtros.talleDesde || null,
-      talle_hasta: state.filtros.talleHasta || null,
+      question: query,
+      solo_stock: els.chkSoloStock.checked,
     };
 
-    const resp = await fetch(API_URL, {
+    const res = await fetch(API_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
-      signal: controller.signal,
+      signal: state.currentAbort.signal,
     });
 
-    if (!resp.ok) throw new Error("Error en el servidor");
+    if (!res.ok) throw new Error("Error en servidor");
 
-    const data = await resp.json();
+    const data = await res.json();
     state.items = data.items || [];
 
     renderResultados(state.items);
-    renderMetricas(state.items);
-    renderChart(state.items);
+    actualizarDashboard(state.items);
 
     setConnectionStatus(true);
-    orbSetError(false);
-  } catch (e) {
-    if (e.name === "AbortError") {
-      els.resultsStatus.textContent = "Consulta detenida";
-    } else {
-      console.error(e);
+    orbSetReady(true);
+    els.resultsStatus.textContent = `${state.items.length} resultados`;
+
+  } catch (err) {
+    if (err.name !== "AbortError") {
       setConnectionStatus(false);
-      els.resultsContainer.innerHTML =
-        '<div class="results-error">Error de conexión</div>';
-      els.resultsStatus.textContent = "Error de conexión";
       orbSetError(true);
-      setTimeout(() => orbSetError(false), 2500);
+      els.resultsStatus.textContent = "Error de conexión";
     }
   } finally {
-    if (state.currentAbort === controller) state.currentAbort = null;
     orbSetLoading(false);
   }
 }
 
 // ============================================================
-// CARGAR CATÁLOGO PARA FILTROS
+// FILTROS
+// ============================================================
+
+function actualizarFiltrosDesdeUI() {
+  state.filtros.marca = els.filtroMarca.value || null;
+  state.filtros.rubro = els.filtroRubro.value || null;
+  state.filtros.talleDesde = els.filtroTalleDesde.value || null;
+  state.filtros.talleHasta = els.filtroTalleHasta.value || null;
+}
+
+async function buscarPorFiltros() {
+  const body = {
+    question: "",
+    solo_stock: els.chkSoloStock.checked,
+    filtros_globales: true,
+    marca: state.filtros.marca,
+    rubro: state.filtros.rubro,
+    talle_desde: state.filtros.talleDesde,
+    talle_hasta: state.filtros.talleHasta,
+  };
+
+  orbSetLoading(true);
+  els.resultsStatus.textContent = "Filtrando…";
+
+  try {
+    const res = await fetch(API_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+
+    const data = await res.json();
+    state.items = data.items || [];
+
+    renderResultados(state.items);
+    actualizarDashboard(state.items);
+
+    setConnectionStatus(true);
+    orbSetReady(true);
+    els.resultsStatus.textContent = `${state.items.length} resultados`;
+
+  } catch (err) {
+    setConnectionStatus(false);
+    orbSetError(true);
+    els.resultsStatus.textContent = "Error de conexión";
+  } finally {
+    orbSetLoading(false);
+  }
+}
+
+// ============================================================
+// CARGAR CATÁLOGO (MARCA / RUBRO)
 // ============================================================
 
 async function cargarCatalogo() {
@@ -563,46 +346,108 @@ async function cargarCatalogo() {
       talle_hasta: null,
     };
 
-    const resp = await fetch(API_URL, {
+    const res = await fetch(API_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
     });
 
-    if (!resp.ok) throw new Error("Error en el servidor");
-
-    const data = await resp.json();
+    const data = await res.json();
     state.catalogItems = data.items || [];
-    poblarFiltros(state.catalogItems);
-  } catch (e) {
-    console.error("Error cargando catálogo para filtros:", e);
+
+    const marcas = [...new Set(state.catalogItems.map((i) => i.marca).filter(Boolean))];
+    const rubros = [...new Set(state.catalogItems.map((i) => i.rubro).filter(Boolean))];
+
+    els.filtroMarca.innerHTML = '<option value="">Marca</option>' +
+      marcas.map((m) => `<option value="${m}">${m}</option>`).join("");
+
+    els.filtroRubro.innerHTML = '<option value="">Rubro</option>' +
+      rubros.map((r) => `<option value="${r}">${r}</option>`).join("");
+
+    setConnectionStatus(true);
+
+  } catch (err) {
+    setConnectionStatus(false);
   }
 }
 
 // ============================================================
-// POBLAR FILTROS
+// LIMPIAR / COPIAR / STOP
 // ============================================================
 
-function poblarFiltros(items) {
-  const marcas = [...new Set(items.map((i) => i.marca).filter(Boolean))];
-  const rubros = [...new Set(items.map((i) => i.rubro).filter(Boolean))];
-
-  els.filtroMarca.innerHTML =
-    '<option value="">Marca</option>' +
-    marcas.map((m) => `<option value="${m}">${m}</option>`).join("");
-
-  els.filtroRubro.innerHTML =
-    '<option value="">Rubro</option>' +
-    rubros.map((r) => `<option value="${r}">${r}</option>`).join("");
+function limpiarPantalla() {
+  els.searchInput.value = "";
+  els.resultsContainer.innerHTML = "";
+  els.resultsStatus.textContent = "Esperando consulta";
+  orbSetReady(false);
 }
 
-function actualizarFiltrosDesdeUI() {
-  state.filtros.marca = els.filtroMarca.value || null;
-  state.filtros.rubro = els.filtroRubro.value || null;
-  state.filtros.talleDesde = els.filtroTalleDesde.value || null;
-  state.filtros.talleHasta = els.filtroTalleHasta.value || null;
+function copiarResultados() {
+  const text = els.resultsContainer.innerText;
+  navigator.clipboard.writeText(text);
+  showToast("Copiado");
+}
+
+function stopTodo() {
+  if (state.currentAbort) state.currentAbort.abort();
+  orbSetError(true);
+  els.resultsStatus.textContent = "Cancelado";
 }
 
 // ============================================================
-// FIN DEL ARCHIVO
+// EVENTOS
 // ============================================================
+
+function initEvents() {
+  // ENTER
+  els.searchInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") buscar();
+  });
+
+  // ORB CLICK
+  els.orb.addEventListener("click", () => buscar());
+
+  // LIMPIAR
+  els.btnClear.addEventListener("click", limpiarPantalla);
+
+  // COPIAR
+  els.btnCopy.addEventListener("click", copiarResultados);
+
+  // STOP
+  els.btnStop.addEventListener("click", stopTodo);
+
+  // FILTROS
+  els.btnFiltros.addEventListener("click", () => {
+    els.filtrosPanel.classList.toggle("visible");
+  });
+
+  els.btnAplicarFiltros.addEventListener("click", () => {
+    actualizarFiltrosDesdeUI();
+    buscarPorFiltros();
+  });
+
+  // SOLO STOCK
+  els.chkSoloStock.addEventListener("change", () => {
+    buscarPorFiltros();
+  });
+
+  // VISTA TABLA
+  els.btnTabla.addEventListener("click", () => {
+    state.modoTabla = !state.modoTabla;
+    els.btnTabla.textContent = state.modoTabla ? "Vista tarjetas" : "Vista tabla";
+    renderResultados(state.items);
+  });
+}
+
+// ============================================================
+// INICIALIZACIÓN
+// ============================================================
+
+async function init() {
+  initEvents();
+  await cargarCatalogo();
+  orbSetReady(false);
+  els.resultsStatus.textContent = "Esperando consulta";
+}
+
+document.addEventListener("DOMContentLoaded", init);
