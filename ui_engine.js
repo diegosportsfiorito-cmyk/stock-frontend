@@ -5,52 +5,128 @@
 function initUI(app) {
   const els = app.els;
 
-  // ENTER en input
-  els.searchInput.addEventListener("keydown", (e) => {
-    if (e.key === "Enter") app.buscar();
-  });
+  // ============================================================
+  // PROTECCIÓN: si falta algún elemento, no rompe nada
+  // ============================================================
+  const safe = (el) => el !== null && el !== undefined;
 
-  // ORB click
-  els.orb.addEventListener("click", () => app.buscar());
+  // ============================================================
+  // ENTER en input + ACTIVAR ADMIN (código secreto)
+  // ============================================================
+  if (safe(els.searchInput)) {
+    els.searchInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        const val = e.target.value.trim().toLowerCase();
 
-  // LIMPIAR
-  els.btnClear.addEventListener("click", app.limpiarPantalla);
+        // ACTIVAR PANEL ADMIN
+        if (val === "admin") {
+          const adminPanel = document.getElementById("admin-panel");
+          if (adminPanel) adminPanel.style.display = "flex";
+          e.target.value = "";
+          showToast("Modo administrador activado");
+          return;
+        }
 
-  // COPIAR
-  els.btnCopy.addEventListener("click", app.copiarResultados);
+        app.buscar();
+      }
+    });
+  }
 
-  // STOP
-  els.btnStop.addEventListener("click", app.stopTodo);
+  // ============================================================
+  // ORB click + doble click (admin)
+  // ============================================================
+  if (safe(els.orb)) {
+    els.orb.addEventListener("click", () => app.buscar());
 
+    els.orb.addEventListener("dblclick", () => {
+      const adminPanel = document.getElementById("admin-panel");
+      if (adminPanel) adminPanel.style.display = "flex";
+      showToast("Modo administrador activado");
+    });
+  }
+
+  // ============================================================
+  // BOTÓN LIMPIAR (solo resultados, no configuración)
+  // ============================================================
+  if (safe(els.btnClear)) {
+    els.btnClear.addEventListener("click", () => app.limpiarPantalla());
+  }
+
+  // ============================================================
+  // BOTÓN COPIAR
+  // ============================================================
+  if (safe(els.btnCopy)) {
+    els.btnCopy.addEventListener("click", () => app.copiarResultados());
+  }
+
+  // ============================================================
+  // BOTÓN STOP
+  // ============================================================
+  if (safe(els.btnStop)) {
+    els.btnStop.addEventListener("click", () => app.stopTodo());
+  }
+
+  // ============================================================
   // FILTROS PANEL
-  els.btnFiltros.addEventListener("click", () => {
-    els.filtrosPanel.classList.toggle("visible");
-  });
+  // ============================================================
+  if (safe(els.btnFiltros) && safe(els.filtrosPanel)) {
+    els.btnFiltros.addEventListener("click", () => {
+      els.filtrosPanel.classList.toggle("visible");
+    });
+  }
 
-  els.btnAplicarFiltros.addEventListener("click", () => {
-    app.actualizarFiltrosDesdeUI();
-    app.buscarPorFiltros();
-  });
+  if (safe(els.btnAplicarFiltros)) {
+    els.btnAplicarFiltros.addEventListener("click", () => {
+      app.actualizarFiltrosDesdeUI();
+      app.buscarPorFiltros();
+    });
+  }
 
+  // ============================================================
   // SOLO STOCK
-  els.chkSoloStock.addEventListener("change", () => {
-    app.buscarPorFiltros();
-  });
+  // ============================================================
+  if (safe(els.chkSoloStock)) {
+    els.chkSoloStock.addEventListener("change", () => {
+      app.buscarPorFiltros();
+    });
+  }
 
+  // ============================================================
   // VISTA TABLA / TARJETAS
-  els.btnTabla.addEventListener("click", () => {
-    app.state.modoTabla = !app.state.modoTabla;
-    els.btnTabla.textContent = app.state.modoTabla
-      ? "Vista tarjetas"
-      : "Vista tabla";
-    app.renderResultados(app.state.items);
-  });
+  // ============================================================
+  if (safe(els.btnTabla)) {
+    els.btnTabla.addEventListener("click", () => {
+      app.state.modoTabla = !app.state.modoTabla;
 
-  // Cambio de modo de gráfico
+      els.btnTabla.textContent = app.state.modoTabla
+        ? "Vista tarjetas"
+        : "Vista tabla";
+
+      app.renderResultados(app.state.items);
+    });
+  }
+
+  // ============================================================
+  // CAMBIO DE MODO DE GRÁFICO
+  // ============================================================
   const chartMode = document.getElementById("chart-mode");
-  if (chartMode) {
+  if (safe(chartMode)) {
     chartMode.addEventListener("change", () => {
       actualizarDashboard(app.state.items);
+    });
+  }
+
+  // ============================================================
+  // SCANNER (si existe startScanner en scanner_v2.js)
+  // ============================================================
+  const btnScanner = document.getElementById("btn-scanner-nativo");
+  if (safe(btnScanner)) {
+    btnScanner.addEventListener("click", () => {
+      if (typeof startScanner === "function") {
+        startScanner();
+      } else {
+        showToast("Scanner no disponible");
+      }
     });
   }
 }
