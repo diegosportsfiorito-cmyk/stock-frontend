@@ -43,6 +43,7 @@ const AppCore = {
 
   showToast(msg) {
     const toast = document.getElementById("toast");
+    if (!toast) return;
     toast.textContent = msg;
     toast.classList.add("visible");
     setTimeout(() => toast.classList.remove("visible"), 2000);
@@ -114,43 +115,57 @@ const AppCore = {
       return;
     }
 
+    let totalStock = 0;
+
     let html = `
-      <table class="tabla-resultados">
-        <thead>
-          <tr>
-            <th>Código</th>
-            <th>Descripción</th>
-            <th>Marca</th>
-            <th>Rubro</th>
-            <th>Color</th>
-            <th>Talles</th>
-            <th>Precio</th>
-            <th>Valorizado</th>
-          </tr>
-        </thead>
-        <tbody>
+      <div class="tabla-wrapper">
+        <table class="tabla-resultados">
+          <thead>
+            <tr>
+              <th>Código</th>
+              <th>Descripción</th>
+              <th>Marca</th>
+              <th>Rubro</th>
+              <th>Color</th>
+              <th>Talle</th>
+              <th>Precio</th>
+              <th>Stock</th>
+            </tr>
+          </thead>
+          <tbody>
     `;
 
     items.forEach((item) => {
-      const talles = item.talles
-        .map((t) => `${t.talle}: ${t.stock}`)
-        .join(" | ");
+      item.talles.forEach((t) => {
+        totalStock += t.stock;
 
-      html += `
-        <tr>
-          <td>${item.codigo}</td>
-          <td>${item.descripcion}</td>
-          <td>${item.marca || "—"}</td>
-          <td>${item.rubro || "—"}</td>
-          <td>${item.color || "—"}</td>
-          <td>${talles}</td>
-          <td>$${this.formatNumber(item.precio)}</td>
-          <td>$${this.formatNumber(item.valorizado)}</td>
-        </tr>
-      `;
+        html += `
+          <tr>
+            <td>${item.codigo}</td>
+            <td>${item.descripcion}</td>
+            <td>${item.marca || "—"}</td>
+            <td>${item.rubro || "—"}</td>
+            <td>${item.color || "—"}</td>
+            <td>${t.talle}</td>
+            <td>$${this.formatNumber(item.precio)}</td>
+            <td>${t.stock}</td>
+          </tr>
+        `;
+      });
     });
 
-    html += "</tbody></table>";
+    html += `
+          </tbody>
+          <tfoot>
+            <tr>
+              <td colspan="7" style="text-align:right;"><strong>Total unidades</strong></td>
+              <td><strong>${totalStock}</strong></td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    `;
+
     els.resultsContainer.innerHTML = html;
   },
 
@@ -311,7 +326,6 @@ const AppCore = {
 
   limpiarPantalla: function () {
     const els = this.els;
-    els.searchInput.value = "";
     els.resultsContainer.innerHTML = "";
     els.resultsStatus.textContent = "Esperando consulta";
     ORB.setReady(false);
@@ -321,6 +335,10 @@ const AppCore = {
 
   copiarResultados: function () {
     const text = this.els.resultsContainer.innerText;
+    if (!text.trim()) {
+      this.showToast("No hay resultados para copiar");
+      return;
+    }
     navigator.clipboard.writeText(text);
     this.showToast("Copiado");
   },
