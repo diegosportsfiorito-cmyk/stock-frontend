@@ -51,7 +51,9 @@ body {
   overflow-x: hidden;
 }
 
-/* MODO DÍA */
+/* ============================================================
+   MODO DÍA
+   ============================================================ */
 
 body.light-mode {
   background: #f5f5f7;
@@ -82,7 +84,9 @@ body.light-mode .result-item {
   border-color: #d1d5db;
 }
 
-/* CONTENEDOR PRINCIPAL */
+/* ============================================================
+   CONTENEDOR PRINCIPAL
+   ============================================================ */
 
 .app-shell {
   min-height: 100vh;
@@ -108,7 +112,9 @@ body.light-mode .result-item {
   z-index: 1;
 }
 
-/* HEADER */
+/* ============================================================
+   HEADER
+   ============================================================ */
 
 .app-header {
   display: flex;
@@ -137,7 +143,9 @@ body.light-mode .result-item {
   color: var(--text-muted);
 }
 
-/* CONEXIÓN */
+/* ============================================================
+   CONEXIÓN
+   ============================================================ */
 
 .connection-indicator {
   display: flex;
@@ -161,7 +169,55 @@ body.light-mode .result-item {
   box-shadow: 0 0 10px rgba(52, 211, 153, 0.9);
 }
 
-/* SEARCH CARD */
+/* ============================================================
+   TOGGLE DÍA/NOCHE (HEADER)
+   ============================================================ */
+
+.toggle-dark {
+  position: relative;
+  width: 48px;
+  height: 24px;
+  display: inline-block;
+}
+
+.toggle-dark input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.toggle-slider {
+  position: absolute;
+  cursor: pointer;
+  inset: 0;
+  background: #4b5563;
+  border-radius: 24px;
+  transition: 0.3s;
+}
+
+.toggle-slider:before {
+  content: "";
+  position: absolute;
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  bottom: 3px;
+  background: #fff;
+  border-radius: 50%;
+  transition: 0.3s;
+}
+
+.toggle-dark input:checked + .toggle-slider {
+  background: var(--accent);
+}
+
+.toggle-dark input:checked + .toggle-slider:before {
+  transform: translateX(24px);
+}
+
+/* ============================================================
+   SEARCH CARD
+   ============================================================ */
 
 .search-card {
   background: var(--card-bg);
@@ -199,7 +255,9 @@ body.light-mode .result-item {
   border-color: var(--accent);
 }
 
-/* BOTÓN CÁMARA */
+/* ============================================================
+   BOTÓN SCANNER
+   ============================================================ */
 
 .scanner-btn {
   width: 38px;
@@ -240,7 +298,9 @@ body.light-mode .result-item {
   border-radius: 2px;
 }
 
-/* SWITCH MODO SCANNER */
+/* ============================================================
+   SWITCH MODO SCANNER
+   ============================================================ */
 
 .scanner-mode-switch {
   display: flex;
@@ -268,7 +328,9 @@ body.light-mode .result-item {
   color: #fff;
 }
 
-/* MÉTRICAS */
+/* ============================================================
+   MÉTRICAS
+   ============================================================ */
 
 .metrics-row {
   display: flex;
@@ -295,7 +357,9 @@ body.light-mode .result-item {
   margin-top: 4px;
 }
 
-/* FILTROS AVANZADOS */
+/* ============================================================
+   FILTROS AVANZADOS
+   ============================================================ */
 
 .filtros-panel {
   display: none;
@@ -326,7 +390,9 @@ body.light-mode .result-item {
   color: var(--text-main);
 }
 
-/* ACCIONES */
+/* ============================================================
+   ACCIONES
+   ============================================================ */
 
 .actions-row {
   display: flex;
@@ -368,7 +434,9 @@ body.light-mode .result-item {
   background: rgba(255, 255, 255, 0.05);
 }
 
-/* SOLO STOCK */
+/* ============================================================
+   SOLO STOCK
+   ============================================================ */
 
 .solo-stock {
   display: inline-flex;
@@ -377,8 +445,6 @@ body.light-mode .result-item {
   font-size: 0.78rem;
   color: var(--text-muted);
 }
-
-/* SWITCH GENERAL */
 
 .switch {
   position: relative;
@@ -422,7 +488,9 @@ input:checked + .slider:before {
   transform: translateX(20px);
 }
 
-/* RESULTADOS */
+/* ============================================================
+   RESULTADOS
+   ============================================================ */
 
 .main-row {
   display: grid;
@@ -466,7 +534,9 @@ input:checked + .slider:before {
   gap: 12px;
 }
 
-/* TARJETAS DE RESULTADO */
+/* ============================================================
+   TARJETAS DE RESULTADO
+   ============================================================ */
 
 .result-item {
   background: rgba(15, 23, 42, 0.9);
@@ -500,7 +570,30 @@ input:checked + .slider:before {
   line-height: 1.3;
 }
 
-/* DASHBOARD */
+/* ============================================================
+   TABLA
+   ============================================================ */
+
+.table-view {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8rem;
+}
+
+.table-view th,
+.table-view td {
+  padding: 8px;
+  border-bottom: 1px solid var(--border-soft);
+}
+
+.table-view th {
+  text-align: left;
+  color: var(--text-muted);
+}
+
+/* ============================================================
+   DASHBOARD
+   ============================================================ */
 
 .dashboard-card {
   background: var(--card-bg);
@@ -529,7 +622,9 @@ input:checked + .slider:before {
   max-height: 220px;
 }
 
-/* TOAST */
+/* ============================================================
+   TOAST
+   ============================================================ */
 
 .toast {
   position: fixed;
@@ -552,7 +647,9 @@ input:checked + .slider:before {
   opacity: 1;
 }
 
-/* PANEL ADMIN */
+/* ============================================================
+   PANEL ADMIN (NUEVO)
+   ============================================================ */
 
 #admin-panel {
   position: fixed;
@@ -599,7 +696,9 @@ input:checked + .slider:before {
   background: rgba(51, 65, 85, 0.9);
 }
 
-/* RESPONSIVE */
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
 
 @media (max-width: 900px) {
   .main-row {
@@ -614,35 +713,3 @@ input:checked + .slider:before {
 @media (max-width: 600px) {
   .search-row {
     flex-direction: column;
-    align-items: stretch;
-  }
-
-  .scanner-mode-switch {
-    width: 100%;
-  }
-
-  .scanner-btn {
-    width: 100%;
-  }
-
-  .results-card {
-    max-height: 260px;
-  }
-
-  .metrics-row {
-    flex-direction: column;
-  }
-}
-
-/* SCROLLBAR */
-
-.results-card::-webkit-scrollbar {
-  width: 6px;
-}
-.results-card::-webkit-scrollbar-track {
-  background: #020617;
-}
-.results-card::-webkit-scrollbar-thumb {
-  background: #4b5563;
-  border-radius: 999px;
-}
