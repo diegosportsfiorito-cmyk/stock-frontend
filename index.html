@@ -6,7 +6,6 @@
   <title>STOCK IA PRO — Asistente inteligente</title>
 
   <script>
-    // Cache Buster Automático
     const v = Date.now();
     document.write(`
       <link rel="stylesheet" href="styles_v2.css?v=${v}">
@@ -17,7 +16,7 @@
 
 <body>
 
-  <!-- BANNER SUPERIOR -->
+  <!-- BANNER -->
   <div style="background:#d60000;color:white;padding:10px;font-size:14px;text-align:center;">
     VERSION RESTAURADA — ORB 3D ULTRA + SCANNER AVANZADO
   </div>
@@ -27,7 +26,6 @@
 
       <!-- HEADER -->
       <div class="app-header">
-
         <div class="branding">
           <div>
             <div class="brand-title">STOCK IA PRO</div>
@@ -36,19 +34,15 @@
         </div>
 
         <div class="header-right">
-
-          <!-- Indicador de conexión -->
           <div class="connection-indicator">
-            <div class="connection-dot" id="connection-dot"></div>
+            <div class="connection-dot"></div>
             <span>Estado conexión</span>
           </div>
 
-          <!-- Toggle Día/Noche -->
           <label class="toggle-dark">
             <input type="checkbox" id="toggle-dark">
             <span class="toggle-slider"></span>
           </label>
-
         </div>
       </div>
 
@@ -74,10 +68,8 @@
             />
           </div>
 
-          <!-- Scanner avanzado -->
           <button id="btn-scanner-nativo" class="scanner-btn" title="Lector avanzado"></button>
 
-          <!-- Modo simple / completo -->
           <div class="scanner-mode-switch">
             <div id="scanner-mode-simple" class="scanner-mode-option active">Simple</div>
             <div id="scanner-mode-completo" class="scanner-mode-option">Completo</div>
@@ -85,7 +77,7 @@
 
         </div>
 
-        <!-- Métricas -->
+        <!-- MÉTRICAS -->
         <div class="metrics-row">
           <div class="metric-card">
             <div class="metric-label">Artículos</div>
@@ -105,7 +97,7 @@
           </div>
         </div>
 
-        <!-- Filtros avanzados -->
+        <!-- FILTROS -->
         <div class="filtros-panel" id="filtros-panel">
           <div class="filtros-row">
             <select id="filtro-marca" class="filtro-select">
@@ -161,8 +153,15 @@
         <section class="dashboard-card">
           <div class="dashboard-header">
             <div class="dashboard-title">Visión rápida</div>
-            <div class="dashboard-subtitle">Distribución por talle</div>
+            <div class="dashboard-subtitle">Distribución por talle / marca / rubro</div>
           </div>
+
+          <select id="chart-mode" class="chart-mode">
+            <option value="talle">Por talle</option>
+            <option value="marca">Por marca</option>
+            <option value="rubro">Por rubro</option>
+          </select>
+
           <canvas id="stockChart"></canvas>
         </section>
 
@@ -209,15 +208,14 @@
   <!-- TOAST -->
   <div class="toast" id="toast"></div>
 
-  <!-- SCRIPTS CON CACHE BUSTER -->
-  <script>
-    document.write(`
-      <script src="https://cdn.jsdelivr.net/npm/chart.js?v=${v}"><\/script>
-      <script src="scanner_v2.js?v=${v}"><\/script>
-      <script src="ui_v2.js?v=${v}"><\/script>
-      <script src="app_v3.js?v=${v}"><\/script>
-    `);
-  </script>
+  <!-- SCRIPTS -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js?v=1"></script>
+
+  <script src="orb_engine.js?v=1"></script>
+  <script src="indicators_engine.js?v=1"></script>
+  <script src="dashboard_engine.js?v=1"></script>
+  <script src="ui_engine.js?v=1"></script>
+  <script src="app_core.js?v=1"></script>
 
 </body>
 </html>
