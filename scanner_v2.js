@@ -3,6 +3,8 @@
 // ============================================================
 
 let modoScanner = "simple";
+let scannerActivo = false;
+let streamActual = null;
 
 // ------------------------------------------------------------
 // PROCESAR CÓDIGO
@@ -43,7 +45,84 @@ function cargarEnInput(texto) {
 }
 
 // ------------------------------------------------------------
-// PROCESAR RETORNO DEL SCANNER NATIVO
+// START SCANNER (BOTÓN PRINCIPAL)
+// ------------------------------------------------------------
+async function startScanner() {
+  if (scannerActivo) return;
+
+  if (!("BarcodeDetector" in window)) {
+    alert("Tu dispositivo no soporta BarcodeDetector.");
+    return;
+  }
+
+  scannerActivo = true;
+
+  const video = document.createElement("video");
+  video.setAttribute("playsinline", true);
+  video.style.position = "fixed";
+  video.style.top = "0";
+  video.style.left = "0";
+  video.style.width = "100%";
+  video.style.height = "100%";
+  video.style.zIndex = "9999";
+  video.style.background = "#000";
+  document.body.appendChild(video);
+
+  try {
+    streamActual = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: "environment" }
+    });
+
+    video.srcObject = streamActual;
+    await video.play();
+
+    const detector = new BarcodeDetector({ formats: ["ean_13", "code_128", "ean_8", "upc_a"] });
+
+    const loop = async () => {
+      if (!scannerActivo) return;
+
+      try {
+        const barcodes = await detector.detect(video);
+
+        if (barcodes.length > 0) {
+          const code = barcodes[0].rawValue;
+          procesarCodigo(code);
+          stopScanner();
+          return;
+        }
+      } catch (err) {
+        console.error("Error detectando código:", err);
+      }
+
+      requestAnimationFrame(loop);
+    };
+
+    loop();
+
+  } catch (err) {
+    console.error("Error al iniciar cámara:", err);
+    alert("No se pudo acceder a la cámara.");
+    stopScanner();
+  }
+}
+
+// ------------------------------------------------------------
+// STOP SCANNER
+// ------------------------------------------------------------
+function stopScanner() {
+  scannerActivo = false;
+
+  if (streamActual) {
+    streamActual.getTracks().forEach((t) => t.stop());
+    streamActual = null;
+  }
+
+  const video = document.querySelector("video[playsinline]");
+  if (video) video.remove();
+}
+
+// ------------------------------------------------------------
+// PROCESAR RETORNO DEL SCANNER NATIVO (ANDROID)
 // ------------------------------------------------------------
 (function procesarRetornoNativo() {
   const params = new URLSearchParams(window.location.search);
