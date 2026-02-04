@@ -11,6 +11,7 @@
 
 <body>
 
+  <!-- BANNER SUPERIOR -->
   <div style="background:#d60000;color:white;padding:10px;font-size:14px;text-align:center;">
     VERSION RESTAURADA — ORB 3D ULTRA + SCANNER AVANZADO
   </div>
@@ -20,6 +21,7 @@
 
       <!-- HEADER -->
       <div class="app-header">
+
         <div class="branding">
           <div>
             <div class="brand-title">STOCK IA PRO</div>
@@ -28,10 +30,19 @@
         </div>
 
         <div class="header-right">
+
+          <!-- Indicador de conexión -->
           <div class="connection-indicator">
             <div class="connection-dot" id="connection-dot"></div>
             <span>Estado conexión</span>
           </div>
+
+          <!-- Toggle Día/Noche -->
+          <label class="toggle-dark">
+            <input type="checkbox" id="toggle-dark">
+            <span class="toggle-slider"></span>
+          </label>
+
         </div>
       </div>
 
@@ -39,9 +50,7 @@
       <div class="orb-zone">
         <div class="orb-wrapper">
           <div class="orb orb-ultra" id="orb">IA PRO</div>
-          <div class="orb-tooltip" id="orb-tooltip">
-            Tocá para buscar
-          </div>
+          <div class="orb-tooltip" id="orb-tooltip">Tocá para buscar</div>
         </div>
       </div>
 
@@ -77,36 +86,43 @@
             <div class="metric-value" id="metric-articulos">0</div>
           </div>
           <div class="metric-card">
-            <div class="metric-label">Stock total</div>
-            <div class="metric-value" id="metric-stock">0</div>
+            <div class="metric-label">Pares</div>
+            <div class="metric-value" id="metric-pares">0</div>
           </div>
           <div class="metric-card">
-            <div class="metric-label">Marcas</div>
-            <div class="metric-value" id="metric-marcas">0</div>
+            <div class="metric-label">Alertas</div>
+            <div class="metric-value" id="metric-alertas">0</div>
           </div>
           <div class="metric-card">
-            <div class="metric-label">Rubro activo</div>
-            <div class="metric-value" id="metric-rubro">–</div>
+            <div class="metric-label">Valorizado</div>
+            <div class="metric-value" id="metric-valorizado">$0</div>
           </div>
         </div>
 
         <!-- Filtros avanzados -->
         <div class="filtros-panel" id="filtros-panel">
           <div class="filtros-row">
-            <select id="filtro-rubro" class="filtro-select">
-              <option value="">Rubro</option>
-            </select>
             <select id="filtro-marca" class="filtro-select">
               <option value="">Marca</option>
             </select>
-            <input id="filtro-talle" class="filtro-input" placeholder="Talle" />
+
+            <select id="filtro-rubro" class="filtro-select">
+              <option value="">Rubro</option>
+            </select>
           </div>
+
+          <div class="filtros-row">
+            <input id="filtro-talle-desde" class="filtro-input" placeholder="Talle desde" />
+            <input id="filtro-talle-hasta" class="filtro-input" placeholder="Talle hasta" />
+          </div>
+
+          <button id="btn-aplicar-filtros" class="btn-secondary">Aplicar filtros</button>
         </div>
 
         <div class="actions-row">
           <div class="solo-stock">
             <label class="switch">
-              <input type="checkbox" id="solo-stock">
+              <input type="checkbox" id="chk-solo-stock">
               <span class="slider"></span>
             </label>
             <span>Solo con stock</span>
@@ -114,7 +130,10 @@
 
           <div class="actions-right">
             <button class="btn-secondary" id="btn-filtros">Filtros</button>
-            <button class="btn-ghost" id="btn-limpiar">Limpiar</button>
+            <button class="btn-ghost" id="btn-clear">Limpiar</button>
+            <button class="btn-ghost" id="btn-copy">Copiar</button>
+            <button class="btn-ghost" id="btn-stop">Stop</button>
+            <button class="btn-secondary" id="btn-tabla">Vista tabla</button>
           </div>
         </div>
       </section>
@@ -146,11 +165,9 @@
     </div>
   </div>
 
-  <!-- PANEL ADMIN -->
+  <!-- PANEL ADMIN NUEVO (solo ORB) -->
   <div id="admin-panel">
-    <h2>Modo administrador</h2>
-
-    <h3>Configuración del ORB</h3>
+    <h2>Configuración del ORB</h2>
 
     <label>Color principal</label>
     <input type="color" id="orb-color" value="#4fc3f7">
@@ -186,8 +203,10 @@
   <!-- TOAST -->
   <div class="toast" id="toast"></div>
 
+  <!-- SCRIPTS -->
   <script src="scanner.js"></script>
   <script src="ui.js"></script>
   <script src="app_v2.js"></script>
+
 </body>
 </html>
