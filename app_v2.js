@@ -1,5 +1,5 @@
 // ============================================================
-// ELEMENTOS  
+// ELEMENTOS
 // ============================================================
 
 const els = {
@@ -129,263 +129,361 @@ function renderResultados(items) {
     els.resultsContainer.appendChild(div);
   });
 }
+      const adminPanel = document.getElementById("admin-panel");
+      if (adminPanel) adminPanel.style.display = "flex";
+    }
+  });
 
-// ============================================================
-// RENDER RESULTADOS — TABLA
-// ============================================================
+  // LIMPIAR
+  els.btnClear.addEventListener("click", limpiarPantalla);
 
-function renderResultadosTabla(items) {
-  els.resultsContainer.innerHTML = "";
+  // COPIAR
+  els.btnCopy.addEventListener("click", copiarResultados);
 
-  if (!items.length) {
-    els.resultsContainer.innerHTML =
-      '<div class="results-empty">Sin resultados.</div>';
-    return;
-  }
+  // STOP
+  els.btnStop.addEventListener("click", stopTodo);
 
-  let html = `
-    <table class="table-view">
-      <thead>
-        <tr>
-          <th>Artículo</th>
-          <th>Descripción</th>
-          <th>Talle</th>
-          <th>Cantidad</th>
-        </tr>
-      </thead>
-      <tbody>
-  `;
+  // FILTROS
+  els.btnFiltros.addEventListener("click", () => {
+    els.filtrosPanel.classList.toggle("visible");
+  });
 
-  items.forEach((item) => {
-    item.talles.forEach((t) => {
-      html += `
-        <tr>
-          <td>${item.codigo}</td>
-          <td>${item.descripcion}</td>
-          <td>${t.talle}</td>
-          <td>${t.stock}</td>
-        </tr>
-      `;
+  els.btnAplicarFiltros.addEventListener("click", () => {
+    actualizarFiltrosDesdeUI();
+    buscarPorFiltros();
+  });
+
+  // SOLO STOCK
+  els.chkSoloStock.addEventListener("change", () => {
+    buscarPorFiltros();
+  });
+
+  // VISTA TABLA
+  els.btnTabla.addEventListener("click", () => {
+    state.modoTabla = !state.modoTabla;
+    els.btnTabla.textContent = state.modoTabla ? "Vista tarjetas" : "Vista tabla";
+    renderResultados(state.items);
+  });
+
+  // Manos libres toggle (si existe)
+  if (els.handsfreeToggle) {
+    els.handsfreeToggle.addEventListener("change", (e) => {
+      toggleManosLibres(e.target.checked);
     });
-  });
-
-  html += "</tbody></table>";
-
-  els.resultsContainer.innerHTML = html;
-}
-
-// ============================================================
-// MÉTRICAS
-// ============================================================
-
-function renderMetricas(items) {
-  let articulos = items.length;
-  let pares = 0;
-  let alertas = 0;
-  let valorizado = 0;
-
-  items.forEach((item) => {
-    item.talles.forEach((t) => {
-      pares += t.stock;
-      if (t.stock === 0) alertas++;
-    });
-    valorizado += item.valorizado;
-  });
-
-  document.getElementById("metric-articulos").textContent = articulos;
-  document.getElementById("metric-pares").textContent = pares;
-  document.getElementById("metric-alertas").textContent = alertas;
-  document.getElementById("metric-valorizado").textContent =
-    "$" + formatNumber(valorizado);
-}
-
-// ============================================================
-// DASHBOARD — CHART
-// ============================================================
-
-function buildChartData(items) {
-  const map = new Map();
-  items.forEach((item) => {
-    item.talles.forEach((t) => {
-      const key = String(t.talle);
-      map.set(key, (map.get(key) || 0) + t.stock);
-    });
-  });
-
-  return {
-    labels: [...map.keys()],
-    data: [...map.values()],
-  };
-}
-
-function renderChart(items) {
-  if (!els.stockChartCanvas || typeof Chart === "undefined") return;
-
-  const { labels, data } = buildChartData(items);
-
-  if (state.chart) {
-    state.chart.destroy();
-    state.chart = null;
-  }
-
-  if (!labels.length) return;
-
-  state.chart = new Chart(els.stockChartCanvas, {
-    type: "pie",
-    data: {
-      labels,
-      datasets: [
-        {
-          data,
-          backgroundColor: [
-            "#4f46e5",
-            "#22c55e",
-            "#f97316",
-            "#e11d48",
-            "#06b6d4",
-            "#a855f7",
-            "#facc15",
-            "#0ea5e9",
-          ],
-          borderWidth: 0,
-        },
-      ],
-    },
-    options: {
-      plugins: {
-        legend: {
-          labels: {
-            color: "#e5e7eb",
-            font: { size: 10 },
-          },
-        },
-      },
-    },
-  });
-}
-// ============================================================
-// COPIAR RESULTADOS
-// ============================================================
-
-function buildCopyText(items) {
-  if (!items.length) return "Sin resultados.";
-
-  let lines = [];
-  lines.push(`Consulta: ${state.lastQuery}`);
-  lines.push("");
-
-  items.forEach((item) => {
-    lines.push(`${item.codigo} - ${item.descripcion}`);
-    lines.push(`Precio: $${formatNumber(item.precio)}`);
-    lines.push(
-      `Marca: ${item.marca || "—"} | Rubro: ${item.rubro || "—"} | Color: ${
-        item.color || "—"
-      }`
-    );
-    const talles = item.talles
-      .map((t) => `${t.talle}: ${t.stock}`)
-      .join(" | ");
-    lines.push(`Talles: ${talles}`);
-    lines.push(`Valorizado total: $${formatNumber(item.valorizado)}`);
-    lines.push("--------------------------------------------------");
-  });
-
-  return lines.join("\n");
-}
-
-async function copiarResultados() {
-  try {
-    const text = buildCopyText(state.items);
-    await navigator.clipboard.writeText(text);
-    showToast("Resultados copiados.");
-  } catch (e) {
-    showToast("No se pudo copiar.");
   }
 }
 
 // ============================================================
-// LIMPIAR
+// INICIALIZACIÓN
 // ============================================================
 
-function limpiarPantalla() {
-  state.items = [];
-  state.lastQuery = "";
-  els.searchInput.value = "";
+async function init() {
+  initVoice();
+  initEvents();
+  await cargarCatalogo();
   orbSetReady(false);
-  renderResultados([]);
-  renderMetricas([]);
-  renderChart([]);
   els.resultsStatus.textContent = "Esperando consulta";
 }
 
+document.addEventListener("DOMContentLoaded", init);
+
 // ============================================================
-// BÚSQUEDA PRINCIPAL
+// PANEL ADMIN — CONFIGURACIÓN DEL ORB (NUEVO SISTEMA)
 // ============================================================
 
-async function buscar(force = false) {
-  const q = els.searchInput.value.trim();
-  if (!q && !force) return;
+const adminPanel = document.getElementById("admin-panel");
 
-  state.lastQuery = q;
-  state.soloStock = !!els.chkSoloStock.checked;
+const orbColorDia = document.getElementById("orb-color");
+const orbColorNoche = document.getElementById("orb-color-dark");
+const orbSize = document.getElementById("orb-size");
+const orbHalo = document.getElementById("orb-halo");
+const orbMode = document.getElementById("orb-mode");
+const orbPresets = document.getElementById("orb-presets");
+const orbReset = document.getElementById("orb-reset");
 
-  els.resultsStatus.textContent = "Buscando...";
-  setConnectionStatus(true);
-  orbSetLoading(true);
+// Cargar valores actuales al panel
+function cargarConfigOrb() {
+  orbColorDia.value = getComputedStyle(document.documentElement)
+    .getPropertyValue("--orb-color")
+    .trim();
 
-  state.lastActivity = Date.now();
+  orbColorNoche.value = getComputedStyle(document.documentElement)
+    .getPropertyValue("--orb-color-dark")
+    .trim();
 
-  if (state.currentAbort) state.currentAbort.abort();
-  const controller = new AbortController();
-  state.currentAbort = controller;
+  orbSize.value = parseInt(els.orb.style.width || 130);
+  orbHalo.value = parseInt(
+    getComputedStyle(document.documentElement)
+      .getPropertyValue("--orb-halo-strength")
+  );
 
-  try {
-    const body = {
-      question: q,
-      solo_stock: state.soloStock,
-      filtros_globales: true,
-      marca: state.filtros.marca || null,
-      rubro: state.filtros.rubro || null,
-      talle_desde: state.filtros.talleDesde || null,
-      talle_hasta: state.filtros.talleHasta || null,
-    };
+  // Detectar modo actual
+  if (els.orb.classList.contains("orb-classic")) orbMode.value = "classic";
+  else if (els.orb.classList.contains("orb-3d")) orbMode.value = "3d";
+  else orbMode.value = "ultra";
+}
 
-    const resp = await fetch(API_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-      signal: controller.signal,
-    });
+// Guardar configuración
+orbColorDia.addEventListener("input", () => {
+  document.documentElement.style.setProperty("--orb-color", orbColorDia.value);
+});
 
-    if (!resp.ok) throw new Error("Error en el servidor");
+orbColorNoche.addEventListener("input", () => {
+  document.documentElement.style.setProperty("--orb-color-dark", orbColorNoche.value);
+});
 
-    const data = await resp.json();
-    state.items = data.items || [];
+orbSize.addEventListener("input", () => {
+  els.orb.style.width = orbSize.value + "px";
+  els.orb.style.height = orbSize.value + "px";
+});
 
-    renderResultados(state.items);
-    renderMetricas(state.items);
-    renderChart(state.items);
+orbHalo.addEventListener("input", () => {
+  document.documentElement.style.setProperty("--orb-halo-strength", orbHalo.value);
+});
 
-    setConnectionStatus(true);
-    orbSetError(false);
-  } catch (e) {
-    if (e.name === "AbortError") {
-      els.resultsStatus.textContent = "Consulta detenida";
-    } else {
-      console.error(e);
-      setConnectionStatus(false);
-      els.resultsContainer.innerHTML =
-        '<div class="results-error">Error de conexión</div>';
-      els.resultsStatus.textContent = "Error de conexión";
-      orbSetError(true);
-      setTimeout(() => orbSetError(false), 2500);
-    }
-  } finally {
-    if (state.currentAbort === controller) state.currentAbort = null;
-    orbSetLoading(false);
+orbMode.addEventListener("change", () => {
+  els.orb.classList.remove("orb-classic", "orb-3d", "orb-ultra");
+  els.orb.classList.add("orb-" + orbMode.value);
+});
+
+// Presets
+orbPresets.addEventListener("change", () => {
+  const preset = orbPresets.value;
+
+  switch (preset) {
+    case "default":
+      document.documentElement.style.setProperty("--orb-color", "#4fc3f7");
+      document.documentElement.style.setProperty("--orb-color-dark", "#7c4dff");
+      document.documentElement.style.setProperty("--orb-halo-strength", "60");
+      els.orb.classList.remove("orb-classic", "orb-3d");
+      els.orb.classList.add("orb-ultra");
+      break;
+
+    case "plasma":
+      document.documentElement.style.setProperty("--orb-color", "#b44cff");
+      document.documentElement.style.setProperty("--orb-color-dark", "#5a00a3");
+      document.documentElement.style.setProperty("--orb-halo-strength", "80");
+      els.orb.classList.remove("orb-classic", "orb-3d");
+      els.orb.classList.add("orb-ultra");
+      break;
+
+    case "fuego":
+      document.documentElement.style.setProperty("--orb-color", "#ff8a00");
+      document.documentElement.style.setProperty("--orb-color-dark", "#b30000");
+      document.documentElement.style.setProperty("--orb-halo-strength", "90");
+      els.orb.classList.remove("orb-classic", "orb-3d");
+      els.orb.classList.add("orb-ultra");
+      break;
+
+    case "neon":
+      document.documentElement.style.setProperty("--orb-color", "#3dff7d");
+      document.documentElement.style.setProperty("--orb-color-dark", "#009933");
+      document.documentElement.style.setProperty("--orb-halo-strength", "100");
+      els.orb.classList.remove("orb-classic", "orb-3d");
+      els.orb.classList.add("orb-ultra");
+      break;
+
+    case "minimal":
+      document.documentElement.style.setProperty("--orb-color", "#444");
+      document.documentElement.style.setProperty("--orb-color-dark", "#111");
+      document.documentElement.style.setProperty("--orb-halo-strength", "0");
+      els.orb.classList.remove("orb-ultra", "orb-3d");
+      els.orb.classList.add("orb-classic");
+      break;
+  }
+
+  showToast("Preset aplicado");
+});
+
+// Reset
+orbReset.addEventListener("click", () => {
+  document.documentElement.style.setProperty("--orb-color", "#4fc3f7");
+  document.documentElement.style.setProperty("--orb-color-dark", "#7c4dff");
+  document.documentElement.style.setProperty("--orb-halo-strength", "60");
+
+  els.orb.style.width = "130px";
+  els.orb.style.height = "130px";
+
+  els.orb.classList.remove("orb-classic", "orb-3d", "orb-ultra");
+  els.orb.classList.add("orb-ultra");
+
+  orbMode.value = "ultra";
+  orbPresets.value = "default";
+
+  showToast("ORB restaurado");
+});
+// ============================================================
+// MODO DÍA / NOCHE
+// ============================================================
+
+document.getElementById("toggle-dark").addEventListener("change", () => {
+  document.body.classList.toggle("light-mode");
+});
+
+// ============================================================
+// MANOS LIBRES / VOZ
+// ============================================================
+
+let recognition = null;
+let manosLibresActivo = false;
+
+function initVoice() {
+  const SpeechRecognition =
+    window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SpeechRecognition) return;
+
+  recognition = new SpeechRecognition();
+  recognition.lang = "es-AR";
+  recognition.continuous = true;
+  recognition.interimResults = false;
+
+  recognition.onresult = (event) => {
+    const last = event.results[event.results.length - 1];
+    const text = last[0].transcript.trim();
+    els.searchInput.value = text;
+    const evt = new Event("input");
+    els.searchInput.dispatchEvent(evt);
+    orbSetReady(true);
+    buscar();
+  };
+
+  recognition.onend = () => {
+    if (manosLibresActivo) recognition.start();
+  };
+}
+
+function toggleManosLibres(checked) {
+  manosLibresActivo = checked;
+  if (!recognition) return;
+  if (checked) {
+    recognition.continuous = true;
+    recognition.start();
+    showToast("Manos libres activado");
+  } else {
+    recognition.stop();
+    showToast("Manos libres desactivado");
   }
 }
 
+function stopTodo() {
+  manosLibresActivo = false;
+  if (els.handsfreeToggle) els.handsfreeToggle.checked = false;
+  if (recognition) recognition.stop();
+  window.speechSynthesis.cancel();
+  if (state.currentAbort) {
+    state.currentAbort.abort();
+    state.currentAbort = null;
+  }
+  orbSetLoading(false);
+  showToast("STOP ejecutado");
+}
+
+function escucharUnaVez() {
+  if (!recognition) {
+    showToast("Voz no disponible en este dispositivo.");
+    return;
+  }
+  manosLibresActivo = false;
+  if (els.handsfreeToggle) els.handsfreeToggle.checked = false;
+  recognition.stop();
+  recognition.continuous = false;
+  recognition.start();
+  showToast("Escuchando una consulta…");
+}
+
+// ============================================================
+// TIMEOUT MANOS LIBRES
+// ============================================================
+
+setInterval(() => {
+  if (!manosLibresActivo) return;
+  const diff = Date.now() - state.lastActivity;
+  if (diff > 30000) {
+    toggleManosLibres(false);
+    if (els.handsfreeToggle) els.handsfreeToggle.checked = false;
+    showToast("Manos libres desactivado por inactividad");
+  }
+}, 5000);
+
+// ============================================================
+// EVENTOS
+// ============================================================
+
+function initEvents() {
+  // ORB como botón principal
+  els.orb.addEventListener("click", () => buscar(false));
+
+  // ENTER inicia búsqueda
+  els.searchInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") buscar(false);
+  });
+
+  // Input → READY + clave ADMIN
+  els.searchInput.addEventListener("input", () => {
+    const val = els.searchInput.value.trim();
+    orbSetReady(val.length > 0);
+
+    if (val.toUpperCase() === "ADMIN") {
+      els.searchInput.value = "";
+      orbSetReady(false);
+      const adminPanel = document.getElementById("admin-panel");
+      if (adminPanel) adminPanel.style.display = "flex";
+      showToast("Modo administrador");
+    }
+  });
+
+  // LIMPIAR
+  els.btnClear.addEventListener("click", limpiarPantalla);
+
+  // COPIAR
+  els.btnCopy.addEventListener("click", copiarResultados);
+
+  // STOP
+  els.btnStop.addEventListener("click", stopTodo);
+
+  // FILTROS
+  els.btnFiltros.addEventListener("click", () => {
+    els.filtrosPanel.classList.toggle("visible");
+  });
+
+  els.btnAplicarFiltros.addEventListener("click", () => {
+    actualizarFiltrosDesdeUI();
+    buscarPorFiltros();
+  });
+
+  // SOLO STOCK
+  els.chkSoloStock.addEventListener("change", () => {
+    buscarPorFiltros();
+  });
+
+  // VISTA TABLA
+  els.btnTabla.addEventListener("click", () => {
+    state.modoTabla = !state.modoTabla;
+    els.btnTabla.textContent = state.modoTabla ? "Vista tarjetas" : "Vista tabla";
+    renderResultados(state.items);
+  });
+
+  // Manos libres toggle
+  if (els.handsfreeToggle) {
+    els.handsfreeToggle.addEventListener("change", (e) => {
+      toggleManosLibres(e.target.checked);
+    });
+  }
+}
+
+// ============================================================
+// INICIALIZACIÓN
+// ============================================================
+
+async function init() {
+  initVoice();
+  initEvents();
+  await cargarCatalogo();
+  orbSetReady(false);
+  els.resultsStatus.textContent = "Esperando consulta";
+}
+
+document.addEventListener("DOMContentLoaded", init);
 // ============================================================
 // BÚSQUEDA SOLO POR FILTROS
 // ============================================================
@@ -504,265 +602,6 @@ function actualizarFiltrosDesdeUI() {
   state.filtros.talleDesde = els.filtroTalleDesde.value || null;
   state.filtros.talleHasta = els.filtroTalleHasta.value || null;
 }
-// ============================================================
-// MANOS LIBRES / VOZ
-// ============================================================
-
-let recognition = null;
-let manosLibresActivo = false;
-
-function initVoice() {
-  const SpeechRecognition =
-    window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!SpeechRecognition) return;
-
-  recognition = new SpeechRecognition();
-  recognition.lang = "es-AR";
-  recognition.continuous = true;
-  recognition.interimResults = false;
-
-  recognition.onresult = (event) => {
-    const last = event.results[event.results.length - 1];
-    const text = last[0].transcript.trim();
-    els.searchInput.value = text;
-    const evt = new Event("input");
-    els.searchInput.dispatchEvent(evt);
-    orbSetReady(true);
-    buscar();
-  };
-
-  recognition.onend = () => {
-    if (manosLibresActivo) recognition.start();
-  };
-}
-
-function toggleManosLibres(checked) {
-  manosLibresActivo = checked;
-  if (!recognition) return;
-  if (checked) {
-    recognition.continuous = true;
-    recognition.start();
-    showToast("Manos libres activado");
-  } else {
-    recognition.stop();
-    showToast("Manos libres desactivado");
-  }
-}
-
-function stopTodo() {
-  manosLibresActivo = false;
-  els.handsfreeToggle.checked = false;
-  if (recognition) recognition.stop();
-  window.speechSynthesis.cancel();
-  if (state.currentAbort) {
-    state.currentAbort.abort();
-    state.currentAbort = null;
-  }
-  orbSetLoading(false);
-  showToast("STOP ejecutado");
-}
-
-function escucharUnaVez() {
-  if (!recognition) {
-    showToast("Voz no disponible en este dispositivo.");
-    return;
-  }
-  manosLibresActivo = false;
-  els.handsfreeToggle.checked = false;
-  recognition.stop();
-  recognition.continuous = false;
-  recognition.start();
-  showToast("Escuchando una consulta…");
-}
-
-// ============================================================
-// TIMEOUT MANOS LIBRES
-// ============================================================
-
-setInterval(() => {
-  if (!manosLibresActivo) return;
-  const diff = Date.now() - state.lastActivity;
-  if (diff > 30000) {
-    toggleManosLibres(false);
-    els.handsfreeToggle.checked = false;
-    showToast("Manos libres desactivado por inactividad");
-  }
-}, 5000);
-
-// ============================================================
-// EVENTOS
-// ============================================================
-
-function initEvents() {
-  // ORB como botón principal
-  els.orb.addEventListener("click", () => buscar(false));
-
-  // ENTER inicia búsqueda
-  els.searchInput.addEventListener("keydown", (e) => {
-    if (e.key === "Enter") buscar(false);
-  });
-
-  // Input → READY + clave ADMIN
-  els.searchInput.addEventListener("input", () => {
-    const val = els.searchInput.value.trim();
-    orbSetReady(val.length > 0);
-
-    if (val.toUpperCase() === "ADMIN") {
-      els.searchInput.value = "";
-      orbSetReady(false);
-      const adminPanel = document.getElementById("admin-panel");
-      if (adminPanel) adminPanel.style.display = "flex";
-    }
-  });
-
-  // LIMPIAR
-  els.btnClear.addEventListener("click", limpiarPantalla);
-
-  // COPIAR
-  els.btnCopy.addEventListener("click", copiarResultados);
-
-  // STOP
-  els.btnStop.addEventListener("click", stopTodo);
-
-  // FILTROS
-  els.btnFiltros.addEventListener("click", () => {
-    els.filtrosPanel.classList.toggle("visible");
-  });
-
-  els.btnAplicarFiltros.addEventListener("click", () => {
-    actualizarFiltrosDesdeUI();
-    buscarPorFiltros();
-  });
-
-  // SOLO STOCK
-  els.chkSoloStock.addEventListener("change", () => {
-    buscarPorFiltros();
-  });
-
-  // VISTA TABLA
-  els.btnTabla.addEventListener("click", () => {
-    state.modoTabla = !state.modoTabla;
-    els.btnTabla.textContent = state.modoTabla ? "Vista tarjetas" : "Vista tabla";
-    renderResultados(state.items);
-  });
-
-  // Manos libres toggle (si existe)
-  if (els.handsfreeToggle) {
-    els.handsfreeToggle.addEventListener("change", (e) => {
-      toggleManosLibres(e.target.checked);
-    });
-  }
-}
-
-// ============================================================
-// INICIALIZACIÓN
-// ============================================================
-
-async function init() {
-  initVoice();
-  initEvents();
-  await cargarCatalogo();
-  orbSetReady(false);
-  els.resultsStatus.textContent = "Esperando consulta";
-}
-
-document.addEventListener("DOMContentLoaded", init);
-
-// ============================================================
-// PANEL ADMIN — CONFIGURACIÓN DEL ORB
-// ============================================================
-
-const adminPanel = document.getElementById("admin-panel");
-const adminSave = document.getElementById("admin-save");
-const adminClose = document.getElementById("admin-close");
-
-const orbColorDia = document.getElementById("orb-color-dia");
-const orbColorNoche = document.getElementById("orb-color-noche");
-const orbSize = document.getElementById("orb-size");
-const orbPulse = document.getElementById("orb-pulse");
-const orbSpin = document.getElementById("orb-spin");
-const orbPos = document.getElementById("orb-pos");
-const orbCenterSize = document.getElementById("orb-center-size");
-
-// Cargar valores actuales al panel
-function cargarConfigOrb() {
-  orbColorDia.value = getComputedStyle(document.documentElement)
-    .getPropertyValue("--orb-color")
-    .trim();
-
-  orbColorNoche.value = getComputedStyle(document.documentElement)
-    .getPropertyValue("--orb-color-dark")
-    .trim();
-
-  orbSize.value = parseInt(els.orb.style.width || 120);
-  orbPulse.value = parseInt(
-    getComputedStyle(document.documentElement)
-      .getPropertyValue("--orb-pulse-speed")
-      .replace("s", "")
-  );
-  orbSpin.value = parseInt(
-    getComputedStyle(document.documentElement)
-      .getPropertyValue("--orb-spin-speed")
-      .replace("s", "")
-  );
-}
-
-// Guardar configuración
-adminSave.addEventListener("click", () => {
-  document.documentElement.style.setProperty("--orb-color", orbColorDia.value);
-  document.documentElement.style.setProperty(
-    "--orb-color-dark",
-    orbColorNoche.value
-  );
-
-  els.orb.style.width = orbSize.value + "px";
-  els.orb.style.height = orbSize.value + "px";
-
-  document.documentElement.style.setProperty(
-    "--orb-pulse-speed",
-    orbPulse.value + "s"
-  );
-  document.documentElement.style.setProperty(
-    "--orb-spin-speed",
-    orbSpin.value + "s"
-  );
-
-  // Posición del ORB
-  if (orbPos.value === "left") {
-    els.orb.style.margin = "0 auto 0 0";
-  } else if (orbPos.value === "center") {
-    els.orb.style.margin = "0 auto";
-  } else if (orbPos.value === "floating") {
-    els.orb.style.position = "fixed";
-    els.orb.style.bottom = "20px";
-    els.orb.style.right = "20px";
-  }
-
-  // Tamaño centrado
-  document.body.classList.remove("orb-b1", "orb-b2", "orb-b3");
-  document.body.classList.add("orb-" + orbCenterSize.value);
-
-  showToast("Configuración guardada");
-});
-
-// Cerrar panel
-adminClose.addEventListener("click", () => {
-  adminPanel.style.display = "none";
-});
-
-// Abrir panel desde botón Admin
-document.getElementById("open-admin").addEventListener("click", () => {
-  adminPanel.style.display = "flex";
-  cargarConfigOrb();
-});
-
-// ============================================================
-// MODO DÍA / NOCHE
-// ============================================================
-
-document.getElementById("toggle-dark").addEventListener("click", () => {
-  document.body.classList.toggle("light-mode");
-});
 
 // ============================================================
 // FIN DEL ARCHIVO
