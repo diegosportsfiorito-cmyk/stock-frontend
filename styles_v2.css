@@ -170,7 +170,7 @@ body.light-mode .result-item {
 }
 
 /* ============================================================
-   TOGGLE DÍA/NOCHE (HEADER)
+   TOGGLE DÍA/NOCHE
    ============================================================ */
 
 .toggle-dark {
@@ -405,6 +405,13 @@ body.light-mode .result-item {
   gap: 8px;
 }
 
+/* NUEVO: botones debajo del input */
+.actions-row-top {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
 .btn-secondary,
 .btn-ghost {
   padding: 8px 14px;
@@ -518,6 +525,12 @@ input:checked + .slider:before {
   justify-content: space-between;
 }
 
+.results-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
 .results-title {
   font-size: 1rem;
   font-weight: 700;
@@ -571,24 +584,28 @@ input:checked + .slider:before {
 }
 
 /* ============================================================
-   TABLA
+   TABLA — NUEVO SISTEMA
    ============================================================ */
 
-.table-view {
+.tabla-wrapper {
   width: 100%;
-  border-collapse: collapse;
-  font-size: 0.8rem;
+  overflow-x: auto;
 }
 
-.table-view th,
-.table-view td {
-  padding: 8px;
-  border-bottom: 1px solid var(--border-soft);
+.tabla-resultados {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 8px 4px;
+  min-width: 750px;
 }
 
-.table-view th {
+.tabla-resultados th,
+.tabla-resultados td {
+  padding: 8px 10px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 6px;
   text-align: left;
-  color: var(--text-muted);
+  font-size: 0.8rem;
 }
 
 /* ============================================================
@@ -648,7 +665,7 @@ input:checked + .slider:before {
 }
 
 /* ============================================================
-   PANEL ADMIN (NUEVO)
+   PANEL ADMIN
    ============================================================ */
 
 #admin-panel {
@@ -685,31 +702,4 @@ input:checked + .slider:before {
 
 #admin-panel button {
   padding: 8px 14px;
-  border-radius: var(--radius-md);
-  background: rgba(30, 41, 59, 0.8);
-  border: 1px solid var(--border-soft);
-  color: var(--text-main);
-  cursor: pointer;
-}
-
-#admin-panel button:hover {
-  background: rgba(51, 65, 85, 0.9);
-}
-
-/* ============================================================
-   RESPONSIVE
-   ============================================================ */
-
-@media (max-width: 900px) {
-  .main-row {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .dashboard-card {
-    width: 100%;
-  }
-}
-
-@media (max-width: 600px) {
-  .search-row {
-    flex-direction: column;
+  border
