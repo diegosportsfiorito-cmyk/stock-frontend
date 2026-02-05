@@ -7,9 +7,7 @@ function initUI(app) {
 
   const safe = (el) => el !== null && el !== undefined;
 
-  // ------------------------------------------------------------
   // ENTER en input + código admin
-  // ------------------------------------------------------------
   if (safe(els.searchInput)) {
     els.searchInput.addEventListener("keydown", (e) => {
       if (e.key === "Enter") {
@@ -28,42 +26,27 @@ function initUI(app) {
     });
   }
 
-  // ------------------------------------------------------------
   // ORB click + doble click (admin)
-  // ------------------------------------------------------------
-  if (safe(els.orb)) {
-    els.orb.addEventListener("click", () => app.buscar());
-
-    els.orb.addEventListener("dblclick", () => {
+  const orb = document.getElementById("orb");
+  if (safe(orb)) {
+    orb.addEventListener("click", () => app.buscar());
+    orb.addEventListener("dblclick", () => {
       const adminPanel = document.getElementById("admin-panel");
       if (adminPanel) adminPanel.style.display = "flex";
       app.showToast("Modo administrador activado");
     });
   }
 
-  // ------------------------------------------------------------
-  // BOTONES ALREDEDOR DEL ORB (iconos)
-  // ------------------------------------------------------------
-
-  // LIMPIAR
+  // Botones alrededor del ORB
   const btnClear = document.getElementById("btn-clear");
-  if (safe(btnClear)) {
-    btnClear.addEventListener("click", () => app.limpiarPantalla());
-  }
+  if (safe(btnClear)) btnClear.addEventListener("click", () => app.limpiarPantalla());
 
-  // COPIAR
   const btnCopy = document.getElementById("btn-copy");
-  if (safe(btnCopy)) {
-    btnCopy.addEventListener("click", () => app.copiarResultados());
-  }
+  if (safe(btnCopy)) btnCopy.addEventListener("click", () => app.copiarResultados());
 
-  // STOP
   const btnStop = document.getElementById("btn-stop");
-  if (safe(btnStop)) {
-    btnStop.addEventListener("click", () => app.stopTodo());
-  }
+  if (safe(btnStop)) btnStop.addEventListener("click", () => app.stopTodo());
 
-  // SCANNER
   const btnScanner = document.getElementById("btn-scanner-nativo");
   if (safe(btnScanner)) {
     btnScanner.addEventListener("click", () => {
@@ -75,9 +58,24 @@ function initUI(app) {
     });
   }
 
-  // DÍA / NOCHE
+  // Modo scanner simple/completo
+  const modoToggle = document.getElementById("modo-scanner-toggle");
+  if (modoToggle) {
+    modoToggle.checked = (window.modoScanner || "simple") === "completo";
+    modoToggle.addEventListener("change", (e) => {
+      const modo = e.target.checked ? "completo" : "simple";
+      if (window.setModoScanner) {
+        window.setModoScanner(modo);
+      }
+      localStorage.setItem("modoDefecto", modo);
+      app.showToast(`Modo scanner: ${modo.toUpperCase()}`);
+    });
+  }
+
+  // Día / noche
   const toggleDark = document.getElementById("toggle-dark");
-  if (safe(toggleDark)) {
+  if (toggleDark) {
+    toggleDark.checked = document.body.classList.contains("light-mode");
     toggleDark.addEventListener("change", (e) => {
       if (e.target.checked) {
         document.body.classList.add("light-mode");
@@ -87,32 +85,27 @@ function initUI(app) {
     });
   }
 
-  // ------------------------------------------------------------
-  // FILTROS
-  // ------------------------------------------------------------
-  if (safe(els.btnFiltros) && safe(els.filtrosPanel)) {
-    els.btnFiltros.addEventListener("click", () => {
+  // Filtros
+  const btnFiltros = document.getElementById("btn-filtros");
+  if (btnFiltros && els.filtrosPanel) {
+    btnFiltros.addEventListener("click", () => {
       els.filtrosPanel.classList.toggle("visible");
     });
   }
 
-  if (safe(els.btnAplicarFiltros)) {
+  if (els.btnAplicarFiltros) {
     els.btnAplicarFiltros.addEventListener("click", () => {
-      app.actualizarFiltrosDesdeUI();
       app.buscarPorFiltros();
-      if (safe(els.searchInput)) els.searchInput.value = "";
     });
   }
 
-  if (safe(els.chkSoloStock)) {
+  if (els.chkSoloStock) {
     els.chkSoloStock.addEventListener("change", () => {
       app.buscarPorFiltros();
     });
   }
 
-  // ------------------------------------------------------------
-  // VISTA TABLA / TARJETAS (botones separados)
-  // ------------------------------------------------------------
+  // Vista tabla / tarjetas
   const btnVistaTabla = document.getElementById("btn-vista-tabla");
   const btnVistaTarjetas = document.getElementById("btn-vista-tarjetas");
 
@@ -132,13 +125,58 @@ function initUI(app) {
     });
   }
 
-  // ------------------------------------------------------------
-  // CAMBIO DE MODO DE GRÁFICO
-  // ------------------------------------------------------------
+  // Cambio de modo de gráfico
   const chartMode = document.getElementById("chart-mode");
-  if (chartMode) {
+  if (chartMode && window.actualizarDashboard) {
     chartMode.addEventListener("change", () => {
-      actualizarDashboard(app.state.items);
+      window.actualizarDashboard(app.state.items);
     });
   }
+
+  // Panel admin: guardar / cerrar
+  const adminGuardar = document.getElementById("admin-guardar");
+  const adminCerrar = document.getElementById("admin-cerrar");
+  const adminPanel = document.getElementById("admin-panel");
+  const adminBackendUrl = document.getElementById("admin-backend-url");
+  const adminModoDefecto = document.getElementById("admin-modo-defecto");
+
+  if (adminGuardar) {
+    adminGuardar.addEventListener("click", () => {
+      const url = adminBackendUrl.value.trim();
+      const modo = adminModoDefecto.value;
+
+      if (url) {
+        localStorage.setItem("backendUrl", url);
+        AppCore.config.backendUrl = url;
+      }
+      localStorage.setItem("modoDefecto", modo);
+      if (window.setModoScanner) {
+        window.setModoScanner(modo);
+      }
+
+      AppCore.showToast("Configuración guardada");
+      if (adminPanel) adminPanel.style.display = "none";
+    });
+  }
+
+  if (adminCerrar) {
+    adminCerrar.addEventListener("click", () => {
+      if (adminPanel) adminPanel.style.display = "none";
+    });
+  }
+
+  // Click en métricas (opcional: disparar filtros rápidos)
+  const metricArt = document.getElementById("metric-articulos");
+  const metricPares = document.getElementById("metric-pares");
+  const metricAlertas = document.getElementById("metric-alertas");
+  const metricVal = document.getElementById("metric-valorizado");
+
+  [metricArt, metricPares, metricAlertas, metricVal].forEach((m) => {
+    if (!m) return;
+    m.addEventListener("click", () => {
+      AppCore.showToast("Métricas clickeables (filtros rápidos en futuro)");
+    });
+  });
 }
+
+window.initUI = initUI;
