@@ -1,7 +1,3 @@
-/* ============================================================
-   RESET & VARIABLES
-   ============================================================ */
-
 :root {
   --bg-dark: #050814;
   --bg-dark-soft: #0b1020;
@@ -44,8 +40,6 @@ body {
   overflow-x: hidden;
 }
 
-/* Modo día */
-
 body.light-mode {
   background: #f5f5f7;
   color: #111;
@@ -75,9 +69,7 @@ body.light-mode .result-item {
   border-color: #d1d5db;
 }
 
-/* ============================================================
-   LAYOUT
-   ============================================================ */
+/* LAYOUT */
 
 .app-shell {
   min-height: 100vh;
@@ -103,9 +95,7 @@ body.light-mode .result-item {
   z-index: 1;
 }
 
-/* ============================================================
-   HEADER
-   ============================================================ */
+/* HEADER */
 
 .app-header {
   display: flex;
@@ -174,9 +164,7 @@ body.light-mode .result-item {
   box-shadow: 0 0 10px rgba(52, 211, 153, 0.9);
 }
 
-/* ============================================================
-   BANNER
-   ============================================================ */
+/* BANNER */
 
 .app-banner {
   font-size: 0.75rem;
@@ -187,9 +175,7 @@ body.light-mode .result-item {
   color: #fff;
 }
 
-/* ============================================================
-   SEARCH + SCANNER
-   ============================================================ */
+/* SEARCH + SCANNER */
 
 .search-card {
   background: var(--card-bg);
@@ -274,6 +260,22 @@ body.light-mode .result-item {
   justify-content: space-between;
 }
 
+.btn-secondary {
+  padding: 6px 12px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--border-soft);
+  background: rgba(15, 23, 42, 0.9);
+  color: var(--text-main);
+  font-size: 0.78rem;
+  cursor: pointer;
+  transition: background var(--transition-fast), border-color var(--transition-fast);
+}
+
+.btn-secondary:hover {
+  background: rgba(30, 64, 175, 0.9);
+  border-color: rgba(129, 140, 248, 0.8);
+}
+
 .solo-stock {
   display: inline-flex;
   align-items: center;
@@ -282,7 +284,7 @@ body.light-mode .result-item {
   color: var(--text-muted);
 }
 
-/* Switch genérico */
+/* Switch */
 
 .switch {
   position: relative;
@@ -337,9 +339,7 @@ input:checked + .slider:before {
   transform: translateX(20px);
 }
 
-/* ============================================================
-   ORB + ANILLO DE ACCIONES
-   ============================================================ */
+/* ORB + ANILLO */
 
 .orb-zone {
   display: flex;
@@ -385,8 +385,6 @@ input:checked + .slider:before {
   margin: 4px 0;
 }
 
-/* Modo scanner + modo día/noche */
-
 .orb-mode-switch {
   display: inline-flex;
   align-items: center;
@@ -395,9 +393,7 @@ input:checked + .slider:before {
   color: var(--text-muted);
 }
 
-/* ============================================================
-   MÉTRICAS
-   ============================================================ */
+/* MÉTRICAS */
 
 .metrics-row {
   display: flex;
@@ -426,9 +422,7 @@ input:checked + .slider:before {
   margin-top: 4px;
 }
 
-/* ============================================================
-   FILTROS AVANZADOS
-   ============================================================ */
+/* FILTROS AVANZADOS */
 
 .filtros-panel {
   display: none;
@@ -461,9 +455,7 @@ input:checked + .slider:before {
   font-size: 0.8rem;
 }
 
-/* ============================================================
-   MAIN ROW: RESULTADOS + DASHBOARD
-   ============================================================ */
+/* MAIN ROW */
 
 .main-row {
   display: grid;
@@ -508,8 +500,6 @@ input:checked + .slider:before {
   flex-direction: column;
   gap: 12px;
 }
-
-/* Tarjetas */
 
 .result-item {
   background: rgba(15, 23, 42, 0.9);
@@ -568,8 +558,6 @@ input:checked + .slider:before {
   border-color: var(--accent);
 }
 
-/* Tabla */
-
 .tabla-wrapper {
   width: 100%;
   overflow-x: auto;
@@ -595,9 +583,7 @@ input:checked + .slider:before {
   color: var(--text-muted);
 }
 
-/* ============================================================
-   DASHBOARD
-   ============================================================ */
+/* DASHBOARD */
 
 .dashboard-card {
   background: var(--card-bg);
@@ -626,9 +612,7 @@ input:checked + .slider:before {
   max-height: 220px;
 }
 
-/* ============================================================
-   PANEL ADMIN
-   ============================================================ */
+/* PANEL ADMIN */
 
 #admin-panel {
   position: fixed;
@@ -639,17 +623,31 @@ input:checked + .slider:before {
   border: 1px solid var(--border-soft);
   border-radius: var(--radius-lg);
   padding: 20px;
-  width: 320px;
+  width: 340px;
   display: none;
   flex-direction: column;
   gap: 10px;
   z-index: 999999;
 }
 
-#admin-panel h2,
-#admin-panel h3 {
-  font-size: 0.9rem;
+#admin-panel h2 {
+  font-size: 1rem;
   margin-bottom: 4px;
+}
+
+#admin-panel h3 {
+  font-size: 0.85rem;
+  margin-top: 10px;
+  margin-bottom: 4px;
+  color: var(--text-main);
+}
+
+#admin-panel label {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
 #admin-panel input,
@@ -661,6 +659,38 @@ input:checked + .slider:before {
   border-radius: var(--radius-md);
   color: var(--text-main);
   font-size: 0.8rem;
+}
+
+#admin-panel input[type="color"] {
+  height: 36px;
+  cursor: pointer;
+}
+
+#admin-panel input[type="range"] {
+  cursor: pointer;
+}
+
+#orb-presets {
+  padding: 8px;
+  border-radius: 8px;
+  background: #111;
+  border: 1px solid var(--border-soft);
+  color: var(--text-main);
+}
+
+#orb-reset {
+  margin-top: 6px;
+  padding: 6px 10px;
+  border-radius: var(--radius-md);
+  background: rgba(30, 41, 59, 0.8);
+  border: 1px solid var(--border-soft);
+  color: var(--text-main);
+  font-size: 0.78rem;
+  cursor: pointer;
+}
+
+#orb-reset:hover {
+  background: rgba(51, 65, 85, 0.9);
 }
 
 #admin-panel button {
@@ -680,11 +710,10 @@ input:checked + .slider:before {
   display: flex;
   justify-content: flex-end;
   gap: 8px;
+  margin-top: 8px;
 }
 
-/* ============================================================
-   TOAST
-   ============================================================ */
+/* TOAST */
 
 .toast {
   position: fixed;
@@ -707,9 +736,7 @@ input:checked + .slider:before {
   opacity: 1;
 }
 
-/* ============================================================
-   RESPONSIVE
-   ============================================================ */
+/* RESPONSIVE */
 
 @media (max-width: 900px) {
   .main-row {
@@ -750,14 +777,8 @@ input:checked + .slider:before {
     max-height: none;
   }
 
-  .actions-row {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 8px;
-  }
-
-  #orb {
-    transform: scale(0.85);
+  #orb-core {
+    transform: scale(0.9);
   }
 
   .orb-actions-ring {
