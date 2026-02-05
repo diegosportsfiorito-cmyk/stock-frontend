@@ -1,6 +1,6 @@
 // ============================================================
 // UI ENGINE — Eventos, botones, filtros, vista tabla/tarjetas
-// + voz, scanner overlay, atajos, métricas clickeables
+// + dictado, manos libres, scanner overlay, atajos, métricas
 // ============================================================
 
 function initUI(app) {
@@ -17,19 +17,41 @@ function initUI(app) {
   const scannerOverlay = document.getElementById("scanner-overlay");
 
   // ============================================================
-  // VOZ — Estado visual + integración suave
+  // AUDIO — BIP
+  // ============================================================
+
+  const AudioCtx = window.AudioContext || window.webkitAudioContext;
+  let audioCtx = null;
+
+  function beep(freq = 1000, duration = 120) {
+    try {
+      if (!AudioCtx) return;
+      if (!audioCtx) audioCtx = new AudioCtx();
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = "sine";
+      osc.frequency.value = freq;
+      gain.gain.value = 0.15;
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start();
+      setTimeout(() => osc.stop(), duration);
+    } catch (e) {}
+  }
+
+  // ============================================================
+  // VOZ — Dictado (switch) + Manos libres (mic)
   // ============================================================
 
   function setVoiceUIState(state) {
-    // state: "off" | "ready" | "listening"
     if (!voiceStatus) return;
 
     if (state === "off") {
-      voiceStatus.textContent = "Voz desactivada";
+      voiceStatus.textContent = "Dictado desactivado";
       voiceStatus.classList.remove("listening");
       if (orbCore) orbCore.classList.remove("orb-listening");
     } else if (state === "ready") {
-      voiceStatus.textContent = "Voz lista";
+      voiceStatus.textContent = "Dictado listo";
       voiceStatus.classList.remove("listening");
       if (orbCore) orbCore.classList.remove("orb-listening");
     } else if (state === "listening") {
@@ -39,70 +61,82 @@ function initUI(app) {
     }
   }
 
-  // Estado inicial de voz según switch
+  // Estado inicial
   if (modoVozSwitch && modoVozSwitch.checked) {
     setVoiceUIState("ready");
   } else {
     setVoiceUIState("off");
   }
 
+  // Switch de dictado
   if (modoVozSwitch) {
     modoVozSwitch.addEventListener("change", (e) => {
       const on = e.target.checked;
       localStorage.setItem("modoVoz", on ? "on" : "off");
       setVoiceUIState(on ? "ready" : "off");
-      app.showToast(on ? "Modo voz activado" : "Modo voz desactivado");
+      beep(on ? 1400 : 600);
+      app.showToast(on ? "Dictado activado" : "Dictado desactivado");
     });
 
-    // Restaurar estado guardado si existe
-    const savedVoz = localStorage.getItem("modoVoz");
-    if (savedVoz === "on") {
+    const saved = localStorage.getItem("modoVoz");
+    if (saved === "on") {
       modoVozSwitch.checked = true;
       setVoiceUIState("ready");
-    } else if (savedVoz === "off") {
-      modoVozSwitch.checked = false;
-      setVoiceUIState("off");
     }
   }
 
+  // Web Speech API — dictado al input
+  function startDictado() {
+    const SR =
+      window.SpeechRecognition || window.webkitSpeechRecognition || null;
+
+    if (!SR) {
+      app.showToast("Dictado no soportado en este navegador");
+      beep(600);
+      return;
+    }
+
+    const rec = new SR();
+    rec.lang = "es-AR";
+    rec.interimResults = false;
+    rec.maxAlternatives = 1;
+
+    setVoiceUIState("listening");
+    beep(1500);
+
+    rec.onresult = (ev) => {
+      const text = ev.results[0][0].transcript || "";
+      if (els.searchInput) els.searchInput.value = text;
+      setVoiceUIState("ready");
+      app.buscar(true);
+    };
+
+    rec.onerror = () => {
+      setVoiceUIState("ready");
+      app.showToast("Error en dictado");
+    };
+
+    rec.onend = () => {
+      if (modoVozSwitch.checked) setVoiceUIState("ready");
+      else setVoiceUIState("off");
+    };
+
+    rec.start();
+  }
+
+  // Botón de manos libres (mic)
   if (micButton) {
     micButton.addEventListener("click", () => {
-      if (!modoVozSwitch || !modoVozSwitch.checked) {
-        app.showToast("Activá el modo voz para usar el micrófono");
+      if (!modoVozSwitch.checked) {
+        app.showToast("Activá el dictado (oreja) para usar el micrófono");
+        beep(600);
         return;
       }
-
-      setVoiceUIState("listening");
-
-      // Si existe un motor de voz externo, lo usamos
-      if (typeof window.startVoiceRecognition === "function") {
-        window.startVoiceRecognition({
-          onResult: (text) => {
-            if (safe(els.searchInput)) {
-              els.searchInput.value = text;
-            }
-            setVoiceUIState("ready");
-            app.buscar(true);
-          },
-          onCancel: () => {
-            setVoiceUIState("ready");
-          },
-          onError: () => {
-            setVoiceUIState("ready");
-            app.showToast("Error en reconocimiento de voz");
-          },
-        });
-      } else {
-        // Fallback: solo feedback visual
-        setTimeout(() => {
-          setVoiceUIState("ready");
-          app.showToast("Motor de voz no configurado");
-        }, 1200);
-      }
+      startDictado();
     });
   }
 
-  // Exponer hooks suaves para otros módulos de voz (opcional)
+  // Hooks globales
   window.voiceUI = {
     setListening: () => setVoiceUIState("listening"),
     setReady: () => setVoiceUIState("ready"),
@@ -110,7 +144,7 @@ function initUI(app) {
   };
 
   // ============================================================
-  // ENTER en input + código admin
+  // ENTER en input + admin
   // ============================================================
 
   if (safe(els.searchInput)) {
@@ -132,13 +166,12 @@ function initUI(app) {
   }
 
   // ============================================================
-  // ORB click + doble click (admin)
+  // ORB
   // ============================================================
 
   const orb = document.getElementById("orb");
   if (safe(orb)) {
     orb.addEventListener("click", () => {
-      // pequeña animación visual
       orb.classList.add("orb-pulse");
       setTimeout(() => orb.classList.remove("orb-pulse"), 300);
       app.buscar();
@@ -152,23 +185,20 @@ function initUI(app) {
   }
 
   // ============================================================
-  // Botones alrededor del ORB
+  // Botones ORB
   // ============================================================
 
   const btnClear = document.getElementById("btn-clear");
-  if (safe(btnClear))
-    btnClear.addEventListener("click", () => app.limpiarPantalla());
+  if (safe(btnClear)) btnClear.addEventListener("click", () => app.limpiarPantalla());
 
   const btnCopy = document.getElementById("btn-copy");
-  if (safe(btnCopy))
-    btnCopy.addEventListener("click", () => app.copiarResultados());
+  if (safe(btnCopy)) btnCopy.addEventListener("click", () => app.copiarResultados());
 
   const btnStop = document.getElementById("btn-stop");
-  if (safe(btnStop))
-    btnStop.addEventListener("click", () => app.stopTodo());
+  if (safe(btnStop)) btnStop.addEventListener("click", () => app.stopTodo());
 
   // ============================================================
-  // SCANNER — botones + overlay visual
+  // SCANNER — overlay
   // ============================================================
 
   function setScannerOverlay(active) {
@@ -184,12 +214,8 @@ function initUI(app) {
 
   const btnScanner1 = document.getElementById("btn-scanner-interno-1");
   const btnScanner2 = document.getElementById("btn-scanner-interno-2");
-  const btnScannerExtPref = document.getElementById(
-    "btn-scanner-externo-preferido"
-  );
-  const btnScannerExtSel = document.getElementById(
-    "btn-scanner-externo-selector"
-  );
+  const btnScannerExtPref = document.getElementById("btn-scanner-externo-preferido");
+  const btnScannerExtSel = document.getElementById("btn-scanner-externo-selector");
 
   if (btnScanner1 && typeof startScannerInterno1 === "function") {
     btnScanner1.addEventListener("click", () => {
@@ -218,10 +244,6 @@ function initUI(app) {
       setScannerOverlay(true);
       startScannerExternoPreferido(() => setScannerOverlay(false));
     });
-  } else if (btnScannerExtPref) {
-    btnScannerExtPref.addEventListener("click", () => {
-      app.showToast("Scanner externo preferido no configurado");
-    });
   }
 
   if (btnScannerExtSel && typeof startScannerExternoSelector === "function") {
@@ -229,13 +251,8 @@ function initUI(app) {
       setScannerOverlay(true);
       startScannerExternoSelector(() => setScannerOverlay(false));
     });
-  } else if (btnScannerExtSel) {
-    btnScannerExtSel.addEventListener("click", () => {
-      app.showToast("Selector de scanner no disponible");
-    });
   }
 
-  // Hooks globales opcionales para otros módulos
   window.scannerUI = {
     start: () => setScannerOverlay(true),
     stop: () => setScannerOverlay(false),
@@ -250,9 +267,7 @@ function initUI(app) {
     modoToggle.checked = (window.modoScanner || "simple") === "completo";
     modoToggle.addEventListener("change", (e) => {
       const modo = e.target.checked ? "completo" : "simple";
-      if (window.setModoScanner) {
-        window.setModoScanner(modo);
-      }
+      if (window.setModoScanner) window.setModoScanner(modo);
       localStorage.setItem("modoDefecto", modo);
       app.showToast(`Modo scanner: ${modo.toUpperCase()}`);
     });
@@ -266,11 +281,8 @@ function initUI(app) {
   if (toggleDark) {
     toggleDark.checked = document.body.classList.contains("light-mode");
     toggleDark.addEventListener("change", (e) => {
-      if (e.target.checked) {
-        document.body.classList.add("light-mode");
-      } else {
-        document.body.classList.remove("light-mode");
-      }
+      if (e.target.checked) document.body.classList.add("light-mode");
+      else document.body.classList.remove("light-mode");
     });
   }
 
@@ -286,15 +298,11 @@ function initUI(app) {
   }
 
   if (els.btnAplicarFiltros) {
-    els.btnAplicarFiltros.addEventListener("click", () => {
-      app.buscarPorFiltros();
-    });
+    els.btnAplicarFiltros.addEventListener("click", () => app.buscarPorFiltros());
   }
 
   if (els.chkSoloStock) {
-    els.chkSoloStock.addEventListener("change", () => {
-      app.buscarPorFiltros();
-    });
+    els.chkSoloStock.addEventListener("change", () => app.buscarPorFiltros());
   }
 
   // ============================================================
@@ -332,7 +340,7 @@ function initUI(app) {
   }
 
   // ============================================================
-  // Panel admin: guardar / cerrar
+  // Panel admin
   // ============================================================
 
   const adminGuardar = document.getElementById("admin-guardar");
@@ -350,10 +358,9 @@ function initUI(app) {
         localStorage.setItem("backendUrl", url);
         AppCore.config.backendUrl = url;
       }
+
       localStorage.setItem("modoDefecto", modo);
-      if (window.setModoScanner) {
-        window.setModoScanner(modo);
-      }
+      if (window.setModoScanner) window.setModoScanner(modo);
 
       AppCore.showToast("Configuración guardada");
       if (adminPanel) adminPanel.style.display = "none";
@@ -367,7 +374,7 @@ function initUI(app) {
   }
 
   // ============================================================
-  // Ayuda — modal simple
+  // Ayuda — modal
   // ============================================================
 
   if (helpButton && helpModal) {
@@ -384,14 +391,12 @@ function initUI(app) {
 
   if (helpModal) {
     helpModal.addEventListener("click", (e) => {
-      if (e.target === helpModal) {
-        helpModal.classList.add("hidden");
-      }
+      if (e.target === helpModal) helpModal.classList.add("hidden");
     });
   }
 
   // ============================================================
-  // Click en métricas — filtros rápidos suaves
+  // Métricas clickeables
   // ============================================================
 
   const metricArt = document.getElementById("metric-articulos");
@@ -414,32 +419,29 @@ function initUI(app) {
   [metricArt, metricAlertas, metricVal].forEach((m) => {
     if (!m) return;
     m.addEventListener("click", () => {
-      AppCore.showToast("Métricas clickeables (filtros avanzados en futuro)");
+      AppCore.showToast("Métricas clickeables (futuro)");
     });
   });
 
   // ============================================================
-  // Atajos de teclado
+  // Atajos
   // ============================================================
 
   document.addEventListener("keydown", (e) => {
     const tag = (e.target && e.target.tagName) || "";
     const isInput = ["INPUT", "TEXTAREA"].includes(tag);
 
-    // ESC: limpiar pantalla
     if (e.key === "Escape") {
       app.limpiarPantalla();
       return;
     }
 
-    // F2: scanner interno 1
     if (e.key === "F2" && !isInput) {
       if (btnScanner1) btnScanner1.click();
       e.preventDefault();
       return;
     }
 
-    // F3: micrófono
     if (e.key === "F3" && !isInput) {
       if (micButton) micButton.click();
       e.preventDefault();
