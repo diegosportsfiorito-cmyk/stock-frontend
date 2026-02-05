@@ -138,3 +138,37 @@ body.light-mode #orb-core.orb-error {
 body.light-mode #orb-core.orb-listening {
   background: radial-gradient(circle at 30% 20%, #22c55e, #15803d);
 }
+/* Animación premium suave */
+@keyframes orbBreath {
+  0% { transform: scale(1); filter: brightness(1); }
+  50% { transform: scale(1.06); filter: brightness(1.25); }
+  100% { transform: scale(1); filter: brightness(1); }
+}
+
+.orb-ultra {
+  animation: orbBreath 2.4s infinite ease-in-out;
+}
+/* Halo inteligente según estado */
+.orb-ready {
+  box-shadow:
+    0 0 40px rgba(96, 165, 250, 0.6),
+    inset 0 0 30px rgba(255, 255, 255, 0.2);
+}
+
+.orb-loading {
+  box-shadow:
+    0 0 60px rgba(96, 165, 250, 0.9),
+    inset 0 0 40px rgba(255, 255, 255, 0.25);
+}
+
+.orb-listening {
+  box-shadow:
+    0 0 60px rgba(34, 197, 94, 0.9),
+    inset 0 0 40px rgba(255, 255, 255, 0.25);
+}
+
+.orb-error {
+  box-shadow:
+    0 0 60px rgba(239, 68, 68, 0.9),
+    inset 0 0 40px rgba(255, 255, 255, 0.15);
+}
