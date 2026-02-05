@@ -1,5 +1,5 @@
 // ============================================================
-// SCANNER V3 — Integrado con procesarCodigo() y modos
+// SCANNER V3 — Múltiples lectores + procesarCodigo()
 // ============================================================
 
 let modoScanner = localStorage.getItem("modoDefecto") || "simple";
@@ -51,10 +51,10 @@ function cargarEnInput(texto) {
   input.dispatchEvent(new Event("input"));
 }
 
-// ------------------------------------------------------------
-// START SCANNER
-// ------------------------------------------------------------
-async function startScanner() {
+// ============================================================
+// SCANNER INTERNO 1 — BarcodeDetector (nativo)
+// ============================================================
+async function startScannerInterno1() {
   if (scannerActivo) return;
 
   if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
@@ -95,7 +95,7 @@ async function startScanner() {
           const barcodes = await detector.detect(video);
 
           if (barcodes.length > 0) {
-            const code = barcodes[0].rawValue;
+            const code = barcodes[0].rawValue.trim();
             procesarCodigo(code);
             stopScanner();
             return;
@@ -109,9 +109,7 @@ async function startScanner() {
 
       loop();
     } else {
-      alert(
-        "Este navegador no soporta el scanner nativo. Podemos integrar ZXing/Quagga2 en una siguiente iteración."
-      );
+      alert("Este navegador no soporta el scanner nativo.");
       stopScanner();
     }
   } catch (err) {
@@ -121,8 +119,40 @@ async function startScanner() {
   }
 }
 
+// ============================================================
+// SCANNER INTERNO 2 — Alternativo (mismo flujo, otro detector futuro)
+// ============================================================
+async function startScannerInterno2() {
+  // Por ahora reutilizamos el mismo flujo de BarcodeDetector,
+  // pero queda listo para integrar ZXing/Quagga2 en el futuro.
+  await startScannerInterno1();
+}
+
+// ============================================================
+// SCANNER EXTERNO — Barcode Scanner+ (intent / deep link)
+// ============================================================
+function startScannerExternoPreferido() {
+  // Intento usar esquema ZXing con retorno a esta app vía ?code=
+  const callbackUrl = `${window.location.origin}${window.location.pathname}?code={CODE}`;
+  const url = `zxing://scan/?ret=${encodeURIComponent(callbackUrl)}&SCAN_FORMATS=EAN_13,EAN_8,UPC_A,CODE_128`;
+
+  window.location.href = url;
+}
+
+// ============================================================
+// SCANNER EXTERNO — Selector de app del sistema
+// ============================================================
+function startScannerExternoSelector() {
+  // Fallback genérico: abrimos un enlace que la mayoría de apps de scanner pueden manejar.
+  // Si el sistema pregunta con qué app abrir, el usuario elige.
+  const callbackUrl = `${window.location.origin}${window.location.pathname}?code={CODE}`;
+  const url = `zxing://scan/?ret=${encodeURIComponent(callbackUrl)}`;
+
+  window.location.href = url;
+}
+
 // ------------------------------------------------------------
-// STOP SCANNER
+// STOP SCANNER INTERNO
 // ------------------------------------------------------------
 function stopScanner() {
   scannerActivo = false;
