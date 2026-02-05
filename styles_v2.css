@@ -1000,3 +1000,14 @@ body.scanner-active {
 #stockChart {
   max-height: 260px !important;
 }
+/* Precios destacados en vista tarjeta */
+
+.precio-publico {
+  color: #b8860b;
+  font-weight: 700;
+}
+
+.precio-valorizado {
+  color: #ff8c00;
+  font-weight: 700;
+}
