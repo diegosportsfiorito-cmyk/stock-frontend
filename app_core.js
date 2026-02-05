@@ -22,7 +22,6 @@ const AppCore = {
     btnStop: document.getElementById("btn-stop"),
     orb: document.getElementById("orb"),
     stockChartCanvas: document.getElementById("stockChart"),
-    btnTabla: document.getElementById("btn-tabla"),
   },
 
   state: {
@@ -326,6 +325,7 @@ const AppCore = {
 
   limpiarPantalla: function () {
     const els = this.els;
+    if (els.searchInput) els.searchInput.value = "";
     els.resultsContainer.innerHTML = "";
     els.resultsStatus.textContent = "Esperando consulta";
     ORB.setReady(false);
@@ -358,6 +358,8 @@ const AppCore = {
     this.els.resultsStatus.textContent = "Esperando consulta";
   },
 };
+
+window.AppCore = AppCore;
 
 document.addEventListener("DOMContentLoaded", () => {
   AppCore.init();
