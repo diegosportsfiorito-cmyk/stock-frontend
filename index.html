@@ -73,19 +73,40 @@
             <button id="mic-button" class="mic-btn" title="Hablar">🎙️</button>
           </div>
 
+          <!-- ESTADO DE VOZ -->
+          <div id="voice-status" class="voice-status">
+            Voz desactivada
+          </div>
+
           <!-- SCANNERS -->
           <div class="scanner-row">
             <div class="scanner-buttons">
-              <button id="btn-scanner-interno-1" class="scanner-big-btn" title="Scanner interno A">
+              <button
+                id="btn-scanner-interno-1"
+                class="scanner-big-btn"
+                title="Scanner interno A"
+              >
                 📷
               </button>
-              <button id="btn-scanner-interno-2" class="scanner-big-btn" title="Scanner interno B">
+              <button
+                id="btn-scanner-interno-2"
+                class="scanner-big-btn"
+                title="Scanner interno B"
+              >
                 🎦
               </button>
-              <button id="btn-scanner-externo-preferido" class="scanner-big-btn" title="Scanner externo">
+              <button
+                id="btn-scanner-externo-preferido"
+                class="scanner-big-btn"
+                title="Scanner externo"
+              >
                 📲
               </button>
-              <button id="btn-scanner-externo-selector" class="scanner-big-btn" title="Elegir app de scanner">
+              <button
+                id="btn-scanner-externo-selector"
+                class="scanner-big-btn"
+                title="Elegir app de scanner"
+              >
                 🧭
               </button>
             </div>
@@ -118,9 +139,27 @@
           <div class="orb-zone">
             <div class="orb-actions-ring">
               <div class="orb-actions-top">
-                <button id="btn-clear" class="orb-action-btn" title="Limpiar">🧹</button>
-                <button id="btn-copy" class="orb-action-btn" title="Copiar resultados">📋</button>
-                <button id="btn-stop" class="orb-action-btn" title="Detener">⏹</button>
+                <button
+                  id="btn-clear"
+                  class="orb-action-btn"
+                  title="Limpiar"
+                >
+                  🧹
+                </button>
+                <button
+                  id="btn-copy"
+                  class="orb-action-btn"
+                  title="Copiar resultados"
+                >
+                  📋
+                </button>
+                <button
+                  id="btn-stop"
+                  class="orb-action-btn"
+                  title="Detener"
+                >
+                  ⏹
+                </button>
               </div>
 
               <div id="orb" class="orb-container">
@@ -165,12 +204,24 @@
             </div>
 
             <div class="filtros-row filtros-row-stack">
-              <input id="filtro-talle-desde" type="number" class="filtro-input" placeholder="Talle desde" />
-              <input id="filtro-talle-hasta" type="number" class="filtro-input" placeholder="Talle hasta" />
+              <input
+                id="filtro-talle-desde"
+                type="number"
+                class="filtro-input"
+                placeholder="Talle desde"
+              />
+              <input
+                id="filtro-talle-hasta"
+                type="number"
+                class="filtro-input"
+                placeholder="Talle hasta"
+              />
             </div>
 
             <div class="filtros-row">
-              <button id="btn-aplicar-filtros" class="btn-secondary">Aplicar filtros</button>
+              <button id="btn-aplicar-filtros" class="btn-secondary">
+                Aplicar filtros
+              </button>
             </div>
           </div>
         </section>
@@ -184,13 +235,27 @@
 
               <div class="results-right">
                 <div class="results-view-toggle">
-                  <button id="btn-vista-tabla" class="view-btn" title="Vista tabla">Tabla</button>
-                  <button id="btn-vista-tarjetas" class="view-btn active" title="Vista tarjetas">Tarjetas</button>
+                  <button
+                    id="btn-vista-tabla"
+                    class="view-btn"
+                    title="Vista tabla"
+                  >
+                    Tabla
+                  </button>
+                  <button
+                    id="btn-vista-tarjetas"
+                    class="view-btn active"
+                    title="Vista tarjetas"
+                  >
+                    Tarjetas
+                  </button>
                 </div>
               </div>
             </div>
 
-            <div id="results-status" class="results-status">Esperando consulta</div>
+            <div id="results-status" class="results-status">
+              Esperando consulta
+            </div>
             <div id="results-container"></div>
           </div>
 
@@ -198,7 +263,9 @@
           <aside class="dashboard-card">
             <div class="dashboard-header">
               <div class="dashboard-title">Visión rápida</div>
-              <div class="dashboard-subtitle">Distribución por talle / marca / rubro</div>
+              <div class="dashboard-subtitle">
+                Distribución por talle / marca / rubro
+              </div>
             </div>
 
             <select id="chart-mode" class="filtro-select">
@@ -284,6 +351,25 @@
       <div class="admin-actions">
         <button id="admin-guardar">Guardar</button>
         <button id="admin-cerrar">Cerrar</button>
+      </div>
+    </div>
+
+    <!-- OVERLAY SCANNER -->
+    <div id="scanner-overlay" class="scanner-overlay hidden">
+      Escaneando código…
+    </div>
+
+    <!-- MODAL AYUDA SIMPLE -->
+    <div id="help-modal" class="help-modal hidden">
+      <div class="help-modal-content">
+        <h2>Ayuda rápida</h2>
+        <ul>
+          <li>Escribí o escaneá un código, marca, rubro o talle.</li>
+          <li>Usá el botón 🎙️ para dictar si el modo voz está activo.</li>
+          <li>Click en métricas para filtros rápidos (stock, etc.).</li>
+          <li>Atajos: ESC limpia, F2 scanner, F3 voz.</li>
+        </ul>
+        <button id="help-close">Cerrar</button>
       </div>
     </div>
 
