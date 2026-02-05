@@ -1,10 +1,11 @@
 // ============================================================
-// SCANNER V3 — Múltiples lectores + procesarCodigo()
+// SCANNER V3 — ZXing interno + app externa + selector
 // ============================================================
 
 let modoScanner = localStorage.getItem("modoDefecto") || "simple";
 let scannerActivo = false;
-let streamActual = null;
+let zxingReader = null;
+let currentDeviceId = null;
 
 window.setModoScanner = function (modo) {
   modoScanner = modo === "completo" ? "completo" : "simple";
@@ -52,89 +53,131 @@ function cargarEnInput(texto) {
 }
 
 // ============================================================
-// SCANNER INTERNO 1 — BarcodeDetector (nativo)
+// OVERLAY DE VIDEO
+// ============================================================
+function crearOverlayVideo() {
+  let overlay = document.getElementById("scanner-overlay");
+  if (!overlay) {
+    overlay = document.createElement("div");
+    overlay.id = "scanner-overlay";
+    overlay.style.position = "fixed";
+    overlay.style.inset = "0";
+    overlay.style.background = "#000";
+    overlay.style.zIndex = "9999";
+    overlay.style.display = "flex";
+    overlay.style.flexDirection = "column";
+    overlay.style.alignItems = "center";
+    overlay.style.justifyContent = "center";
+
+    const video = document.createElement("video");
+    video.id = "scanner-video";
+    video.setAttribute("playsinline", true);
+    video.style.width = "100%";
+    video.style.maxWidth = "480px";
+    video.style.height = "auto";
+
+    const btnCerrar = document.createElement("button");
+    btnCerrar.textContent = "Cerrar";
+    btnCerrar.style.marginTop = "10px";
+    btnCerrar.style.padding = "8px 14px";
+    btnCerrar.style.borderRadius = "999px";
+    btnCerrar.style.border = "none";
+    btnCerrar.style.background = "#111827";
+    btnCerrar.style.color = "#fff";
+    btnCerrar.style.cursor = "pointer";
+    btnCerrar.onclick = stopScannerInterno;
+
+    overlay.appendChild(video);
+    overlay.appendChild(btnCerrar);
+    document.body.appendChild(overlay);
+  }
+  return document.getElementById("scanner-video");
+}
+
+function destruirOverlayVideo() {
+  const overlay = document.getElementById("scanner-overlay");
+  if (overlay) overlay.remove();
+}
+
+// ============================================================
+// ZXing INTERNO — lector real
 // ============================================================
 async function startScannerInterno1() {
   if (scannerActivo) return;
-
-  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-    alert("Este dispositivo no permite acceso a la cámara.");
+  if (!window.ZXing || !ZXing.BrowserMultiFormatReader) {
+    alert("No se pudo cargar el lector interno (ZXing). Verificá la conexión.");
     return;
   }
 
   scannerActivo = true;
 
-  const video = document.createElement("video");
-  video.setAttribute("playsinline", true);
-  video.style.position = "fixed";
-  video.style.top = "0";
-  video.style.left = "0";
-  video.style.width = "100%";
-  video.style.height = "100%";
-  video.style.zIndex = "9999";
-  video.style.background = "#000";
-  document.body.appendChild(video);
-
   try {
-    streamActual = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode: "environment" },
-    });
-
-    video.srcObject = streamActual;
-    await video.play();
-
-    if ("BarcodeDetector" in window) {
-      const detector = new BarcodeDetector({
-        formats: ["ean_13", "code_128", "ean_8", "upc_a"],
-      });
-
-      const loop = async () => {
-        if (!scannerActivo) return;
-
-        try {
-          const barcodes = await detector.detect(video);
-
-          if (barcodes.length > 0) {
-            const code = barcodes[0].rawValue.trim();
-            procesarCodigo(code);
-            stopScanner();
-            return;
-          }
-        } catch (err) {
-          console.error("Error detectando código:", err);
-        }
-
-        requestAnimationFrame(loop);
-      };
-
-      loop();
-    } else {
-      alert("Este navegador no soporta el scanner nativo.");
-      stopScanner();
+    if (!zxingReader) {
+      zxingReader = new ZXing.BrowserMultiFormatReader();
     }
+
+    const devices = await zxingReader.listVideoInputDevices();
+    if (!devices.length) {
+      alert("No se encontró cámara en este dispositivo.");
+      scannerActivo = false;
+      return;
+    }
+
+    // Elegimos la trasera si existe
+    const backCam =
+      devices.find((d) =>
+        (d.label || "").toLowerCase().includes("back")
+      ) || devices[0];
+
+    currentDeviceId = backCam.deviceId;
+
+    const videoElem = crearOverlayVideo();
+
+    await zxingReader.decodeFromVideoDevice(
+      currentDeviceId,
+      videoElem,
+      (result, err) => {
+        if (!scannerActivo) return;
+        if (result) {
+          const code = result.getText().trim();
+          procesarCodigo(code);
+          stopScannerInterno();
+        }
+      }
+    );
   } catch (err) {
-    console.error("Error al iniciar cámara:", err);
-    alert("No se pudo acceder a la cámara.");
-    stopScanner();
+    console.error("Error ZXing:", err);
+    alert("No se pudo iniciar el scanner interno.");
+    stopScannerInterno();
   }
 }
 
-// ============================================================
-// SCANNER INTERNO 2 — Alternativo (mismo flujo, otro detector futuro)
-// ============================================================
+// Interno 2: dejamos preparado para otro perfil, por ahora reutiliza el mismo
 async function startScannerInterno2() {
-  // Por ahora reutilizamos el mismo flujo de BarcodeDetector,
-  // pero queda listo para integrar ZXing/Quagga2 en el futuro.
   await startScannerInterno1();
+}
+
+// ------------------------------------------------------------
+// STOP ZXing
+// ------------------------------------------------------------
+function stopScannerInterno() {
+  scannerActivo = false;
+  if (zxingReader) {
+    try {
+      zxingReader.reset();
+    } catch (e) {}
+  }
+  destruirOverlayVideo();
 }
 
 // ============================================================
 // SCANNER EXTERNO — Barcode Scanner+ (intent / deep link)
 // ============================================================
 function startScannerExternoPreferido() {
-  // Intento usar esquema ZXing con retorno a esta app vía ?code=
   const callbackUrl = `${window.location.origin}${window.location.pathname}?code={CODE}`;
-  const url = `zxing://scan/?ret=${encodeURIComponent(callbackUrl)}&SCAN_FORMATS=EAN_13,EAN_8,UPC_A,CODE_128`;
+  const url = `zxing://scan/?ret=${encodeURIComponent(
+    callbackUrl
+  )}&SCAN_FORMATS=EAN_13,EAN_8,UPC_A,CODE_128`;
 
   window.location.href = url;
 }
@@ -143,8 +186,6 @@ function startScannerExternoPreferido() {
 // SCANNER EXTERNO — Selector de app del sistema
 // ============================================================
 function startScannerExternoSelector() {
-  // Fallback genérico: abrimos un enlace que la mayoría de apps de scanner pueden manejar.
-  // Si el sistema pregunta con qué app abrir, el usuario elige.
   const callbackUrl = `${window.location.origin}${window.location.pathname}?code={CODE}`;
   const url = `zxing://scan/?ret=${encodeURIComponent(callbackUrl)}`;
 
@@ -152,22 +193,7 @@ function startScannerExternoSelector() {
 }
 
 // ------------------------------------------------------------
-// STOP SCANNER INTERNO
-// ------------------------------------------------------------
-function stopScanner() {
-  scannerActivo = false;
-
-  if (streamActual) {
-    streamActual.getTracks().forEach((t) => t.stop());
-    streamActual = null;
-  }
-
-  const video = document.querySelector("video[playsinline]");
-  if (video) video.remove();
-}
-
-// ------------------------------------------------------------
-// PROCESAR RETORNO NATIVO (?code=...)
+// PROCESAR RETORNO EXTERNO (?code=...)
 // ------------------------------------------------------------
 (function procesarRetornoNativo() {
   const params = new URLSearchParams(window.location.search);
