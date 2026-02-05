@@ -18,7 +18,7 @@
   --transition-med: 0.25s ease-out;
 }
 
-/* reset básico */
+/* RESET */
 
 *,
 *::before,
@@ -147,6 +147,25 @@ body.light-mode {
   margin-top: 2px;
 }
 
+/* BOTÓN AYUDA */
+
+.btn-help {
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  border: 1px solid var(--border-soft);
+  background: rgba(15, 23, 42, 0.9);
+  color: var(--text-main);
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background var(--transition-fast), border-color var(--transition-fast);
+}
+
+.btn-help:hover {
+  background: rgba(30, 64, 175, 0.9);
+  border-color: rgba(129, 140, 248, 0.8);
+}
+
 /* SEARCH */
 
 .search-card {
@@ -185,7 +204,29 @@ body.light-mode {
   border-color: var(--accent);
 }
 
-/* SCANNER ROW */
+/* MIC */
+
+.mic-btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 999px;
+  border: 1px solid var(--border-soft);
+  background: rgba(15, 23, 42, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  color: var(--text-main);
+  cursor: pointer;
+  transition: background var(--transition-fast), border-color var(--transition-fast);
+}
+
+.mic-btn:hover {
+  background: rgba(30, 64, 175, 0.9);
+  border-color: rgba(129, 140, 248, 0.8);
+}
+
+/* SCANNERS */
 
 .scanner-row {
   display: flex;
@@ -210,7 +251,7 @@ body.light-mode {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1rem;
+  font-size: 1.1rem;
   color: var(--text-main);
   cursor: pointer;
   transition: background var(--transition-fast), border-color var(--transition-fast),
@@ -223,12 +264,7 @@ body.light-mode {
   transform: translateY(-1px);
 }
 
-.scanner-mode-switch {
-  display: flex;
-  align-items: center;
-}
-
-/* FILTROS + SOLO STOCK */
+/* FILTROS */
 
 .search-filters-row {
   display: flex;
@@ -260,7 +296,7 @@ body.light-mode {
   color: var(--text-muted);
 }
 
-/* Switch */
+/* SWITCH */
 
 .switch {
   position: relative;
@@ -315,7 +351,7 @@ input:checked + .slider:before {
   transform: translateX(20px);
 }
 
-/* ORB + ACCIONES */
+/* ORB */
 
 .orb-zone {
   display: flex;
@@ -508,6 +544,11 @@ input:checked + .slider:before {
   margin-top: 4px;
 }
 
+.result-talles {
+  margin-top: 6px;
+  font-size: 0.75rem;
+  line-height: 1.3;
+}
 .result-talles {
   margin-top: 6px;
   font-size: 0.75rem;
