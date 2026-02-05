@@ -75,15 +75,11 @@ const AppCore = {
 
     items.forEach((item) => {
       let totalItem = 0;
-      let tieneNegativos = false;
-
       item.talles.forEach((t) => {
         pares += t.stock;
         totalItem += t.stock;
-        if (t.stock < 0) tieneNegativos = true;
       });
-
-      if (item.alerta || tieneNegativos) alertas++;
+      if (item.alerta || totalItem < 0) alertas++;
       valorizado += item.valorizado || 0;
     });
 
@@ -131,13 +127,11 @@ const AppCore = {
       }
         </div>
         <div class="result-talles">${talles}</div>
-        <div class="result-precios">
-          <span class="precio-publico">Precio público: $${this.formatNumber(
-            item.precio
-          )}</span>
-          <span class="precio-valorizado">Valorizado: $${this.formatNumber(
-            item.valorizado
-          )}</span>
+        <div class="result-sub precio-publico">
+          Precio público: $${this.formatNumber(item.precio)}
+        </div>
+        <div class="result-sub precio-valorizado">
+          Valorizado: $${this.formatNumber(item.valorizado)}
         </div>
       `;
 
