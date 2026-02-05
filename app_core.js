@@ -327,10 +327,6 @@ const AppCore = {
       ORB.setLoading(false);
     }
   },
-    } finally {
-      ORB.setLoading(false);
-    }
-  },
 
   // ============================================================
   // FILTROS MANUALES
