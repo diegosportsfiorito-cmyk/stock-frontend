@@ -25,36 +25,18 @@ window.setModoScanner = function (modo) {
 function procesarCodigo(codigo) {
   let resultado = codigo.trim();
 
-  // Normalización inteligente
-  if (/^T\d+$/i.test(resultado)) {
-    resultado = resultado.replace("T", "");
-  }
-
-  if (/^P\d+$/i.test(resultado)) {
-    resultado = "precio " + resultado.replace("P", "");
-  }
-
-  if (/^\d{2,3}$/.test(resultado)) {
-    resultado = "talle " + resultado;
-  }
-
-  if (/^T\d+\s*A\s*T\d+$/i.test(resultado)) {
+  if (/^T\d+$/i.test(resultado)) resultado = resultado.replace("T", "");
+  if (/^P\d+$/i.test(resultado)) resultado = "precio " + resultado.replace("P", "");
+  if (/^\d{2,3}$/.test(resultado)) resultado = "talle " + resultado;
+  if (/^T\d+\s*A\s*T\d+$/i.test(resultado))
     resultado = resultado.replace(/T/gi, "").replace(/A/gi, " a ");
-  }
 
-  if (modoScanner === "simple") {
-    resultado = extraerArticulo(resultado);
-  }
+  if (modoScanner === "simple") resultado = extraerArticulo(resultado);
 
   cargarEnInput(resultado);
 
-  if (window.AppCore) {
-    AppCore.buscar(true);
-  }
-
-  if (window.modoVozActivo === true && window.enviarVozAI) {
-    enviarVozAI(resultado);
-  }
+  if (window.AppCore) AppCore.buscar(true);
+  if (window.modoVozActivo === true && window.enviarVozAI) enviarVozAI(resultado);
 }
 
 // ============================================================
@@ -63,12 +45,10 @@ function procesarCodigo(codigo) {
 function extraerArticulo(codigo) {
   const separadores = ["/", "!", " "];
   let corte = codigo.length;
-
   separadores.forEach((sep) => {
     const pos = codigo.indexOf(sep);
     if (pos !== -1 && pos < corte) corte = pos;
   });
-
   return codigo.substring(0, corte);
 }
 
@@ -83,7 +63,7 @@ function cargarEnInput(texto) {
 }
 
 // ============================================================
-// OVERLAY PREMIUM (Google Lens Style)
+// OVERLAY PREMIUM
 // ============================================================
 function crearOverlayVideo() {
   let overlay = document.getElementById("scanner-overlay");
@@ -216,6 +196,24 @@ async function cambiarCamara() {
 }
 
 // ============================================================
+// ZXing — formatos extendidos
+// ============================================================
+function getZXingFormats() {
+  return [
+    ZXing.BarcodeFormat.EAN_13,
+    ZXing.BarcodeFormat.EAN_8,
+    ZXing.BarcodeFormat.UPC_A,
+    ZXing.BarcodeFormat.UPC_E,
+    ZXing.BarcodeFormat.CODE_128,
+    ZXing.BarcodeFormat.CODE_39,
+    ZXing.BarcodeFormat.CODE_93,
+    ZXing.BarcodeFormat.ITF,
+    ZXing.BarcodeFormat.CODABAR,
+    ZXing.BarcodeFormat.QR_CODE,
+  ];
+}
+
+// ============================================================
 // ZXing INTERNO — lector real
 // ============================================================
 async function startScannerInterno1() {
@@ -230,6 +228,8 @@ async function startScannerInterno1() {
   try {
     if (!zxingReader) {
       zxingReader = new ZXing.BrowserMultiFormatReader();
+      zxingReader.hints = new Map();
+      zxingReader.hints.set(ZXing.DecodeHintType.POSSIBLE_FORMATS, getZXingFormats());
     }
 
     availableDevices = await zxingReader.listVideoInputDevices();
@@ -281,8 +281,57 @@ async function startScannerInterno1() {
   }
 }
 
+// ============================================================
+// SCANNER INTERNO 2 — versión rápida
+// ============================================================
 async function startScannerInterno2() {
-  await startScannerInterno1();
+  if (!window.ZXing) {
+    alert("ZXing no disponible");
+    return;
+  }
+
+  if (!zxingReader) {
+    zxingReader = new ZXing.BrowserMultiFormatReader();
+    zxingReader.hints = new Map();
+    zxingReader.hints.set(ZXing.DecodeHintType.POSSIBLE_FORMATS, getZXingFormats());
+  }
+
+  scannerActivo = true;
+
+  try {
+    const videoElem = crearOverlayVideo();
+
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: "environment" },
+    });
+
+    videoElem.srcObject = stream;
+    currentTrack = stream.getVideoTracks()[0];
+    await videoElem.play();
+
+    scannerTimeout = setTimeout(() => {
+      stopScannerInterno();
+      alert("No se detectó ningún código.");
+    }, 12000);
+
+    await zxingReader.decodeFromVideoDevice(
+      null,
+      videoElem,
+      (result, err) => {
+        if (!scannerActivo) return;
+        if (result) {
+          const code = result.getText().trim();
+          navigator.vibrate?.(80);
+          procesarCodigo(code);
+          stopScannerInterno();
+        }
+      }
+    );
+  } catch (err) {
+    console.error("Error ZXing:", err);
+    alert("No se pudo iniciar el scanner interno.");
+    stopScannerInterno();
+  }
 }
 
 // ============================================================
@@ -317,7 +366,7 @@ function startScannerExternoPreferido() {
   const callbackUrl = `${window.location.origin}${window.location.pathname}?code={CODE}`;
   const url = `zxing://scan/?ret=${encodeURIComponent(
     callbackUrl
-  )}&SCAN_FORMATS=EAN_13,EAN_8,UPC_A,CODE_128`;
+  )}&SCAN_FORMATS=EAN_13,EAN_8,UPC_A,CODE_128,CODE_39,CODE_93,ITF,CODABAR`;
 
   window.location.href = url;
 }
