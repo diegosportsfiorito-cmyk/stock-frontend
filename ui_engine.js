@@ -5,25 +5,21 @@
 function initUI(app) {
   const els = app.els;
 
-  // ============================================================
-  // PROTECCIÓN: si falta algún elemento, no rompe nada
-  // ============================================================
   const safe = (el) => el !== null && el !== undefined;
 
-  // ============================================================
-  // ENTER en input + ACTIVAR ADMIN (código secreto)
-  // ============================================================
+  // ------------------------------------------------------------
+  // ENTER en input + código admin
+  // ------------------------------------------------------------
   if (safe(els.searchInput)) {
     els.searchInput.addEventListener("keydown", (e) => {
       if (e.key === "Enter") {
         const val = e.target.value.trim().toLowerCase();
 
-        // ACTIVAR PANEL ADMIN
         if (val === "admin") {
           const adminPanel = document.getElementById("admin-panel");
           if (adminPanel) adminPanel.style.display = "flex";
           e.target.value = "";
-          showToast("Modo administrador activado");
+          app.showToast("Modo administrador activado");
           return;
         }
 
@@ -32,43 +28,68 @@ function initUI(app) {
     });
   }
 
-  // ============================================================
+  // ------------------------------------------------------------
   // ORB click + doble click (admin)
-  // ============================================================
+  // ------------------------------------------------------------
   if (safe(els.orb)) {
     els.orb.addEventListener("click", () => app.buscar());
 
     els.orb.addEventListener("dblclick", () => {
       const adminPanel = document.getElementById("admin-panel");
       if (adminPanel) adminPanel.style.display = "flex";
-      showToast("Modo administrador activado");
+      app.showToast("Modo administrador activado");
     });
   }
 
-  // ============================================================
-  // BOTÓN LIMPIAR (solo resultados, no configuración)
-  // ============================================================
-  if (safe(els.btnClear)) {
-    els.btnClear.addEventListener("click", () => app.limpiarPantalla());
+  // ------------------------------------------------------------
+  // BOTONES ALREDEDOR DEL ORB (iconos)
+  // ------------------------------------------------------------
+
+  // LIMPIAR
+  const btnClear = document.getElementById("btn-clear");
+  if (safe(btnClear)) {
+    btnClear.addEventListener("click", () => app.limpiarPantalla());
   }
 
-  // ============================================================
-  // BOTÓN COPIAR
-  // ============================================================
-  if (safe(els.btnCopy)) {
-    els.btnCopy.addEventListener("click", () => app.copiarResultados());
+  // COPIAR
+  const btnCopy = document.getElementById("btn-copy");
+  if (safe(btnCopy)) {
+    btnCopy.addEventListener("click", () => app.copiarResultados());
   }
 
-  // ============================================================
-  // BOTÓN STOP
-  // ============================================================
-  if (safe(els.btnStop)) {
-    els.btnStop.addEventListener("click", () => app.stopTodo());
+  // STOP
+  const btnStop = document.getElementById("btn-stop");
+  if (safe(btnStop)) {
+    btnStop.addEventListener("click", () => app.stopTodo());
   }
 
-  // ============================================================
-  // FILTROS PANEL
-  // ============================================================
+  // SCANNER
+  const btnScanner = document.getElementById("btn-scanner-nativo");
+  if (safe(btnScanner)) {
+    btnScanner.addEventListener("click", () => {
+      if (typeof startScanner === "function") {
+        startScanner();
+      } else {
+        app.showToast("Scanner no disponible");
+      }
+    });
+  }
+
+  // DÍA / NOCHE
+  const toggleDark = document.getElementById("toggle-dark");
+  if (safe(toggleDark)) {
+    toggleDark.addEventListener("change", (e) => {
+      if (e.target.checked) {
+        document.body.classList.add("light-mode");
+      } else {
+        document.body.classList.remove("light-mode");
+      }
+    });
+  }
+
+  // ------------------------------------------------------------
+  // FILTROS
+  // ------------------------------------------------------------
   if (safe(els.btnFiltros) && safe(els.filtrosPanel)) {
     els.btnFiltros.addEventListener("click", () => {
       els.filtrosPanel.classList.toggle("visible");
@@ -79,54 +100,45 @@ function initUI(app) {
     els.btnAplicarFiltros.addEventListener("click", () => {
       app.actualizarFiltrosDesdeUI();
       app.buscarPorFiltros();
+      if (safe(els.searchInput)) els.searchInput.value = "";
     });
   }
 
-  // ============================================================
-  // SOLO STOCK
-  // ============================================================
   if (safe(els.chkSoloStock)) {
     els.chkSoloStock.addEventListener("change", () => {
       app.buscarPorFiltros();
     });
   }
 
-  // ============================================================
-  // VISTA TABLA / TARJETAS
-  // ============================================================
-  if (safe(els.btnTabla)) {
-    els.btnTabla.addEventListener("click", () => {
-      app.state.modoTabla = !app.state.modoTabla;
+  // ------------------------------------------------------------
+  // VISTA TABLA / TARJETAS (botones separados)
+  // ------------------------------------------------------------
+  const btnVistaTabla = document.getElementById("btn-vista-tabla");
+  const btnVistaTarjetas = document.getElementById("btn-vista-tarjetas");
 
-      els.btnTabla.textContent = app.state.modoTabla
-        ? "Vista tarjetas"
-        : "Vista tabla";
+  if (btnVistaTabla && btnVistaTarjetas) {
+    btnVistaTabla.addEventListener("click", () => {
+      app.state.modoTabla = true;
+      btnVistaTabla.classList.add("active");
+      btnVistaTarjetas.classList.remove("active");
+      app.renderResultados(app.state.items);
+    });
 
+    btnVistaTarjetas.addEventListener("click", () => {
+      app.state.modoTabla = false;
+      btnVistaTarjetas.classList.add("active");
+      btnVistaTabla.classList.remove("active");
       app.renderResultados(app.state.items);
     });
   }
 
-  // ============================================================
+  // ------------------------------------------------------------
   // CAMBIO DE MODO DE GRÁFICO
-  // ============================================================
+  // ------------------------------------------------------------
   const chartMode = document.getElementById("chart-mode");
-  if (safe(chartMode)) {
+  if (chartMode) {
     chartMode.addEventListener("change", () => {
       actualizarDashboard(app.state.items);
-    });
-  }
-
-  // ============================================================
-  // SCANNER (si existe startScanner en scanner_v2.js)
-  // ============================================================
-  const btnScanner = document.getElementById("btn-scanner-nativo");
-  if (safe(btnScanner)) {
-    btnScanner.addEventListener("click", () => {
-      if (typeof startScanner === "function") {
-        startScanner();
-      } else {
-        showToast("Scanner no disponible");
-      }
     });
   }
 }
