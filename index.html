@@ -1,221 +1,257 @@
 <!DOCTYPE html>
 <html lang="es">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>STOCK IA PRO — Asistente inteligente</title>
+  <head>
+    <meta charset="UTF-8" />
+    <title>STOCK IA PRO — Asistente inteligente</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-  <script>
-    const v = Date.now();
-    document.write(`
-      <link rel="stylesheet" href="styles_v2.css?v=${v}">
-      <link rel="stylesheet" href="orb_v2.css?v=${v}">
-    `);
-  </script>
-</head>
-
-<body>
-
-  <!-- BANNER -->
-  <div style="background:#d60000;color:white;padding:10px;font-size:14px;text-align:center;">
-    VERSION RESTAURADA — ORB 3D ULTRA + SCANNER AVANZADO
-  </div>
-
-  <div class="app-shell">
-    <div class="app-container">
-
-      <!-- HEADER -->
-      <div class="app-header">
-        <div class="branding">
-          <div>
-            <div class="brand-title">STOCK IA PRO</div>
-            <div class="brand-subtitle">Asistente inteligente de stock</div>
+    <link rel="stylesheet" href="styles_v2.css" />
+    <link rel="stylesheet" href="orb_v2.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <div class="app-container">
+        <!-- HEADER -->
+        <header class="app-header">
+          <div class="branding">
+            <div class="brand-orb-mini">IA</div>
+            <div>
+              <div class="brand-title">STOCK IA PRO</div>
+              <div class="brand-subtitle">Asistente inteligente de stock</div>
+            </div>
           </div>
+
+          <div class="header-right">
+            <div class="connection-indicator">
+              <span class="connection-dot" id="connection-dot"></span>
+              <span>Estado conexión</span>
+            </div>
+          </div>
+        </header>
+
+        <!-- BANNER -->
+        <div class="app-banner">
+          VERSION RESTAURADA — ORB 3D ULTRA + SCANNER AVANZADO
         </div>
 
-        <div class="header-right">
-          <div class="connection-indicator">
-            <div class="connection-dot"></div>
-            <span>Estado conexión</span>
+        <!-- SEARCH + ORB -->
+        <section class="search-card">
+          <div class="search-row">
+            <div class="search-input-wrapper">
+              <input
+                id="search-input"
+                type="text"
+                class="search-input"
+                placeholder="Buscar artículo, marca o rubro..."
+                autocomplete="off"
+              />
+            </div>
+
+            <button id="btn-scanner-nativo" class="scanner-btn" title="Scanner">
+            </button>
           </div>
 
-          <label class="toggle-dark">
-            <input type="checkbox" id="toggle-dark">
-            <span class="toggle-slider"></span>
-          </label>
-        </div>
-      </div>
-
-      <!-- ORB -->
-      <div class="orb-zone">
-        <div class="orb-wrapper">
-          <div class="orb orb-ultra" id="orb">IA PRO</div>
-          <div class="orb-tooltip" id="orb-tooltip">Tocá para buscar</div>
-        </div>
-      </div>
-
-      <!-- BUSCADOR -->
-      <section class="search-card">
-        <div class="search-row">
-
-          <div class="search-input-wrapper">
-            <input
-              id="search-input"
-              class="search-input"
-              type="text"
-              placeholder="Buscar artículo, marca o rubro…"
-              autocomplete="off"
-            />
-          </div>
-
-          <button id="btn-scanner-nativo" class="scanner-btn" title="Lector avanzado"></button>
-
-          <div class="scanner-mode-switch">
-            <div id="scanner-mode-simple" class="scanner-mode-option active">Simple</div>
-            <div id="scanner-mode-completo" class="scanner-mode-option">Completo</div>
-          </div>
-
-        </div>
-
-        <!-- MÉTRICAS -->
-        <div class="metrics-row">
-          <div class="metric-card">
-            <div class="metric-label">Artículos</div>
-            <div class="metric-value" id="metric-articulos">0</div>
-          </div>
-          <div class="metric-card">
-            <div class="metric-label">Pares</div>
-            <div class="metric-value" id="metric-pares">0</div>
-          </div>
-          <div class="metric-card">
-            <div class="metric-label">Alertas</div>
-            <div class="metric-value" id="metric-alertas">0</div>
-          </div>
-          <div class="metric-card">
-            <div class="metric-label">Valorizado</div>
-            <div class="metric-value" id="metric-valorizado">$0</div>
-          </div>
-        </div>
-
-        <!-- FILTROS -->
-        <div class="filtros-panel" id="filtros-panel">
-          <div class="filtros-row">
-            <select id="filtro-marca" class="filtro-select">
-              <option value="">Marca</option>
-            </select>
-
-            <select id="filtro-rubro" class="filtro-select">
-              <option value="">Rubro</option>
-            </select>
-          </div>
-
-          <div class="filtros-row">
-            <input id="filtro-talle-desde" class="filtro-input" placeholder="Talle desde" />
-            <input id="filtro-talle-hasta" class="filtro-input" placeholder="Talle hasta" />
-          </div>
-
-          <button id="btn-aplicar-filtros" class="btn-secondary">Aplicar filtros</button>
-        </div>
-
-        <div class="actions-row">
-          <div class="solo-stock">
-            <label class="switch">
-              <input type="checkbox" id="chk-solo-stock">
-              <span class="slider"></span>
+          <!-- FILTROS BTN -->
+          <div class="search-filters-row">
+            <button id="btn-filtros" class="btn-secondary">Filtros</button>
+            <label class="solo-stock">
+              <span>Solo con stock</span>
+              <label class="switch">
+                <input id="chk-solo-stock" type="checkbox" />
+                <span class="slider"></span>
+              </label>
             </label>
-            <span>Solo con stock</span>
           </div>
 
-          <div class="actions-right">
-            <button class="btn-secondary" id="btn-filtros">Filtros</button>
-            <button class="btn-ghost" id="btn-clear">Limpiar</button>
-            <button class="btn-ghost" id="btn-copy">Copiar</button>
-            <button class="btn-ghost" id="btn-stop">Stop</button>
-            <button class="btn-secondary" id="btn-tabla">Vista tabla</button>
+          <!-- ORB + ACCIONES -->
+          <div class="orb-zone">
+            <div class="orb-actions-ring">
+              <div class="orb-actions-top">
+                <button
+                  id="btn-clear"
+                  class="orb-action-btn"
+                  title="Limpiar"
+                >
+                  🧹
+                </button>
+                <button
+                  id="btn-copy"
+                  class="orb-action-btn"
+                  title="Copiar resultados"
+                >
+                  📋
+                </button>
+                <button
+                  id="btn-stop"
+                  class="orb-action-btn"
+                  title="Detener"
+                >
+                  ⏹
+                </button>
+              </div>
+
+              <div id="orb" class="orb-container">
+                <!-- ORB 3D se maneja desde orb_engine.js + orb_v2.css -->
+                <div id="orb-core"></div>
+              </div>
+
+              <div class="orb-actions-bottom">
+                <label class="orb-mode-switch">
+                  <span>Simple</span>
+                  <label class="switch small">
+                    <input id="modo-scanner-toggle" type="checkbox" />
+                    <span class="slider"></span>
+                  </label>
+                  <span>Completo</span>
+                </label>
+
+                <label class="orb-mode-switch">
+                  <span>Modo día</span>
+                  <label class="switch small">
+                    <input id="toggle-dark" type="checkbox" />
+                    <span class="slider"></span>
+                  </label>
+                  <span>Noche</span>
+                </label>
+              </div>
+            </div>
           </div>
-        </div>
-      </section>
 
-      <!-- CONTENIDO PRINCIPAL -->
-      <div class="main-row">
-
-        <!-- RESULTADOS -->
-        <section class="results-card">
-          <div class="results-header">
-            <div class="results-title">Resultados</div>
-            <div class="results-status" id="results-status">Esperando consulta</div>
+          <!-- MÉTRICAS -->
+          <div class="metrics-row">
+            <div class="metric-card" id="metric-articulos">
+              <div class="metric-label">Artículos</div>
+              <div class="metric-value" id="metric-articulos-value">0</div>
+            </div>
+            <div class="metric-card" id="metric-pares">
+              <div class="metric-label">Pares</div>
+              <div class="metric-value" id="metric-pares-value">0</div>
+            </div>
+            <div class="metric-card" id="metric-alertas">
+              <div class="metric-label">Alertas</div>
+              <div class="metric-value" id="metric-alertas-value">0</div>
+            </div>
+            <div class="metric-card" id="metric-valorizado">
+              <div class="metric-label">Valorizado</div>
+              <div class="metric-value" id="metric-valorizado-value">$0</div>
+            </div>
           </div>
 
-          <div id="results-container"></div>
+          <!-- FILTROS AVANZADOS -->
+          <div id="filtros-panel" class="filtros-panel">
+            <div class="filtros-row">
+              <select id="filtro-marca" class="filtro-select">
+                <option value="">Marca</option>
+              </select>
+              <select id="filtro-rubro" class="filtro-select">
+                <option value="">Rubro</option>
+              </select>
+            </div>
+            <div class="filtros-row">
+              <input
+                id="filtro-talle-desde"
+                type="number"
+                class="filtro-input"
+                placeholder="Talle desde"
+              />
+              <input
+                id="filtro-talle-hasta"
+                type="number"
+                class="filtro-input"
+                placeholder="Talle hasta"
+              />
+            </div>
+            <div class="filtros-row">
+              <button id="btn-aplicar-filtros" class="btn-secondary">
+                Aplicar filtros
+              </button>
+            </div>
+          </div>
         </section>
 
-        <!-- DASHBOARD -->
-        <section class="dashboard-card">
-          <div class="dashboard-header">
-            <div class="dashboard-title">Visión rápida</div>
-            <div class="dashboard-subtitle">Distribución por talle / marca / rubro</div>
+        <!-- MAIN ROW: RESULTADOS + DASHBOARD -->
+        <section class="main-row">
+          <!-- RESULTADOS -->
+          <div class="results-card">
+            <div class="results-header">
+              <div class="results-title">Resultados</div>
+              <div class="results-right">
+                <div class="results-view-toggle">
+                  <button
+                    id="btn-vista-tabla"
+                    class="view-btn"
+                    title="Vista tabla"
+                  >
+                    Tabla
+                  </button>
+                  <button
+                    id="btn-vista-tarjetas"
+                    class="view-btn active"
+                    title="Vista tarjetas"
+                  >
+                    Tarjetas
+                  </button>
+                </div>
+              </div>
+            </div>
+            <div id="results-status" class="results-status">
+              Esperando consulta
+            </div>
+            <div id="results-container"></div>
           </div>
 
-          <select id="chart-mode" class="chart-mode">
-            <option value="talle">Por talle</option>
-            <option value="marca">Por marca</option>
-            <option value="rubro">Por rubro</option>
-          </select>
-
-          <canvas id="stockChart"></canvas>
+          <!-- DASHBOARD -->
+          <aside class="dashboard-card">
+            <div class="dashboard-header">
+              <div class="dashboard-title">Visión rápida</div>
+              <div class="dashboard-subtitle">
+                Distribución por talle / marca / rubro
+              </div>
+            </div>
+            <select id="chart-mode" class="filtro-select">
+              <option value="talle">Por talle</option>
+              <option value="marca">Por marca</option>
+              <option value="rubro">Por rubro</option>
+            </select>
+            <canvas id="stockChart"></canvas>
+          </aside>
         </section>
-
       </div>
-
     </div>
-  </div>
 
-  <!-- PANEL ADMIN -->
-  <div id="admin-panel">
-    <h2>Configuración del ORB</h2>
+    <!-- PANEL ADMIN -->
+    <div id="admin-panel">
+      <h2>Panel administrador</h2>
 
-    <label>Color principal</label>
-    <input type="color" id="orb-color" value="#4fc3f7">
+      <h3>Configuración general</h3>
+      <label>
+        URL backend
+        <input id="admin-backend-url" type="text" />
+      </label>
 
-    <label>Color secundario</label>
-    <input type="color" id="orb-color-dark" value="#7c4dff">
+      <label>
+        Modo por defecto
+        <select id="admin-modo-defecto">
+          <option value="simple">Simple</option>
+          <option value="completo">Completo</option>
+        </select>
+      </label>
 
-    <label>Tamaño del ORB</label>
-    <input type="range" id="orb-size" min="80" max="160" value="130">
+      <div class="admin-actions">
+        <button id="admin-guardar">Guardar</button>
+        <button id="admin-cerrar">Cerrar</button>
+      </div>
+    </div>
 
-    <label>Intensidad del halo</label>
-    <input type="range" id="orb-halo" min="0" max="100" value="60">
+    <!-- TOAST -->
+    <div id="toast" class="toast"></div>
 
-    <label>Modo visual</label>
-    <select id="orb-mode">
-      <option value="classic">Clásico</option>
-      <option value="3d">3D</option>
-      <option value="ultra" selected>3D Ultra</option>
-    </select>
-
-    <h3>Presets del ORB</h3>
-    <select id="orb-presets">
-      <option value="default">Energía Azul</option>
-      <option value="plasma">Plasma Violeta</option>
-      <option value="fuego">Fuego</option>
-      <option value="neon">Neón Verde</option>
-      <option value="minimal">Minimalista</option>
-    </select>
-
-    <button id="orb-reset">Restablecer valores</button>
-  </div>
-
-  <!-- TOAST -->
-  <div class="toast" id="toast"></div>
-
-  <!-- SCRIPTS -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js?v=1"></script>
-
-  <script src="orb_engine.js?v=1"></script>
-  <script src="indicators_engine.js?v=1"></script>
-  <script src="dashboard_engine.js?v=1"></script>
-  <script src="ui_engine.js?v=1"></script>
-  <script src="app_core.js?v=1"></script>
-
-</body>
+    <!-- SCRIPTS -->
+    <script src="orb_engine.js"></script>
+    <script src="dashboard_engine.js"></script>
+    <script src="indicators_engine.js"></script>
+    <script src="scanner_v3.js"></script>
+    <script src="app_core.js"></script>
+    <script src="ui_engine.js"></script>
+  </body>
 </html>
