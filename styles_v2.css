@@ -1,5 +1,5 @@
 /* ============================================================
-   VARIABLES Y RESET
+   01 — RESET & VARIABLES
    ============================================================ */
 
 :root {
@@ -20,13 +20,6 @@
   --radius-pill: 999px;
   --transition-fast: 0.18s ease-out;
   --transition-med: 0.25s ease-out;
-
-  /* ORB */
-  --orb-color: #4fc3f7;
-  --orb-color-dark: #7c4dff;
-  --orb-pulse-speed: 3s;
-  --orb-spin-speed: 6s;
-  --orb-halo-strength: 60;
 }
 
 *,
@@ -37,14 +30,12 @@
   padding: 0;
 }
 
-html,
-body {
+html, body {
   height: 100%;
 }
 
 body {
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text",
-    "Segoe UI", sans-serif;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", sans-serif;
   background: radial-gradient(circle at top, #111827 0, #020617 55%, #000 100%);
   color: var(--text-main);
   -webkit-font-smoothing: antialiased;
@@ -52,40 +43,7 @@ body {
 }
 
 /* ============================================================
-   MODO DÍA
-   ============================================================ */
-
-body.light-mode {
-  background: #f5f5f7;
-  color: #111;
-}
-
-body.light-mode .app-container {
-  background: #ffffff;
-  border-color: #d1d5db;
-}
-
-body.light-mode .search-card,
-body.light-mode .results-card,
-body.light-mode .metric-card,
-body.light-mode .dashboard-card {
-  background: #ffffff;
-  border-color: #d1d5db;
-}
-
-body.light-mode .search-input {
-  background: #fff;
-  color: #111;
-  border-color: #d1d5db;
-}
-
-body.light-mode .result-item {
-  background: #fff;
-  border-color: #d1d5db;
-}
-
-/* ============================================================
-   CONTENEDOR PRINCIPAL
+   02 — LAYOUT BASE
    ============================================================ */
 
 .app-shell {
@@ -113,7 +71,7 @@ body.light-mode .result-item {
 }
 
 /* ============================================================
-   HEADER
+   03 — HEADER
    ============================================================ */
 
 .app-header {
@@ -121,7 +79,6 @@ body.light-mode .result-item {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  position: relative;
 }
 
 .branding {
@@ -142,10 +99,6 @@ body.light-mode .result-item {
   font-size: 0.72rem;
   color: var(--text-muted);
 }
-
-/* ============================================================
-   CONEXIÓN
-   ============================================================ */
 
 .connection-indicator {
   display: flex;
@@ -170,53 +123,7 @@ body.light-mode .result-item {
 }
 
 /* ============================================================
-   TOGGLE DÍA/NOCHE
-   ============================================================ */
-
-.toggle-dark {
-  position: relative;
-  width: 48px;
-  height: 24px;
-  display: inline-block;
-}
-
-.toggle-dark input {
-  opacity: 0;
-  width: 0;
-  height: 0;
-}
-
-.toggle-slider {
-  position: absolute;
-  cursor: pointer;
-  inset: 0;
-  background: #4b5563;
-  border-radius: 24px;
-  transition: 0.3s;
-}
-
-.toggle-slider:before {
-  content: "";
-  position: absolute;
-  height: 18px;
-  width: 18px;
-  left: 3px;
-  bottom: 3px;
-  background: #fff;
-  border-radius: 50%;
-  transition: 0.3s;
-}
-
-.toggle-dark input:checked + .toggle-slider {
-  background: var(--accent);
-}
-
-.toggle-dark input:checked + .toggle-slider:before {
-  transform: translateX(24px);
-}
-
-/* ============================================================
-   SEARCH CARD
+   04 — SEARCH + SCANNER
    ============================================================ */
 
 .search-card {
@@ -254,10 +161,6 @@ body.light-mode .result-item {
   outline: none;
   border-color: var(--accent);
 }
-
-/* ============================================================
-   BOTÓN SCANNER
-   ============================================================ */
 
 .scanner-btn {
   width: 38px;
@@ -299,37 +202,44 @@ body.light-mode .result-item {
 }
 
 /* ============================================================
-   SWITCH MODO SCANNER
+   05 — ORB + ACCIONES ALREDEDOR
    ============================================================ */
 
-.scanner-mode-switch {
+.orb-actions-ring {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.orb-actions-top,
+.orb-actions-bottom {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+}
+
+.orb-action-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  border: 1px solid var(--border-soft);
+  background: rgba(15, 23, 42, 0.9);
   display: flex;
   align-items: center;
-  background: rgba(15, 23, 42, 0.9);
-  border: 1px solid var(--border-soft);
-  border-radius: var(--radius-pill);
-  overflow: hidden;
-  height: 38px;
-  min-width: 140px;
-}
-
-.scanner-mode-option {
-  flex: 1;
-  text-align: center;
-  padding: 8px 0;
-  font-size: 0.78rem;
+  justify-content: center;
+  font-size: 0.8rem;
+  color: var(--text-main);
   cursor: pointer;
-  color: var(--text-muted);
-  transition: background var(--transition-fast), color var(--transition-fast);
+  transition: background var(--transition-fast), border-color var(--transition-fast);
 }
 
-.scanner-mode-option.active {
-  background: var(--accent);
-  color: #fff;
+.orb-action-btn:hover {
+  background: rgba(51, 65, 85, 0.9);
+  border-color: rgba(129, 140, 248, 0.8);
 }
-
 /* ============================================================
-   MÉTRICAS
+   06 — MÉTRICAS
    ============================================================ */
 
 .metrics-row {
@@ -358,7 +268,7 @@ body.light-mode .result-item {
 }
 
 /* ============================================================
-   FILTROS AVANZADOS
+   07 — FILTROS AVANZADOS
    ============================================================ */
 
 .filtros-panel {
@@ -391,7 +301,7 @@ body.light-mode .result-item {
 }
 
 /* ============================================================
-   ACCIONES
+   08 — ACCIONES (LIMPIAR, COPIAR, STOP)
    ============================================================ */
 
 .actions-row {
@@ -405,7 +315,6 @@ body.light-mode .result-item {
   gap: 8px;
 }
 
-/* NUEVO: botones debajo del input */
 .actions-row-top {
   display: flex;
   gap: 8px;
@@ -442,61 +351,7 @@ body.light-mode .result-item {
 }
 
 /* ============================================================
-   SOLO STOCK
-   ============================================================ */
-
-.solo-stock {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 0.78rem;
-  color: var(--text-muted);
-}
-
-.switch {
-  position: relative;
-  display: inline-block;
-  width: 42px;
-  height: 22px;
-}
-
-.switch input {
-  opacity: 0;
-  width: 0;
-  height: 0;
-}
-
-.slider {
-  position: absolute;
-  cursor: pointer;
-  inset: 0;
-  background-color: #555;
-  transition: 0.3s;
-  border-radius: 22px;
-}
-
-.slider:before {
-  position: absolute;
-  content: "";
-  height: 16px;
-  width: 16px;
-  left: 3px;
-  bottom: 3px;
-  background-color: white;
-  transition: 0.3s;
-  border-radius: 50%;
-}
-
-input:checked + .slider {
-  background-color: var(--accent);
-}
-
-input:checked + .slider:before {
-  transform: translateX(20px);
-}
-
-/* ============================================================
-   RESULTADOS
+   09 — RESULTADOS
    ============================================================ */
 
 .main-row {
@@ -525,12 +380,6 @@ input:checked + .slider:before {
   justify-content: space-between;
 }
 
-.results-actions {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-}
-
 .results-title {
   font-size: 1rem;
   font-weight: 700;
@@ -548,7 +397,7 @@ input:checked + .slider:before {
 }
 
 /* ============================================================
-   TARJETAS DE RESULTADO
+   10 — RESULTADOS EN TARJETAS
    ============================================================ */
 
 .result-item {
@@ -584,7 +433,34 @@ input:checked + .slider:before {
 }
 
 /* ============================================================
-   TABLA — NUEVO SISTEMA
+   11 — BOTONES TABLA / TARJETAS
+   ============================================================ */
+
+.results-view-toggle {
+  display: flex;
+  gap: 6px;
+}
+
+.results-view-toggle button {
+  padding: 4px 10px;
+  font-size: 0.75rem;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--border-soft);
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: background var(--transition-fast), color var(--transition-fast),
+    border-color var(--transition-fast);
+}
+
+.results-view-toggle button.active {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+
+/* ============================================================
+   12 — TABLA
    ============================================================ */
 
 .tabla-wrapper {
@@ -608,8 +484,11 @@ input:checked + .slider:before {
   font-size: 0.8rem;
 }
 
+.tabla-resultados th {
+  color: var(--text-muted);
+}
 /* ============================================================
-   DASHBOARD
+   13 — DASHBOARD
    ============================================================ */
 
 .dashboard-card {
@@ -640,32 +519,7 @@ input:checked + .slider:before {
 }
 
 /* ============================================================
-   TOAST
-   ============================================================ */
-
-.toast {
-  position: fixed;
-  bottom: 22px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: rgba(15, 23, 42, 0.95);
-  padding: 10px 16px;
-  border-radius: var(--radius-md);
-  border: 1px solid var(--border-soft);
-  color: var(--text-main);
-  font-size: 0.8rem;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.25s ease;
-  z-index: 999999;
-}
-
-.toast.visible {
-  opacity: 1;
-}
-
-/* ============================================================
-   PANEL ADMIN
+   14 — PANEL ADMIN
    ============================================================ */
 
 #admin-panel {
@@ -702,4 +556,106 @@ input:checked + .slider:before {
 
 #admin-panel button {
   padding: 8px 14px;
-  border
+  border-radius: var(--radius-md);
+  background: rgba(30, 41, 59, 0.8);
+  border: 1px solid var(--border-soft);
+  color: var(--text-main);
+  cursor: pointer;
+}
+
+#admin-panel button:hover {
+  background: rgba(51, 65, 85, 0.9);
+}
+
+/* ============================================================
+   15 — TOAST
+   ============================================================ */
+
+.toast {
+  position: fixed;
+  bottom: 22px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(15, 23, 42, 0.95);
+  padding: 10px 16px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-soft);
+  color: var(--text-main);
+  font-size: 0.8rem;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease;
+  z-index: 999999;
+}
+
+.toast.visible {
+  opacity: 1;
+}
+
+/* ============================================================
+   16 — RESPONSIVE MÓVIL
+   ============================================================ */
+
+@media (max-width: 900px) {
+  .main-row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .dashboard-card {
+    width: 100%;
+  }
+}
+
+@media (max-width: 600px) {
+  .app-container {
+    padding: 12px;
+  }
+
+  /* Search */
+  .search-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  /* Métricas scroll horizontal */
+  .metrics-row {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+  }
+
+  .metric-card {
+    min-width: 120px;
+  }
+
+  /* Resultados */
+  .results-card {
+    max-height: none;
+  }
+
+  /* Acciones */
+  .actions-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  /* ORB más compacto */
+  #orb {
+    transform: scale(0.85);
+  }
+
+  .orb-actions-ring {
+    gap: 6px;
+  }
+
+  .orb-action-btn {
+    width: 30px;
+    height: 30px;
+  }
+
+  /* Botones tabla/tarjetas */
+  .results-view-toggle button {
+    padding: 4px 8px;
+    font-size: 0.7rem;
+  }
+}
