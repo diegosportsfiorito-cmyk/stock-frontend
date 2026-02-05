@@ -77,18 +77,18 @@ function actualizarDashboard(items) {
         {
           data: dataset.data,
           backgroundColor: [
-            "#4fc3f7",
-            "#81c784",
-            "#ffb74d",
-            "#e57373",
-            "#ba68c8",
-            "#ffd54f",
-            "#4db6ac",
-            "#9575cd",
-            "#f06292",
-            "#64b5f6",
-            "#aed581",
-            "#ff8a65"
+            "#ff1744",
+            "#ff9100",
+            "#ffea00",
+            "#00e676",
+            "#00b0ff",
+            "#2979ff",
+            "#651fff",
+            "#d500f9",
+            "#ff4081",
+            "#76ff03",
+            "#00e5ff",
+            "#ff6d00"
           ],
           borderWidth: 1,
           borderColor: "#111827"
