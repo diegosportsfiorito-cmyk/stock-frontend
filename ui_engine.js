@@ -61,14 +61,12 @@ function initUI(app) {
     }
   }
 
-  // Estado inicial
   if (modoVozSwitch && modoVozSwitch.checked) {
     setVoiceUIState("ready");
   } else {
     setVoiceUIState("off");
   }
 
-  // Switch de dictado
   if (modoVozSwitch) {
     modoVozSwitch.addEventListener("change", (e) => {
       const on = e.target.checked;
@@ -85,7 +83,6 @@ function initUI(app) {
     }
   }
 
-  // Web Speech API — dictado al input
   function startDictado() {
     const SR =
       window.SpeechRecognition || window.webkitSpeechRecognition || null;
@@ -124,7 +121,6 @@ function initUI(app) {
     rec.start();
   }
 
-  // Botón de manos libres (mic)
   if (micButton) {
     micButton.addEventListener("click", () => {
       if (!modoVozSwitch.checked) {
@@ -136,7 +132,6 @@ function initUI(app) {
     });
   }
 
-  // Hooks globales
   window.voiceUI = {
     setListening: () => setVoiceUIState("listening"),
     setReady: () => setVoiceUIState("ready"),
