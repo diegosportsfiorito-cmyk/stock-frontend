@@ -1,26 +1,45 @@
 // ============================================================
-// ORB ENGINE — Estados del ORB (loading / ready / error)
+// ORB ENGINE — Estados del ORB (idle / loading / ready / listening / error)
 // ============================================================
 
 const ORB = {
   el: document.getElementById("orb-core"),
+  currentState: "idle",
 
-  setState(className) {
+  setBase() {
     if (!this.el) return;
-    // Siempre mantenemos la base visual
     this.el.className = "orb-ultra";
-    if (className) this.el.classList.add(className);
+  },
+
+  setState(state) {
+    if (!this.el) return;
+    this.currentState = state;
+    this.setBase();
+
+    if (state === "loading") {
+      this.el.classList.add("orb-loading");
+    } else if (state === "ready") {
+      this.el.classList.add("orb-ready");
+    } else if (state === "listening") {
+      this.el.classList.add("orb-listening");
+    } else if (state === "error") {
+      this.el.classList.add("orb-error");
+    }
   },
 
   setLoading(v) {
-    this.setState(v ? "orb-loading" : "");
+    this.setState(v ? "loading" : "idle");
   },
 
   setReady(v) {
-    this.setState(v ? "orb-ready" : "");
+    this.setState(v ? "ready" : "idle");
+  },
+
+  setListening(v) {
+    this.setState(v ? "listening" : "ready");
   },
 
   setError(v) {
-    this.setState(v ? "orb-error" : "");
+    this.setState(v ? "error" : "idle");
   },
 };
