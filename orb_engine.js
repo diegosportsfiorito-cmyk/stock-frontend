@@ -1,27 +1,26 @@
 // ============================================================
-// ORB ENGINE — Control de estados visuales del ORB 3D
+// ORB ENGINE — Estados del ORB (loading / ready / error)
 // ============================================================
 
 const ORB = {
   el: document.getElementById("orb-core"),
 
-  setState(stateClass) {
+  setState(className) {
     if (!this.el) return;
-    this.el.className = "";
-    if (stateClass) this.el.classList.add(stateClass);
+    // Siempre mantenemos la base visual
+    this.el.className = "orb-ultra";
+    if (className) this.el.classList.add(className);
   },
 
-  setLoading(active) {
-    this.setState(active ? "orb-loading" : "");
+  setLoading(v) {
+    this.setState(v ? "orb-loading" : "");
   },
 
-  setReady(active) {
-    this.setState(active ? "orb-ready" : "");
+  setReady(v) {
+    this.setState(v ? "orb-ready" : "");
   },
 
-  setError(active) {
-    this.setState(active ? "orb-error" : "");
-  }
+  setError(v) {
+    this.setState(v ? "orb-error" : "");
+  },
 };
-
-window.ORB = ORB;
