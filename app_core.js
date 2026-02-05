@@ -1,5 +1,5 @@
 // ============================================================
-// APP CORE — Búsqueda, filtros, render, conexión backend
+// APP CORE — Motor inteligente + filtros estructurados
 // ============================================================
 
 const AppCore = {
@@ -42,7 +42,9 @@ const AppCore = {
     modoTabla: false,
   },
 
-  // ------------------ Utilidades ------------------
+  // ============================================================
+  // UTILIDADES
+  // ============================================================
 
   showToast(msg) {
     const toast = document.getElementById("toast");
@@ -61,7 +63,9 @@ const AppCore = {
     this.els.connectionDot.classList.toggle("online", ok);
   },
 
-  // ------------------ Indicadores ------------------
+  // ============================================================
+  // INDICADORES
+  // ============================================================
 
   actualizarIndicadores(items) {
     let articulos = items.length;
@@ -89,7 +93,9 @@ const AppCore = {
     }
   },
 
-  // ------------------ Render resultados ------------------
+  // ============================================================
+  // RENDER RESULTADOS
+  // ============================================================
 
   renderResultados(items) {
     if (this.state.modoTabla) {
@@ -196,7 +202,139 @@ const AppCore = {
     cont.innerHTML = html;
   },
 
-  // ------------------ Filtros ------------------
+  // ============================================================
+  // PARSER INTELIGENTE
+  // ============================================================
+
+  interpretarQuery(raw) {
+    const q = raw.trim().toUpperCase();
+
+    const marcas = [...new Set(this.state.catalogItems.map((i) => i.marca))];
+    const rubros = [...new Set(this.state.catalogItems.map((i) => i.rubro))];
+
+    let marca = null;
+    let rubro = null;
+    let talleDesde = null;
+    let talleHasta = null;
+    let question = "";
+
+    const palabras = q.split(/\s+/);
+
+    palabras.forEach((p) => {
+      if (marcas.includes(p)) marca = p;
+      if (rubros.includes(p)) rubro = p;
+    });
+
+    const matchRango = q.match(/T?(\d+)\s*A\s*T?(\d+)/);
+    if (matchRango) {
+      talleDesde = parseInt(matchRango[1]);
+      talleHasta = parseInt(matchRango[2]);
+      return { filtros_globales: true, marca, rubro, talleDesde, talleHasta, question: "" };
+    }
+
+    const matchTalle = q.match(/^T?(\d{1,3})$/);
+    if (matchTalle) {
+      const t = parseInt(matchTalle[1]);
+      return { filtros_globales: true, marca, rubro, talleDesde: t, talleHasta: t, question: "" };
+    }
+
+    const matchPrecio = q.match(/^P(\d{2,6})$/);
+    if (matchPrecio) {
+      return { filtros_globales: false, question: "PRECIO " + matchPrecio[1] };
+    }
+
+    if (/^\d{8,14}$/.test(q)) {
+      return { filtros_globales: false, question: q };
+    }
+
+    let resto = palabras.filter((p) => p !== marca && p !== rubro).join(" ");
+    question = resto.trim();
+
+    const usarFiltros =
+      marca || rubro || talleDesde !== null || talleHasta !== null;
+
+    return {
+      filtros_globales: usarFiltros,
+      marca,
+      rubro,
+      talleDesde,
+      talleHasta,
+      question,
+    };
+  },
+
+  // ============================================================
+  // BÚSQUEDA PRINCIPAL
+  // ============================================================
+
+  async buscar(force = false) {
+    const raw = this.els.searchInput.value.trim();
+    if (!raw) {
+      this.showToast("Ingresá un código o descripción");
+      return;
+    }
+
+    if (!force && raw === this.state.lastQuery) return;
+    this.state.lastQuery = raw;
+
+    const parsed = this.interpretarQuery(raw);
+
+    if (this.state.currentAbort) this.state.currentAbort.abort();
+    this.state.currentAbort = new AbortController();
+
+    ORB.setLoading(true);
+    this.els.resultsStatus.textContent = "Buscando…";
+
+    const body = {
+      question: parsed.question || "",
+      solo_stock: this.els.chkSoloStock.checked,
+      filtros_globales: parsed.filtros_globales,
+      marca: parsed.marca,
+      rubro: parsed.rubro,
+      talle_desde: parsed.talleDesde,
+      talle_hasta: parsed.talleHasta,
+    };
+
+    try {
+      const res = await fetch(this.config.backendUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+        signal: this.state.currentAbort.signal,
+      });
+
+      if (!res.ok) throw new Error("Error en servidor");
+
+      const data = await res.json();
+      this.state.items = data.items || [];
+
+      this.renderResultados(this.state.items);
+      if (window.actualizarDashboard) {
+        window.actualizarDashboard(this.state.items);
+      }
+      this.actualizarIndicadores(this.state.items);
+
+      this.setConnectionStatus(true);
+      ORB.setReady(true);
+      this.els.resultsStatus.textContent = `${this.state.items.length} resultados`;
+    } catch (err) {
+      if (err.name !== "AbortError") {
+        this.setConnectionStatus(false);
+        ORB.setError(true);
+        this.els.resultsStatus.textContent = "Error de conexión";
+      }
+    } finally {
+      ORB.setLoading(false);
+    }
+  },
+    } finally {
+      ORB.setLoading(false);
+    }
+  },
+
+  // ============================================================
+  // FILTROS MANUALES
+  // ============================================================
 
   actualizarFiltrosDesdeUI() {
     this.state.filtros.marca = this.els.filtroMarca.value || null;
@@ -249,7 +387,9 @@ const AppCore = {
     }
   },
 
-  // ------------------ Catálogo (marca/rubro) ------------------
+  // ============================================================
+  // CATÁLOGO
+  // ============================================================
 
   async cargarCatalogo() {
     try {
@@ -293,63 +433,9 @@ const AppCore = {
     }
   },
 
-  // ------------------ Búsqueda principal ------------------
-
-  async buscar(force = false) {
-    const query = this.els.searchInput.value.trim();
-    if (!query) {
-      this.showToast("Ingresá un código o descripción");
-      return;
-    }
-
-    if (!force && query === this.state.lastQuery) return;
-    this.state.lastQuery = query;
-
-    if (this.state.currentAbort) this.state.currentAbort.abort();
-    this.state.currentAbort = new AbortController();
-
-    ORB.setLoading(true);
-    this.els.resultsStatus.textContent = "Buscando…";
-
-    try {
-      const body = {
-        question: query,
-        solo_stock: this.els.chkSoloStock.checked,
-      };
-
-      const res = await fetch(this.config.backendUrl, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-        signal: this.state.currentAbort.signal,
-      });
-
-      if (!res.ok) throw new Error("Error en servidor");
-
-      const data = await res.json();
-      this.state.items = data.items || [];
-
-      this.renderResultados(this.state.items);
-      if (window.actualizarDashboard) {
-        window.actualizarDashboard(this.state.items);
-      }
-      this.actualizarIndicadores(this.state.items);
-
-      this.setConnectionStatus(true);
-      ORB.setReady(true);
-      this.els.resultsStatus.textContent = `${this.state.items.length} resultados`;
-    } catch (err) {
-      if (err.name !== "AbortError") {
-        this.setConnectionStatus(false);
-        ORB.setError(true);
-        this.els.resultsStatus.textContent = "Error de conexión";
-      }
-    } finally {
-      ORB.setLoading(false);
-    }
-  },
-
-  // ------------------ Utilidades UI ------------------
+  // ============================================================
+  // UTILIDADES UI
+  // ============================================================
 
   limpiarPantalla() {
     this.els.searchInput.value = "";
@@ -378,7 +464,9 @@ const AppCore = {
     this.els.resultsStatus.textContent = "Cancelado";
   },
 
-  // ------------------ Config admin ------------------
+  // ============================================================
+  // CONFIG ADMIN
+  // ============================================================
 
   aplicarConfigAdmin() {
     const url = localStorage.getItem("backendUrl");
@@ -398,14 +486,19 @@ const AppCore = {
     if (selectModo) selectModo.value = this.config.modoDefecto;
   },
 
-  // ------------------ INIT ------------------
+  // ============================================================
+  // INIT
+  // ============================================================
 
   async init() {
     this.aplicarConfigAdmin();
+
     if (window.initUI) {
       window.initUI(this);
     }
+
     await this.cargarCatalogo();
+
     ORB.setReady(false);
     this.els.resultsStatus.textContent = "Esperando consulta";
   },
