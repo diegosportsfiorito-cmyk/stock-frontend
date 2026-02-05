@@ -26,13 +26,19 @@
               <span class="connection-dot" id="connection-dot"></span>
               <span>Estado conexión</span>
             </div>
+
+            <div class="header-switch-row">
+              <label class="orb-mode-switch">
+                <span>Modo día</span>
+                <label class="switch small">
+                  <input id="toggle-dark" type="checkbox" />
+                  <span class="slider"></span>
+                </label>
+                <span>Noche</span>
+              </label>
+            </div>
           </div>
         </header>
-
-        <!-- BANNER -->
-        <div class="app-banner">
-          VERSION RESTAURADA — ORB 3D ULTRA + SCANNER AVANZADO
-        </div>
 
         <!-- SEARCH + ORB -->
         <section class="search-card">
@@ -46,8 +52,43 @@
                 autocomplete="off"
               />
             </div>
+          </div>
 
-            <button id="btn-scanner-nativo" class="scanner-btn" title="Scanner"></button>
+          <!-- BOTONES SCANNER + MODO SIMPLE/COMPLETO -->
+          <div class="scanner-row">
+            <div class="scanner-buttons">
+              <button id="btn-scanner-interno-1" class="scanner-big-btn" title="Scanner interno 1">
+                🔍 1
+              </button>
+              <button id="btn-scanner-interno-2" class="scanner-big-btn" title="Scanner interno 2">
+                🔍 2
+              </button>
+              <button
+                id="btn-scanner-externo-preferido"
+                class="scanner-big-btn"
+                title="Barcode Scanner+"
+              >
+                📱+
+              </button>
+              <button
+                id="btn-scanner-externo-selector"
+                class="scanner-big-btn"
+                title="Elegir app de scanner"
+              >
+                📱?
+              </button>
+            </div>
+
+            <div class="scanner-mode-switch">
+              <label class="orb-mode-switch">
+                <span>Simple</span>
+                <label class="switch small">
+                  <input id="modo-scanner-toggle" type="checkbox" />
+                  <span class="slider"></span>
+                </label>
+                <span>Completo</span>
+              </label>
+            </div>
           </div>
 
           <div class="search-filters-row">
@@ -72,26 +113,6 @@
 
               <div id="orb" class="orb-container">
                 <div id="orb-core" class="orb-ultra"></div>
-              </div>
-
-              <div class="orb-actions-bottom">
-                <label class="orb-mode-switch">
-                  <span>Simple</span>
-                  <label class="switch small">
-                    <input id="modo-scanner-toggle" type="checkbox" />
-                    <span class="slider"></span>
-                  </label>
-                  <span>Completo</span>
-                </label>
-
-                <label class="orb-mode-switch">
-                  <span>Modo día</span>
-                  <label class="switch small">
-                    <input id="toggle-dark" type="checkbox" />
-                    <span class="slider"></span>
-                  </label>
-                  <span>Noche</span>
-                </label>
               </div>
             </div>
           </div>
@@ -118,7 +139,7 @@
 
           <!-- FILTROS AVANZADOS -->
           <div id="filtros-panel" class="filtros-panel">
-            <div class="filtros-row">
+            <div class="filtros-row filtros-row-stack">
               <select id="filtro-marca" class="filtro-select">
                 <option value="">Marca</option>
               </select>
@@ -126,7 +147,7 @@
                 <option value="">Rubro</option>
               </select>
             </div>
-            <div class="filtros-row">
+            <div class="filtros-row filtros-row-stack">
               <input
                 id="filtro-talle-desde"
                 type="number"
@@ -191,6 +212,12 @@
             <canvas id="stockChart"></canvas>
           </aside>
         </section>
+
+        <!-- FOOTER -->
+        <footer class="app-footer">
+          <div class="footer-logo">SCL</div>
+          <div class="footer-text">Salas Creative Lab</div>
+        </footer>
       </div>
     </div>
 
@@ -265,8 +292,8 @@
     <!-- TOAST -->
     <div id="toast" class="toast"></div>
 
-    <!-- LIBS (si usás Chart.js) -->
-    <!-- <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> -->
+    <!-- LIBS -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <!-- SCRIPTS -->
     <script src="orb_engine.js"></script>
