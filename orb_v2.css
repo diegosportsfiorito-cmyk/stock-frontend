@@ -24,7 +24,7 @@
 }
 
 /* ============================================================
-   MODO ULTRA (default)
+   MODO ULTRA (default) — UNIFICADO
    ============================================================ */
 
 .orb-ultra {
@@ -36,7 +36,7 @@
   box-shadow:
     0 0 calc(var(--orb-halo-strength) * 1px) var(--orb-color),
     inset 0 0 40px rgba(255, 255, 255, 0.2);
-  animation: orbPulse 1.2s infinite ease-in-out;
+  animation: orbBreath 2.4s infinite ease-in-out;
 }
 
 /* ============================================================
@@ -44,11 +44,7 @@
    ============================================================ */
 
 .orb-3d {
-  background: radial-gradient(
-    circle at 25% 25%,
-    var(--orb-color),
-    #000
-  );
+  background: radial-gradient(circle at 25% 25%, var(--orb-color), #000);
   box-shadow:
     0 0 calc(var(--orb-halo-strength) * 1px) var(--orb-color),
     inset -20px -20px 40px rgba(0, 0, 0, 0.6),
@@ -66,31 +62,41 @@
     var(--orb-color),
     var(--orb-color-dark)
   );
-  box-shadow:
-    0 0 calc(var(--orb-halo-strength) * 0.6px) var(--orb-color);
+  box-shadow: 0 0 calc(var(--orb-halo-strength) * 0.6px) var(--orb-color);
 }
 
 /* ============================================================
    ESTADOS (controlados por orb_engine.js)
    ============================================================ */
 
-.orb-loading {
-  animation: orbLoading 0.45s infinite linear;
-  filter: brightness(1.6) saturate(1.4);
-}
-
 .orb-ready {
   filter: brightness(1.2);
   box-shadow:
-    0 0 calc(var(--orb-halo-strength) * 1.2px) var(--orb-color),
+    0 0 40px rgba(96, 165, 250, 0.6),
+    inset 0 0 30px rgba(255, 255, 255, 0.2);
+}
+
+.orb-loading {
+  animation: orbLoading 0.45s infinite linear;
+  filter: brightness(1.6) saturate(1.4);
+  box-shadow:
+    0 0 60px rgba(96, 165, 250, 0.9),
     inset 0 0 40px rgba(255, 255, 255, 0.25);
+}
+
+.orb-listening {
+  background: radial-gradient(circle at 30% 20%, #22c55e, #065f46);
+  box-shadow:
+    0 0 60px rgba(34, 197, 94, 0.9),
+    inset 0 0 40px rgba(255, 255, 255, 0.25);
+  animation: orbListeningPulse 0.7s infinite ease-in-out;
 }
 
 .orb-error {
   background: radial-gradient(circle at 30% 20%, #ff4f6a, #7c0000);
   box-shadow:
-    0 0 calc(var(--orb-halo-strength) * 1px) #ff4f6a,
-    inset 0 0 40px rgba(255, 255, 255, 0.1);
+    0 0 60px rgba(239, 68, 68, 0.9),
+    inset 0 0 40px rgba(255, 255, 255, 0.15);
   animation: orbErrorPulse 0.8s infinite ease-in-out;
 }
 
@@ -98,10 +104,10 @@
    ANIMACIONES
    ============================================================ */
 
-@keyframes orbPulse {
-  0% { transform: scale(1); }
-  50% { transform: scale(1.04); }
-  100% { transform: scale(1); }
+@keyframes orbBreath {
+  0% { transform: scale(1); filter: brightness(1); }
+  50% { transform: scale(1.06); filter: brightness(1.25); }
+  100% { transform: scale(1); filter: brightness(1); }
 }
 
 @keyframes orbRotate {
@@ -119,7 +125,17 @@
   50% { transform: scale(1.05); filter: brightness(1.4); }
   100% { transform: scale(1); filter: brightness(1); }
 }
-/* ORB — integración modo día */
+
+@keyframes orbListeningPulse {
+  0% { transform: scale(1); filter: brightness(1); }
+  50% { transform: scale(1.06); filter: brightness(1.5); }
+  100% { transform: scale(1); filter: brightness(1); }
+}
+
+/* ============================================================
+   MODO DÍA — INTEGRACIÓN COMPLETA
+   ============================================================ */
+
 body.light-mode #orb-core.orb-ultra {
   background: radial-gradient(circle at 30% 20%, #60a5fa, #3b82f6);
   box-shadow:
@@ -137,38 +153,4 @@ body.light-mode #orb-core.orb-error {
 
 body.light-mode #orb-core.orb-listening {
   background: radial-gradient(circle at 30% 20%, #22c55e, #15803d);
-}
-/* Animación premium suave */
-@keyframes orbBreath {
-  0% { transform: scale(1); filter: brightness(1); }
-  50% { transform: scale(1.06); filter: brightness(1.25); }
-  100% { transform: scale(1); filter: brightness(1); }
-}
-
-.orb-ultra {
-  animation: orbBreath 2.4s infinite ease-in-out;
-}
-/* Halo inteligente según estado */
-.orb-ready {
-  box-shadow:
-    0 0 40px rgba(96, 165, 250, 0.6),
-    inset 0 0 30px rgba(255, 255, 255, 0.2);
-}
-
-.orb-loading {
-  box-shadow:
-    0 0 60px rgba(96, 165, 250, 0.9),
-    inset 0 0 40px rgba(255, 255, 255, 0.25);
-}
-
-.orb-listening {
-  box-shadow:
-    0 0 60px rgba(34, 197, 94, 0.9),
-    inset 0 0 40px rgba(255, 255, 255, 0.25);
-}
-
-.orb-error {
-  box-shadow:
-    0 0 60px rgba(239, 68, 68, 0.9),
-    inset 0 0 40px rgba(255, 255, 255, 0.15);
 }
