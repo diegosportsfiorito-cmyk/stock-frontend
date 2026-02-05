@@ -2,26 +2,30 @@
 // APP CORE — Búsqueda, filtros, render, conexión backend
 // ============================================================
 
-const API_URL = "https://stock-backend-1-0upi.onrender.com/query";
-
 const AppCore = {
+  config: {
+    backendUrl:
+      localStorage.getItem("backendUrl") ||
+      "https://stock-backend-1-0upi.onrender.com/query",
+    modoDefecto: localStorage.getItem("modoDefecto") || "simple",
+  },
+
   els: {
     searchInput: document.getElementById("search-input"),
-    btnClear: document.getElementById("btn-clear"),
-    btnCopy: document.getElementById("btn-copy"),
-    btnFiltros: document.getElementById("btn-filtros"),
-    filtrosPanel: document.getElementById("filtros-panel"),
+    chkSoloStock: document.getElementById("chk-solo-stock"),
     filtroMarca: document.getElementById("filtro-marca"),
     filtroRubro: document.getElementById("filtro-rubro"),
     filtroTalleDesde: document.getElementById("filtro-talle-desde"),
     filtroTalleHasta: document.getElementById("filtro-talle-hasta"),
+    filtrosPanel: document.getElementById("filtros-panel"),
     btnAplicarFiltros: document.getElementById("btn-aplicar-filtros"),
-    chkSoloStock: document.getElementById("chk-solo-stock"),
     resultsContainer: document.getElementById("results-container"),
     resultsStatus: document.getElementById("results-status"),
-    btnStop: document.getElementById("btn-stop"),
-    orb: document.getElementById("orb"),
-    stockChartCanvas: document.getElementById("stockChart"),
+    metricArticulos: document.getElementById("metric-articulos-value"),
+    metricPares: document.getElementById("metric-pares-value"),
+    metricAlertas: document.getElementById("metric-alertas-value"),
+    metricValorizado: document.getElementById("metric-valorizado-value"),
+    connectionDot: document.getElementById("connection-dot"),
   },
 
   state: {
@@ -49,30 +53,55 @@ const AppCore = {
   },
 
   formatNumber(n) {
-    return Number(n).toLocaleString("es-AR");
+    return Number(n || 0).toLocaleString("es-AR");
   },
 
   setConnectionStatus(ok) {
-    const dot = document.querySelector(".connection-dot");
-    if (!dot) return;
-    dot.style.background = ok ? "#3ddc84" : "#ff4f6a";
+    if (!this.els.connectionDot) return;
+    this.els.connectionDot.classList.toggle("online", ok);
+  },
+
+  // ------------------ Indicadores ------------------
+
+  actualizarIndicadores(items) {
+    let articulos = items.length;
+    let pares = 0;
+    let alertas = 0;
+    let valorizado = 0;
+
+    items.forEach((item) => {
+      let totalItem = 0;
+      item.talles.forEach((t) => {
+        pares += t.stock;
+        totalItem += t.stock;
+      });
+      if (item.alerta) alertas++;
+      valorizado += item.valorizado || 0;
+    });
+
+    this.els.metricArticulos.textContent = this.formatNumber(articulos);
+    this.els.metricPares.textContent = this.formatNumber(pares);
+    this.els.metricAlertas.textContent = this.formatNumber(alertas);
+    this.els.metricValorizado.textContent = `$${this.formatNumber(valorizado)}`;
+
+    if (window.actualizarIndicadores) {
+      window.actualizarIndicadores({ articulos, pares, alertas, valorizado });
+    }
   },
 
   // ------------------ Render resultados ------------------
 
   renderResultados(items) {
-    const els = this.els;
-
     if (this.state.modoTabla) {
       this.renderResultadosTabla(items);
       return;
     }
 
-    els.resultsContainer.innerHTML = "";
+    const cont = this.els.resultsContainer;
+    cont.innerHTML = "";
 
     if (!items.length) {
-      els.resultsContainer.innerHTML =
-        '<div class="results-empty">Sin resultados.</div>';
+      cont.innerHTML = '<div class="results-empty">Sin resultados.</div>';
       return;
     }
 
@@ -100,17 +129,16 @@ const AppCore = {
         )}</div>
       `;
 
-      els.resultsContainer.appendChild(div);
+      cont.appendChild(div);
     });
   },
 
   renderResultadosTabla(items) {
-    const els = this.els;
-    els.resultsContainer.innerHTML = "";
+    const cont = this.els.resultsContainer;
+    cont.innerHTML = "";
 
     if (!items.length) {
-      els.resultsContainer.innerHTML =
-        '<div class="results-empty">Sin resultados.</div>';
+      cont.innerHTML = '<div class="results-empty">Sin resultados.</div>';
       return;
     }
 
@@ -165,25 +193,24 @@ const AppCore = {
       </div>
     `;
 
-    els.resultsContainer.innerHTML = html;
+    cont.innerHTML = html;
   },
 
   // ------------------ Filtros ------------------
 
   actualizarFiltrosDesdeUI() {
-    const els = this.els;
-    this.state.filtros.marca = els.filtroMarca.value || null;
-    this.state.filtros.rubro = els.filtroRubro.value || null;
-    this.state.filtros.talleDesde = els.filtroTalleDesde.value || null;
-    this.state.filtros.talleHasta = els.filtroTalleHasta.value || null;
+    this.state.filtros.marca = this.els.filtroMarca.value || null;
+    this.state.filtros.rubro = this.els.filtroRubro.value || null;
+    this.state.filtros.talleDesde = this.els.filtroTalleDesde.value || null;
+    this.state.filtros.talleHasta = this.els.filtroTalleHasta.value || null;
   },
 
   async buscarPorFiltros() {
-    const els = this.els;
+    this.actualizarFiltrosDesdeUI();
 
     const body = {
       question: "",
-      solo_stock: els.chkSoloStock.checked,
+      solo_stock: this.els.chkSoloStock.checked,
       filtros_globales: true,
       marca: this.state.filtros.marca,
       rubro: this.state.filtros.rubro,
@@ -192,10 +219,10 @@ const AppCore = {
     };
 
     ORB.setLoading(true);
-    els.resultsStatus.textContent = "Filtrando…";
+    this.els.resultsStatus.textContent = "Filtrando…";
 
     try {
-      const res = await fetch(API_URL, {
+      const res = await fetch(this.config.backendUrl, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
@@ -205,16 +232,18 @@ const AppCore = {
       this.state.items = data.items || [];
 
       this.renderResultados(this.state.items);
-      actualizarDashboard(this.state.items);
-      actualizarIndicadores(this.state.items);
+      if (window.actualizarDashboard) {
+        window.actualizarDashboard(this.state.items);
+      }
+      this.actualizarIndicadores(this.state.items);
 
       this.setConnectionStatus(true);
       ORB.setReady(true);
-      els.resultsStatus.textContent = `${this.state.items.length} resultados`;
+      this.els.resultsStatus.textContent = `${this.state.items.length} resultados`;
     } catch (err) {
       this.setConnectionStatus(false);
       ORB.setError(true);
-      els.resultsStatus.textContent = "Error de conexión";
+      this.els.resultsStatus.textContent = "Error de conexión";
     } finally {
       ORB.setLoading(false);
     }
@@ -223,8 +252,6 @@ const AppCore = {
   // ------------------ Catálogo (marca/rubro) ------------------
 
   async cargarCatalogo() {
-    const els = this.els;
-
     try {
       const body = {
         question: "",
@@ -236,7 +263,7 @@ const AppCore = {
         talle_hasta: null,
       };
 
-      const res = await fetch(API_URL, {
+      const res = await fetch(this.config.backendUrl, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
@@ -252,11 +279,11 @@ const AppCore = {
         ...new Set(this.state.catalogItems.map((i) => i.rubro).filter(Boolean)),
       ];
 
-      els.filtroMarca.innerHTML =
+      this.els.filtroMarca.innerHTML =
         '<option value="">Marca</option>' +
         marcas.map((m) => `<option value="${m}">${m}</option>`).join("");
 
-      els.filtroRubro.innerHTML =
+      this.els.filtroRubro.innerHTML =
         '<option value="">Rubro</option>' +
         rubros.map((r) => `<option value="${r}">${r}</option>`).join("");
 
@@ -269,8 +296,7 @@ const AppCore = {
   // ------------------ Búsqueda principal ------------------
 
   async buscar(force = false) {
-    const els = this.els;
-    const query = els.searchInput.value.trim();
+    const query = this.els.searchInput.value.trim();
     if (!query) {
       this.showToast("Ingresá un código o descripción");
       return;
@@ -283,15 +309,15 @@ const AppCore = {
     this.state.currentAbort = new AbortController();
 
     ORB.setLoading(true);
-    els.resultsStatus.textContent = "Buscando…";
+    this.els.resultsStatus.textContent = "Buscando…";
 
     try {
       const body = {
         question: query,
-        solo_stock: els.chkSoloStock.checked,
+        solo_stock: this.els.chkSoloStock.checked,
       };
 
-      const res = await fetch(API_URL, {
+      const res = await fetch(this.config.backendUrl, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
@@ -304,17 +330,19 @@ const AppCore = {
       this.state.items = data.items || [];
 
       this.renderResultados(this.state.items);
-      actualizarDashboard(this.state.items);
-      actualizarIndicadores(this.state.items);
+      if (window.actualizarDashboard) {
+        window.actualizarDashboard(this.state.items);
+      }
+      this.actualizarIndicadores(this.state.items);
 
       this.setConnectionStatus(true);
       ORB.setReady(true);
-      els.resultsStatus.textContent = `${this.state.items.length} resultados`;
+      this.els.resultsStatus.textContent = `${this.state.items.length} resultados`;
     } catch (err) {
       if (err.name !== "AbortError") {
         this.setConnectionStatus(false);
         ORB.setError(true);
-        els.resultsStatus.textContent = "Error de conexión";
+        this.els.resultsStatus.textContent = "Error de conexión";
       }
     } finally {
       ORB.setLoading(false);
@@ -323,17 +351,18 @@ const AppCore = {
 
   // ------------------ Utilidades UI ------------------
 
-  limpiarPantalla: function () {
-    const els = this.els;
-    if (els.searchInput) els.searchInput.value = "";
-    els.resultsContainer.innerHTML = "";
-    els.resultsStatus.textContent = "Esperando consulta";
+  limpiarPantalla() {
+    this.els.searchInput.value = "";
+    this.els.resultsContainer.innerHTML = "";
+    this.els.resultsStatus.textContent = "Esperando consulta";
     ORB.setReady(false);
-    actualizarIndicadores([]);
-    actualizarDashboard([]);
+    this.actualizarIndicadores([]);
+    if (window.actualizarDashboard) {
+      window.actualizarDashboard([]);
+    }
   },
 
-  copiarResultados: function () {
+  copiarResultados() {
     const text = this.els.resultsContainer.innerText;
     if (!text.trim()) {
       this.showToast("No hay resultados para copiar");
@@ -343,16 +372,39 @@ const AppCore = {
     this.showToast("Copiado");
   },
 
-  stopTodo: function () {
+  stopTodo() {
     if (this.state.currentAbort) this.state.currentAbort.abort();
     ORB.setError(true);
     this.els.resultsStatus.textContent = "Cancelado";
   },
 
+  // ------------------ Config admin ------------------
+
+  aplicarConfigAdmin() {
+    const url = localStorage.getItem("backendUrl");
+    const modo = localStorage.getItem("modoDefecto");
+
+    if (url) this.config.backendUrl = url;
+    if (modo) {
+      this.config.modoDefecto = modo;
+      if (window.setModoScanner) {
+        window.setModoScanner(modo);
+      }
+    }
+
+    const inputUrl = document.getElementById("admin-backend-url");
+    const selectModo = document.getElementById("admin-modo-defecto");
+    if (inputUrl) inputUrl.value = this.config.backendUrl;
+    if (selectModo) selectModo.value = this.config.modoDefecto;
+  },
+
   // ------------------ INIT ------------------
 
   async init() {
-    initUI(this);
+    this.aplicarConfigAdmin();
+    if (window.initUI) {
+      window.initUI(this);
+    }
     await this.cargarCatalogo();
     ORB.setReady(false);
     this.els.resultsStatus.textContent = "Esperando consulta";
