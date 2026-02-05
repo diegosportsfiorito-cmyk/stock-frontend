@@ -1,5 +1,5 @@
 // ============================================================
-// SCANNER AVANZADO — Barcode Scanner+
+// SCANNER V3 — Integrado con procesarCodigo()
 // ============================================================
 
 let modoScanner = "simple";
@@ -45,13 +45,15 @@ function cargarEnInput(texto) {
 }
 
 // ------------------------------------------------------------
-// START SCANNER (BOTÓN PRINCIPAL)
+// START SCANNER
 // ------------------------------------------------------------
 async function startScanner() {
   if (scannerActivo) return;
 
   if (!("BarcodeDetector" in window)) {
-    alert("Tu dispositivo no soporta BarcodeDetector.");
+    alert(
+      "Este navegador no soporta el scanner nativo. Más adelante podemos integrar Quagga2 o ZXing."
+    );
     return;
   }
 
@@ -70,13 +72,15 @@ async function startScanner() {
 
   try {
     streamActual = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode: "environment" }
+      video: { facingMode: "environment" },
     });
 
     video.srcObject = streamActual;
     await video.play();
 
-    const detector = new BarcodeDetector({ formats: ["ean_13", "code_128", "ean_8", "upc_a"] });
+    const detector = new BarcodeDetector({
+      formats: ["ean_13", "code_128", "ean_8", "upc_a"],
+    });
 
     const loop = async () => {
       if (!scannerActivo) return;
@@ -98,7 +102,6 @@ async function startScanner() {
     };
 
     loop();
-
   } catch (err) {
     console.error("Error al iniciar cámara:", err);
     alert("No se pudo acceder a la cámara.");
@@ -122,7 +125,7 @@ function stopScanner() {
 }
 
 // ------------------------------------------------------------
-// PROCESAR RETORNO DEL SCANNER NATIVO (ANDROID)
+// PROCESAR RETORNO NATIVO (?code=...)
 // ------------------------------------------------------------
 (function procesarRetornoNativo() {
   const params = new URLSearchParams(window.location.search);
@@ -130,8 +133,6 @@ function stopScanner() {
 
   if (code) {
     procesarCodigo(code);
-
-    // Limpiar la URL para evitar re-procesar
     history.replaceState({}, "", window.location.origin + window.location.pathname);
   }
 })();
