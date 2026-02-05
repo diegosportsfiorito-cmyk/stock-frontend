@@ -1,200 +1,306 @@
 <!DOCTYPE html>
 <html lang="es">
-<head>
-  <meta charset="UTF-8" />
-  <title>STOCK IA PRO — Asistente inteligente</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <link rel="stylesheet" href="styles_v2.css" />
-</head>
-<body>
-  <div id="app">
-    <header class="app-header">
-      <div class="logo-title">
-        <div class="logo-orb" id="orb-core"></div>
-        <div class="title-block">
-          <h1>STOCK IA PRO</h1>
-          <h2>Asistente inteligente de stock</h2>
-        </div>
-      </div>
-      <div class="header-controls">
-        <label class="switch">
-          <input type="checkbox" id="modo-voz-switch" />
-          <span class="slider"></span>
-        </label>
-        <span class="switch-label">Modo voz</span>
+  <head>
+    <meta charset="UTF-8" />
+    <title>STOCK IA PRO — Asistente inteligente</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-        <button id="help-button" class="icon-button" title="Ayuda">
-          ❓
-        </button>
-      </div>
-    </header>
+    <link rel="stylesheet" href="styles_v2.css" />
+    <link rel="stylesheet" href="orb_v2.css" />
+  </head>
 
-    <main class="main-layout">
-      <section class="search-panel">
-        <div class="search-row">
-          <input
-            type="text"
-            id="search-input"
-            placeholder="Escribí o hablá: marca, rubro, talle, rango, color, precio, código..."
-            autocomplete="off"
-          />
-          <button id="mic-button" class="icon-button primary" title="Hablar">
-            🎙️
-          </button>
-        </div>
+  <body>
+    <div class="app-shell">
+      <div class="app-container">
+        <!-- HEADER -->
+        <header class="app-header">
+          <div class="branding">
+            <div class="brand-orb-mini">IA</div>
+            <div>
+              <div class="brand-title">STOCK IA PRO</div>
+              <div class="brand-subtitle">Asistente inteligente de stock</div>
+            </div>
+          </div>
 
-        <div class="search-toggles">
-          <div class="toggle-group">
-            <label class="toggle">
-              <input type="checkbox" id="view-simple" checked />
-              <span>Simple</span>
-            </label>
-            <label class="toggle">
-              <input type="checkbox" id="view-complete" />
-              <span>Completo</span>
-            </label>
-            <label class="toggle">
-              <input type="checkbox" id="solo-stock" checked />
+          <div class="header-right">
+            <div class="connection-indicator">
+              <span class="connection-dot" id="connection-dot"></span>
+              <span>Estado conexión</span>
+            </div>
+
+            <!-- SWITCH MODO VOZ -->
+            <div class="header-switch-row">
+              <label class="orb-mode-switch">
+                <span>Voz</span>
+                <label class="switch small">
+                  <input id="modo-voz-switch" type="checkbox" />
+                  <span class="slider"></span>
+                </label>
+              </label>
+            </div>
+
+            <!-- SWITCH DÍA/NOCHE -->
+            <div class="header-switch-row">
+              <label class="orb-mode-switch">
+                <span>Modo día</span>
+                <label class="switch small">
+                  <input id="toggle-dark" type="checkbox" />
+                  <span class="slider"></span>
+                </label>
+                <span>Noche</span>
+              </label>
+            </div>
+
+            <!-- BOTÓN AYUDA -->
+            <button id="help-button" class="btn-help" title="Ayuda">❓</button>
+          </div>
+        </header>
+
+        <!-- SEARCH + ORB -->
+        <section class="search-card">
+          <div class="search-row">
+            <div class="search-input-wrapper">
+              <input
+                id="search-input"
+                type="text"
+                class="search-input"
+                placeholder="Buscar artículo, marca, rubro, talle, color, precio..."
+                autocomplete="off"
+              />
+            </div>
+
+            <!-- MIC A LA DERECHA DEL INPUT -->
+            <button id="mic-button" class="mic-btn" title="Hablar">🎙️</button>
+          </div>
+
+          <!-- SCANNERS -->
+          <div class="scanner-row">
+            <div class="scanner-buttons">
+              <button id="btn-scanner-interno-1" class="scanner-big-btn" title="Scanner interno A">
+                📷
+              </button>
+              <button id="btn-scanner-interno-2" class="scanner-big-btn" title="Scanner interno B">
+                🎦
+              </button>
+              <button id="btn-scanner-externo-preferido" class="scanner-big-btn" title="Scanner externo">
+                📲
+              </button>
+              <button id="btn-scanner-externo-selector" class="scanner-big-btn" title="Elegir app de scanner">
+                🧭
+              </button>
+            </div>
+
+            <div class="scanner-mode-switch">
+              <label class="orb-mode-switch">
+                <span>Simple</span>
+                <label class="switch small">
+                  <input id="modo-scanner-toggle" type="checkbox" />
+                  <span class="slider"></span>
+                </label>
+                <span>Completo</span>
+              </label>
+            </div>
+          </div>
+
+          <div class="search-filters-row">
+            <button id="btn-filtros" class="btn-secondary">Filtros</button>
+
+            <label class="solo-stock">
               <span>Solo con stock</span>
+              <label class="switch">
+                <input id="chk-solo-stock" type="checkbox" />
+                <span class="slider"></span>
+              </label>
             </label>
           </div>
-        </div>
 
-        <div class="scanner-row">
-          <button id="scanner-interno-a" class="scanner-button" title="Scanner interno">
-            <div class="scanner-icon">📷</div>
-            <div class="scanner-label">Interno</div>
-          </button>
-          <button id="scanner-interno-b" class="scanner-button" title="Scanner interno alternativo">
-            <div class="scanner-icon">🎦</div>
-            <div class="scanner-label">Interno 2</div>
-          </button>
-          <button id="scanner-externo" class="scanner-button" title="Scanner externo">
-            <div class="scanner-icon">📲</div>
-            <div class="scanner-label">Externo</div>
-          </button>
-          <button id="scanner-selector" class="scanner-button" title="Elegir app de scanner">
-            <div class="scanner-icon">🧭</div>
-            <div class="scanner-label">Elegir app</div>
-          </button>
-        </div>
+          <!-- ORB -->
+          <div class="orb-zone">
+            <div class="orb-actions-ring">
+              <div class="orb-actions-top">
+                <button id="btn-clear" class="orb-action-btn" title="Limpiar">🧹</button>
+                <button id="btn-copy" class="orb-action-btn" title="Copiar resultados">📋</button>
+                <button id="btn-stop" class="orb-action-btn" title="Detener">⏹</button>
+              </div>
 
-        <div class="metrics-grid">
-          <div class="metric-card">
-            <div class="metric-label">Artículos</div>
-            <div class="metric-value" id="metric-articulos">0</div>
+              <div id="orb" class="orb-container">
+                <div id="orb-core" class="orb-ultra"></div>
+              </div>
+            </div>
           </div>
-          <div class="metric-card">
-            <div class="metric-label">Pares</div>
-            <div class="metric-value" id="metric-pares">0</div>
-          </div>
-          <div class="metric-card">
-            <div class="metric-label">Alertas</div>
-            <div class="metric-value" id="metric-alertas">0</div>
-          </div>
-          <div class="metric-card">
-            <div class="metric-label">Valorizado</div>
-            <div class="metric-value" id="metric-valorizado">$0</div>
-          </div>
-        </div>
 
-        <section class="filters-panel">
-          <h3>Filtros avanzados</h3>
-          <div class="filters-row">
-            <div class="filter-field">
-              <label>Rubro</label>
-              <select id="filtro-rubro"></select>
+          <!-- MÉTRICAS -->
+          <div class="metrics-row">
+            <div class="metric-card" id="metric-articulos">
+              <div class="metric-label">Artículos</div>
+              <div class="metric-value" id="metric-articulos-value">0</div>
             </div>
-            <div class="filter-field">
-              <label>Talle desde</label>
-              <input type="number" id="filtro-talle-desde" />
+
+            <div class="metric-card" id="metric-pares">
+              <div class="metric-label">Pares</div>
+              <div class="metric-value" id="metric-pares-value">0</div>
             </div>
-            <div class="filter-field">
-              <label>Talle hasta</label>
-              <input type="number" id="filtro-talle-hasta" />
+
+            <div class="metric-card" id="metric-alertas">
+              <div class="metric-label">Alertas</div>
+              <div class="metric-value" id="metric-alertas-value">0</div>
             </div>
-            <div class="filter-field">
-              <label>Marca</label>
-              <select id="filtro-marca"></select>
+
+            <div class="metric-card" id="metric-valorizado">
+              <div class="metric-label">Valorizado</div>
+              <div class="metric-value" id="metric-valorizado-value">$0</div>
             </div>
           </div>
-          <button id="aplicar-filtros" class="primary">Aplicar filtros</button>
+
+          <!-- FILTROS AVANZADOS -->
+          <div id="filtros-panel" class="filtros-panel">
+            <div class="filtros-row filtros-row-stack">
+              <select id="filtro-marca" class="filtro-select">
+                <option value="">Marca</option>
+              </select>
+
+              <select id="filtro-rubro" class="filtro-select">
+                <option value="">Rubro</option>
+              </select>
+            </div>
+
+            <div class="filtros-row filtros-row-stack">
+              <input id="filtro-talle-desde" type="number" class="filtro-input" placeholder="Talle desde" />
+              <input id="filtro-talle-hasta" type="number" class="filtro-input" placeholder="Talle hasta" />
+            </div>
+
+            <div class="filtros-row">
+              <button id="btn-aplicar-filtros" class="btn-secondary">Aplicar filtros</button>
+            </div>
+          </div>
         </section>
-      </section>
 
-      <section class="results-panel">
-        <div class="results-header">
-          <div>
-            <h3>Resultados</h3>
-            <span id="result-count">0 resultados</span>
+        <!-- MAIN ROW -->
+        <section class="main-row">
+          <!-- RESULTADOS -->
+          <div class="results-card">
+            <div class="results-header">
+              <div class="results-title">Resultados</div>
+
+              <div class="results-right">
+                <div class="results-view-toggle">
+                  <button id="btn-vista-tabla" class="view-btn" title="Vista tabla">Tabla</button>
+                  <button id="btn-vista-tarjetas" class="view-btn active" title="Vista tarjetas">Tarjetas</button>
+                </div>
+              </div>
+            </div>
+
+            <div id="results-status" class="results-status">Esperando consulta</div>
+            <div id="results-container"></div>
           </div>
-        </div>
 
-        <div class="results-table-wrapper">
-          <table class="results-table" id="results-table">
-            <thead>
-              <tr>
-                <th>Código</th>
-                <th>Descripción</th>
-                <th>Marca</th>
-                <th>Rubro</th>
-                <th>Color</th>
-                <th>Talle</th>
-                <th>Precio</th>
-                <th>Stock</th>
-              </tr>
-            </thead>
-            <tbody id="results-body"></tbody>
-          </table>
-        </div>
-      </section>
+          <!-- DASHBOARD -->
+          <aside class="dashboard-card">
+            <div class="dashboard-header">
+              <div class="dashboard-title">Visión rápida</div>
+              <div class="dashboard-subtitle">Distribución por talle / marca / rubro</div>
+            </div>
 
-      <aside class="sidebar-panel">
-        <section class="quick-view">
-          <h3>Visión rápida</h3>
-          <div class="quick-view-controls">
-            <label>Distribución por</label>
-            <select id="quick-view-mode">
+            <select id="chart-mode" class="filtro-select">
               <option value="talle">Por talle</option>
               <option value="marca">Por marca</option>
               <option value="rubro">Por rubro</option>
             </select>
-          </div>
-          <canvas id="quick-view-chart"></canvas>
+
+            <canvas id="stockChart"></canvas>
+          </aside>
         </section>
-      </aside>
-    </main>
-  </div>
 
-  <!-- Modales -->
-  <div id="modal-mic" class="modal hidden">
-    <div class="modal-content">
-      <h3>Hablar con STOCK IA PRO</h3>
-      <p id="modal-mic-status">Escuchando...</p>
-      <button id="modal-mic-cancel" class="secondary">Cancelar</button>
+        <!-- FOOTER -->
+        <footer class="app-footer">
+          <div class="footer-logo">SCL</div>
+          <div class="footer-text">Salas Creative Lab</div>
+        </footer>
+      </div>
     </div>
-  </div>
 
-  <div id="modal-help" class="modal hidden">
-    <div class="modal-content help-content">
-      <h3>¿Qué puedo pedir?</h3>
-      <p>Podés pedir cosas como:</p>
-      <ul>
-        <li>“Mostrame todo ADIDAS con stock”</li>
-        <li>“Pelotas BALONES talle 5”</li>
-        <li>“T46” → todo lo de talle 46</li>
-        <li>“T46 a T47” → talles entre 46 y 47</li>
-        <li>“P46” → precio 46</li>
-        <li>“ADIDAS AZUL” → marca + color</li>
-        <li>“¿Qué puedes hacer?” → la IA te explica sus capacidades</li>
-      </ul>
-      <button id="modal-help-close" class="primary">Cerrar</button>
+    <!-- PANEL ADMIN -->
+    <div id="admin-panel">
+      <h2>Panel administrador</h2>
+
+      <h3>Backend</h3>
+      <label>
+        URL backend
+        <input id="admin-backend-url" type="text" />
+      </label>
+
+      <label>
+        Modo por defecto
+        <select id="admin-modo-defecto">
+          <option value="simple">Simple</option>
+          <option value="completo">Completo</option>
+        </select>
+      </label>
+
+      <h3>ORB — Apariencia</h3>
+
+      <label>
+        Color día
+        <input id="orb-color" type="color" />
+      </label>
+
+      <label>
+        Color noche
+        <input id="orb-color-dark" type="color" />
+      </label>
+
+      <label>
+        Tamaño ORB (px)
+        <input id="orb-size" type="range" min="80" max="200" />
+      </label>
+
+      <label>
+        Intensidad halo
+        <input id="orb-halo" type="range" min="0" max="120" />
+      </label>
+
+      <label>
+        Modo visual
+        <select id="orb-mode">
+          <option value="ultra">Ultra</option>
+          <option value="3d">3D</option>
+          <option value="classic">Classic</option>
+        </select>
+      </label>
+
+      <label>
+        Presets
+        <select id="orb-presets">
+          <option value="default">Default</option>
+          <option value="plasma">Plasma</option>
+          <option value="fuego">Fuego</option>
+          <option value="neon">Neón</option>
+          <option value="minimal">Minimal</option>
+        </select>
+      </label>
+
+      <button id="orb-reset">Reset ORB</button>
+
+      <div class="admin-actions">
+        <button id="admin-guardar">Guardar</button>
+        <button id="admin-cerrar">Cerrar</button>
+      </div>
     </div>
-  </div>
 
-  <script src="scanner_v3.js"></script>
-  <script src="orb_engine.js"></script>
-  <script src="ui_engine.js"></script>
-  <script src="app_core.js"></script>
-</body>
+    <!-- TOAST -->
+    <div id="toast" class="toast"></div>
+
+    <!-- LIBS -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://unpkg.com/@zxing/library@latest"></script>
+
+    <!-- SCRIPTS -->
+    <script src="orb_engine.js"></script>
+    <script src="orb_admin_engine.js"></script>
+    <script src="dashboard_engine.js"></script>
+    <script src="indicators_engine.js"></script>
+    <script src="scanner_v3.js"></script>
+    <script src="app_core.js"></script>
+    <script src="ui_engine.js"></script>
+  </body>
 </html>
