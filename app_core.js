@@ -75,11 +75,15 @@ const AppCore = {
 
     items.forEach((item) => {
       let totalItem = 0;
+      let tieneNegativos = false;
+
       item.talles.forEach((t) => {
         pares += t.stock;
         totalItem += t.stock;
+        if (t.stock < 0) tieneNegativos = true;
       });
-      if (item.alerta) alertas++;
+
+      if (item.alerta || tieneNegativos) alertas++;
       valorizado += item.valorizado || 0;
     });
 
@@ -127,12 +131,14 @@ const AppCore = {
       }
         </div>
         <div class="result-talles">${talles}</div>
-        <div class="result-sub">Precio público: $${this.formatNumber(
-          item.precio
-        )}</div>
-        <div class="result-sub">Valorizado: $${this.formatNumber(
-          item.valorizado
-        )}</div>
+        <div class="result-precios">
+          <span class="precio-publico">Precio público: $${this.formatNumber(
+            item.precio
+          )}</span>
+          <span class="precio-valorizado">Valorizado: $${this.formatNumber(
+            item.valorizado
+          )}</span>
+        </div>
       `;
 
       cont.appendChild(div);
@@ -229,13 +235,27 @@ const AppCore = {
     if (matchRango) {
       talleDesde = parseInt(matchRango[1]);
       talleHasta = parseInt(matchRango[2]);
-      return { filtros_globales: true, marca, rubro, talleDesde, talleHasta, question: "" };
+      return {
+        filtros_globales: true,
+        marca,
+        rubro,
+        talleDesde,
+        talleHasta,
+        question: "",
+      };
     }
 
     const matchTalle = q.match(/^T?(\d{1,3})$/);
     if (matchTalle) {
       const t = parseInt(matchTalle[1]);
-      return { filtros_globales: true, marca, rubro, talleDesde: t, talleHasta: t, question: "" };
+      return {
+        filtros_globales: true,
+        marca,
+        rubro,
+        talleDesde: t,
+        talleHasta: t,
+        question: "",
+      };
     }
 
     const matchPrecio = q.match(/^P(\d{2,6})$/);
