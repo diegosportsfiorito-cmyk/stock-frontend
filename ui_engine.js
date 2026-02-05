@@ -46,15 +46,23 @@ function initUI(app) {
   const btnStop = document.getElementById("btn-stop");
   if (safe(btnStop)) btnStop.addEventListener("click", () => app.stopTodo());
 
-  const btnScanner = document.getElementById("btn-scanner-nativo");
-  if (safe(btnScanner)) {
-    btnScanner.addEventListener("click", () => {
-      if (typeof startScanner === "function") {
-        startScanner();
-      } else {
-        app.showToast("Scanner no disponible");
-      }
-    });
+  // NUEVOS BOTONES DE SCANNER
+  const btnScanner1 = document.getElementById("btn-scanner-interno-1");
+  const btnScanner2 = document.getElementById("btn-scanner-interno-2");
+  const btnScannerExtPref = document.getElementById("btn-scanner-externo-preferido");
+  const btnScannerExtSel = document.getElementById("btn-scanner-externo-selector");
+
+  if (btnScanner1 && typeof startScannerInterno1 === "function") {
+    btnScanner1.addEventListener("click", () => startScannerInterno1());
+  }
+  if (btnScanner2 && typeof startScannerInterno2 === "function") {
+    btnScanner2.addEventListener("click", () => startScannerInterno2());
+  }
+  if (btnScannerExtPref && typeof startScannerExternoPreferido === "function") {
+    btnScannerExtPref.addEventListener("click", () => startScannerExternoPreferido());
+  }
+  if (btnScannerExtSel && typeof startScannerExternoSelector === "function") {
+    btnScannerExtSel.addEventListener("click", () => startScannerExternoSelector());
   }
 
   // Modo scanner simple/completo
