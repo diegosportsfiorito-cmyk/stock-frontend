@@ -1,5 +1,5 @@
 // ============================================================
-// DASHBOARD ENGINE — Gráfico dinámico de distribución
+// DASHBOARD ENGINE — Gráfico dinámico de distribución (Torta)
 // ============================================================
 
 let chartInstance = null;
@@ -70,35 +70,39 @@ function actualizarDashboard(items) {
   if (chartInstance) chartInstance.destroy();
 
   chartInstance = new Chart(ctx, {
-    type: "bar",
+    type: "pie",
     data: {
       labels: dataset.labels,
       datasets: [
         {
-          label: "Unidades",
           data: dataset.data,
-          backgroundColor: "rgba(79, 140, 255, 0.6)",
-          borderColor: "rgba(79, 140, 255, 1)",
+          backgroundColor: [
+            "#4fc3f7",
+            "#81c784",
+            "#ffb74d",
+            "#e57373",
+            "#ba68c8",
+            "#ffd54f",
+            "#4db6ac",
+            "#9575cd",
+            "#f06292",
+            "#64b5f6",
+            "#aed581",
+            "#ff8a65"
+          ],
           borderWidth: 1,
+          borderColor: "#111827"
         }
       ]
     },
     options: {
       responsive: true,
       plugins: {
-        legend: { display: false }
-      },
-      scales: {
-        x: {
-          ticks: {
+        legend: {
+          position: "bottom",
+          labels: {
             color: "#9ca3af",
-            font: { size: 10 }
-          }
-        },
-        y: {
-          ticks: {
-            color: "#9ca3af",
-            font: { size: 10 }
+            font: { size: 12 }
           }
         }
       }
