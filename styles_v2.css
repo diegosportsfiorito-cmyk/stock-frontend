@@ -853,6 +853,7 @@ input:checked + .slider:before {
     align-items: flex-start;
   }
 }
+
 /* ============================================================
    MODAL DE AYUDA — CENTRADO + OVERLAY
 ============================================================ */
