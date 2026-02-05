@@ -47,11 +47,9 @@
               />
             </div>
 
-            <button id="btn-scanner-nativo" class="scanner-btn" title="Scanner">
-            </button>
+            <button id="btn-scanner-nativo" class="scanner-btn" title="Scanner"></button>
           </div>
 
-          <!-- FILTROS BTN -->
           <div class="search-filters-row">
             <button id="btn-filtros" class="btn-secondary">Filtros</button>
             <label class="solo-stock">
@@ -67,32 +65,13 @@
           <div class="orb-zone">
             <div class="orb-actions-ring">
               <div class="orb-actions-top">
-                <button
-                  id="btn-clear"
-                  class="orb-action-btn"
-                  title="Limpiar"
-                >
-                  🧹
-                </button>
-                <button
-                  id="btn-copy"
-                  class="orb-action-btn"
-                  title="Copiar resultados"
-                >
-                  📋
-                </button>
-                <button
-                  id="btn-stop"
-                  class="orb-action-btn"
-                  title="Detener"
-                >
-                  ⏹
-                </button>
+                <button id="btn-clear" class="orb-action-btn" title="Limpiar">🧹</button>
+                <button id="btn-copy" class="orb-action-btn" title="Copiar resultados">📋</button>
+                <button id="btn-stop" class="orb-action-btn" title="Detener">⏹</button>
               </div>
 
               <div id="orb" class="orb-container">
-                <!-- ORB 3D se maneja desde orb_engine.js + orb_v2.css -->
-                <div id="orb-core"></div>
+                <div id="orb-core" class="orb-ultra"></div>
               </div>
 
               <div class="orb-actions-bottom">
@@ -169,7 +148,7 @@
           </div>
         </section>
 
-        <!-- MAIN ROW: RESULTADOS + DASHBOARD -->
+        <!-- MAIN ROW -->
         <section class="main-row">
           <!-- RESULTADOS -->
           <div class="results-card">
@@ -177,11 +156,7 @@
               <div class="results-title">Resultados</div>
               <div class="results-right">
                 <div class="results-view-toggle">
-                  <button
-                    id="btn-vista-tabla"
-                    class="view-btn"
-                    title="Vista tabla"
-                  >
+                  <button id="btn-vista-tabla" class="view-btn" title="Vista tabla">
                     Tabla
                   </button>
                   <button
@@ -223,7 +198,7 @@
     <div id="admin-panel">
       <h2>Panel administrador</h2>
 
-      <h3>Configuración general</h3>
+      <h3>Backend</h3>
       <label>
         URL backend
         <input id="admin-backend-url" type="text" />
@@ -237,6 +212,50 @@
         </select>
       </label>
 
+      <h3>ORB — Apariencia</h3>
+
+      <label>
+        Color día
+        <input id="orb-color" type="color" />
+      </label>
+
+      <label>
+        Color noche
+        <input id="orb-color-dark" type="color" />
+      </label>
+
+      <label>
+        Tamaño ORB (px)
+        <input id="orb-size" type="range" min="80" max="200" />
+      </label>
+
+      <label>
+        Intensidad halo
+        <input id="orb-halo" type="range" min="0" max="120" />
+      </label>
+
+      <label>
+        Modo visual
+        <select id="orb-mode">
+          <option value="ultra">Ultra</option>
+          <option value="3d">3D</option>
+          <option value="classic">Classic</option>
+        </select>
+      </label>
+
+      <label>
+        Presets
+        <select id="orb-presets">
+          <option value="default">Default</option>
+          <option value="plasma">Plasma</option>
+          <option value="fuego">Fuego</option>
+          <option value="neon">Neón</option>
+          <option value="minimal">Minimal</option>
+        </select>
+      </label>
+
+      <button id="orb-reset">Reset ORB</button>
+
       <div class="admin-actions">
         <button id="admin-guardar">Guardar</button>
         <button id="admin-cerrar">Cerrar</button>
@@ -246,8 +265,12 @@
     <!-- TOAST -->
     <div id="toast" class="toast"></div>
 
+    <!-- LIBS (si usás Chart.js) -->
+    <!-- <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> -->
+
     <!-- SCRIPTS -->
     <script src="orb_engine.js"></script>
+    <script src="orb_admin_engine.js"></script>
     <script src="dashboard_engine.js"></script>
     <script src="indicators_engine.js"></script>
     <script src="scanner_v3.js"></script>
