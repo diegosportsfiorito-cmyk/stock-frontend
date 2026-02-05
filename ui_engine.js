@@ -4,7 +4,6 @@
 
 function initUI(app) {
   const els = app.els;
-
   const safe = (el) => el !== null && el !== undefined;
 
   // ENTER en input + código admin
@@ -165,7 +164,7 @@ function initUI(app) {
     });
   }
 
-  // Click en métricas (opcional: disparar filtros rápidos)
+  // Click en métricas (hook futuro)
   const metricArt = document.getElementById("metric-articulos");
   const metricPares = document.getElementById("metric-pares");
   const metricAlertas = document.getElementById("metric-alertas");
