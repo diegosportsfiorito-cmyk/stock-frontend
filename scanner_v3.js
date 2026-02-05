@@ -1,10 +1,14 @@
 // ============================================================
-// SCANNER V3 — Integrado con procesarCodigo()
+// SCANNER V3 — Integrado con procesarCodigo() y modos
 // ============================================================
 
-let modoScanner = "simple";
+let modoScanner = localStorage.getItem("modoDefecto") || "simple";
 let scannerActivo = false;
 let streamActual = null;
+
+window.setModoScanner = function (modo) {
+  modoScanner = modo === "completo" ? "completo" : "simple";
+};
 
 // ------------------------------------------------------------
 // PROCESAR CÓDIGO
@@ -17,13 +21,16 @@ function procesarCodigo(codigo) {
   }
 
   cargarEnInput(resultado);
+  if (window.AppCore) {
+    AppCore.buscar(true);
+  }
 }
 
 // ------------------------------------------------------------
 // EXTRAER ARTÍCULO (modo simple)
 // ------------------------------------------------------------
 function extraerArticulo(codigo) {
-  const separadores = ["/", "!"];
+  const separadores = ["/", "!", " "];
   let corte = codigo.length;
 
   separadores.forEach((sep) => {
@@ -50,10 +57,8 @@ function cargarEnInput(texto) {
 async function startScanner() {
   if (scannerActivo) return;
 
-  if (!("BarcodeDetector" in window)) {
-    alert(
-      "Este navegador no soporta el scanner nativo. Más adelante podemos integrar Quagga2 o ZXing."
-    );
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    alert("Este dispositivo no permite acceso a la cámara.");
     return;
   }
 
@@ -78,30 +83,37 @@ async function startScanner() {
     video.srcObject = streamActual;
     await video.play();
 
-    const detector = new BarcodeDetector({
-      formats: ["ean_13", "code_128", "ean_8", "upc_a"],
-    });
+    if ("BarcodeDetector" in window) {
+      const detector = new BarcodeDetector({
+        formats: ["ean_13", "code_128", "ean_8", "upc_a"],
+      });
 
-    const loop = async () => {
-      if (!scannerActivo) return;
+      const loop = async () => {
+        if (!scannerActivo) return;
 
-      try {
-        const barcodes = await detector.detect(video);
+        try {
+          const barcodes = await detector.detect(video);
 
-        if (barcodes.length > 0) {
-          const code = barcodes[0].rawValue;
-          procesarCodigo(code);
-          stopScanner();
-          return;
+          if (barcodes.length > 0) {
+            const code = barcodes[0].rawValue;
+            procesarCodigo(code);
+            stopScanner();
+            return;
+          }
+        } catch (err) {
+          console.error("Error detectando código:", err);
         }
-      } catch (err) {
-        console.error("Error detectando código:", err);
-      }
 
-      requestAnimationFrame(loop);
-    };
+        requestAnimationFrame(loop);
+      };
 
-    loop();
+      loop();
+    } else {
+      alert(
+        "Este navegador no soporta el scanner nativo. Podemos integrar ZXing/Quagga2 en una siguiente iteración."
+      );
+      stopScanner();
+    }
   } catch (err) {
     console.error("Error al iniciar cámara:", err);
     alert("No se pudo acceder a la cámara.");
