@@ -776,12 +776,13 @@ input:checked + .slider:before {
   }
 
   .metrics-row {
-    flex-wrap: nowrap;
-    overflow-x: auto;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
   }
 
   .metric-card {
-    min-width: 120px;
+    min-width: 0;
   }
 
   .results-card {
