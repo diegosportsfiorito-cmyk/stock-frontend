@@ -18,6 +18,8 @@
   --transition-med: 0.25s ease-out;
 }
 
+/* reset básico */
+
 *,
 *::before,
 *::after {
@@ -43,30 +45,6 @@ body {
 body.light-mode {
   background: #f5f5f7;
   color: #111;
-}
-
-body.light-mode .app-container {
-  background: #ffffff;
-  border-color: #d1d5db;
-}
-
-body.light-mode .search-card,
-body.light-mode .results-card,
-body.light-mode .metric-card,
-body.light-mode .dashboard-card {
-  background: #ffffff;
-  border-color: #d1d5db;
-}
-
-body.light-mode .search-input {
-  background: #fff;
-  color: #111;
-  border-color: #d1d5db;
-}
-
-body.light-mode .result-item {
-  background: #fff;
-  border-color: #d1d5db;
 }
 
 /* LAYOUT */
@@ -138,8 +116,9 @@ body.light-mode .result-item {
 
 .header-right {
   display: flex;
-  align-items: center;
-  gap: 12px;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
 }
 
 .connection-indicator {
@@ -164,18 +143,11 @@ body.light-mode .result-item {
   box-shadow: 0 0 10px rgba(52, 211, 153, 0.9);
 }
 
-/* BANNER */
-
-.app-banner {
-  font-size: 0.75rem;
-  text-align: center;
-  padding: 6px 10px;
-  border-radius: 999px;
-  background: linear-gradient(90deg, #ef4444, #f97316);
-  color: #fff;
+.header-switch-row {
+  margin-top: 2px;
 }
 
-/* SEARCH + SCANNER */
+/* SEARCH */
 
 .search-card {
   background: var(--card-bg);
@@ -213,43 +185,47 @@ body.light-mode .result-item {
   border-color: var(--accent);
 }
 
-.scanner-btn {
-  width: 38px;
-  height: 38px;
-  border-radius: var(--radius-md);
+/* SCANNER ROW */
+
+.scanner-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.scanner-buttons {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.scanner-big-btn {
+  min-width: 44px;
+  height: 44px;
+  border-radius: 999px;
   border: 1px solid var(--border-soft);
   background: rgba(15, 23, 42, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  color: var(--text-main);
   cursor: pointer;
-  position: relative;
-  transition: background var(--transition-fast), border-color var(--transition-fast);
+  transition: background var(--transition-fast), border-color var(--transition-fast),
+    transform var(--transition-fast);
 }
 
-.scanner-btn:hover {
+.scanner-big-btn:hover {
   background: rgba(30, 64, 175, 0.9);
   border-color: rgba(129, 140, 248, 0.8);
+  transform: translateY(-1px);
 }
 
-.scanner-btn::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  margin: auto;
-  width: 18px;
-  height: 14px;
-  border: 2px solid #e5e7eb;
-  border-radius: 4px;
-}
-
-.scanner-btn::after {
-  content: "";
-  position: absolute;
-  top: 6px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 8px;
-  height: 4px;
-  background: #e5e7eb;
-  border-radius: 2px;
+.scanner-mode-switch {
+  display: flex;
+  align-items: center;
 }
 
 /* FILTROS + SOLO STOCK */
@@ -339,7 +315,7 @@ input:checked + .slider:before {
   transform: translateX(20px);
 }
 
-/* ORB + ANILLO */
+/* ORB + ACCIONES */
 
 .orb-zone {
   display: flex;
@@ -351,34 +327,35 @@ input:checked + .slider:before {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
 }
 
-.orb-actions-top,
-.orb-actions-bottom {
+.orb-actions-top {
   display: flex;
-  gap: 8px;
+  gap: 10px;
   justify-content: center;
 }
 
 .orb-action-btn {
-  width: 32px;
-  height: 32px;
+  width: 40px;
+  height: 40px;
   border-radius: 999px;
   border: 1px solid var(--border-soft);
   background: rgba(15, 23, 42, 0.9);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.8rem;
+  font-size: 1rem;
   color: var(--text-main);
   cursor: pointer;
-  transition: background var(--transition-fast), border-color var(--transition-fast);
+  transition: background var(--transition-fast), border-color var(--transition-fast),
+    transform var(--transition-fast);
 }
 
 .orb-action-btn:hover {
   background: rgba(51, 65, 85, 0.9);
   border-color: rgba(129, 140, 248, 0.8);
+  transform: translateY(-1px);
 }
 
 .orb-container {
@@ -442,6 +419,10 @@ input:checked + .slider:before {
 .filtros-row {
   display: flex;
   gap: 10px;
+}
+
+.filtros-row-stack {
+  flex-direction: column;
 }
 
 .filtro-select,
@@ -736,6 +717,36 @@ input:checked + .slider:before {
   opacity: 1;
 }
 
+/* FOOTER */
+
+.app-footer {
+  margin-top: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.footer-logo {
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  background: radial-gradient(circle at 30% 20%, #4f8cff, #111827);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+}
+
+.footer-text {
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
 /* RESPONSIVE */
 
 @media (max-width: 900px) {
@@ -786,12 +797,17 @@ input:checked + .slider:before {
   }
 
   .orb-action-btn {
-    width: 30px;
-    height: 30px;
+    width: 36px;
+    height: 36px;
   }
 
   .view-btn {
     padding: 4px 8px;
     font-size: 0.7rem;
+  }
+
+  .scanner-row {
+    flex-direction: column;
+    align-items: flex-start;
   }
 }
