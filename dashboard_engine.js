@@ -4,13 +4,40 @@
 
 let chartInstance = null;
 
-// ------------------ Construcción de datasets ------------------
+// ============================================================
+// Normalización de campos
+// ============================================================
+
+function normalizarCampo(v) {
+  if (!v) return "—";
+  const s = String(v).trim().toUpperCase();
+  if (s === "NAN" || s === "NULL" || s === "UNDEFINED") return "—";
+  return v;
+}
+
+// ============================================================
+// Paleta dinámica (infinita)
+// ============================================================
+
+function generarColores(n) {
+  const colores = [];
+  for (let i = 0; i < n; i++) {
+    const hue = (i * 47) % 360;
+    colores.push(`hsl(${hue}, 85%, 55%)`);
+  }
+  return colores;
+}
+
+// ============================================================
+// Construcción de datasets
+// ============================================================
 
 function datasetPorTalle(items) {
   const map = new Map();
   items.forEach(item => {
     item.talles.forEach(t => {
-      map.set(t.talle, (map.get(t.talle) || 0) + t.stock);
+      const key = normalizarCampo(t.talle);
+      map.set(key, (map.get(key) || 0) + t.stock);
     });
   });
 
@@ -25,7 +52,7 @@ function datasetPorMarca(items) {
   items.forEach(item => {
     let total = 0;
     item.talles.forEach(t => total += t.stock);
-    const key = item.marca || "Sin marca";
+    const key = normalizarCampo(item.marca);
     map.set(key, (map.get(key) || 0) + total);
   });
 
@@ -40,7 +67,7 @@ function datasetPorRubro(items) {
   items.forEach(item => {
     let total = 0;
     item.talles.forEach(t => total += t.stock);
-    const key = item.rubro || "Sin rubro";
+    const key = normalizarCampo(item.rubro);
     map.set(key, (map.get(key) || 0) + total);
   });
 
@@ -50,7 +77,9 @@ function datasetPorRubro(items) {
   return { labels, data };
 }
 
-// ------------------ Render del gráfico ------------------
+// ============================================================
+// Render del gráfico
+// ============================================================
 
 function actualizarDashboard(items) {
   const canvas = document.getElementById("stockChart");
@@ -69,6 +98,10 @@ function actualizarDashboard(items) {
 
   if (chartInstance) chartInstance.destroy();
 
+  const colores = generarColores(dataset.labels.length);
+
+  const isLight = document.body.classList.contains("light-mode");
+
   chartInstance = new Chart(ctx, {
     type: "pie",
     data: {
@@ -76,22 +109,9 @@ function actualizarDashboard(items) {
       datasets: [
         {
           data: dataset.data,
-          backgroundColor: [
-            "#ff1744",
-            "#ff9100",
-            "#ffea00",
-            "#00e676",
-            "#00b0ff",
-            "#2979ff",
-            "#651fff",
-            "#d500f9",
-            "#ff4081",
-            "#76ff03",
-            "#00e5ff",
-            "#ff6d00"
-          ],
+          backgroundColor: colores,
           borderWidth: 1,
-          borderColor: "#111827"
+          borderColor: isLight ? "#e5e7eb" : "#111827"
         }
       ]
     },
@@ -101,7 +121,7 @@ function actualizarDashboard(items) {
         legend: {
           position: "bottom",
           labels: {
-            color: "#9ca3af",
+            color: isLight ? "#333" : "#9ca3af",
             font: { size: 12 }
           }
         }
