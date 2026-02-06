@@ -61,12 +61,14 @@ function initUI(app) {
     }
   }
 
+  // Estado inicial
   if (modoVozSwitch && modoVozSwitch.checked) {
     setVoiceUIState("ready");
   } else {
     setVoiceUIState("off");
   }
 
+  // Cambio del switch
   if (modoVozSwitch) {
     modoVozSwitch.addEventListener("change", (e) => {
       const on = e.target.checked;
@@ -83,6 +85,7 @@ function initUI(app) {
     }
   }
 
+  // Dictado por voz
   function startDictado() {
     const SR =
       window.SpeechRecognition || window.webkitSpeechRecognition || null;
