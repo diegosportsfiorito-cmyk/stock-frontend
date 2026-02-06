@@ -1055,3 +1055,51 @@ body.scanner-active {
 .fuente-datos-panel div {
   margin-bottom: 4px;
 }
+/* ============================================================
+   AUTOCOMPLETE — LISTA DE SUGERENCIAS
+============================================================ */
+
+.search-input-wrapper {
+  position: relative;
+}
+
+.autocomplete-list {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  width: 100%;
+  margin-top: 4px;
+  list-style: none;
+  background: rgba(15, 23, 42, 0.98);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-md);
+  max-height: 220px;
+  overflow-y: auto;
+  padding: 4px 0;
+  z-index: 9999;
+}
+
+.autocomplete-list li {
+  padding: 8px 12px;
+  font-size: 0.82rem;
+  color: var(--text-main);
+  cursor: pointer;
+  transition: background var(--transition-fast);
+}
+
+.autocomplete-list li:hover {
+  background: rgba(79, 140, 255, 0.25);
+}
+
+body.light-mode .autocomplete-list {
+  background: #ffffff;
+  border-color: #d1d5db;
+}
+
+body.light-mode .autocomplete-list li {
+  color: #111;
+}
+
+body.light-mode .autocomplete-list li:hover {
+  background: #e5e7eb;
+}
