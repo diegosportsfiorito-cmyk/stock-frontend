@@ -1011,3 +1011,47 @@ body.scanner-active {
   color: #ff8c00;
   font-weight: 700;
 }
+/* ============================================================
+   ACCIONES DE BÚSQUEDA — BOTONES DEBAJO DEL INPUT
+============================================================ */
+
+.search-actions-row {
+  margin-top: -4px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.search-actions-right {
+  display: flex;
+  gap: 10px;
+}
+
+/* ============================================================
+   FUENTE DE DATOS — PANEL DESPLEGABLE
+============================================================ */
+
+.fuente-datos-wrapper {
+  margin-top: 10px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.fuente-datos-panel {
+  margin-top: 8px;
+  padding: 12px;
+  border-radius: var(--radius-md);
+  background: rgba(15, 23, 42, 0.95);
+  border: 1px solid var(--border-soft);
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  display: none;
+  width: 260px;
+}
+
+.fuente-datos-panel.visible {
+  display: block;
+}
+
+.fuente-datos-panel div {
+  margin-bottom: 4px;
+}
