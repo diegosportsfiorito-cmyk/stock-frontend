@@ -1,6 +1,6 @@
 // ============================================================
 // UI ENGINE — Eventos, botones, filtros, vista tabla/tarjetas
-// + dictado, manos libres, scanner overlay, atajos, métricas
+// + dictado, manos libres, scanner overlay, atajos, métricas, autocomplete
 // ============================================================
 
 function initUI(app) {
@@ -15,6 +15,7 @@ function initUI(app) {
   const helpModal = document.getElementById("help-modal");
   const helpClose = document.getElementById("help-close");
   const scannerOverlay = document.getElementById("scanner-overlay");
+  const autoList = document.getElementById("autocomplete-list");
 
   // ============================================================
   // AUDIO — BIP
@@ -40,7 +41,7 @@ function initUI(app) {
   }
 
   // ============================================================
-  // VOZ — Dictado (switch) + Manos libres (mic)
+  // VOZ — Dictado
   // ============================================================
 
   function setVoiceUIState(state) {
@@ -61,14 +62,9 @@ function initUI(app) {
     }
   }
 
-  // Estado inicial
-  if (modoVozSwitch && modoVozSwitch.checked) {
-    setVoiceUIState("ready");
-  } else {
-    setVoiceUIState("off");
-  }
+  if (modoVozSwitch && modoVozSwitch.checked) setVoiceUIState("ready");
+  else setVoiceUIState("off");
 
-  // Cambio del switch
   if (modoVozSwitch) {
     modoVozSwitch.addEventListener("change", (e) => {
       const on = e.target.checked;
@@ -85,10 +81,8 @@ function initUI(app) {
     }
   }
 
-  // Dictado por voz
   function startDictado() {
-    const SR =
-      window.SpeechRecognition || window.webkitSpeechRecognition || null;
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition || null;
 
     if (!SR) {
       app.showToast("Dictado no soportado en este navegador");
@@ -108,6 +102,7 @@ function initUI(app) {
       const text = ev.results[0][0].transcript || "";
       if (els.searchInput) els.searchInput.value = text;
       setVoiceUIState("ready");
+      if (autoList) autoList.innerHTML = "";
       app.buscar(true);
     };
 
@@ -142,6 +137,52 @@ function initUI(app) {
   };
 
   // ============================================================
+  // AUTOCOMPLETADO
+  // ============================================================
+
+  function renderAutocomplete(term) {
+    if (!autoList || !els.searchInput) return;
+    const value = term.trim();
+    if (!value) {
+      autoList.innerHTML = "";
+      return;
+    }
+
+    if (!window.AppCore || !AppCore.getAutocompleteSuggestions) {
+      autoList.innerHTML = "";
+      return;
+    }
+
+    const sugerencias = AppCore.getAutocompleteSuggestions(value);
+    if (!sugerencias.length) {
+      autoList.innerHTML = "";
+      return;
+    }
+
+    autoList.innerHTML = sugerencias
+      .map((s) => `<li data-value="${s}">${s}</li>`)
+      .join("");
+  }
+
+  if (safe(els.searchInput)) {
+    els.searchInput.addEventListener("input", (e) => {
+      renderAutocomplete(e.target.value || "");
+    });
+  }
+
+  if (autoList) {
+    autoList.addEventListener("click", (e) => {
+      const li = e.target;
+      if (li && li.tagName === "LI" && els.searchInput) {
+        const val = li.getAttribute("data-value") || li.textContent || "";
+        els.searchInput.value = val;
+        autoList.innerHTML = "";
+        app.buscar(true);
+      }
+    });
+  }
+
+  // ============================================================
   // ENTER en input + admin
   // ============================================================
 
@@ -154,8 +195,18 @@ function initUI(app) {
           const adminPanel = document.getElementById("admin-panel");
           if (adminPanel) adminPanel.style.display = "flex";
           e.target.value = "";
+          if (autoList) autoList.innerHTML = "";
           app.showToast("Modo administrador activado");
           return;
+        }
+
+        if (autoList && autoList.children.length > 0) {
+          const first = autoList.querySelector("li");
+          if (first) {
+            const v = first.getAttribute("data-value") || first.textContent || "";
+            els.searchInput.value = v;
+            autoList.innerHTML = "";
+          }
         }
 
         app.buscar();
@@ -172,6 +223,7 @@ function initUI(app) {
     orb.addEventListener("click", () => {
       orb.classList.add("orb-pulse");
       setTimeout(() => orb.classList.remove("orb-pulse"), 300);
+      if (autoList) autoList.innerHTML = "";
       app.buscar();
     });
 
@@ -187,7 +239,11 @@ function initUI(app) {
   // ============================================================
 
   const btnClear = document.getElementById("btn-clear");
-  if (safe(btnClear)) btnClear.addEventListener("click", () => app.limpiarPantalla());
+  if (safe(btnClear))
+    btnClear.addEventListener("click", () => {
+      if (autoList) autoList.innerHTML = "";
+      app.limpiarPantalla();
+    });
 
   const btnCopy = document.getElementById("btn-copy");
   if (safe(btnCopy)) btnCopy.addEventListener("click", () => app.copiarResultados());
@@ -430,6 +486,10 @@ function initUI(app) {
     const isInput = ["INPUT", "TEXTAREA"].includes(tag);
 
     if (e.key === "Escape") {
+      if (autoList && autoList.innerHTML.trim()) {
+        autoList.innerHTML = "";
+        return;
+      }
       app.limpiarPantalla();
       return;
     }
