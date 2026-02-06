@@ -26,6 +26,15 @@ const AppCore = {
     metricAlertas: document.getElementById("metric-alertas-value"),
     metricValorizado: document.getElementById("metric-valorizado-value"),
     connectionDot: document.getElementById("connection-dot"),
+    fuenteDatosToggle: document.getElementById("fuente-datos-toggle"),
+    fuenteDatosPanel: document.getElementById("fuente-datos-panel"),
+    fuenteArchivo: document.getElementById("fuente-archivo"),
+    fuenteFecha: document.getElementById("fuente-fecha"),
+    fuenteMarcas: document.getElementById("fuente-marcas"),
+    fuenteRubros: document.getElementById("fuente-rubros"),
+    fuenteArticulos: document.getElementById("fuente-articulos"),
+    fuenteStockTotal: document.getElementById("fuente-stock-total"),
+    fuenteStockNegativo: document.getElementById("fuente-stock-negativo"),
   },
 
   state: {
@@ -40,6 +49,7 @@ const AppCore = {
       talleHasta: null,
     },
     modoTabla: false,
+    resumenCatalogo: null,
   },
 
   // ============================================================
@@ -68,6 +78,40 @@ const AppCore = {
   setConnectionStatus(ok) {
     if (!this.els.connectionDot) return;
     this.els.connectionDot.classList.toggle("online", ok);
+  },
+
+  // ============================================================
+  // TTS — Voz de salida básica sincronizada con ORB
+  // ============================================================
+
+  speakResultados() {
+    if (!("speechSynthesis" in window)) return;
+    if (!this.state.items || !this.state.items.length) return;
+
+    const total = this.state.items.length;
+    const pares = this.state.items.reduce(
+      (acc, item) => acc + item.talles.reduce((s, t) => s + t.stock, 0),
+      0
+    );
+
+    const primer = this.state.items[0];
+    const texto = `Tengo ${total} resultados, con un total de ${pares} unidades. 
+    Primer artículo: ${primer.descripcion || "sin descripción"}, marca ${primer.marca ||
+      "sin marca"}, rubro ${primer.rubro || "sin rubro"}.`;
+
+    try {
+      ORB.setState("orb-listening"); // lo usamos como "hablando" visualmente
+      const utter = new SpeechSynthesisUtterance(texto);
+      utter.lang = "es-AR";
+      utter.onend = () => {
+        ORB.setReady(true);
+      };
+      window.speechSynthesis.cancel();
+      window.speechSynthesis.speak(utter);
+    } catch (e) {
+      // si algo falla, no rompemos nada
+      ORB.setReady(true);
+    }
   },
 
   // ============================================================
@@ -225,7 +269,6 @@ const AppCore = {
     let talleHasta = null;
     let question = "";
 
-    // --- NUEVO: detección de marcas multi‑palabra ---
     const qUpper = q.toUpperCase();
 
     const marcasUpper = marcas.map((m) => m?.toUpperCase?.() || "");
@@ -248,7 +291,6 @@ const AppCore = {
       }
     }
 
-    // --- Rango de talles ---
     const matchRango = q.match(/T?(\d+)\s*A\s*T?(\d+)/);
     if (matchRango) {
       talleDesde = parseInt(matchRango[1]);
@@ -263,7 +305,6 @@ const AppCore = {
       };
     }
 
-    // --- Talle único ---
     const matchTalle = q.match(/^T?(\d{1,3})$/);
     if (matchTalle) {
       const t = parseInt(matchTalle[1]);
@@ -277,18 +318,15 @@ const AppCore = {
       };
     }
 
-    // --- Precio ---
     const matchPrecio = q.match(/^P(\d{2,6})$/);
     if (matchPrecio) {
       return { filtros_globales: false, question: "PRECIO " + matchPrecio[1] };
     }
 
-    // --- Código numérico ---
     if (/^\d{8,14}$/.test(q)) {
       return { filtros_globales: false, question: q };
     }
 
-    // --- Texto libre ---
     question = q;
 
     const usarFiltros =
@@ -358,6 +396,9 @@ const AppCore = {
       this.setConnectionStatus(true);
       ORB.setReady(true);
       this.els.resultsStatus.textContent = `${this.state.items.length} resultados`;
+
+      // TTS después de resultados
+      this.speakResultados();
     } catch (err) {
       if (err.name !== "AbortError") {
         this.setConnectionStatus(false);
@@ -415,12 +456,62 @@ const AppCore = {
       this.setConnectionStatus(true);
       ORB.setReady(true);
       this.els.resultsStatus.textContent = `${this.state.items.length} resultados`;
+
+      this.speakResultados();
     } catch (err) {
       this.setConnectionStatus(false);
       ORB.setError(true);
       this.els.resultsStatus.textContent = "Error de conexión";
     } finally {
       ORB.setLoading(false);
+    }
+  },
+
+  // ============================================================
+  // RESUMEN CATÁLOGO / FUENTE DE DATOS
+  // ============================================================
+
+  calcularResumenCatalogo() {
+    const items = this.state.catalogItems || [];
+    const marcas = new Set();
+    const rubros = new Set();
+    let articulos = items.length;
+    let stockTotal = 0;
+    let stockNegativo = 0;
+
+    items.forEach((item) => {
+      if (item.marca) marcas.add(item.marca);
+      if (item.rubro) rubros.add(item.rubro);
+      let totalItem = 0;
+      (item.talles || []).forEach((t) => {
+        stockTotal += t.stock;
+        totalItem += t.stock;
+      });
+      if (totalItem < 0) stockNegativo++;
+    });
+
+    const resumen = {
+      archivo: "Catálogo remoto",
+      fecha: new Date().toLocaleString("es-AR"),
+      marcas: marcas.size,
+      rubros: rubros.size,
+      articulos,
+      stockTotal,
+      stockNegativo,
+    };
+
+    this.state.resumenCatalogo = resumen;
+
+    if (this.els.fuenteArchivo) {
+      this.els.fuenteArchivo.textContent = resumen.archivo;
+      this.els.fuenteFecha.textContent = resumen.fecha;
+      this.els.fuenteMarcas.textContent = resumen.marcas;
+      this.els.fuenteRubros.textContent = resumen.rubros;
+      this.els.fuenteArticulos.textContent = resumen.articulos;
+      this.els.fuenteStockTotal.textContent = this.formatNumber(
+        resumen.stockTotal
+      );
+      this.els.fuenteStockNegativo.textContent = resumen.stockNegativo;
     }
   },
 
@@ -464,6 +555,7 @@ const AppCore = {
         '<option value="">Rubro</option>' +
         rubros.map((r) => `<option value="${r}">${r}</option>`).join("");
 
+      this.calcularResumenCatalogo();
       this.setConnectionStatus(true);
     } catch (err) {
       this.setConnectionStatus(false);
@@ -532,6 +624,30 @@ const AppCore = {
 
     if (window.initUI) {
       window.initUI(this);
+    }
+
+    // 5 clics en el ORB para abrir admin
+    const orb = document.getElementById("orb-core");
+    const adminPanel = document.getElementById("admin-panel");
+    if (orb && adminPanel) {
+      let orbClicks = 0;
+      orb.addEventListener("click", () => {
+        orbClicks++;
+        if (orbClicks >= 5) {
+          adminPanel.style.display = "flex";
+          orbClicks = 0;
+        }
+        setTimeout(() => {
+          orbClicks = 0;
+        }, 1200);
+      });
+    }
+
+    // Toggle fuente de datos
+    if (this.els.fuenteDatosToggle && this.els.fuenteDatosPanel) {
+      this.els.fuenteDatosToggle.addEventListener("click", () => {
+        this.els.fuenteDatosPanel.classList.toggle("visible");
+      });
     }
 
     await this.cargarCatalogo();
