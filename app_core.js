@@ -122,9 +122,8 @@ const AppCore = {
       div.innerHTML = `
         <div class="result-title">${item.codigo} — ${item.descripcion}</div>
         <div class="result-sub">
-          Marca: ${item.marca || "—"} | Rubro: ${item.rubro || "—"} | Color: ${
-        item.color || "—"
-      }
+          Marca: ${item.marca || "—"} | Rubro: ${item.rubro || "—"} | Color: ${(!item.color || item.color === "nan" || item.color === "NaN") ? "—" : item.color}
+
         </div>
         <div class="result-talles">${talles}</div>
         <div class="result-sub precio-publico">
