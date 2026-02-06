@@ -63,6 +63,18 @@ const AppCore = {
     return valor;
   },
 
+  // normalización fuerte para lógica (parser, índices, autocomplete)
+  normalizarTexto(valor) {
+    if (!valor) return "";
+    return valor
+      .toString()
+      .normalize("NFKD")
+      .replace(/\u00A0/g, " ")
+      .replace(/\s+/g, " ")
+      .trim()
+      .toUpperCase();
+  },
+
   showToast(msg) {
     const toast = document.getElementById("toast");
     if (!toast) return;
@@ -96,21 +108,22 @@ const AppCore = {
 
     const primer = this.state.items[0];
     const texto = `Tengo ${total} resultados, con un total de ${pares} unidades. 
-    Primer artículo: ${primer.descripcion || "sin descripción"}, marca ${primer.marca ||
-      "sin marca"}, rubro ${primer.rubro || "sin rubro"}.`;
+    Primer artículo: ${primer.descripcion || "sin descripción"}, marca ${
+      primer.marca || "sin marca"
+    }, rubro ${primer.rubro || "sin rubro"}.`;
 
     try {
-      ORB.setState("orb-listening"); // lo usamos como "hablando" visualmente
+      if (window.ORB && ORB.setSpeaking) ORB.setSpeaking(true);
       const utter = new SpeechSynthesisUtterance(texto);
       utter.lang = "es-AR";
       utter.onend = () => {
-        ORB.setReady(true);
+        if (window.ORB && ORB.setSpeaking) ORB.setSpeaking(false);
+        else if (window.ORB && ORB.setReady) ORB.setReady(true);
       };
       window.speechSynthesis.cancel();
       window.speechSynthesis.speak(utter);
     } catch (e) {
-      // si algo falla, no rompemos nada
-      ORB.setReady(true);
+      if (window.ORB && ORB.setReady) ORB.setReady(true);
     }
   },
 
@@ -171,7 +184,9 @@ const AppCore = {
         .join(" | ");
 
       div.innerHTML = `
-        <div class="result-title">${this.normalizarCampo(item.codigo)} — ${this.normalizarCampo(item.descripcion)}</div>
+        <div class="result-title">${this.normalizarCampo(
+          item.codigo
+        )} — ${this.normalizarCampo(item.descripcion)}</div>
         <div class="result-sub">
           Marca: ${this.normalizarCampo(item.marca)} |
           Rubro: ${this.normalizarCampo(item.rubro)} |
@@ -258,10 +273,26 @@ const AppCore = {
   // ============================================================
 
   interpretarQuery(raw) {
-    const q = raw.trim().toUpperCase();
+    const q = raw.trim();
+    const qUpper = this.normalizarTexto(q);
 
-    const marcas = [...new Set(this.state.catalogItems.map((i) => i.marca))];
-    const rubros = [...new Set(this.state.catalogItems.map((i) => i.rubro))];
+    // índice normalizado -> crudo
+    const mapMarcas = new Map();
+    const mapRubros = new Map();
+
+    this.state.catalogItems.forEach((i) => {
+      if (i.marca) {
+        const norm = this.normalizarTexto(i.marca);
+        if (norm && !mapMarcas.has(norm)) mapMarcas.set(norm, i.marca);
+      }
+      if (i.rubro) {
+        const norm = this.normalizarTexto(i.rubro);
+        if (norm && !mapRubros.has(norm)) mapRubros.set(norm, i.rubro);
+      }
+    });
+
+    const marcasNorm = Array.from(mapMarcas.keys());
+    const rubrosNorm = Array.from(mapRubros.keys());
 
     let marca = null;
     let rubro = null;
@@ -269,29 +300,23 @@ const AppCore = {
     let talleHasta = null;
     let question = "";
 
-    const qUpper = q.toUpperCase();
-
-    const marcasUpper = marcas.map((m) => m?.toUpperCase?.() || "");
-    const marcasOrdenadas = marcasUpper.sort((a, b) => b.length - a.length);
-
-    for (const m of marcasOrdenadas) {
-      if (m && qUpper.includes(m)) {
-        marca = m;
+    const marcasOrdenadas = marcasNorm.sort((a, b) => b.length - a.length);
+    for (const mNorm of marcasOrdenadas) {
+      if (mNorm && qUpper.includes(mNorm)) {
+        marca = mapMarcas.get(mNorm); // valor crudo para backend
         break;
       }
     }
 
-    const rubrosUpper = rubros.map((r) => r?.toUpperCase?.() || "");
-    const rubrosOrdenados = rubrosUpper.sort((a, b) => b.length - a.length);
-
-    for (const r of rubrosOrdenados) {
-      if (r && qUpper.includes(r)) {
-        rubro = r;
+    const rubrosOrdenados = rubrosNorm.sort((a, b) => b.length - a.length);
+    for (const rNorm of rubrosOrdenados) {
+      if (rNorm && qUpper.includes(rNorm)) {
+        rubro = mapRubros.get(rNorm);
         break;
       }
     }
 
-    const matchRango = q.match(/T?(\d+)\s*A\s*T?(\d+)/);
+    const matchRango = qUpper.match(/T?(\d+)\s*A\s*T?(\d+)/);
     if (matchRango) {
       talleDesde = parseInt(matchRango[1]);
       talleHasta = parseInt(matchRango[2]);
@@ -305,7 +330,7 @@ const AppCore = {
       };
     }
 
-    const matchTalle = q.match(/^T?(\d{1,3})$/);
+    const matchTalle = qUpper.match(/^T?(\d{1,3})$/);
     if (matchTalle) {
       const t = parseInt(matchTalle[1]);
       return {
@@ -318,13 +343,13 @@ const AppCore = {
       };
     }
 
-    const matchPrecio = q.match(/^P(\d{2,6})$/);
+    const matchPrecio = qUpper.match(/^P(\d{2,6})$/);
     if (matchPrecio) {
       return { filtros_globales: false, question: "PRECIO " + matchPrecio[1] };
     }
 
-    if (/^\d{8,14}$/.test(q)) {
-      return { filtros_globales: false, question: q };
+    if (/^\d{8,14}$/.test(qUpper)) {
+      return { filtros_globales: false, question: qUpper };
     }
 
     question = q;
@@ -361,7 +386,7 @@ const AppCore = {
     if (this.state.currentAbort) this.state.currentAbort.abort();
     this.state.currentAbort = new AbortController();
 
-    ORB.setLoading(true);
+    if (window.ORB && ORB.setLoading) ORB.setLoading(true);
     this.els.resultsStatus.textContent = "Buscando…";
 
     const body = {
@@ -394,19 +419,18 @@ const AppCore = {
       this.actualizarIndicadores(this.state.items);
 
       this.setConnectionStatus(true);
-      ORB.setReady(true);
+      if (window.ORB && ORB.setReady) ORB.setReady(true);
       this.els.resultsStatus.textContent = `${this.state.items.length} resultados`;
 
-      // TTS después de resultados
       this.speakResultados();
     } catch (err) {
       if (err.name !== "AbortError") {
         this.setConnectionStatus(false);
-        ORB.setError(true);
+        if (window.ORB && ORB.setError) ORB.setError(true);
         this.els.resultsStatus.textContent = "Error de conexión";
       }
     } finally {
-      ORB.setLoading(false);
+      if (window.ORB && ORB.setLoading) ORB.setLoading(false);
     }
   },
 
@@ -434,7 +458,7 @@ const AppCore = {
       talle_hasta: this.state.filtros.talleHasta,
     };
 
-    ORB.setLoading(true);
+    if (window.ORB && ORB.setLoading) ORB.setLoading(true);
     this.els.resultsStatus.textContent = "Filtrando…";
 
     try {
@@ -454,16 +478,16 @@ const AppCore = {
       this.actualizarIndicadores(this.state.items);
 
       this.setConnectionStatus(true);
-      ORB.setReady(true);
+      if (window.ORB && ORB.setReady) ORB.setReady(true);
       this.els.resultsStatus.textContent = `${this.state.items.length} resultados`;
 
       this.speakResultados();
     } catch (err) {
       this.setConnectionStatus(false);
-      ORB.setError(true);
+      if (window.ORB && ORB.setError) ORB.setError(true);
       this.els.resultsStatus.textContent = "Error de conexión";
     } finally {
-      ORB.setLoading(false);
+      if (window.ORB && ORB.setLoading) ORB.setLoading(false);
     }
   },
 
@@ -540,12 +564,22 @@ const AppCore = {
       const data = await res.json();
       this.state.catalogItems = data.items || [];
 
-      const marcas = [
-        ...new Set(this.state.catalogItems.map((i) => i.marca).filter(Boolean)),
-      ];
-      const rubros = [
-        ...new Set(this.state.catalogItems.map((i) => i.rubro).filter(Boolean)),
-      ];
+      const marcasSet = new Map();
+      const rubrosSet = new Map();
+
+      this.state.catalogItems.forEach((i) => {
+        if (i.marca) {
+          const norm = this.normalizarTexto(i.marca);
+          if (norm && !marcasSet.has(norm)) marcasSet.set(norm, i.marca);
+        }
+        if (i.rubro) {
+          const norm = this.normalizarTexto(i.rubro);
+          if (norm && !rubrosSet.has(norm)) rubrosSet.set(norm, i.rubro);
+        }
+      });
+
+      const marcas = Array.from(marcasSet.values());
+      const rubros = Array.from(rubrosSet.values());
 
       this.els.filtroMarca.innerHTML =
         '<option value="">Marca</option>' +
@@ -563,14 +597,40 @@ const AppCore = {
   },
 
   // ============================================================
+  // AUTOCOMPLETADO — sugerencias desde catálogo
+  // ============================================================
+
+  getAutocompleteSuggestions(term) {
+    const q = this.normalizarTexto(term);
+    if (!q || !this.state.catalogItems.length) return [];
+
+    const sugerencias = new Set();
+
+    this.state.catalogItems.forEach((item) => {
+      const marca = this.normalizarTexto(item.marca);
+      const rubro = this.normalizarTexto(item.rubro);
+      const desc = this.normalizarTexto(item.descripcion);
+      const codigo = this.normalizarTexto(item.codigo);
+
+      if (marca && marca.includes(q)) sugerencias.add(item.marca);
+      if (rubro && rubro.includes(q)) sugerencias.add(item.rubro);
+      if (desc && desc.includes(q)) sugerencias.add(item.descripcion);
+      if (codigo && codigo.includes(q)) sugerencias.add(item.codigo);
+    });
+
+    return Array.from(sugerencias).slice(0, 10);
+  },
+
+  // ============================================================
   // UTILIDADES UI
   // ============================================================
 
   limpiarPantalla() {
     this.els.searchInput.value = "";
+    this.state.lastQuery = "";
     this.els.resultsContainer.innerHTML = "";
     this.els.resultsStatus.textContent = "Esperando consulta";
-    ORB.setReady(false);
+    if (window.ORB && ORB.setReady) ORB.setReady(false);
     this.actualizarIndicadores([]);
     if (window.actualizarDashboard) {
       window.actualizarDashboard([]);
@@ -589,7 +649,7 @@ const AppCore = {
 
   stopTodo() {
     if (this.state.currentAbort) this.state.currentAbort.abort();
-    ORB.setError(true);
+    if (window.ORB && ORB.setError) ORB.setError(true);
     this.els.resultsStatus.textContent = "Cancelado";
   },
 
@@ -652,7 +712,7 @@ const AppCore = {
 
     await this.cargarCatalogo();
 
-    ORB.setReady(false);
+    if (window.ORB && ORB.setReady) ORB.setReady(false);
     this.els.resultsStatus.textContent = "Esperando consulta";
   },
 };
