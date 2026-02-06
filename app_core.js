@@ -178,7 +178,7 @@ const AppCore = {
             <td>${item.descripcion}</td>
             <td>${item.marca || "—"}</td>
             <td>${item.rubro || "—"}</td>
-            <td>${item.color || "—"}</td>
+            <td>${(!item.color || item.color === "nan" || item.color === "NaN") ? "—" : item.color}</td>
             <td>${t.talle}</td>
             <td>$${this.formatNumber(item.precio)}</td>
             <td>${t.stock}</td>
