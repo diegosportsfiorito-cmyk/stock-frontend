@@ -46,6 +46,13 @@ const AppCore = {
   // UTILIDADES
   // ============================================================
 
+  normalizarCampo(valor) {
+    if (!valor) return "—";
+    const v = String(valor).trim().toUpperCase();
+    if (v === "NAN" || v === "NULL" || v === "UNDEFINED") return "—";
+    return valor;
+  },
+
   showToast(msg) {
     const toast = document.getElementById("toast");
     if (!toast) return;
@@ -120,10 +127,11 @@ const AppCore = {
         .join(" | ");
 
       div.innerHTML = `
-        <div class="result-title">${item.codigo} — ${item.descripcion}</div>
+        <div class="result-title">${this.normalizarCampo(item.codigo)} — ${this.normalizarCampo(item.descripcion)}</div>
         <div class="result-sub">
-          Marca: ${item.marca || "—"} | Rubro: ${item.rubro || "—"} | Color: ${(!item.color || item.color === "nan" || item.color === "NaN") ? "—" : item.color}
-
+          Marca: ${this.normalizarCampo(item.marca)} |
+          Rubro: ${this.normalizarCampo(item.rubro)} |
+          Color: ${this.normalizarCampo(item.color)}
         </div>
         <div class="result-talles">${talles}</div>
         <div class="result-sub precio-publico">
@@ -173,11 +181,11 @@ const AppCore = {
 
         html += `
           <tr>
-            <td>${item.codigo}</td>
-            <td>${item.descripcion}</td>
-            <td>${item.marca || "—"}</td>
-            <td>${item.rubro || "—"}</td>
-            <td>${(!item.color || item.color === "nan" || item.color === "NaN") ? "—" : item.color}</td>
+            <td>${this.normalizarCampo(item.codigo)}</td>
+            <td>${this.normalizarCampo(item.descripcion)}</td>
+            <td>${this.normalizarCampo(item.marca)}</td>
+            <td>${this.normalizarCampo(item.rubro)}</td>
+            <td>${this.normalizarCampo(item.color)}</td>
             <td>${t.talle}</td>
             <td>$${this.formatNumber(item.precio)}</td>
             <td>${t.stock}</td>
@@ -202,7 +210,7 @@ const AppCore = {
   },
 
   // ============================================================
-  // PARSER INTELIGENTE
+  // PARSER INTELIGENTE (CORREGIDO)
   // ============================================================
 
   interpretarQuery(raw) {
@@ -217,13 +225,30 @@ const AppCore = {
     let talleHasta = null;
     let question = "";
 
-    const palabras = q.split(/\s+/);
+    // --- NUEVO: detección de marcas multi‑palabra ---
+    const qUpper = q.toUpperCase();
 
-    palabras.forEach((p) => {
-      if (marcas.includes(p)) marca = p;
-      if (rubros.includes(p)) rubro = p;
-    });
+    const marcasUpper = marcas.map((m) => m?.toUpperCase?.() || "");
+    const marcasOrdenadas = marcasUpper.sort((a, b) => b.length - a.length);
 
+    for (const m of marcasOrdenadas) {
+      if (m && qUpper.includes(m)) {
+        marca = m;
+        break;
+      }
+    }
+
+    const rubrosUpper = rubros.map((r) => r?.toUpperCase?.() || "");
+    const rubrosOrdenados = rubrosUpper.sort((a, b) => b.length - a.length);
+
+    for (const r of rubrosOrdenados) {
+      if (r && qUpper.includes(r)) {
+        rubro = r;
+        break;
+      }
+    }
+
+    // --- Rango de talles ---
     const matchRango = q.match(/T?(\d+)\s*A\s*T?(\d+)/);
     if (matchRango) {
       talleDesde = parseInt(matchRango[1]);
@@ -238,6 +263,7 @@ const AppCore = {
       };
     }
 
+    // --- Talle único ---
     const matchTalle = q.match(/^T?(\d{1,3})$/);
     if (matchTalle) {
       const t = parseInt(matchTalle[1]);
@@ -251,17 +277,19 @@ const AppCore = {
       };
     }
 
+    // --- Precio ---
     const matchPrecio = q.match(/^P(\d{2,6})$/);
     if (matchPrecio) {
       return { filtros_globales: false, question: "PRECIO " + matchPrecio[1] };
     }
 
+    // --- Código numérico ---
     if (/^\d{8,14}$/.test(q)) {
       return { filtros_globales: false, question: q };
     }
 
-    let resto = palabras.filter((p) => p !== marca && p !== rubro).join(" ");
-    question = resto.trim();
+    // --- Texto libre ---
+    question = q;
 
     const usarFiltros =
       marca || rubro || talleDesde !== null || talleHasta !== null;
