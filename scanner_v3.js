@@ -224,6 +224,7 @@ async function startScannerInterno1() {
   }
 
   scannerActivo = true;
+  ORB.setLoading(true);
 
   try {
     if (!zxingReader) {
@@ -236,6 +237,7 @@ async function startScannerInterno1() {
     if (!availableDevices.length) {
       alert("No se encontró cámara.");
       scannerActivo = false;
+      ORB.setError(true);
       return;
     }
 
@@ -297,6 +299,7 @@ async function startScannerInterno2() {
   }
 
   scannerActivo = true;
+  ORB.setLoading(true);
 
   try {
     const videoElem = crearOverlayVideo();
@@ -339,6 +342,7 @@ async function startScannerInterno2() {
 // ============================================================
 function stopScannerInterno() {
   scannerActivo = false;
+  ORB.setReady(true);
 
   if (scannerTimeout) {
     clearTimeout(scannerTimeout);
