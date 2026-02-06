@@ -69,8 +69,29 @@
               />
             </div>
 
-            <!-- MIC A LA DERECHA DEL INPUT -->
-            <button id="mic-button" class="mic-btn" title="Hablar">🎙️</button>
+            <!-- OREJA A LA DERECHA DEL INPUT -->
+            <button id="mic-button" class="mic-btn" title="Dictado por voz">
+              👂
+            </button>
+          </div>
+
+          <!-- ACCIONES DE BÚSQUEDA -->
+          <div class="search-actions-row">
+            <div class="search-actions-right">
+              <button id="btn-clear" class="orb-action-btn" title="Limpiar">
+                🧹
+              </button>
+              <button
+                id="btn-copy"
+                class="orb-action-btn"
+                title="Copiar resultados"
+              >
+                📋
+              </button>
+              <button id="btn-stop" class="orb-action-btn" title="Detener">
+                ⏹
+              </button>
+            </div>
           </div>
 
           <!-- ESTADO DE VOZ -->
@@ -138,30 +159,6 @@
           <!-- ORB -->
           <div class="orb-zone">
             <div class="orb-actions-ring">
-              <div class="orb-actions-top">
-                <button
-                  id="btn-clear"
-                  class="orb-action-btn"
-                  title="Limpiar"
-                >
-                  🧹
-                </button>
-                <button
-                  id="btn-copy"
-                  class="orb-action-btn"
-                  title="Copiar resultados"
-                >
-                  📋
-                </button>
-                <button
-                  id="btn-stop"
-                  class="orb-action-btn"
-                  title="Detener"
-                >
-                  ⏹
-                </button>
-              </div>
-
               <div id="orb" class="orb-container">
                 <div id="orb-core" class="orb-ultra"></div>
               </div>
@@ -278,6 +275,31 @@
           </aside>
         </section>
 
+        <!-- FUENTE DE DATOS -->
+        <section class="fuente-datos-wrapper">
+          <button id="fuente-datos-toggle" class="btn-secondary">
+            Fuente de datos
+          </button>
+          <div id="fuente-datos-panel" class="fuente-datos-panel">
+            <div><strong>Archivo:</strong> <span id="fuente-archivo">—</span></div>
+            <div><strong>Fecha:</strong> <span id="fuente-fecha">—</span></div>
+            <div><strong>Marcas:</strong> <span id="fuente-marcas">—</span></div>
+            <div><strong>Rubros:</strong> <span id="fuente-rubros">—</span></div>
+            <div>
+              <strong>Artículos:</strong>
+              <span id="fuente-articulos">—</span>
+            </div>
+            <div>
+              <strong>Stock total:</strong>
+              <span id="fuente-stock-total">—</span>
+            </div>
+            <div>
+              <strong>Stock negativo:</strong>
+              <span id="fuente-stock-negativo">—</span>
+            </div>
+          </div>
+        </section>
+
         <!-- FOOTER -->
         <footer class="app-footer">
           <div class="footer-logo">SCL</div>
@@ -355,8 +377,7 @@
     </div>
 
     <!-- OVERLAY SCANNER -->
-    <div id="scanner-overlay" class="scanner-overlay hidden">
-    </div>
+    <div id="scanner-overlay" class="scanner-overlay hidden"></div>
 
     <!-- MODAL AYUDA SIMPLE -->
     <div id="help-modal" class="help-modal hidden">
@@ -364,7 +385,7 @@
         <h2>Ayuda rápida</h2>
         <ul>
           <li>Escribí o escaneá un código, marca, rubro o talle.</li>
-          <li>Usá el botón 🎙️ para dictar si el modo voz está activo.</li>
+          <li>Usá el botón 👂 para dictar si el modo voz está activo.</li>
           <li>Click en métricas para filtros rápidos (stock, etc.).</li>
           <li>Atajos: ESC limpia, F2 scanner, F3 voz.</li>
         </ul>
@@ -389,4 +410,3 @@
     <script src="ui_engine.js"></script>
   </body>
 </html>
-
