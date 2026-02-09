@@ -11,8 +11,8 @@
 
 /* Contenedor del ORB */
 #orb-core {
-  width: 130px;
-  height: 130px;
+  width: 110px;   /* ← CORREGIDO */
+  height: 110px;  /* ← CORREGIDO */
   border-radius: 50%;
   position: relative;
   margin: auto;
@@ -125,32 +125,9 @@
 }
 
 /* ============================================================
-   MODO DÍA
+   ANILLO — Dial de 8 canales
    ============================================================ */
 
-body.light-mode #orb-core.orb-ultra {
-  background: radial-gradient(circle at 30% 20%, #60a5fa, #3b82f6);
-  box-shadow:
-    0 0 calc(var(--orb-halo-strength) * 0.8px) #60a5fa,
-    inset 0 0 30px rgba(255, 255, 255, 0.25);
-}
-
-body.light-mode #orb-core.orb-ready {
-  filter: brightness(1.15);
-}
-
-body.light-mode #orb-core.orb-error {
-  background: radial-gradient(circle at 30% 20%, #ef4444, #7f1d1d);
-}
-
-body.light-mode #orb-core.orb-listening {
-  background: radial-gradient(circle at 30% 20%, #22c55e, #15803d);
-}
-/* ============================================================
-   ANILLO — Dial de 8 canales (ÚNICO Y CORRECTO)
-   ============================================================ */
-
-/* El contenedor del ORB (padre del anillo) */
 .orb-container {
   position: relative;
   width: 160px;
@@ -160,14 +137,12 @@ body.light-mode #orb-core.orb-listening {
   justify-content: center;
 }
 
-/* Anillo completo */
 .orb-ring {
   position: absolute;
   inset: 0;
   pointer-events: none;
 }
 
-/* Sectores (8) */
 .orb-ring-sector {
   position: absolute;
   width: 100%;
@@ -183,7 +158,6 @@ body.light-mode #orb-core.orb-listening {
   background: rgba(255, 255, 255, 0.15);
 }
 
-/* Iconos */
 .orb-ring-icon {
   position: absolute;
   width: 100%;
@@ -199,33 +173,6 @@ body.light-mode #orb-core.orb-listening {
 /* ============================================================
    MODO DÍA — Ajustes del anillo
    ============================================================ */
-
-body.light-mode .orb-ring-sector.active {
-  background: rgba(0, 0, 0, 0.15);
-}
-/* ============================================================
-   ANIMACIONES — CONTINUACIÓN
-   ============================================================ */
-
-@keyframes orbErrorPulse {
-  0% { transform: scale(1); filter: brightness(1); }
-  50% { transform: scale(1.05); filter: brightness(1.4); }
-  100% { transform: scale(1); filter: brightness(1); }
-}
-
-@keyframes orbListeningPulse {
-  0% { transform: scale(1); filter: brightness(1); }
-  50% { transform: scale(1.06); filter: brightness(1.5); }
-  100% { transform: scale(1); filter: brightness(1); }
-}
-
-/* ============================================================
-   AJUSTES EXTRA PARA MODO DÍA
-   ============================================================ */
-
-body.light-mode .orb-ring-sector {
-  background: transparent;
-}
 
 body.light-mode .orb-ring-sector.active {
   background: rgba(0, 0, 0, 0.15);
