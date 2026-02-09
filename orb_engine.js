@@ -212,4 +212,31 @@
       activate(s.id);
     }
   });
+
+  // ============================================================
+  // API GLOBAL PARA orb_admin_engine.js
+  // ============================================================
+
+  window.ORB = {
+    currentMode: "ultra",
+
+    setBase() {
+      orbCore.className = "orb-ultra";
+    },
+
+    setHalo(value) {
+      document.documentElement.style.setProperty("--orb-halo-strength", value);
+    },
+
+    setMode(mode) {
+      this.currentMode = mode;
+      orbCore.className = "orb-" + mode;
+    },
+
+    reset() {
+      this.currentMode = "ultra";
+      orbCore.className = "orb-ultra";
+      document.documentElement.style.setProperty("--orb-halo-strength", 60);
+    }
+  };
 })();
