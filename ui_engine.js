@@ -209,7 +209,8 @@ function initUI(app) {
           }
         }
 
-        app.buscar();
+        // ENTER siempre dispara búsqueda “real”
+        app.buscar(true);
       }
     });
   }
@@ -224,7 +225,7 @@ function initUI(app) {
       orb.classList.add("orb-pulse");
       setTimeout(() => orb.classList.remove("orb-pulse"), 300);
       if (autoList) autoList.innerHTML = "";
-      app.buscar();
+      app.buscar(true);
     });
 
     orb.addEventListener("dblclick", () => {
@@ -249,7 +250,11 @@ function initUI(app) {
   if (safe(btnCopy)) btnCopy.addEventListener("click", () => app.copiarResultados());
 
   const btnStop = document.getElementById("btn-stop");
-  if (safe(btnStop)) btnStop.addEventListener("click", () => app.stopTodo());
+  if (safe(btnStop))
+    btnStop.addEventListener("click", () => {
+      if (autoList) autoList.innerHTML = "";
+      app.stopTodo();
+    });
 
   // ============================================================
   // SCANNER — overlay
