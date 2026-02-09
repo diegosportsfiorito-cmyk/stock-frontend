@@ -1,125 +1,210 @@
 // ============================================================
-// ORB ENGINE — Estados del ORB (idle / loading / ready / listening / speaking / error)
-// Compatible con: presets, modo día/noche, TTS, admin panel
+// ORB ENGINE — Anillo interactivo (minimalista / iconos / radial)
 // ============================================================
 
-const ORB = {
-  el: document.getElementById("orb-core"),
-  currentState: "idle",
-  currentMode: "ultra", // ultra | 3d | classic
-  haloIntensity: 60,
+(function () {
+  const orb = document.getElementById("orb");
+  const orbCore = document.getElementById("orb-core");
+  if (!orb || !orbCore) return;
 
   // ============================================================
-  // BASE
+  // CONFIGURACIÓN
   // ============================================================
 
-  setBase() {
-    if (!this.el) return;
+  const ringMode = localStorage.getItem("orbRingMode") || "minimalista";
 
-    // Limpia todos los estados
-    this.el.classList.remove(
-      "orb-ultra",
-      "orb-3d",
-      "orb-classic",
-      "orb-loading",
-      "orb-ready",
-      "orb-listening",
-      "orb-speaking",
-      "orb-error"
-    );
+  // Sectores: 3 modos
+  const SECTORS = [
+    { id: "escuchando", start: 0, end: 120 },
+    { id: "manoslibres", start: 120, end: 240 },
+    { id: "modoVisual", start: 240, end: 360 },
+  ];
 
-    // Aplica el modo visual actual
-    if (this.currentMode === "3d") {
-      this.el.classList.add("orb-3d");
-    } else if (this.currentMode === "classic") {
-      this.el.classList.add("orb-classic");
-    } else {
-      this.el.classList.add("orb-ultra");
+  // ============================================================
+  // CREACIÓN DEL ANILLO
+  // ============================================================
+
+  const ring = document.createElement("div");
+  ring.className = "orb-ring";
+  orb.appendChild(ring);
+
+  // Sectores visibles
+  SECTORS.forEach((s, i) => {
+    const seg = document.createElement("div");
+    seg.className = "orb-ring-sector";
+    seg.dataset.sector = s.id;
+    seg.style.setProperty("--i", i);
+    ring.appendChild(seg);
+  });
+
+  // Iconos (solo modo admin)
+  if (ringMode === "iconos") {
+    const icons = {
+      escuchando: "👂",
+      manoslibres: "🎙️",
+      modoVisual: "🌗",
+    };
+
+    SECTORS.forEach((s, i) => {
+      const icon = document.createElement("div");
+      icon.className = "orb-ring-icon";
+      icon.innerHTML = icons[s.id];
+      icon.style.setProperty("--i", i);
+      ring.appendChild(icon);
+    });
+  }
+
+  // ============================================================
+  // RADIAL (solo admin)
+  // ============================================================
+
+  let radialVisible = false;
+
+  function showRadial() {
+    radialVisible = true;
+    ring.classList.add("radial-visible");
+  }
+
+  function hideRadial() {
+    radialVisible = false;
+    ring.classList.remove("radial-visible");
+  }
+
+  if (ringMode === "radial") {
+    orb.addEventListener("mousedown", () => {
+      showRadial();
+    });
+
+    document.addEventListener("mouseup", () => {
+      hideRadial();
+    });
+  }
+
+  // ============================================================
+  // DETECCIÓN DE ÁNGULO
+  // ============================================================
+
+  function getAngleFromEvent(ev) {
+    const rect = orb.getBoundingClientRect();
+    const cx = rect.left + rect.width / 2;
+    const cy = rect.top + rect.height / 2;
+
+    const x = ev.clientX - cx;
+    const y = ev.clientY - cy;
+
+    let angle = Math.atan2(y, x) * (180 / Math.PI);
+    angle = angle < 0 ? angle + 360 : angle;
+
+    return angle;
+  }
+
+  function getSectorFromAngle(angle) {
+    return SECTORS.find((s) => angle >= s.start && angle < s.end);
+  }
+
+  // ============================================================
+  // ILUMINACIÓN DE SECTOR
+  // ============================================================
+
+  function highlightSector(id) {
+    document.querySelectorAll(".orb-ring-sector").forEach((el) => {
+      el.classList.toggle("active", el.dataset.sector === id);
+    });
+  }
+
+  // ============================================================
+  // ACCIONES DE CADA SECTOR
+  // ============================================================
+
+  function activateSector(id) {
+    if (id === "escuchando") {
+      const sw = document.getElementById("modo-voz-switch");
+      if (sw) {
+        sw.checked = !sw.checked;
+        sw.dispatchEvent(new Event("change"));
+      }
     }
 
-    // Aplica halo dinámico
-    document.documentElement.style.setProperty(
-      "--orb-halo-strength",
-      this.haloIntensity
-    );
-  },
-
-  // ============================================================
-  // ESTADOS
-  // ============================================================
-
-  setState(state) {
-    if (!this.el) return;
-
-    this.currentState = state;
-    this.setBase();
-
-    if (state === "loading") {
-      this.el.classList.add("orb-loading");
-    } else if (state === "ready") {
-      this.el.classList.add("orb-ready");
-    } else if (state === "listening") {
-      this.el.classList.add("orb-listening");
-    } else if (state === "speaking") {
-      this.el.classList.add("orb-speaking");
-    } else if (state === "error") {
-      this.el.classList.add("orb-error");
+    if (id === "manoslibres") {
+      if (window.voiceUI && window.voiceUI.setHandsfree) {
+        const current = document.getElementById("btn-handsfree").classList.contains("active");
+        window.voiceUI.setHandsfree(!current);
+      }
     }
-  },
+
+    if (id === "modoVisual") {
+      const sw = document.getElementById("toggle-dark");
+      if (sw) {
+        sw.checked = !sw.checked;
+        sw.dispatchEvent(new Event("change"));
+      }
+    }
+  }
 
   // ============================================================
-  // MÉTODOS PÚBLICOS
+  // EVENTOS DE ARRASTRE
   // ============================================================
 
-  setLoading(v) {
-    this.setState(v ? "loading" : "idle");
-  },
+  let dragging = false;
 
-  setReady(v) {
-    this.setState(v ? "ready" : "idle");
-  },
+  orb.addEventListener("mousedown", (ev) => {
+    dragging = true;
+    const angle = getAngleFromEvent(ev);
+    const sector = getSectorFromAngle(angle);
+    if (sector) highlightSector(sector.id);
+  });
 
-  setListening(v) {
-    this.setState(v ? "listening" : "ready");
-  },
+  document.addEventListener("mousemove", (ev) => {
+    if (!dragging) return;
+    const angle = getAngleFromEvent(ev);
+    const sector = getSectorFromAngle(angle);
+    if (sector) highlightSector(sector.id);
+  });
 
-  setSpeaking(v) {
-    this.setState(v ? "speaking" : "ready");
-  },
+  document.addEventListener("mouseup", (ev) => {
+    if (!dragging) return;
+    dragging = false;
 
-  setError(v) {
-    this.setState(v ? "error" : "idle");
-  },
+    const angle = getAngleFromEvent(ev);
+    const sector = getSectorFromAngle(angle);
+    if (sector) {
+      highlightSector(sector.id);
+      activateSector(sector.id);
+    }
 
-  // ============================================================
-  // MODO VISUAL (desde panel admin)
-  // ============================================================
-
-  setMode(mode) {
-    this.currentMode = mode;
-    this.setBase();
-  },
-
-  // ============================================================
-  // HALO (desde panel admin)
-  // ============================================================
-
-  setHalo(intensity) {
-    this.haloIntensity = intensity;
-    this.setBase();
-  },
+    if (ringMode === "radial") hideRadial();
+  });
 
   // ============================================================
-  // RESET COMPLETO
+  // TOUCH EVENTS (mobile)
   // ============================================================
 
-  reset() {
-    this.currentState = "idle";
-    this.currentMode = "ultra";
-    this.haloIntensity = 60;
-    this.setBase();
-  },
-};
+  orb.addEventListener("touchstart", (ev) => {
+    dragging = true;
+    const t = ev.touches[0];
+    const angle = getAngleFromEvent(t);
+    const sector = getSectorFromAngle(angle);
+    if (sector) highlightSector(sector.id);
+  });
 
-// Exponer global
-window.ORB = ORB;
+  orb.addEventListener("touchmove", (ev) => {
+    if (!dragging) return;
+    const t = ev.touches[0];
+    const angle = getAngleFromEvent(t);
+    const sector = getSectorFromAngle(angle);
+    if (sector) highlightSector(sector.id);
+  });
+
+  orb.addEventListener("touchend", (ev) => {
+    dragging = false;
+    const t = ev.changedTouches[0];
+    const angle = getAngleFromEvent(t);
+    const sector = getSectorFromAngle(angle);
+    if (sector) {
+      highlightSector(sector.id);
+      activateSector(sector.id);
+    }
+
+    if (ringMode === "radial") hideRadial();
+  });
+})();
