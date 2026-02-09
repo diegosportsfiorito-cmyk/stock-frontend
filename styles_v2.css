@@ -1220,3 +1220,6 @@ body.light-mode .autocomplete-list li:hover {
   transform: rotate(calc(var(--i) * 45deg));
   pointer-events: none;
 }
+.search-actions-right {
+  display: none !important;
+}
