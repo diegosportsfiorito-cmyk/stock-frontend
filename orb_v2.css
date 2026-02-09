@@ -186,3 +186,42 @@ body.light-mode #orb-core.orb-listening {
   transform: rotate(calc(var(--i) * 45deg));
   pointer-events: none;
 }
+.orb-container {
+  position: relative;
+  width: 130px;
+  height: 130px;
+  margin: auto;
+}
+
+.orb-ring {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.orb-ring-sector {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  clip-path: polygon(50% 50%, 100% 0, 100% 100%);
+  transform: rotate(calc(var(--i) * 45deg));
+  background: transparent;
+  transition: background 0.15s;
+}
+
+.orb-ring-sector.active {
+  background: rgba(255,255,255,0.15);
+}
+
+.orb-ring-icon {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  font-size: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform: rotate(calc(var(--i) * 45deg));
+  pointer-events: none;
+}
