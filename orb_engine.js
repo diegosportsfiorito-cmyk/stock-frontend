@@ -1,29 +1,14 @@
-// ============================================================
-// ORB ENGINE — Dial de 8 canales
-// ============================================================
-// Canales definidos por Alejandro:
-// 1) stop
-// 2) clear
-// 3) copy
-// 4) daynight
-// 5) help
-// 6) solostock
-// 7) escuchando
-// 8) filtros
-// ============================================================
-
 (function () {
   const orb = document.getElementById("orb");
   const orbCore = document.getElementById("orb-core");
   if (!orb || !orbCore) return;
 
-  // ============================================================
-  // CONFIGURACIÓN
-  // ============================================================
+  // Ajuste crítico: tamaño real del ORB para que el anillo tenga espacio
+  orbCore.style.width = "110px";
+  orbCore.style.height = "110px";
 
   const ringMode = localStorage.getItem("orbRingMode") || "iconos";
 
-  // Sectores en sentido horario desde arriba (0°)
   const SECTORS = [
     { id: "stop", start: 337.5, end: 22.5 },
     { id: "clear", start: 22.5, end: 67.5 },
@@ -45,10 +30,6 @@
     escuchando: "👂",
     filtros: "🎛️",
   };
-
-  // ============================================================
-  // CREACIÓN DEL ANILLO
-  // ============================================================
 
   const ring = document.createElement("div");
   ring.className = "orb-ring";
@@ -72,10 +53,6 @@
       ring.appendChild(icon);
     });
   }
-
-  // ============================================================
-  // DETECCIÓN DE ÁNGULO
-  // ============================================================
 
   function getAngle(ev) {
     const rect = orb.getBoundingClientRect();
@@ -103,24 +80,17 @@
     });
   }
 
-  // ============================================================
-  // ACCIONES DE LOS 8 CANALES
-  // ============================================================
-
   function activate(id) {
     switch (id) {
       case "stop":
         document.getElementById("btn-stop")?.click();
         break;
-
       case "clear":
         document.getElementById("btn-clear")?.click();
         break;
-
       case "copy":
         document.getElementById("btn-copy")?.click();
         break;
-
       case "daynight":
         const sw = document.getElementById("toggle-dark");
         if (sw) {
@@ -128,11 +98,9 @@
           sw.dispatchEvent(new Event("change"));
         }
         break;
-
       case "help":
         document.getElementById("help-button")?.click();
         break;
-
       case "solostock":
         const chk = document.getElementById("chk-solo-stock");
         if (chk) {
@@ -140,7 +108,6 @@
           chk.dispatchEvent(new Event("change"));
         }
         break;
-
       case "escuchando":
         const voz = document.getElementById("modo-voz-switch");
         if (voz) {
@@ -148,16 +115,11 @@
           voz.dispatchEvent(new Event("change"));
         }
         break;
-
       case "filtros":
         document.getElementById("btn-filtros")?.click();
         break;
     }
   }
-
-  // ============================================================
-  // EVENTOS DE ARRASTRE (MOUSE + TOUCH)
-  // ============================================================
 
   let dragging = false;
 
@@ -212,10 +174,6 @@
       activate(s.id);
     }
   });
-
-  // ============================================================
-  // API GLOBAL PARA orb_admin_engine.js
-  // ============================================================
 
   window.ORB = {
     currentMode: "ultra",
