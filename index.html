@@ -137,7 +137,7 @@
             </label>
           </div>
 
-          <!-- ORB + ANILLO -->
+          <!-- ORB (SIN ANILLO) -->
           <div class="orb-zone">
             <div class="orb-actions-ring">
               <div id="orb" class="orb-container">
@@ -198,51 +198,13 @@
         </section>
 
         <!-- ============================================================
-             MAIN ROW
-        ============================================================ -->
-        <section class="main-row">
-          <!-- RESULTADOS -->
-          <div class="results-card">
-            <div class="results-header">
-              <div class="results-title">Resultados</div>
-
-              <div class="results-right">
-                <div class="results-view-toggle">
-                  <button id="btn-vista-tabla" class="view-btn" title="Vista tabla">Tabla</button>
-                  <button id="btn-vista-tarjetas" class="view-btn active" title="Vista tarjetas">Tarjetas</button>
-                </div>
-              </div>
-            </div>
-
-            <div id="results-status" class="results-status">Esperando consulta</div>
-            <div id="results-container"></div>
-          </div>
-
-          <!-- DASHBOARD -->
-          <aside class="dashboard-card">
-            <div class="dashboard-header">
-              <div class="dashboard-title">Visión rápida</div>
-              <div class="dashboard-subtitle">Distribución por talle / marca / rubro</div>
-            </div>
-
-            <select id="chart-mode" class="filtro-select">
-              <option value="talle">Por talle</option>
-              <option value="marca">Por marca</option>
-              <option value="rubro">Por rubro</option>
-            </select>
-
-            <canvas id="stockChart"></canvas>
-          </aside>
-        </section>
-
-        <!-- ============================================================
-             FUENTE DE DATOS
+             FUENTE DE DATOS (DESPLEGABLE)
         ============================================================ -->
         <section class="fuente-datos-wrapper">
           <button id="fuente-datos-toggle" class="btn-secondary">Fuente de datos</button>
 
           <div id="fuente-datos-panel" class="fuente-datos-panel">
-            <div><strong>Archivo:</strong> <span id="fuente-archivo">—</span></div>
+            <div><strong>Archivo original:</strong> <span id="fuente-archivo">—</span></div>
             <div><strong>Fecha:</strong> <span id="fuente-fecha">—</span></div>
             <div><strong>Marcas:</strong> <span id="fuente-marcas">—</span></div>
             <div><strong>Rubros:</strong> <span id="fuente-rubros">—</span></div>
@@ -385,5 +347,29 @@
     <script src="scanner_v3.js?v=3001"></script>
     <script src="app_core.js?v=3001"></script>
     <script src="ui_engine.js?v=3001"></script>
+
+    <!-- ============================================================
+         FUENTE DE DATOS — SCRIPT
+    ============================================================ -->
+    <script>
+      const toggleFuente = document.getElementById("fuente-datos-toggle");
+      const panelFuente = document.getElementById("fuente-datos-panel");
+
+      toggleFuente.addEventListener("click", () => {
+        panelFuente.classList.toggle("visible");
+      });
+
+      window.FUENTE = {
+        setDatos({ archivo, fecha, marcas, rubros, articulos, stockTotal, stockNegativo }) {
+          document.getElementById("fuente-archivo").textContent = archivo;
+          document.getElementById("fuente-fecha").textContent = fecha;
+          document.getElementById("fuente-marcas").textContent = marcas;
+          document.getElementById("fuente-rubros").textContent = rubros;
+          document.getElementById("fuente-articulos").textContent = articulos;
+          document.getElementById("fuente-stock-total").textContent = stockTotal;
+          document.getElementById("fuente-stock-negativo").textContent = stockNegativo;
+        }
+      };
+    </script>
   </body>
 </html>
