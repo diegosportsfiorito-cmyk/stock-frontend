@@ -76,11 +76,19 @@
               <ul id="autocomplete-list" class="autocomplete-list"></ul>
             </div>
 
-            <!-- OREJA -->
+            <!-- MICRÓFONO -->
             <button id="mic-button" class="mic-btn" title="Dictado por voz">
-              👂
+              🎙️
+            </button>
+
+            <!-- MANOS LIBRES -->
+            <button id="btn-handsfree" class="mic-btn" title="Modo manos libres">
+              📢
             </button>
           </div>
+
+          <!-- ESTADO BÚSQUEDA -->
+          <div id="search-status" class="search-status"></div>
 
           <!-- ACCIONES -->
           <div class="search-actions-row">
@@ -149,9 +157,14 @@
               <div class="metric-value" id="metric-pares-value">0</div>
             </div>
 
-            <div class="metric-card" id="metric-alertas">
-              <div class="metric-label">Alertas</div>
-              <div class="metric-value" id="metric-alertas-value">0</div>
+            <div class="metric-card" id="metric-negativos">
+              <div class="metric-label">Negativos</div>
+              <div class="metric-value" id="metric-negativos-value">0</div>
+            </div>
+
+            <div class="metric-card" id="metric-cero">
+              <div class="metric-label">Cero stock</div>
+              <div class="metric-value" id="metric-cero-value">0</div>
             </div>
 
             <div class="metric-card" id="metric-valorizado">
@@ -331,7 +344,7 @@
         <h2>Ayuda rápida</h2>
         <ul>
           <li>Escribí o escaneá un código, marca, rubro o talle.</li>
-          <li>Usá el botón 👂 para dictar si el modo voz está activo.</li>
+          <li>Usá el botón 🎙️ para dictar si el modo voz está activo.</li>
           <li>Click en métricas para filtros rápidos.</li>
           <li>Atajos: ESC limpia, F2 scanner, F3 voz.</li>
         </ul>
