@@ -1,5 +1,15 @@
 // ============================================================
-// ORB ENGINE — Anillo interactivo (minimalista / iconos / radial)
+// ORB ENGINE — Dial de 8 canales
+// ============================================================
+// Canales definidos por Alejandro:
+// 1) stop
+// 2) clear
+// 3) copy
+// 4) daynight
+// 5) help
+// 6) solostock
+// 7) escuchando
+// 8) filtros
 // ============================================================
 
 (function () {
@@ -11,14 +21,30 @@
   // CONFIGURACIÓN
   // ============================================================
 
-  const ringMode = localStorage.getItem("orbRingMode") || "minimalista";
+  const ringMode = localStorage.getItem("orbRingMode") || "iconos";
 
-  // Sectores: 3 modos
+  // Sectores en sentido horario desde arriba (0°)
   const SECTORS = [
-    { id: "escuchando", start: 0, end: 120 },
-    { id: "manoslibres", start: 120, end: 240 },
-    { id: "modoVisual", start: 240, end: 360 },
+    { id: "stop", start: 337.5, end: 22.5 },
+    { id: "clear", start: 22.5, end: 67.5 },
+    { id: "copy", start: 67.5, end: 112.5 },
+    { id: "daynight", start: 112.5, end: 157.5 },
+    { id: "help", start: 157.5, end: 202.5 },
+    { id: "solostock", start: 202.5, end: 247.5 },
+    { id: "escuchando", start: 247.5, end: 292.5 },
+    { id: "filtros", start: 292.5, end: 337.5 },
   ];
+
+  const ICONS = {
+    stop: "⏹",
+    clear: "🧹",
+    copy: "📋",
+    daynight: "🌗",
+    help: "❓",
+    solostock: "📦",
+    escuchando: "👂",
+    filtros: "🎛️",
+  };
 
   // ============================================================
   // CREACIÓN DEL ANILLO
@@ -26,10 +52,9 @@
 
   const ring = document.createElement("div");
   ring.className = "orb-ring";
-  ring.dataset.mode = ringMode; // ← ajuste final
+  ring.dataset.mode = ringMode;
   orb.appendChild(ring);
 
-  // Sectores visibles
   SECTORS.forEach((s, i) => {
     const seg = document.createElement("div");
     seg.className = "orb-ring-sector";
@@ -38,46 +63,13 @@
     ring.appendChild(seg);
   });
 
-  // Iconos (solo modo admin)
   if (ringMode === "iconos") {
-    const icons = {
-      escuchando: "👂",
-      manoslibres: "🎙️",
-      modoVisual: "🌗",
-    };
-
     SECTORS.forEach((s, i) => {
       const icon = document.createElement("div");
       icon.className = "orb-ring-icon";
-      icon.innerHTML = icons[s.id];
+      icon.innerHTML = ICONS[s.id];
       icon.style.setProperty("--i", i);
       ring.appendChild(icon);
-    });
-  }
-
-  // ============================================================
-  // RADIAL (solo admin)
-  // ============================================================
-
-  let radialVisible = false;
-
-  function showRadial() {
-    radialVisible = true;
-    ring.classList.add("radial-visible");
-  }
-
-  function hideRadial() {
-    radialVisible = false;
-    ring.classList.remove("radial-visible");
-  }
-
-  if (ringMode === "radial") {
-    orb.addEventListener("mousedown", () => {
-      showRadial();
-    });
-
-    document.addEventListener("mouseup", () => {
-      hideRadial();
     });
   }
 
@@ -85,7 +77,7 @@
   // DETECCIÓN DE ÁNGULO
   // ============================================================
 
-  function getAngleFromEvent(ev) {
+  function getAngle(ev) {
     const rect = orb.getBoundingClientRect();
     const cx = rect.left + rect.width / 2;
     const cy = rect.top + rect.height / 2;
@@ -94,123 +86,130 @@
     const y = ev.clientY - cy;
 
     let angle = Math.atan2(y, x) * (180 / Math.PI);
-    angle = angle < 0 ? angle + 360 : angle;
-
+    if (angle < 0) angle += 360;
     return angle;
   }
 
-  function getSectorFromAngle(angle) {
-    return SECTORS.find((s) => angle >= s.start && angle < s.end);
+  function getSector(angle) {
+    return SECTORS.find((s) => {
+      if (s.start < s.end) return angle >= s.start && angle < s.end;
+      return angle >= s.start || angle < s.end;
+    });
   }
 
-  // ============================================================
-  // ILUMINACIÓN DE SECTOR
-  // ============================================================
-
-  function highlightSector(id) {
+  function highlight(id) {
     document.querySelectorAll(".orb-ring-sector").forEach((el) => {
       el.classList.toggle("active", el.dataset.sector === id);
     });
   }
 
   // ============================================================
-  // ACCIONES DE CADA SECTOR
+  // ACCIONES DE LOS 8 CANALES
   // ============================================================
 
-  function activateSector(id) {
-    // Escuchando ON/OFF
-    if (id === "escuchando") {
-      const sw = document.getElementById("modo-voz-switch");
-      if (sw) {
-        sw.checked = !sw.checked;
-        sw.dispatchEvent(new Event("change"));
-      }
-    }
+  function activate(id) {
+    switch (id) {
+      case "stop":
+        document.getElementById("btn-stop")?.click();
+        break;
 
-    // Manos libres ON/OFF
-    if (id === "manoslibres") {
-      if (window.voiceUI && window.voiceUI.setHandsfree) {
-        const current = document
-          .getElementById("btn-handsfree")
-          .classList.contains("active");
-        window.voiceUI.setHandsfree(!current);
-      }
-    }
+      case "clear":
+        document.getElementById("btn-clear")?.click();
+        break;
 
-    // Día/Noche
-    if (id === "modoVisual") {
-      const sw = document.getElementById("toggle-dark");
-      if (sw) {
-        sw.checked = !sw.checked;
-        sw.dispatchEvent(new Event("change"));
-      }
+      case "copy":
+        document.getElementById("btn-copy")?.click();
+        break;
+
+      case "daynight":
+        const sw = document.getElementById("toggle-dark");
+        if (sw) {
+          sw.checked = !sw.checked;
+          sw.dispatchEvent(new Event("change"));
+        }
+        break;
+
+      case "help":
+        document.getElementById("help-button")?.click();
+        break;
+
+      case "solostock":
+        const chk = document.getElementById("chk-solo-stock");
+        if (chk) {
+          chk.checked = !chk.checked;
+          chk.dispatchEvent(new Event("change"));
+        }
+        break;
+
+      case "escuchando":
+        const voz = document.getElementById("modo-voz-switch");
+        if (voz) {
+          voz.checked = !voz.checked;
+          voz.dispatchEvent(new Event("change"));
+        }
+        break;
+
+      case "filtros":
+        document.getElementById("btn-filtros")?.click();
+        break;
     }
   }
 
   // ============================================================
-  // EVENTOS DE ARRASTRE (mouse)
+  // EVENTOS DE ARRASTRE (MOUSE + TOUCH)
   // ============================================================
 
   let dragging = false;
 
   orb.addEventListener("mousedown", (ev) => {
     dragging = true;
-    const angle = getAngleFromEvent(ev);
-    const sector = getSectorFromAngle(angle);
-    if (sector) highlightSector(sector.id);
+    const angle = getAngle(ev);
+    const s = getSector(angle);
+    if (s) highlight(s.id);
   });
 
   document.addEventListener("mousemove", (ev) => {
     if (!dragging) return;
-    const angle = getAngleFromEvent(ev);
-    const sector = getSectorFromAngle(angle);
-    if (sector) highlightSector(sector.id);
+    const angle = getAngle(ev);
+    const s = getSector(angle);
+    if (s) highlight(s.id);
   });
 
   document.addEventListener("mouseup", (ev) => {
     if (!dragging) return;
     dragging = false;
-
-    const angle = getAngleFromEvent(ev);
-    const sector = getSectorFromAngle(angle);
-    if (sector) {
-      highlightSector(sector.id);
-      activateSector(sector.id);
+    const angle = getAngle(ev);
+    const s = getSector(angle);
+    if (s) {
+      highlight(s.id);
+      activate(s.id);
     }
-
-    if (ringMode === "radial") hideRadial();
   });
-
-  // ============================================================
-  // EVENTOS TOUCH (mobile)
-  // ============================================================
 
   orb.addEventListener("touchstart", (ev) => {
     dragging = true;
     const t = ev.touches[0];
-    const angle = getAngleFromEvent(t);
-    const sector = getSectorFromAngle(angle);
-    if (sector) highlightSector(sector.id);
+    const angle = getAngle(t);
+    const s = getSector(angle);
+    if (s) highlight(s.id);
   });
 
   orb.addEventListener("touchmove", (ev) => {
     if (!dragging) return;
     const t = ev.touches[0];
-    const angle = getAngleFromEvent(t);
-    const sector = getSectorFromAngle(angle);
-    if (sector) highlightSector(sector.id);
+    const angle = getAngle(t);
+    const s = getSector(angle);
+    if (s) highlight(s.id);
   });
 
   orb.addEventListener("touchend", (ev) => {
     dragging = false;
     const t = ev.changedTouches[0];
-    const angle = getAngleFromEvent(t);
-    const sector = getSectorFromAngle(angle);
-    if (sector) {
-      highlightSector(sector.id);
-      activateSector(sector.id);
+    const angle = getAngle(t);
+    const s = getSector(angle);
+    if (s) {
+      highlight(s.id);
+      activate(s.id);
     }
-
-    if (ringMode === "radial") hideRadial();
   });
 })();
