@@ -11,6 +11,7 @@ const ORB_ADMIN = {
   inputHalo: document.getElementById("orb-halo"),
   inputModo: document.getElementById("orb-mode"),
   inputPresets: document.getElementById("orb-presets"),
+  inputRingMode: document.getElementById("orb-ring-mode"), // ← NUEVO
   btnReset: document.getElementById("orb-reset"),
 
   orbEl: document.getElementById("orb-core"),
@@ -22,6 +23,7 @@ const ORB_ADMIN = {
   cargarConfig() {
     if (!this.orbEl) return;
 
+    // Colores
     this.inputColorDia.value = getComputedStyle(document.documentElement)
       .getPropertyValue("--orb-color")
       .trim();
@@ -30,16 +32,26 @@ const ORB_ADMIN = {
       .getPropertyValue("--orb-color-dark")
       .trim();
 
+    // Tamaño
     const size = parseInt(this.orbEl.style.width || 130);
     this.inputSize.value = size;
 
+    // Halo
     const halo = parseInt(
       getComputedStyle(document.documentElement)
         .getPropertyValue("--orb-halo-strength")
     );
     this.inputHalo.value = halo;
 
+    // Modo visual
     this.inputModo.value = ORB.currentMode;
+
+    // Preset actual
+    this.inputPresets.value = localStorage.getItem("orbPreset") || "default";
+
+    // Modo del anillo (nuevo)
+    const ringMode = localStorage.getItem("orbRingMode") || "minimalista";
+    if (this.inputRingMode) this.inputRingMode.value = ringMode;
   },
 
   // ============================================================
@@ -83,6 +95,12 @@ const ORB_ADMIN = {
       this.aplicarPreset(this.inputPresets.value);
     });
 
+    // Modo del anillo (nuevo)
+    this.inputRingMode?.addEventListener("change", () => {
+      localStorage.setItem("orbRingMode", this.inputRingMode.value);
+      if (window.AppCore) AppCore.showToast("Modo del anillo actualizado");
+    });
+
     // Reset
     this.btnReset?.addEventListener("click", () => {
       this.resetOrb();
@@ -115,6 +133,8 @@ const ORB_ADMIN = {
     this.inputHalo.value = p[2];
     this.inputModo.value = p[3];
 
+    localStorage.setItem("orbPreset", nombre);
+
     if (window.AppCore) AppCore.showToast("Preset aplicado");
   },
 
@@ -137,6 +157,10 @@ const ORB_ADMIN = {
     this.inputHalo.value = 60;
     this.inputModo.value = "ultra";
     this.inputPresets.value = "default";
+
+    // Reset del modo del anillo
+    localStorage.setItem("orbRingMode", "minimalista");
+    if (this.inputRingMode) this.inputRingMode.value = "minimalista";
 
     if (window.AppCore) AppCore.showToast("ORB restaurado");
   },
