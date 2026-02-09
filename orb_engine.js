@@ -26,6 +26,7 @@
 
   const ring = document.createElement("div");
   ring.className = "orb-ring";
+  ring.dataset.mode = ringMode; // ← ajuste final
   orb.appendChild(ring);
 
   // Sectores visibles
@@ -117,6 +118,7 @@
   // ============================================================
 
   function activateSector(id) {
+    // Escuchando ON/OFF
     if (id === "escuchando") {
       const sw = document.getElementById("modo-voz-switch");
       if (sw) {
@@ -125,13 +127,17 @@
       }
     }
 
+    // Manos libres ON/OFF
     if (id === "manoslibres") {
       if (window.voiceUI && window.voiceUI.setHandsfree) {
-        const current = document.getElementById("btn-handsfree").classList.contains("active");
+        const current = document
+          .getElementById("btn-handsfree")
+          .classList.contains("active");
         window.voiceUI.setHandsfree(!current);
       }
     }
 
+    // Día/Noche
     if (id === "modoVisual") {
       const sw = document.getElementById("toggle-dark");
       if (sw) {
@@ -142,7 +148,7 @@
   }
 
   // ============================================================
-  // EVENTOS DE ARRASTRE
+  // EVENTOS DE ARRASTRE (mouse)
   // ============================================================
 
   let dragging = false;
@@ -176,7 +182,7 @@
   });
 
   // ============================================================
-  // TOUCH EVENTS (mobile)
+  // EVENTOS TOUCH (mobile)
   // ============================================================
 
   orb.addEventListener("touchstart", (ev) => {
