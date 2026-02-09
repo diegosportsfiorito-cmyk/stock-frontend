@@ -50,6 +50,10 @@ const AppCore = {
     },
     modoTabla: false,
     resumenCatalogo: null,
+
+    // estados internos de búsqueda
+    buscando: false,
+    cancelado: false,
   },
 
   // ============================================================
@@ -368,7 +372,7 @@ const AppCore = {
   },
 
   // ============================================================
-  // BÚSQUEDA PRINCIPAL
+  // BÚSQUEDA PRINCIPAL (CORREGIDA)
   // ============================================================
 
   async buscar(force = false) {
@@ -381,13 +385,16 @@ const AppCore = {
     if (!force && raw === this.state.lastQuery) return;
     this.state.lastQuery = raw;
 
-    const parsed = this.interpretarQuery(raw);
+    this.state.buscando = true;
+    this.state.cancelado = false;
 
     if (this.state.currentAbort) this.state.currentAbort.abort();
     this.state.currentAbort = new AbortController();
 
     if (window.ORB && ORB.setLoading) ORB.setLoading(true);
     this.els.resultsStatus.textContent = "Buscando…";
+
+    const parsed = this.interpretarQuery(raw);
 
     const body = {
       question: parsed.question || "",
@@ -424,13 +431,18 @@ const AppCore = {
 
       this.speakResultados();
     } catch (err) {
-      if (err.name !== "AbortError") {
+      if (err.name === "AbortError") {
+        this.els.resultsStatus.textContent = "Cancelado";
+      } else {
         this.setConnectionStatus(false);
         if (window.ORB && ORB.setError) ORB.setError(true);
         this.els.resultsStatus.textContent = "Error de conexión";
       }
     } finally {
-      if (window.ORB && ORB.setLoading) ORB.setLoading(false);
+      this.state.buscando = false;
+      if (!this.state.cancelado) {
+        if (window.ORB && ORB.setLoading) ORB.setLoading(false);
+      }
     }
   },
 
@@ -647,10 +659,22 @@ const AppCore = {
     this.showToast("Copiado");
   },
 
+  // ============================================================
+  // STOP (CORREGIDO)
+  // ============================================================
+
   stopTodo() {
-    if (this.state.currentAbort) this.state.currentAbort.abort();
-    if (window.ORB && ORB.setError) ORB.setError(true);
+    this.state.cancelado = true;
+    this.state.buscando = false;
+
+    if (this.state.currentAbort) {
+      this.state.currentAbort.abort();
+    }
+
     this.els.resultsStatus.textContent = "Cancelado";
+
+    if (window.ORB && ORB.setError) ORB.setError(true);
+    if (window.ORB && ORB.setLoading) ORB.setLoading(false);
   },
 
   // ============================================================
