@@ -24,15 +24,11 @@
 }
 
 /* ============================================================
-   MODO ULTRA (default) — UNIFICADO
+   MODO ULTRA (default)
    ============================================================ */
 
 .orb-ultra {
-  background: radial-gradient(
-    circle at 30% 20%,
-    var(--orb-color),
-    var(--orb-color-dark)
-  );
+  background: radial-gradient(circle at 30% 20%, var(--orb-color), var(--orb-color-dark));
   box-shadow:
     0 0 calc(var(--orb-halo-strength) * 1px) var(--orb-color),
     inset 0 0 40px rgba(255, 255, 255, 0.2);
@@ -57,16 +53,12 @@
    ============================================================ */
 
 .orb-classic {
-  background: radial-gradient(
-    circle at 50% 50%,
-    var(--orb-color),
-    var(--orb-color-dark)
-  );
+  background: radial-gradient(circle at 50% 50%, var(--orb-color), var(--orb-color-dark));
   box-shadow: 0 0 calc(var(--orb-halo-strength) * 0.6px) var(--orb-color);
 }
 
 /* ============================================================
-   ESTADOS (controlados por orb_engine.js)
+   ESTADOS
    ============================================================ */
 
 .orb-ready {
@@ -133,7 +125,7 @@
 }
 
 /* ============================================================
-   MODO DÍA — INTEGRACIÓN COMPLETA
+   MODO DÍA
    ============================================================ */
 
 body.light-mode #orb-core.orb-ultra {
@@ -154,51 +146,28 @@ body.light-mode #orb-core.orb-error {
 body.light-mode #orb-core.orb-listening {
   background: radial-gradient(circle at 30% 20%, #22c55e, #15803d);
 }
-.orb-ring {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-}
+/* ============================================================
+   ANILLO — Dial de 8 canales (ÚNICO Y CORRECTO)
+   ============================================================ */
 
-.orb-ring-sector {
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  border-radius: 50%;
-  clip-path: polygon(50% 50%, 100% 0, 100% 100%);
-  transform: rotate(calc(var(--i) * 45deg));
-  background: transparent;
-  transition: background 0.15s;
-}
-
-.orb-ring-sector.active {
-  background: rgba(255,255,255,0.15);
-}
-
-.orb-ring-icon {
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  font-size: 22px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transform: rotate(calc(var(--i) * 45deg));
-  pointer-events: none;
-}
+/* El contenedor del ORB (padre del anillo) */
 .orb-container {
   position: relative;
-  width: 130px;
-  height: 130px;
-  margin: auto;
+  width: 160px;
+  height: 160px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
+/* Anillo completo */
 .orb-ring {
   position: absolute;
   inset: 0;
   pointer-events: none;
 }
 
+/* Sectores (8) */
 .orb-ring-sector {
   position: absolute;
   width: 100%;
@@ -207,13 +176,14 @@ body.light-mode #orb-core.orb-listening {
   clip-path: polygon(50% 50%, 100% 0, 100% 100%);
   transform: rotate(calc(var(--i) * 45deg));
   background: transparent;
-  transition: background 0.15s;
+  transition: background 0.15s ease;
 }
 
 .orb-ring-sector.active {
-  background: rgba(255,255,255,0.15);
+  background: rgba(255, 255, 255, 0.15);
 }
 
+/* Iconos */
 .orb-ring-icon {
   position: absolute;
   width: 100%;
@@ -225,3 +195,42 @@ body.light-mode #orb-core.orb-listening {
   transform: rotate(calc(var(--i) * 45deg));
   pointer-events: none;
 }
+
+/* ============================================================
+   MODO DÍA — Ajustes del anillo
+   ============================================================ */
+
+body.light-mode .orb-ring-sector.active {
+  background: rgba(0, 0, 0, 0.15);
+}
+/* ============================================================
+   ANIMACIONES — CONTINUACIÓN
+   ============================================================ */
+
+@keyframes orbErrorPulse {
+  0% { transform: scale(1); filter: brightness(1); }
+  50% { transform: scale(1.05); filter: brightness(1.4); }
+  100% { transform: scale(1); filter: brightness(1); }
+}
+
+@keyframes orbListeningPulse {
+  0% { transform: scale(1); filter: brightness(1); }
+  50% { transform: scale(1.06); filter: brightness(1.5); }
+  100% { transform: scale(1); filter: brightness(1); }
+}
+
+/* ============================================================
+   AJUSTES EXTRA PARA MODO DÍA
+   ============================================================ */
+
+body.light-mode .orb-ring-sector {
+  background: transparent;
+}
+
+body.light-mode .orb-ring-sector.active {
+  background: rgba(0, 0, 0, 0.15);
+}
+
+/* ============================================================
+   FIN DEL ARCHIVO
+   ============================================================ */
