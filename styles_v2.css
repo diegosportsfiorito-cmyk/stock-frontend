@@ -1103,3 +1103,85 @@ body.light-mode .autocomplete-list li {
 body.light-mode .autocomplete-list li:hover {
   background: #e5e7eb;
 }
+/* ============================================================
+   ORB — ANILLO INTERACTIVO (Minimalista / Iconos / Radial)
+============================================================ */
+
+.orb-container {
+  position: relative;
+  width: 160px;
+  height: 160px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ANILLO BASE */
+.orb-ring {
+  position: absolute;
+  width: 200px;
+  height: 200px;
+  border-radius: 50%;
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* SECTORES (3) */
+.orb-ring-sector {
+  position: absolute;
+  width: 200px;
+  height: 200px;
+  border-radius: 50%;
+  clip-path: polygon(50% 50%, 100% 0, 100% 100%);
+  transform-origin: center;
+  opacity: 0.12;
+  background: var(--accent);
+  transition: opacity 0.2s ease, background 0.2s ease;
+}
+
+.orb-ring-sector:nth-child(1) { transform: rotate(0deg); }
+.orb-ring-sector:nth-child(2) { transform: rotate(120deg); }
+.orb-ring-sector:nth-child(3) { transform: rotate(240deg); }
+
+.orb-ring-sector.active {
+  opacity: 0.35;
+  background: var(--accent);
+}
+
+/* ICONOS (solo modo admin) */
+.orb-ring-icon {
+  position: absolute;
+  font-size: 1.4rem;
+  color: var(--text-main);
+  opacity: 0.85;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+  pointer-events: none;
+}
+
+.orb-ring-icon:nth-child(4) { transform: rotate(0deg) translateY(-85px); }
+.orb-ring-icon:nth-child(5) { transform: rotate(120deg) translateY(-85px); }
+.orb-ring-icon:nth-child(6) { transform: rotate(240deg) translateY(-85px); }
+
+/* RADIAL (aparece solo al mantener presionado) */
+.orb-ring.radial-visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.orb-ring:not(.radial-visible)[data-mode="radial"] {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* ORB PULSE */
+.orb-pulse {
+  animation: orbPulse 0.35s ease-out;
+}
+
+@keyframes orbPulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.08); }
+  100% { transform: scale(1); }
+}
