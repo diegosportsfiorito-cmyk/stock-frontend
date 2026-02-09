@@ -5,8 +5,9 @@
     <title>STOCK IA PRO — Asistente inteligente</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <link rel="stylesheet" href="styles_v2.css" />
-    <link rel="stylesheet" href="orb_v2.css" />
+    <!-- CSS con versión para romper caché -->
+    <link rel="stylesheet" href="styles_v2.css?v=3001" />
+    <link rel="stylesheet" href="orb_v2.css?v=3001" />
   </head>
 
   <body>
@@ -136,12 +137,11 @@
             </label>
           </div>
 
-          <!-- ORB + ANILLO (visual, la lógica va en orb_engine.js) -->
+          <!-- ORB + ANILLO -->
           <div class="orb-zone">
             <div class="orb-actions-ring">
               <div id="orb" class="orb-container">
                 <div id="orb-core" class="orb-ultra"></div>
-                <!-- El anillo se dibuja vía CSS/JS -->
               </div>
             </div>
           </div>
@@ -376,14 +376,14 @@
     <script src="https://unpkg.com/@zxing/library@latest"></script>
 
     <!-- ============================================================
-         SCRIPTS
+         SCRIPTS (con versión para romper caché)
     ============================================================ -->
-    <script src="orb_engine.js"></script>
-    <script src="orb_admin_engine.js"></script>
-    <script src="dashboard_engine.js"></script>
-    <script src="indicators_engine.js"></script>
-    <script src="scanner_v3.js"></script>
-    <script src="app_core.js"></script>
-    <script src="ui_engine.js"></script>
+    <script src="orb_engine.js?v=3001"></script>
+    <script src="orb_admin_engine.js?v=3001"></script>
+    <script src="dashboard_engine.js?v=3001"></script>
+    <script src="indicators_engine.js?v=3001"></script>
+    <script src="scanner_v3.js?v=3001"></script>
+    <script src="app_core.js?v=3001"></script>
+    <script src="ui_engine.js?v=3001"></script>
   </body>
 </html>
