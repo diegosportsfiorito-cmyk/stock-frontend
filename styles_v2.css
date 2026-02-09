@@ -18,8 +18,6 @@
   --transition-med: 0.25s ease-out;
 }
 
-/* RESET */
-
 *,
 *::before,
 *::after {
@@ -47,8 +45,6 @@ body.light-mode {
   color: #111;
 }
 
-/* LAYOUT */
-
 .app-shell {
   min-height: 100vh;
   display: flex;
@@ -72,8 +68,6 @@ body.light-mode {
   overflow: hidden;
   z-index: 1;
 }
-
-/* HEADER */
 
 .app-header {
   display: flex;
@@ -147,8 +141,6 @@ body.light-mode {
   margin-top: 2px;
 }
 
-/* BOTÓN AYUDA */
-
 .btn-help {
   width: 34px;
   height: 34px;
@@ -165,8 +157,6 @@ body.light-mode {
   background: rgba(30, 64, 175, 0.9);
   border-color: rgba(129, 140, 248, 0.8);
 }
-
-/* SEARCH */
 
 .search-card {
   background: var(--card-bg);
@@ -204,8 +194,6 @@ body.light-mode {
   border-color: var(--accent);
 }
 
-/* MIC */
-
 .mic-btn {
   width: 44px;
   height: 44px;
@@ -225,8 +213,6 @@ body.light-mode {
   background: rgba(30, 64, 175, 0.9);
   border-color: rgba(129, 140, 248, 0.8);
 }
-
-/* SCANNERS */
 
 .scanner-row {
   display: flex;
@@ -264,8 +250,6 @@ body.light-mode {
   transform: translateY(-1px);
 }
 
-/* FILTROS */
-
 .search-filters-row {
   display: flex;
   align-items: center;
@@ -295,8 +279,6 @@ body.light-mode {
   font-size: 0.78rem;
   color: var(--text-muted);
 }
-
-/* SWITCH */
 
 .switch {
   position: relative;
@@ -350,8 +332,7 @@ input:checked + .slider {
 input:checked + .slider:before {
   transform: translateX(20px);
 }
-
-/* ORB */
+/* ORB ZONE */
 
 .orb-zone {
   display: flex;
@@ -366,44 +347,69 @@ input:checked + .slider:before {
   gap: 10px;
 }
 
-.orb-actions-top {
-  display: flex;
-  gap: 10px;
-  justify-content: center;
-}
-
-.orb-action-btn {
-  width: 40px;
-  height: 40px;
-  border-radius: 999px;
-  border: 1px solid var(--border-soft);
-  background: rgba(15, 23, 42, 0.9);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1rem;
-  color: var(--text-main);
-  cursor: pointer;
-  transition: background var(--transition-fast), border-color var(--transition-fast),
-    transform var(--transition-fast);
-}
-
-.orb-action-btn:hover {
-  background: rgba(51, 65, 85, 0.9);
-  border-color: rgba(129, 140, 248, 0.8);
-  transform: translateY(-1px);
-}
-
 .orb-container {
-  margin: 4px 0;
+  position: relative;
+  width: 160px;
+  height: 160px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.orb-mode-switch {
-  display: inline-flex;
+/* ORB CORE */
+
+#orb-core {
+  width: 130px;
+  height: 130px;
+  border-radius: 50%;
+  position: relative;
+  margin: auto;
+  cursor: pointer;
+  transition: transform 0.25s ease, filter 0.25s ease;
+  display: flex;
   align-items: center;
-  gap: 6px;
-  font-size: 0.7rem;
-  color: var(--text-muted);
+  justify-content: center;
+}
+
+/* ORB — Dial de 8 canales (FINAL) */
+
+.orb-ring {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.orb-ring-sector {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  clip-path: polygon(50% 50%, 100% 0, 100% 100%);
+  transform: rotate(calc(var(--i) * 45deg));
+  background: transparent;
+  transition: background 0.15s;
+}
+
+.orb-ring-sector.active {
+  background: rgba(255,255,255,0.15);
+}
+
+.orb-ring-icon {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  font-size: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform: rotate(calc(var(--i) * 45deg));
+  pointer-events: none;
+}
+
+/* OCULTAR BOTONES VIEJOS */
+
+.search-actions-right {
+  display: none !important;
 }
 
 /* MÉTRICAS */
@@ -549,12 +555,6 @@ input:checked + .slider:before {
   font-size: 0.75rem;
   line-height: 1.3;
 }
-.result-talles {
-  margin-top: 6px;
-  font-size: 0.75rem;
-  line-height: 1.3;
-}
-
 /* Vista tabla / tarjetas */
 
 .results-view-toggle {
@@ -787,7 +787,6 @@ input:checked + .slider:before {
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
-
 /* RESPONSIVE */
 
 @media (max-width: 900px) {
@@ -854,9 +853,7 @@ input:checked + .slider:before {
   }
 }
 
-/* ============================================================
-   MODAL DE AYUDA — CENTRADO + OVERLAY
-============================================================ */
+/* MODAL DE AYUDA */
 
 .help-modal {
   position: fixed;
@@ -881,9 +878,7 @@ input:checked + .slider:before {
   box-shadow: 0 8px 30px rgba(0,0,0,0.35);
 }
 
-/* ============================================================
-   PRECIO PÚBLICO / VALORIZADO — TARJETAS
-============================================================ */
+/* PRECIOS DESTACADOS */
 
 .result-precios {
   margin-top: 6px;
@@ -902,9 +897,7 @@ input:checked + .slider:before {
   font-weight: 700;
 }
 
-/* ============================================================
-   TABLA — SCROLL HORIZONTAL MEJORADO
-============================================================ */
+/* TABLA — SCROLL HORIZONTAL */
 
 .tabla-wrapper {
   width: 100%;
@@ -916,9 +909,7 @@ input:checked + .slider:before {
   min-width: 900px;
 }
 
-/* ============================================================
-   MODO DÍA — AJUSTE COMPLETO
-============================================================ */
+/* MODO DÍA — AJUSTE COMPLETO */
 
 body.light-mode {
   background: #f5f5f7;
@@ -962,9 +953,7 @@ body.light-mode .view-btn.active {
   color: #fff !important;
 }
 
-/* ============================================================
-   SCANNER OVERLAY — COMPATIBILIDAD
-============================================================ */
+/* SCANNER OVERLAY */
 
 body.scanner-active {
   overflow: hidden;
@@ -974,9 +963,7 @@ body.scanner-active {
   backdrop-filter: blur(4px);
 }
 
-/* ============================================================
-   ESTADO DE VOZ — VISUAL
-============================================================ */
+/* ESTADO DE VOZ */
 
 .voice-status {
   font-size: 0.75rem;
@@ -993,71 +980,13 @@ body.scanner-active {
   box-shadow: 0 0 25px #ff4f6a !important;
 }
 
-/* ============================================================
-   GRÁFICO DE TORTA — AJUSTES VISUALES
-============================================================ */
+/* GRÁFICO DE TORTA */
 
 #stockChart {
   max-height: 260px !important;
 }
-/* Precios destacados en vista tarjeta */
 
-.precio-publico {
-  color: #b8860b;
-  font-weight: 700;
-}
-
-.precio-valorizado {
-  color: #ff8c00;
-  font-weight: 700;
-}
-/* ============================================================
-   ACCIONES DE BÚSQUEDA — BOTONES DEBAJO DEL INPUT
-============================================================ */
-
-.search-actions-row {
-  margin-top: -4px;
-  display: flex;
-  justify-content: flex-end;
-}
-
-.search-actions-right {
-  display: flex;
-  gap: 10px;
-}
-
-/* ============================================================
-   FUENTE DE DATOS — PANEL DESPLEGABLE
-============================================================ */
-
-.fuente-datos-wrapper {
-  margin-top: 10px;
-  display: flex;
-  justify-content: flex-end;
-}
-
-.fuente-datos-panel {
-  margin-top: 8px;
-  padding: 12px;
-  border-radius: var(--radius-md);
-  background: rgba(15, 23, 42, 0.95);
-  border: 1px solid var(--border-soft);
-  font-size: 0.75rem;
-  color: var(--text-muted);
-  display: none;
-  width: 260px;
-}
-
-.fuente-datos-panel.visible {
-  display: block;
-}
-
-.fuente-datos-panel div {
-  margin-bottom: 4px;
-}
-/* ============================================================
-   AUTOCOMPLETE — LISTA DE SUGERENCIAS
-============================================================ */
+/* AUTOCOMPLETE */
 
 .search-input-wrapper {
   position: relative;
@@ -1102,127 +1031,4 @@ body.light-mode .autocomplete-list li {
 
 body.light-mode .autocomplete-list li:hover {
   background: #e5e7eb;
-}
-/* ============================================================
-   ORB — ANILLO INTERACTIVO (Minimalista / Iconos / Radial)
-============================================================ */
-
-.orb-container {
-  position: relative;
-  width: 160px;
-  height: 160px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-/* ANILLO BASE */
-.orb-ring {
-  position: absolute;
-  width: 200px;
-  height: 200px;
-  border-radius: 50%;
-  pointer-events: none;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-/* SECTORES (3) */
-.orb-ring-sector {
-  position: absolute;
-  width: 200px;
-  height: 200px;
-  border-radius: 50%;
-  clip-path: polygon(50% 50%, 100% 0, 100% 100%);
-  transform-origin: center;
-  opacity: 0.12;
-  background: var(--accent);
-  transition: opacity 0.2s ease, background 0.2s ease;
-}
-
-.orb-ring-sector:nth-child(1) { transform: rotate(0deg); }
-.orb-ring-sector:nth-child(2) { transform: rotate(120deg); }
-.orb-ring-sector:nth-child(3) { transform: rotate(240deg); }
-
-.orb-ring-sector.active {
-  opacity: 0.35;
-  background: var(--accent);
-}
-
-/* ICONOS (solo modo admin) */
-.orb-ring-icon {
-  position: absolute;
-  font-size: 1.4rem;
-  color: var(--text-main);
-  opacity: 0.85;
-  transition: transform 0.2s ease, opacity 0.2s ease;
-  pointer-events: none;
-}
-
-.orb-ring-icon:nth-child(4) { transform: rotate(0deg) translateY(-85px); }
-.orb-ring-icon:nth-child(5) { transform: rotate(120deg) translateY(-85px); }
-.orb-ring-icon:nth-child(6) { transform: rotate(240deg) translateY(-85px); }
-
-/* RADIAL (aparece solo al mantener presionado) */
-.orb-ring.radial-visible {
-  opacity: 1;
-  pointer-events: auto;
-}
-
-.orb-ring:not(.radial-visible)[data-mode="radial"] {
-  opacity: 0;
-  pointer-events: none;
-}
-
-/* ORB PULSE */
-.orb-pulse {
-  animation: orbPulse 0.35s ease-out;
-}
-
-@keyframes orbPulse {
-  0% { transform: scale(1); }
-  50% { transform: scale(1.08); }
-  100% { transform: scale(1); }
-}
-/* ============================================================
-   ORB — Dial de 8 canales
-   ============================================================ */
-.orb-ring {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-}
-
-.orb-ring-sector {
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  border-radius: 50%;
-  clip-path: polygon(50% 50%, 100% 0, 100% 100%);
-  transform: rotate(calc(var(--i) * 45deg));
-  background: transparent;
-  transition: background 0.15s;
-}
-
-.orb-ring-sector.active {
-  background: rgba(255,255,255,0.15);
-}
-
-.orb-ring-icon {
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  font-size: 22px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transform: rotate(calc(var(--i) * 45deg));
-  pointer-events: none;
-}
-.search-actions-right {
-  display: none !important;
-}
-.search-actions-right {
-  display: none !important;
 }
