@@ -11,6 +11,7 @@ function initUI(app) {
   const orbCore = document.getElementById("orb-core");
   const micButton = document.getElementById("mic-button");
   const modoVozSwitch = document.getElementById("modo-voz-switch");
+  const modoManosLibres = document.getElementById("modo-manos-libres");
   const voiceStatus = document.getElementById("voice-status");
   const helpButton = document.getElementById("help-button");
   const helpModal = document.getElementById("help-modal");
@@ -63,10 +64,17 @@ function initUI(app) {
     }
   }
 
+  // Estado inicial dictado desde switch + localStorage
   if (modoVozSwitch && modoVozSwitch.checked) setVoiceUIState("ready");
   else setVoiceUIState("off");
 
   if (modoVozSwitch) {
+    const saved = localStorage.getItem("modoVoz");
+    if (saved === "on") {
+      modoVozSwitch.checked = true;
+      setVoiceUIState("ready");
+    }
+
     modoVozSwitch.addEventListener("change", (e) => {
       const on = e.target.checked;
       localStorage.setItem("modoVoz", on ? "on" : "off");
@@ -74,12 +82,18 @@ function initUI(app) {
       beep(on ? 1400 : 600);
       app.showToast(on ? "Dictado activado" : "Dictado desactivado");
     });
+  }
 
-    const saved = localStorage.getItem("modoVoz");
-    if (saved === "on") {
-      modoVozSwitch.checked = true;
-      setVoiceUIState("ready");
-    }
+  // Manos libres — solo persistencia y estado
+  if (modoManosLibres) {
+    const savedML = localStorage.getItem("modoManosLibres");
+    if (savedML === "on") modoManosLibres.checked = true;
+
+    modoManosLibres.addEventListener("change", (e) => {
+      const on = e.target.checked;
+      localStorage.setItem("modoManosLibres", on ? "on" : "off");
+      app.showToast(on ? "Manos libres activado" : "Manos libres desactivado");
+    });
   }
 
   function startDictado() {
@@ -101,7 +115,8 @@ function initUI(app) {
 
     rec.onresult = (ev) => {
       const text = ev.results[0][0].transcript || "";
-      if (els.searchInput) els.searchInput.value = text;
+      const limpio = text.replace(/[.,;:]+$/g, "").trim();
+      if (els.searchInput) els.searchInput.value = limpio;
       setVoiceUIState("ready");
       if (autoList) autoList.innerHTML = "";
       app.buscar(true);
@@ -113,7 +128,7 @@ function initUI(app) {
     };
 
     rec.onend = () => {
-      if (modoVozSwitch.checked) setVoiceUIState("ready");
+      if (modoVozSwitch && modoVozSwitch.checked) setVoiceUIState("ready");
       else setVoiceUIState("off");
     };
 
@@ -122,8 +137,8 @@ function initUI(app) {
 
   if (micButton) {
     micButton.addEventListener("click", () => {
-      if (!modoVozSwitch.checked) {
-        app.showToast("Activá el dictado (oreja) para usar el micrófono");
+      if (!modoVozSwitch || !modoVozSwitch.checked) {
+        app.showToast("Activá el dictado para usar el micrófono");
         beep(600);
         return;
       }
@@ -210,7 +225,7 @@ function initUI(app) {
           }
         }
 
-        app.buscar();
+        app.buscar(true);
       }
     });
   }
@@ -225,7 +240,7 @@ function initUI(app) {
       orb.classList.add("orb-pulse");
       setTimeout(() => orb.classList.remove("orb-pulse"), 300);
       if (autoList) autoList.innerHTML = "";
-      app.buscar();
+      app.buscar(true);
     });
 
     orb.addEventListener("dblclick", () => {
