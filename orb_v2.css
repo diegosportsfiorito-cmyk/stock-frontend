@@ -177,7 +177,15 @@
 body.light-mode .orb-ring-sector.active {
   background: rgba(0, 0, 0, 0.15);
 }
+/* ============================================================
+   DESACTIVAR ANILLO COMPLETO (sin borrar código original)
+   ============================================================ */
 
+.orb-ring,
+.orb-ring-sector,
+.orb-ring-icon {
+  display: none !important;
+}
 /* ============================================================
    FIN DEL ARCHIVO
    ============================================================ */
