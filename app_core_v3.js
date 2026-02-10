@@ -156,14 +156,21 @@ const AppCore = {
       valorizado += item.valorizado || 0;
     });
 
-    this.els.metricArticulos.textContent = this.formatNumber(articulos);
-    this.els.metricPares.textContent = this.formatNumber(pares);
+    if (this.els.metricArticulos)
+      this.els.metricArticulos.textContent = this.formatNumber(articulos);
+    if (this.els.metricPares)
+      this.els.metricPares.textContent = this.formatNumber(pares);
 
-    this.els.metricAlertasNegativos.textContent =
-      this.formatNumber(alertasNegativos);
-    this.els.metricAlertasCero.textContent = this.formatNumber(alertasCero);
+    if (this.els.metricAlertasNegativos)
+      this.els.metricAlertasNegativos.textContent =
+        this.formatNumber(alertasNegativos);
+    if (this.els.metricAlertasCero)
+      this.els.metricAlertasCero.textContent = this.formatNumber(alertasCero);
 
-    this.els.metricValorizado.textContent = `$${this.formatNumber(valorizado)}`;
+    if (this.els.metricValorizado)
+      this.els.metricValorizado.textContent = `$${this.formatNumber(
+        valorizado
+      )}`;
 
     if (window.actualizarIndicadores) {
       window.actualizarIndicadores({
@@ -182,6 +189,7 @@ const AppCore = {
 
   renderResultadosTabla(items) {
     const cont = this.els.resultsContainer;
+    if (!cont) return;
     cont.innerHTML = "";
 
     if (!items.length) {
@@ -242,14 +250,90 @@ const AppCore = {
 
     cont.innerHTML = html;
   },
+  // ============================================================
+  // RENDER RESULTADOS (TARJETAS)
+  // ============================================================
+
+  renderResultadosTarjetas(items) {
+    const cont = this.els.resultsContainer;
+    if (!cont) return;
+    cont.innerHTML = "";
+
+    if (!items.length) {
+      cont.innerHTML = '<div class="results-empty">Sin resultados.</div>';
+      return;
+    }
+
+    let totalStock = 0;
+    const frag = document.createDocumentFragment();
+
+    items.forEach((item) => {
+      const card = document.createElement("div");
+      card.className = "result-item";
+
+      const titulo = document.createElement("div");
+      titulo.className = "result-title";
+      titulo.textContent = `${this.normalizarCampo(item.descripcion)} (${this.normalizarCampo(
+        item.codigo
+      )})`;
+
+      const sub = document.createElement("div");
+      sub.className = "result-sub";
+      sub.textContent = `${this.normalizarCampo(item.marca)} — ${this.normalizarCampo(
+        item.rubro
+      )} — ${this.normalizarCampo(item.color)}`;
+
+      const tallesDiv = document.createElement("div");
+      tallesDiv.className = "result-talles";
+
+      const tallesTexto = item.talles
+        .map((t) => {
+          totalStock += t.stock;
+          return `Talle ${t.talle}: ${t.stock}`;
+        })
+        .join(" | ");
+
+      tallesDiv.textContent = tallesTexto;
+
+      const preciosDiv = document.createElement("div");
+      preciosDiv.className = "result-precios";
+      preciosDiv.innerHTML = `
+        <span class="precio-publico">$${this.formatNumber(item.precio || 0)}</span>
+        ${
+          item.valorizado
+            ? `<span class="precio-valorizado">Valorizado: $${this.formatNumber(
+                item.valorizado
+              )}</span>`
+            : ""
+        }
+      `;
+
+      card.appendChild(titulo);
+      card.appendChild(sub);
+      card.appendChild(tallesDiv);
+      card.appendChild(preciosDiv);
+
+      frag.appendChild(card);
+    });
+
+    const totalDiv = document.createElement("div");
+    totalDiv.className = "results-status";
+    totalDiv.textContent = `Total unidades: ${this.formatNumber(totalStock)}`;
+
+    cont.appendChild(frag);
+    cont.appendChild(totalDiv);
+  },
 
   // ============================================================
-  // RENDER RESULTADOS (VISTA ÚNICA)
+  // RENDER RESULTADOS (SEGÚN MODO)
   // ============================================================
 
   renderResultados(items) {
-    // Por ahora usamos solo tabla; el toggle tabla/tarjetas sigue funcionando a nivel estado.
-    this.renderResultadosTabla(items);
+    if (this.state.modoTabla) {
+      this.renderResultadosTabla(items);
+    } else {
+      this.renderResultadosTarjetas(items);
+    }
   },
 
   // ============================================================
@@ -293,8 +377,8 @@ const AppCore = {
       }
     }
 
-    const rubrosOrdenados = rubrosNorm.sort((a, b) => b.length - a.length);
-    for (const rNorm of rubrosOrdenados) {
+    const rubrosOrdenadas = rubrosNorm.sort((a, b) => b.length - a.length);
+    for (const rNorm of rubrosOrdenadas) {
       if (!rNorm) continue;
       if (tokens.includes(rNorm)) {
         rubro = mapRubros.get(rNorm);
@@ -396,7 +480,7 @@ const AppCore = {
   // ============================================================
 
   async buscar(force = false) {
-    const raw = this.els.searchInput.value.trim();
+    const raw = (this.els.searchInput && this.els.searchInput.value.trim()) || "";
     if (!raw) {
       this.showToast("Ingresá un código o descripción");
       return;
@@ -411,11 +495,12 @@ const AppCore = {
     this.state.currentAbort = new AbortController();
 
     if (window.ORB && ORB.setLoading) ORB.setLoading(true);
-    this.els.resultsStatus.textContent = "Buscando…";
+    if (this.els.resultsStatus)
+      this.els.resultsStatus.textContent = "Buscando…";
 
     const body = {
       question: parsed.question || "",
-      solo_stock: this.els.chkSoloStock.checked,
+      solo_stock: this.els.chkSoloStock && this.els.chkSoloStock.checked,
       filtros_globales: parsed.filtros_globales,
       marca: parsed.marca,
       rubro: parsed.rubro,
@@ -446,29 +531,38 @@ const AppCore = {
 
       this.setConnectionStatus(true);
       if (window.ORB && ORB.setReady) ORB.setReady(true);
-      this.els.resultsStatus.textContent = `${this.state.items.length} resultados`;
+      if (this.els.resultsStatus)
+        this.els.resultsStatus.textContent = `${this.state.items.length} resultados`;
 
       this.speakResultados();
     } catch (err) {
       if (err.name !== "AbortError") {
         this.setConnectionStatus(false);
         if (window.ORB && ORB.setError) ORB.setError(true);
-        this.els.resultsStatus.textContent = "Error de conexión";
+        if (this.els.resultsStatus)
+          this.els.resultsStatus.textContent = "Error de conexión";
       }
     } finally {
       if (window.ORB && ORB.setLoading) ORB.setLoading(false);
     }
   },
-
   // ============================================================
   // FILTROS MANUALES
   // ============================================================
 
   actualizarFiltrosDesdeUI() {
-    this.state.filtros.marca = this.els.filtroMarca.value || null;
-    this.state.filtros.rubro = this.els.filtroRubro.value || null;
-    this.state.filtros.talleDesde = this.els.filtroTalleDesde.value || null;
-    this.state.filtros.talleHasta = this.els.filtroTalleHasta.value || null;
+    this.state.filtros.marca = this.els.filtroMarca
+      ? this.els.filtroMarca.value || null
+      : null;
+    this.state.filtros.rubro = this.els.filtroRubro
+      ? this.els.filtroRubro.value || null
+      : null;
+    this.state.filtros.talleDesde = this.els.filtroTalleDesde
+      ? this.els.filtroTalleDesde.value || null
+      : null;
+    this.state.filtros.talleHasta = this.els.filtroTalleHasta
+      ? this.els.filtroTalleHasta.value || null
+      : null;
   },
 
   async buscarPorFiltros() {
@@ -479,7 +573,7 @@ const AppCore = {
 
     const body = {
       question: "",
-      solo_stock: this.els.chkSoloStock.checked,
+      solo_stock: this.els.chkSoloStock && this.els.chkSoloStock.checked,
       filtros_globales: true,
       marca: this.state.filtros.marca,
       rubro: this.state.filtros.rubro,
@@ -490,7 +584,8 @@ const AppCore = {
     };
 
     if (window.ORB && ORB.setLoading) ORB.setLoading(true);
-    this.els.resultsStatus.textContent = "Filtrando…";
+    if (this.els.resultsStatus)
+      this.els.resultsStatus.textContent = "Filtrando…";
 
     try {
       const res = await fetch(this.config.backendUrl + "/query", {
@@ -513,14 +608,16 @@ const AppCore = {
 
       this.setConnectionStatus(true);
       if (window.ORB && ORB.setReady) ORB.setReady(true);
-      this.els.resultsStatus.textContent = `${this.state.items.length} resultados`;
+      if (this.els.resultsStatus)
+        this.els.resultsStatus.textContent = `${this.state.items.length} resultados`;
 
       this.speakResultados();
     } catch (err) {
       if (err.name !== "AbortError") {
         this.setConnectionStatus(false);
         if (window.ORB && ORB.setError) ORB.setError(true);
-        this.els.resultsStatus.textContent = "Error de conexión";
+        if (this.els.resultsStatus)
+          this.els.resultsStatus.textContent = "Error de conexión";
       }
     } finally {
       if (window.ORB && ORB.setLoading) ORB.setLoading(false);
@@ -573,7 +670,8 @@ const AppCore = {
       window.speechSynthesis.cancel();
     }
     if (window.ORB && ORB.setReady) ORB.setReady(true);
-    this.els.resultsStatus.textContent = "Operación detenida";
+    if (this.els.resultsStatus)
+      this.els.resultsStatus.textContent = "Operación detenida";
   },
 
   // ============================================================
@@ -627,7 +725,6 @@ const AppCore = {
       this.state.catalogItems = data.items || [];
       this.state.resumenCatalogo = data.resumen || null;
 
-      // Poblar filtros
       const marcas = new Set();
       const rubros = new Set();
 
@@ -654,7 +751,6 @@ const AppCore = {
             .join("");
       }
 
-      // Fuente de datos
       if (this.state.resumenCatalogo) {
         const r = this.state.resumenCatalogo;
         if (this.els.fuenteArchivo) this.els.fuenteArchivo.textContent = r.archivo || "—";
