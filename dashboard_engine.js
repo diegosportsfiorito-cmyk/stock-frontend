@@ -1,119 +1,56 @@
-// ============================================================
-// DASHBOARD ENGINE — Gráfico dinámico de distribución (Torta)
-// ============================================================
+let stockChart = null;
 
-let chartInstance = null;
+function prepararDatos(items, modo) {
+  const conteo = {};
 
-// ============================================================
-// Normalización de campos
-// ============================================================
-
-function normalizarCampo(v) {
-  if (!v) return "—";
-  const s = String(v).trim().toUpperCase();
-  if (s === "NAN" || s === "NULL" || s === "UNDEFINED") return "—";
-  return v;
-}
-
-// ============================================================
-// Paleta dinámica (infinita)
-// ============================================================
-
-function generarColores(n) {
-  const colores = [];
-  for (let i = 0; i < n; i++) {
-    const hue = (i * 47) % 360;
-    colores.push(`hsl(${hue}, 85%, 55%)`);
+  for (const item of items) {
+    if (modo === "talle") {
+      const talles = item.talles || {};
+      for (const t in talles) {
+        const cant = talles[t] || 0;
+        if (!conteo[t]) conteo[t] = 0;
+        conteo[t] += cant;
+      }
+    } else if (modo === "marca") {
+      const m = item.marca || "Sin marca";
+      if (!conteo[m]) conteo[m] = 0;
+      conteo[m] += item.stockTotal || 0;
+    } else if (modo === "rubro") {
+      const r = item.rubro || "Sin rubro";
+      if (!conteo[r]) conteo[r] = 0;
+      conteo[r] += item.stockTotal || 0;
+    }
   }
-  return colores;
+
+  const labels = Object.keys(conteo);
+  const valores = Object.values(conteo);
+
+  return { labels, valores };
 }
-
-// ============================================================
-// Construcción de datasets
-// ============================================================
-
-function datasetPorTalle(items) {
-  const map = new Map();
-  items.forEach(item => {
-    item.talles.forEach(t => {
-      const key = normalizarCampo(t.talle);
-      map.set(key, (map.get(key) || 0) + t.stock);
-    });
-  });
-
-  const labels = Array.from(map.keys()).sort((a, b) => Number(a) - Number(b));
-  const data = labels.map(l => map.get(l));
-
-  return { labels, data };
-}
-
-function datasetPorMarca(items) {
-  const map = new Map();
-  items.forEach(item => {
-    let total = 0;
-    item.talles.forEach(t => total += t.stock);
-    const key = normalizarCampo(item.marca);
-    map.set(key, (map.get(key) || 0) + total);
-  });
-
-  const labels = Array.from(map.keys());
-  const data = labels.map(l => map.get(l));
-
-  return { labels, data };
-}
-
-function datasetPorRubro(items) {
-  const map = new Map();
-  items.forEach(item => {
-    let total = 0;
-    item.talles.forEach(t => total += t.stock);
-    const key = normalizarCampo(item.rubro);
-    map.set(key, (map.get(key) || 0) + total);
-  });
-
-  const labels = Array.from(map.keys());
-  const data = labels.map(l => map.get(l));
-
-  return { labels, data };
-}
-
-// ============================================================
-// Render del gráfico
-// ============================================================
 
 function actualizarDashboard(items) {
-  const canvas = document.getElementById("stockChart");
-  const modeSelect = document.getElementById("chart-mode");
+  const modo = document.getElementById("chart-mode")?.value || "talle";
+  const ctx = document.getElementById("stockChart");
 
-  if (!canvas || !modeSelect) return;
+  if (!ctx) return;
 
-  const mode = modeSelect.value;
-  let dataset;
+  const { labels, valores } = prepararDatos(items, modo);
 
-  if (mode === "marca") dataset = datasetPorMarca(items);
-  else if (mode === "rubro") dataset = datasetPorRubro(items);
-  else dataset = datasetPorTalle(items);
+  if (stockChart) {
+    stockChart.destroy();
+  }
 
-  const ctx = canvas.getContext("2d");
-
-  if (chartInstance) chartInstance.destroy();
-
-  const colores = generarColores(dataset.labels.length);
-
-  const isLight = document.body.classList.contains("light-mode");
-
-  chartInstance = new Chart(ctx, {
+  stockChart = new Chart(ctx, {
     type: "pie",
     data: {
-      labels: dataset.labels,
+      labels,
       datasets: [
         {
-          data: dataset.data,
-          backgroundColor: colores,
+          data: valores,
+          backgroundColor: generarColores(labels.length),
           borderWidth: 1,
-          borderColor: isLight ? "#e5e7eb" : "#111827"
-        }
-      ]
+        },
+      ],
     },
     options: {
       responsive: true,
@@ -121,13 +58,58 @@ function actualizarDashboard(items) {
         legend: {
           position: "bottom",
           labels: {
-            color: isLight ? "#333" : "#9ca3af",
-            font: { size: 12 }
-          }
-        }
-      }
-    }
+            color: "#ccc",
+            font: { size: 11 },
+          },
+        },
+      },
+    },
   });
 }
 
+function generarColores(n) {
+  const colores = [];
+  for (let i = 0; i < n; i++) {
+    const h = Math.floor((360 / n) * i);
+    colores.push(`hsl(${h}, 70%, 55%)`);
+  }
+  return colores;
+}
+
 window.actualizarDashboard = actualizarDashboard;
+/* INDICADORES — MÉTRICAS SUPERIORES */
+
+function actualizarIndicadores(items) {
+  const totalArticulos = items.length;
+
+  let totalPares = 0;
+  let negativos = 0;
+  let sinStock = 0;
+  let valorizado = 0;
+
+  for (const item of items) {
+    const stock = item.stockTotal || 0;
+    const precio = item.precioPublico || 0;
+
+    totalPares += stock;
+
+    if (stock < 0) negativos++;
+    if (stock === 0) sinStock++;
+
+    valorizado += stock * precio;
+  }
+
+  const elArt = document.getElementById("metric-articulos-value");
+  const elPares = document.getElementById("metric-pares-value");
+  const elNeg = document.getElementById("metric-alertas-negativos");
+  const elCero = document.getElementById("metric-alertas-cero");
+  const elVal = document.getElementById("metric-valorizado-value");
+
+  if (elArt) elArt.textContent = totalArticulos;
+  if (elPares) elPares.textContent = totalPares;
+  if (elNeg) elNeg.textContent = negativos;
+  if (elCero) elCero.textContent = sinStock;
+  if (elVal) elVal.textContent = "$" + valorizado.toLocaleString("es-AR");
+}
+
+window.actualizarIndicadores = actualizarIndicadores;
