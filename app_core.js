@@ -143,7 +143,7 @@ const AppCore = {
 
     items.forEach((item) => {
       let totalItem = 0;
-      item.talles.forEach((t) => {
+      (item.talles || []).forEach((t) => {
         pares += t.stock;
         totalItem += t.stock;
       });
@@ -153,7 +153,9 @@ const AppCore = {
 
     this.els.metricArticulos.textContent = this.formatNumber(articulos);
     this.els.metricPares.textContent = this.formatNumber(pares);
-    this.els.metricAlertas.textContent = this.formatNumber(alertas);
+    if (this.els.metricAlertas) {
+      this.els.metricAlertas.textContent = this.formatNumber(alertas);
+    }
     this.els.metricValorizado.textContent = `$${this.formatNumber(valorizado)}`;
 
     if (window.actualizarIndicadores) {
@@ -183,7 +185,7 @@ const AppCore = {
       const div = document.createElement("div");
       div.className = "result-item";
 
-      const talles = item.talles
+      const talles = (item.talles || [])
         .map((t) => `${t.talle}: ${t.stock}`)
         .join(" | ");
 
@@ -239,7 +241,7 @@ const AppCore = {
     `;
 
     items.forEach((item) => {
-      item.talles.forEach((t) => {
+      (item.talles || []).forEach((t) => {
         totalStock += t.stock;
 
         html += `
@@ -320,7 +322,8 @@ const AppCore = {
       }
     }
 
-    const matchRango = qUpper.match(/T?(\d+)\s*A\s*T?(\d+)/);
+    // rango de talles más flexible: T40 A 42, 40-42, 40 / 42, etc.
+    const matchRango = qUpper.match(/T?(\d+)\s*(?:A|-|\/)\s*T?(\d+)/);
     if (matchRango) {
       talleDesde = parseInt(matchRango[1]);
       talleHasta = parseInt(matchRango[2]);
@@ -347,7 +350,8 @@ const AppCore = {
       };
     }
 
-    const matchPrecio = qUpper.match(/^P(\d{2,6})$/);
+    // precio: P15000 o 15000 o $15000
+    const matchPrecio = qUpper.match(/^(?:P|\$)?(\d{2,6})$/);
     if (matchPrecio) {
       return { filtros_globales: false, question: "PRECIO " + matchPrecio[1] };
     }
@@ -507,7 +511,7 @@ const AppCore = {
   // RESUMEN CATÁLOGO / FUENTE DE DATOS
   // ============================================================
 
-  calcularResumenCatalogo() {
+  calcularResumenCatalogo(nombreArchivo) {
     const items = this.state.catalogItems || [];
     const marcas = new Set();
     const rubros = new Set();
@@ -527,7 +531,7 @@ const AppCore = {
     });
 
     const resumen = {
-      archivo: "Catálogo remoto",
+      archivo: nombreArchivo || "Catálogo remoto",
       fecha: new Date().toLocaleString("es-AR"),
       marcas: marcas.size,
       rubros: rubros.size,
@@ -601,7 +605,17 @@ const AppCore = {
         '<option value="">Rubro</option>' +
         rubros.map((r) => `<option value="${r}">${r}</option>`).join("");
 
-      this.calcularResumenCatalogo();
+      // Nombre completo del archivo original de Google Drive (si el backend lo envía)
+      const nombreArchivo =
+        data.archivo_original ||
+        data.archivo ||
+        data.source_file ||
+        data.source_file_name ||
+        (data.metadata &&
+          (data.metadata.archivo || data.metadata.nombre_archivo)) ||
+        "Catálogo remoto";
+
+      this.calcularResumenCatalogo(nombreArchivo);
       this.setConnectionStatus(true);
     } catch (err) {
       this.setConnectionStatus(false);
@@ -727,7 +741,7 @@ const AppCore = {
       });
     }
 
-    // Toggle fuente de datos
+    // Toggle fuente de datos (solo al hacer clic en el botón)
     if (this.els.fuenteDatosToggle && this.els.fuenteDatosPanel) {
       this.els.fuenteDatosToggle.addEventListener("click", () => {
         this.els.fuenteDatosPanel.classList.toggle("visible");
