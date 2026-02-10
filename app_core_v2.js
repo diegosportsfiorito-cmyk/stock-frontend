@@ -1,4 +1,4 @@
-// build 20260210-2
+// build 20260210-3-XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 // ============================================================
 // APP CORE — Motor inteligente + filtros estructurados
 // ============================================================
