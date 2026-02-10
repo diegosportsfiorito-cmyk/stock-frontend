@@ -102,7 +102,7 @@ function actualizarDashboard(items) {
   const colores = generarColores(dataset.labels.length);
   const isLight = document.body.classList.contains("light-mode");
 
-  // Si hay demasiadas categorías, cambiar a barras automáticamente
+  // Cambio automático a barras si hay demasiadas categorías
   const tipo = dataset.labels.length > 12 ? "bar" : "pie";
 
   chartInstance = new Chart(ctx, {
