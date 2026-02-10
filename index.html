@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <title>STOCK IA PRO — Asistente inteligente</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <link rel="stylesheet" href="styles_v2.css" />
+    <link rel="stylesheet" href="orb_v2.css" />
+  </head>
+
+  <body>
+    <div class="app-shell">
+      <div class="app-container">
+        <!-- ============================================================
+             HEADER
+        ============================================================ -->
+        <header class="app-header">
+          <div class="branding">
+            <div class="brand-orb-mini">IA</div>
+            <div>
+              <div class="brand-title">STOCK IA PRO</div>
+              <div class="brand-subtitle">Asistente inteligente de stock</div>
+            </div>
+          </div>
+
+          <div class="header-right">
+            <div class="connection-indicator">
+              <span class="connection-dot" id="connection-dot"></span>
+              <span>Estado conexión</span>
+            </div>
+
+            <!-- SWITCH MODO VOZ -->
+            <div class="header-switch-row">
+              <label class="orb-mode-switch">
+                <span>Voz</span>
+                <label class="switch small">
+                  <input id="modo-voz-switch" type="checkbox" />
+                  <span class="slider"></span>
+                </label>
+              </label>
+            </div>
+
+            <!-- SWITCH DÍA/NOCHE -->
+            <div class="header-switch-row">
+              <label class="orb-mode-switch">
+                <span>Modo día</span>
+                <label class="switch small">
+                  <input id="toggle-dark" type="checkbox" />
+                  <span class="slider"></span>
+                </label>
+                <span>Noche</span>
+              </label>
+            </div>
+
+            <!-- BOTÓN AYUDA -->
+            <button id="help-button" class="btn-help" title="Ayuda">❓</button>
+          </div>
+        </header>
+
+        <!-- ============================================================
+             SEARCH + ORB
+        ============================================================ -->
+        <section class="search-card">
+          <div class="search-row">
+            <div class="search-input-wrapper">
+              <input
+                id="search-input"
+                type="text"
+                class="search-input"
+                placeholder="Buscar artículo, marca, rubro, talle, color, precio..."
+                autocomplete="off"
+              />
+
+              <!-- AUTOCOMPLETE -->
+              <ul id="autocomplete-list" class="autocomplete-list"></ul>
+            </div>
+
+            <!-- OREJA -->
+            <button id="mic-button" class="mic-btn" title="Dictado por voz">
+              👂
+            </button>
+          </div>
+
+          <!-- ACCIONES -->
+          <div class="search-actions-row">
+            <div class="search-actions-right">
+              <button id="btn-clear" class="orb-action-btn" title="Limpiar">🧹</button>
+              <button id="btn-copy" class="orb-action-btn" title="Copiar resultados">📋</button>
+              <button id="btn-stop" class="orb-action-btn" title="Detener">⏹</button>
+            </div>
+          </div>
+
+          <!-- ESTADO DE VOZ -->
+          <div id="voice-status" class="voice-status">Voz desactivada</div>
+
+          <!-- SCANNERS -->
+          <div class="scanner-row">
+            <div class="scanner-buttons">
+              <button id="btn-scanner-interno-1" class="scanner-big-btn" title="Scanner interno A">📷</button>
+              <button id="btn-scanner-interno-2" class="scanner-big-btn" title="Scanner interno B">🎦</button>
+              <button id="btn-scanner-externo-preferido" class="scanner-big-btn" title="Scanner externo">📲</button>
+              <button id="btn-scanner-externo-selector" class="scanner-big-btn" title="Elegir app de scanner">🧭</button>
+            </div>
+
+            <div class="scanner-mode-switch">
+              <label class="orb-mode-switch">
+                <span>Simple</span>
+                <label class="switch small">
+                  <input id="modo-scanner-toggle" type="checkbox" />
+                  <span class="slider"></span>
+                </label>
+                <span>Completo</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- FILTROS -->
+          <div class="search-filters-row">
+            <button id="btn-filtros" class="btn-secondary">Filtros</button>
+
+            <label class="solo-stock">
+              <span>Solo con stock</span>
+              <label class="switch">
+                <input id="chk-solo-stock" type="checkbox" />
+                <span class="slider"></span>
+              </label>
+            </label>
+          </div>
+
+          <!-- ORB -->
+          <div class="orb-zone">
+            <div class="orb-actions-ring">
+              <div id="orb" class="orb-container">
+                <div id="orb-core" class="orb-ultra"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- MÉTRICAS -->
+          <div class="metrics-row">
+            <div class="metric-card" id="metric-articulos">
+              <div class="metric-label">Artículos</div>
+              <div class="metric-value" id="metric-articulos-value">0</div>
+            </div>
+
+            <div class="metric-card" id="metric-pares">
+              <div class="metric-label">Pares</div>
+              <div class="metric-value" id="metric-pares-value">0</div>
+            </div>
+
+            <div class="metric-card" id="metric-alertas">
+              <div class="metric-label">Alertas</div>
+              <div class="metric-value" id="metric-alertas-value">0</div>
+            </div>
+
+            <div class="metric-card" id="metric-valorizado">
+              <div class="metric-label">Valorizado</div>
+              <div class="metric-value" id="metric-valorizado-value">$0</div>
+            </div>
+          </div>
+
+          <!-- FILTROS AVANZADOS -->
+          <div id="filtros-panel" class="filtros-panel">
+            <div class="filtros-row filtros-row-stack">
+              <select id="filtro-marca" class="filtro-select">
+                <option value="">Marca</option>
+              </select>
+
+              <select id="filtro-rubro" class="filtro-select">
+                <option value="">Rubro</option>
+              </select>
+            </div>
+
+            <div class="filtros-row filtros-row-stack">
+              <input id="filtro-talle-desde" type="number" class="filtro-input" placeholder="Talle desde" />
+              <input id="filtro-talle-hasta" type="number" class="filtro-input" placeholder="Talle hasta" />
+            </div>
+
+            <div class="filtros-row">
+              <button id="btn-aplicar-filtros" class="btn-secondary">Aplicar filtros</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============================================================
+             MAIN ROW
+        ============================================================ -->
+        <section class="main-row">
+          <!-- RESULTADOS -->
+          <div class="results-card">
+            <div class="results-header">
+              <div class="results-title">Resultados</div>
+
+              <div class="results-right">
+                <div class="results-view-toggle">
+                  <button id="btn-vista-tabla" class="view-btn" title="Vista tabla">Tabla</button>
+                  <button id="btn-vista-tarjetas" class="view-btn active" title="Vista tarjetas">Tarjetas</button>
+                </div>
+              </div>
+            </div>
+
+            <div id="results-status" class="results-status">Esperando consulta</div>
+            <div id="results-container"></div>
+          </div>
+
+          <!-- DASHBOARD -->
+          <aside class="dashboard-card">
+            <div class="dashboard-header">
+              <div class="dashboard-title">Visión rápida</div>
+              <div class="dashboard-subtitle">Distribución por talle / marca / rubro</div>
+            </div>
+
+            <select id="chart-mode" class="filtro-select">
+              <option value="talle">Por talle</option>
+              <option value="marca">Por marca</option>
+              <option value="rubro">Por rubro</option>
+            </select>
+
+            <canvas id="stockChart"></canvas>
+          </aside>
+        </section>
+
+        <!-- ============================================================
+             FUENTE DE DATOS
+        ============================================================ -->
+        <section class="fuente-datos-wrapper">
+          <button id="fuente-datos-toggle" class="btn-secondary">Fuente de datos</button>
+
+          <div id="fuente-datos-panel" class="fuente-datos-panel">
+            <div><strong>Archivo:</strong> <span id="fuente-archivo">—</span></div>
+            <div><strong>Fecha:</strong> <span id="fuente-fecha">—</span></div>
+            <div><strong>Marcas:</strong> <span id="fuente-marcas">—</span></div>
+            <div><strong>Rubros:</strong> <span id="fuente-rubros">—</span></div>
+            <div><strong>Artículos:</strong> <span id="fuente-articulos">—</span></div>
+            <div><strong>Stock total:</strong> <span id="fuente-stock-total">—</span></div>
+            <div><strong>Stock negativo:</strong> <span id="fuente-stock-negativo">—</span></div>
+          </div>
+        </section>
+
+        <!-- ============================================================
+             FOOTER
+        ============================================================ -->
+        <footer class="app-footer">
+          <div class="footer-logo">SCL</div>
+          <div class="footer-text">Salas Creative Lab</div>
+        </footer>
+      </div>
+    </div>
+
+    <!-- ============================================================
+         PANEL ADMIN
+    ============================================================ -->
+    <div id="admin-panel">
+      <h2>Panel administrador</h2>
+
+      <h3>Backend</h3>
+      <label>
+        URL backend
+        <input id="admin-backend-url" type="text" />
+      </label>
+
+      <label>
+        Modo por defecto
+        <select id="admin-modo-defecto">
+          <option value="simple">Simple</option>
+          <option value="completo">Completo</option>
+        </select>
+      </label>
+
+      <h3>ORB — Apariencia</h3>
+
+      <label>
+        Color día
+        <input id="orb-color" type="color" />
+      </label>
+
+      <label>
+        Color noche
+        <input id="orb-color-dark" type="color" />
+      </label>
+
+      <label>
+        Tamaño ORB (px)
+        <input id="orb-size" type="range" min="80" max="200" />
+      </label>
+
+      <label>
+        Intensidad halo
+        <input id="orb-halo" type="range" min="0" max="120" />
+      </label>
+
+      <label>
+        Modo visual
+        <select id="orb-mode">
+          <option value="ultra">Ultra</option>
+          <option value="3d">3D</option>
+          <option value="classic">Classic</option>
+        </select>
+      </label>
+
+      <label>
+        Presets
+        <select id="orb-presets">
+          <option value="default">Default</option>
+          <option value="plasma">Plasma</option>
+          <option value="fuego">Fuego</option>
+          <option value="neon">Neón</option>
+          <option value="minimal">Minimal</option>
+        </select>
+      </label>
+
+      <button id="orb-reset">Reset ORB</button>
+
+      <div class="admin-actions">
+        <button id="admin-guardar">Guardar</button>
+        <button id="admin-cerrar">Cerrar</button>
+      </div>
+    </div>
+
+    <!-- ============================================================
+         OVERLAY SCANNER
+    ============================================================ -->
+    <div id="scanner-overlay" class="scanner-overlay hidden"></div>
+
+    <!-- ============================================================
+         MODAL AYUDA
+    ============================================================ -->
+    <div id="help-modal" class="help-modal hidden">
+      <div class="help-modal-content">
+        <h2>Ayuda rápida</h2>
+        <ul>
+          <li>Escribí o escaneá un código, marca, rubro o talle.</li>
+          <li>Usá el botón 👂 para dictar si el modo voz está activo.</li>
+          <li>Click en métricas para filtros rápidos.</li>
+          <li>Atajos: ESC limpia, F2 scanner, F3 voz.</li>
+        </ul>
+        <button id="help-close">Cerrar</button>
+      </div>
+    </div>
+
+    <!-- ============================================================
+         TOAST
+    ============================================================ -->
+    <div id="toast" class="toast"></div>
+
+    <!-- ============================================================
+         LIBS
+    ============================================================ -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://unpkg.com/@zxing/library@latest"></script>
+
+    <!-- ============================================================
+         SCRIPTS
+    ============================================================ -->
+    <script src="orb_engine.js"></script>
+    <script src="orb_admin_engine.js"></script>
+    <script src="dashboard_engine.js"></script>
+    <script src="indicators_engine.js"></script>
+    <script src="scanner_v3.js"></script>
+    <script src="app_core.js"></script>
+    <script src="ui_engine.js"></script>
+  </body>
+</html>
