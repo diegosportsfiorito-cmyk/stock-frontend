@@ -177,6 +177,7 @@ const AppCore = {
       });
     }
   },
+
   // ============================================================
   // RENDER RESULTADOS (TABLA)
   // ============================================================
@@ -423,7 +424,7 @@ const AppCore = {
     };
 
     try {
-      const res = await fetch(this.config.backendUrl, {
+      const res = await fetch(this.config.backendUrl + "/query", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
@@ -456,6 +457,7 @@ const AppCore = {
       if (window.ORB && ORB.setLoading) ORB.setLoading(false);
     }
   },
+
   // ============================================================
   // FILTROS MANUALES
   // ============================================================
@@ -489,7 +491,7 @@ const AppCore = {
     this.els.resultsStatus.textContent = "Filtrando…";
 
     try {
-      const res = await fetch(this.config.backendUrl, {
+      const res = await fetch(this.config.backendUrl + "/query", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
@@ -591,7 +593,7 @@ const AppCore = {
         soloNegativo: false,
       };
 
-      const res = await fetch(this.config.backendUrl, {
+      const res = await fetch(this.config.backendUrl + "/query", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
@@ -656,6 +658,7 @@ const AppCore = {
 
     return Array.from(sugerencias).slice(0, 10);
   },
+
   // ============================================================
   // UTILIDADES UI
   // ============================================================
