@@ -1,0 +1,156 @@
+/* ============================================================
+   ORB V2 — 3D ULTRA + HALO + GLOW + MODOS VISUALES
+   ============================================================ */
+
+/* Variables controladas por orb_admin_engine.js */
+:root {
+  --orb-color: #4fc3f7;
+  --orb-color-dark: #7c4dff;
+  --orb-halo-strength: 60;
+}
+
+/* Contenedor del ORB */
+#orb-core {
+  width: 130px;
+  height: 130px;
+  border-radius: 50%;
+  position: relative;
+  margin: auto;
+  cursor: pointer;
+  transition: transform 0.25s ease, filter 0.25s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ============================================================
+   MODO ULTRA (default) — UNIFICADO
+   ============================================================ */
+
+.orb-ultra {
+  background: radial-gradient(
+    circle at 30% 20%,
+    var(--orb-color),
+    var(--orb-color-dark)
+  );
+  box-shadow:
+    0 0 calc(var(--orb-halo-strength) * 1px) var(--orb-color),
+    inset 0 0 40px rgba(255, 255, 255, 0.2);
+  animation: orbBreath 2.4s infinite ease-in-out;
+}
+
+/* ============================================================
+   MODO 3D
+   ============================================================ */
+
+.orb-3d {
+  background: radial-gradient(circle at 25% 25%, var(--orb-color), #000);
+  box-shadow:
+    0 0 calc(var(--orb-halo-strength) * 1px) var(--orb-color),
+    inset -20px -20px 40px rgba(0, 0, 0, 0.6),
+    inset 20px 20px 40px rgba(255, 255, 255, 0.15);
+  animation: orbRotate 4s infinite linear;
+}
+
+/* ============================================================
+   MODO CLASSIC
+   ============================================================ */
+
+.orb-classic {
+  background: radial-gradient(
+    circle at 50% 50%,
+    var(--orb-color),
+    var(--orb-color-dark)
+  );
+  box-shadow: 0 0 calc(var(--orb-halo-strength) * 0.6px) var(--orb-color);
+}
+
+/* ============================================================
+   ESTADOS (controlados por orb_engine.js)
+   ============================================================ */
+
+.orb-ready {
+  filter: brightness(1.2);
+  box-shadow:
+    0 0 40px rgba(96, 165, 250, 0.6),
+    inset 0 0 30px rgba(255, 255, 255, 0.2);
+}
+
+.orb-loading {
+  animation: orbLoading 0.45s infinite linear;
+  filter: brightness(1.6) saturate(1.4);
+  box-shadow:
+    0 0 60px rgba(96, 165, 250, 0.9),
+    inset 0 0 40px rgba(255, 255, 255, 0.25);
+}
+
+.orb-listening {
+  background: radial-gradient(circle at 30% 20%, #22c55e, #065f46);
+  box-shadow:
+    0 0 60px rgba(34, 197, 94, 0.9),
+    inset 0 0 40px rgba(255, 255, 255, 0.25);
+  animation: orbListeningPulse 0.7s infinite ease-in-out;
+}
+
+.orb-error {
+  background: radial-gradient(circle at 30% 20%, #ff4f6a, #7c0000);
+  box-shadow:
+    0 0 60px rgba(239, 68, 68, 0.9),
+    inset 0 0 40px rgba(255, 255, 255, 0.15);
+  animation: orbErrorPulse 0.8s infinite ease-in-out;
+}
+
+/* ============================================================
+   ANIMACIONES
+   ============================================================ */
+
+@keyframes orbBreath {
+  0% { transform: scale(1); filter: brightness(1); }
+  50% { transform: scale(1.06); filter: brightness(1.25); }
+  100% { transform: scale(1); filter: brightness(1); }
+}
+
+@keyframes orbRotate {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes orbLoading {
+  0% { transform: scale(1) rotate(0deg); }
+  100% { transform: scale(1.05) rotate(360deg); }
+}
+
+@keyframes orbErrorPulse {
+  0% { transform: scale(1); filter: brightness(1); }
+  50% { transform: scale(1.05); filter: brightness(1.4); }
+  100% { transform: scale(1); filter: brightness(1); }
+}
+
+@keyframes orbListeningPulse {
+  0% { transform: scale(1); filter: brightness(1); }
+  50% { transform: scale(1.06); filter: brightness(1.5); }
+  100% { transform: scale(1); filter: brightness(1); }
+}
+
+/* ============================================================
+   MODO DÍA — INTEGRACIÓN COMPLETA
+   ============================================================ */
+
+body.light-mode #orb-core.orb-ultra {
+  background: radial-gradient(circle at 30% 20%, #60a5fa, #3b82f6);
+  box-shadow:
+    0 0 calc(var(--orb-halo-strength) * 0.8px) #60a5fa,
+    inset 0 0 30px rgba(255, 255, 255, 0.25);
+}
+
+body.light-mode #orb-core.orb-ready {
+  filter: brightness(1.15);
+}
+
+body.light-mode #orb-core.orb-error {
+  background: radial-gradient(circle at 30% 20%, #ef4444, #7f1d1d);
+}
+
+body.light-mode #orb-core.orb-listening {
+  background: radial-gradient(circle at 30% 20%, #22c55e, #15803d);
+}
