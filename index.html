@@ -65,8 +65,8 @@
             <button id="mic-button" class="mic-btn" title="Dictado por voz">🎤</button>
           </div>
 
-          <!-- NUEVOS SWITCHES DEBAJO DEL INPUT -->
-          <div class="header-switch-row" style="margin-top:6px; display:flex; justify-content:flex-start;">
+          <!-- SWITCHES DE VOZ -->
+          <div class="voice-switches">
             <label class="orb-mode-switch">
               <span>Manos libres</span>
               <label class="switch small">
@@ -74,9 +74,7 @@
                 <span class="slider"></span>
               </label>
             </label>
-          </div>
 
-          <div class="header-switch-row" style="margin-top:4px; display:flex; justify-content:flex-start;">
             <label class="orb-mode-switch">
               <span>Dictado</span>
               <label class="switch small">
@@ -136,7 +134,7 @@
             </div>
           </div>
 
-          <!-- MÉTRICAS -->
+          <!-- MÉTRICAS (IDs corregidos para coincidir con app_core_v3.js) -->
           <div class="metrics-row">
             <div class="metric-card" id="metric-articulos">
               <div class="metric-label">Artículos</div>
@@ -148,14 +146,14 @@
               <div class="metric-value" id="metric-pares-value">0</div>
             </div>
 
-            <div class="metric-card" id="metric-alertas">
+            <div class="metric-card" id="metric-alertas-negativos">
               <div class="metric-label">Stock negativo</div>
-              <div class="metric-value" id="metric-alertas-value">0</div>
+              <div class="metric-value" id="metric-alertas-negativos">0</div>
             </div>
 
-            <div class="metric-card" id="metric-sinstock">
+            <div class="metric-card" id="metric-alertas-cero">
               <div class="metric-label">Sin stock</div>
-              <div class="metric-value" id="metric-sinstock-value">0</div>
+              <div class="metric-value" id="metric-alertas-cero">0</div>
             </div>
 
             <div class="metric-card" id="metric-valorizado">
@@ -235,6 +233,7 @@
             <div><strong>Stock negativo:</strong> <span id="fuente-stock-negativo">—</span></div>
           </div>
         </section>
+
         <footer class="app-footer">
           <div class="footer-logo">SCL</div>
           <div class="footer-text">Salas Creative Lab</div>
@@ -242,6 +241,9 @@
       </div>
     </div>
 
+    <!-- ============================================================
+         PANEL ADMIN
+    ============================================================ -->
     <div id="admin-panel">
       <h2>Panel administrador</h2>
 
@@ -326,6 +328,9 @@
 
     <div id="toast" class="toast"></div>
 
+    <!-- ============================================================
+         SCRIPTS
+    ============================================================ -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://unpkg.com/@zxing/library@latest"></script>
 
