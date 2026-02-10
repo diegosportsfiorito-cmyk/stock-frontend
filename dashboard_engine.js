@@ -16,14 +16,14 @@ function normalizarCampo(v) {
 }
 
 // ============================================================
-// Paleta dinámica (infinita)
+// Paleta dinámica suave
 // ============================================================
 
 function generarColores(n) {
   const colores = [];
   for (let i = 0; i < n; i++) {
-    const hue = (i * 47) % 360;
-    colores.push(`hsl(${hue}, 85%, 55%)`);
+    const hue = (i * 37) % 360;
+    colores.push(`hsl(${hue}, 70%, 55%)`);
   }
   return colores;
 }
@@ -35,7 +35,7 @@ function generarColores(n) {
 function datasetPorTalle(items) {
   const map = new Map();
   items.forEach(item => {
-    item.talles.forEach(t => {
+    (item.talles || []).forEach(t => {
       const key = normalizarCampo(t.talle);
       map.set(key, (map.get(key) || 0) + t.stock);
     });
@@ -51,12 +51,12 @@ function datasetPorMarca(items) {
   const map = new Map();
   items.forEach(item => {
     let total = 0;
-    item.talles.forEach(t => total += t.stock);
+    (item.talles || []).forEach(t => total += t.stock);
     const key = normalizarCampo(item.marca);
     map.set(key, (map.get(key) || 0) + total);
   });
 
-  const labels = Array.from(map.keys());
+  const labels = Array.from(map.keys()).sort((a, b) => map.get(b) - map.get(a));
   const data = labels.map(l => map.get(l));
 
   return { labels, data };
@@ -66,19 +66,19 @@ function datasetPorRubro(items) {
   const map = new Map();
   items.forEach(item => {
     let total = 0;
-    item.talles.forEach(t => total += t.stock);
+    (item.talles || []).forEach(t => total += t.stock);
     const key = normalizarCampo(item.rubro);
     map.set(key, (map.get(key) || 0) + total);
   });
 
-  const labels = Array.from(map.keys());
+  const labels = Array.from(map.keys()).sort((a, b) => map.get(b) - map.get(a));
   const data = labels.map(l => map.get(l));
 
   return { labels, data };
 }
 
 // ============================================================
-// Render del gráfico
+// Render del gráfico (mejorado)
 // ============================================================
 
 function actualizarDashboard(items) {
@@ -98,12 +98,15 @@ function actualizarDashboard(items) {
 
   if (chartInstance) chartInstance.destroy();
 
+  const total = dataset.data.reduce((a, b) => a + b, 0);
   const colores = generarColores(dataset.labels.length);
-
   const isLight = document.body.classList.contains("light-mode");
 
+  // Si hay demasiadas categorías, cambiar a barras automáticamente
+  const tipo = dataset.labels.length > 12 ? "bar" : "pie";
+
   chartInstance = new Chart(ctx, {
-    type: "pie",
+    type: tipo,
     data: {
       labels: dataset.labels,
       datasets: [
@@ -117,6 +120,10 @@ function actualizarDashboard(items) {
     },
     options: {
       responsive: true,
+      animation: {
+        duration: 900,
+        easing: "easeOutQuart"
+      },
       plugins: {
         legend: {
           position: "bottom",
@@ -124,9 +131,38 @@ function actualizarDashboard(items) {
             color: isLight ? "#333" : "#9ca3af",
             font: { size: 12 }
           }
+        },
+        tooltip: {
+          callbacks: {
+            label: function (ctx) {
+              const valor = ctx.raw;
+              const pct = ((valor / total) * 100).toFixed(1);
+              return `${ctx.label}: ${valor} (${pct}%)`;
+            }
+          }
+        },
+        datalabels: {
+          color: isLight ? "#333" : "#fff",
+          formatter: function (value) {
+            const pct = (value / total) * 100;
+            return pct >= 5 ? pct.toFixed(1) + "%" : "";
+          },
+          font: {
+            weight: "bold",
+            size: 11
+          }
         }
-      }
-    }
+      },
+      scales: tipo === "bar" ? {
+        x: {
+          ticks: { color: isLight ? "#333" : "#9ca3af" }
+        },
+        y: {
+          ticks: { color: isLight ? "#333" : "#9ca3af" }
+        }
+      } : {}
+    },
+    plugins: [ChartDataLabels]
   });
 }
 
