@@ -30,7 +30,6 @@
               <span>Estado conexión</span>
             </div>
 
-            <!-- SWITCH MODO VOZ -->
             <div class="header-switch-row">
               <label class="orb-mode-switch">
                 <span>Voz</span>
@@ -41,7 +40,6 @@
               </label>
             </div>
 
-            <!-- SWITCH DÍA/NOCHE -->
             <div class="header-switch-row">
               <label class="orb-mode-switch">
                 <span>Modo día</span>
@@ -53,7 +51,6 @@
               </label>
             </div>
 
-            <!-- BOTÓN AYUDA -->
             <button id="help-button" class="btn-help" title="Ayuda">❓</button>
           </div>
         </header>
@@ -72,17 +69,14 @@
                 autocomplete="off"
               />
 
-              <!-- AUTOCOMPLETE -->
               <ul id="autocomplete-list" class="autocomplete-list"></ul>
             </div>
 
-            <!-- OREJA -->
             <button id="mic-button" class="mic-btn" title="Dictado por voz">
               👂
             </button>
           </div>
 
-          <!-- ACCIONES -->
           <div class="search-actions-row">
             <div class="search-actions-right">
               <button id="btn-clear" class="orb-action-btn" title="Limpiar">🧹</button>
@@ -91,10 +85,8 @@
             </div>
           </div>
 
-          <!-- ESTADO DE VOZ -->
           <div id="voice-status" class="voice-status">Voz desactivada</div>
 
-          <!-- SCANNERS -->
           <div class="scanner-row">
             <div class="scanner-buttons">
               <button id="btn-scanner-interno-1" class="scanner-big-btn" title="Scanner interno A">📷</button>
@@ -115,7 +107,6 @@
             </div>
           </div>
 
-          <!-- FILTROS -->
           <div class="search-filters-row">
             <button id="btn-filtros" class="btn-secondary">Filtros</button>
 
@@ -128,7 +119,6 @@
             </label>
           </div>
 
-          <!-- ORB -->
           <div class="orb-zone">
             <div class="orb-actions-ring">
               <div id="orb" class="orb-container">
@@ -149,9 +139,15 @@
               <div class="metric-value" id="metric-pares-value">0</div>
             </div>
 
-            <div class="metric-card" id="metric-alertas">
-              <div class="metric-label">Alertas</div>
-              <div class="metric-value" id="metric-alertas-value">0</div>
+            <!-- NUEVOS INDICADORES -->
+            <div class="metric-card" id="metric-alertas-negativos">
+              <div class="metric-label">Stock negativo</div>
+              <div class="metric-value" id="metric-alertas-negativos">0</div>
+            </div>
+
+            <div class="metric-card" id="metric-alertas-cero">
+              <div class="metric-label">Sin stock</div>
+              <div class="metric-value" id="metric-alertas-cero">0</div>
             </div>
 
             <div class="metric-card" id="metric-valorizado">
@@ -160,7 +156,6 @@
             </div>
           </div>
 
-          <!-- FILTROS AVANZADOS -->
           <div id="filtros-panel" class="filtros-panel">
             <div class="filtros-row filtros-row-stack">
               <select id="filtro-marca" class="filtro-select">
@@ -187,7 +182,6 @@
              MAIN ROW
         ============================================================ -->
         <section class="main-row">
-          <!-- RESULTADOS -->
           <div class="results-card">
             <div class="results-header">
               <div class="results-title">Resultados</div>
@@ -204,7 +198,6 @@
             <div id="results-container"></div>
           </div>
 
-          <!-- DASHBOARD -->
           <aside class="dashboard-card">
             <div class="dashboard-header">
               <div class="dashboard-title">Visión rápida</div>
@@ -221,9 +214,6 @@
           </aside>
         </section>
 
-        <!-- ============================================================
-             FUENTE DE DATOS
-        ============================================================ -->
         <section class="fuente-datos-wrapper">
           <button id="fuente-datos-toggle" class="btn-secondary">Fuente de datos</button>
 
@@ -237,7 +227,6 @@
             <div><strong>Stock negativo:</strong> <span id="fuente-stock-negativo">—</span></div>
           </div>
         </section>
-
         <!-- ============================================================
              FOOTER
         ============================================================ -->
@@ -331,7 +320,7 @@
         <h2>Ayuda rápida</h2>
         <ul>
           <li>Escribí o escaneá un código, marca, rubro o talle.</li>
-          <li>Usá el botón 👂 para dictar si el modo voz está activo.</li>
+          <li>Usá el botón 👂 si el modo voz está activo.</li>
           <li>Click en métricas para filtros rápidos.</li>
           <li>Atajos: ESC limpia, F2 scanner, F3 voz.</li>
         </ul>
