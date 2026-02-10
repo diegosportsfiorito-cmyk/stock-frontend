@@ -23,7 +23,11 @@ const AppCore = {
     resultsStatus: document.getElementById("results-status"),
     metricArticulos: document.getElementById("metric-articulos-value"),
     metricPares: document.getElementById("metric-pares-value"),
-    metricAlertas: document.getElementById("metric-alertas-value"),
+
+    // NUEVOS INDICADORES
+    metricAlertasNegativos: document.getElementById("metric-alertas-negativos"),
+    metricAlertasCero: document.getElementById("metric-alertas-cero"),
+
     metricValorizado: document.getElementById("metric-valorizado-value"),
     connectionDot: document.getElementById("connection-dot"),
     fuenteDatosToggle: document.getElementById("fuente-datos-toggle"),
@@ -63,7 +67,6 @@ const AppCore = {
     return valor;
   },
 
-  // normalización fuerte para lógica (parser, índices, autocomplete)
   normalizarTexto(valor) {
     if (!valor) return "";
     return valor
@@ -93,7 +96,7 @@ const AppCore = {
   },
 
   // ============================================================
-  // TTS — Voz de salida básica sincronizada con ORB
+  // TTS
   // ============================================================
 
   speakResultados() {
@@ -128,82 +131,55 @@ const AppCore = {
   },
 
   // ============================================================
-  // INDICADORES
+  // INDICADORES (NEGATIVOS + CERO)
   // ============================================================
 
   actualizarIndicadores(items) {
     let articulos = items.length;
     let pares = 0;
-    let alertas = 0;
     let valorizado = 0;
+
+    let alertasNegativos = 0;
+    let alertasCero = 0;
 
     items.forEach((item) => {
       let totalItem = 0;
+      let todosCero = true;
+
       item.talles.forEach((t) => {
         pares += t.stock;
         totalItem += t.stock;
+        if (t.stock !== 0) todosCero = false;
       });
-      if (item.alerta || totalItem < 0) alertas++;
+
+      if (totalItem < 0) alertasNegativos++;
+      else if (totalItem === 0 && todosCero) alertasCero++;
+
       valorizado += item.valorizado || 0;
     });
 
     this.els.metricArticulos.textContent = this.formatNumber(articulos);
     this.els.metricPares.textContent = this.formatNumber(pares);
-    this.els.metricAlertas.textContent = this.formatNumber(alertas);
+
+    this.els.metricAlertasNegativos.textContent =
+      this.formatNumber(alertasNegativos);
+    this.els.metricAlertasCero.textContent = this.formatNumber(alertasCero);
+
     this.els.metricValorizado.textContent = `$${this.formatNumber(valorizado)}`;
 
     if (window.actualizarIndicadores) {
-      window.actualizarIndicadores({ articulos, pares, alertas, valorizado });
+      window.actualizarIndicadores({
+        articulos,
+        pares,
+        alertasNegativos,
+        alertasCero,
+        valorizado,
+      });
     }
   },
-
   // ============================================================
-  // RENDER RESULTADOS
+  // RENDER RESULTADOS (TABLA)
   // ============================================================
-
-  renderResultados(items) {
-    if (this.state.modoTabla) {
-      this.renderResultadosTabla(items);
-      return;
-    }
-
-    const cont = this.els.resultsContainer;
-    cont.innerHTML = "";
-
-    if (!items.length) {
-      cont.innerHTML = '<div class="results-empty">Sin resultados.</div>';
-      return;
-    }
-
-    items.forEach((item) => {
-      const div = document.createElement("div");
-      div.className = "result-item";
-
-      const talles = item.talles
-        .map((t) => `${t.talle}: ${t.stock}`)
-        .join(" | ");
-
-      div.innerHTML = `
-        <div class="result-title">${this.normalizarCampo(
-          item.codigo
-        )} — ${this.normalizarCampo(item.descripcion)}</div>
-        <div class="result-sub">
-          Marca: ${this.normalizarCampo(item.marca)} |
-          Rubro: ${this.normalizarCampo(item.rubro)} |
-          Color: ${this.normalizarCampo(item.color)}
-        </div>
-        <div class="result-talles">${talles}</div>
-        <div class="result-sub precio-publico">
-          Precio público: $${this.formatNumber(item.precio)}
-        </div>
-        <div class="result-sub precio-valorizado">
-          Valorizado: $${this.formatNumber(item.valorizado)}
-        </div>
-      `;
-
-      cont.appendChild(div);
-    });
-  },
 
   renderResultadosTabla(items) {
     const cont = this.els.resultsContainer;
@@ -276,7 +252,6 @@ const AppCore = {
     const q = raw.trim();
     const qUpper = this.normalizarTexto(q);
 
-    // índice normalizado -> crudo
     const mapMarcas = new Map();
     const mapRubros = new Map();
 
@@ -299,7 +274,6 @@ const AppCore = {
     let talleDesde = null;
     let talleHasta = null;
 
-    // tokens para evitar falsos positivos
     const tokens = qUpper.split(/\W+/);
 
     const marcasOrdenadas = marcasNorm.sort((a, b) => b.length - a.length);
@@ -320,18 +294,19 @@ const AppCore = {
       }
     }
 
-    // Rango de talles flexible: T40 A 42, 40-42, 40/42, T40-42, etc.
+    // Rango de talles
     const matchRango = qUpper.match(/T?(\d+)\s*(?:A|-|\/)\s*T?(\d+)/);
     if (matchRango) {
       talleDesde = parseInt(matchRango[1]);
       talleHasta = parseInt(matchRango[2]);
-      const usarFiltros = true;
       return {
-        filtros_globales: usarFiltros,
+        filtros_globales: true,
         marca,
         rubro,
         talleDesde,
         talleHasta,
+        soloUltimo: false,
+        soloNegativo: false,
         question: "",
       };
     }
@@ -340,18 +315,19 @@ const AppCore = {
     const matchTalle = qUpper.match(/^T?(\d{1,3})$/);
     if (matchTalle) {
       const t = parseInt(matchTalle[1]);
-      const usarFiltros = true;
       return {
-        filtros_globales: usarFiltros,
+        filtros_globales: true,
         marca,
         rubro,
         talleDesde: t,
         talleHasta: t,
+        soloUltimo: false,
+        soloNegativo: false,
         question: "",
       };
     }
 
-    // Precio flexible: P15000, 15000, $15000
+    // Precio
     const matchPrecio = qUpper.match(/^(?:P|\$)?(\d{2,6})$/);
     if (matchPrecio) {
       return {
@@ -360,11 +336,13 @@ const AppCore = {
         rubro: null,
         talleDesde: null,
         talleHasta: null,
-        question: "PRECIO " + matchPrecio[1],
+        soloUltimo: false,
+        soloNegativo: false,
+        question: matchPrecio[1],
       };
     }
 
-    // Código numérico largo (permitiendo guiones/espacios)
+    // Código largo
     if (/^\d[\d\- ]{6,14}\d$/.test(qUpper)) {
       return {
         filtros_globales: false,
@@ -372,11 +350,29 @@ const AppCore = {
         rubro: null,
         talleDesde: null,
         talleHasta: null,
+        soloUltimo: false,
+        soloNegativo: false,
         question: qUpper.replace(/[\s\-]/g, ""),
       };
     }
 
-    // Texto libre + posibles filtros
+    // Detectar "último" / "negativos"
+    const esUltimo = /\bULTIM[OA]S?\b/.test(qUpper);
+    const esNegativo = /\bNEGATIV[OA]S?\b/.test(qUpper);
+
+    if (esUltimo || esNegativo) {
+      return {
+        filtros_globales: true,
+        marca,
+        rubro,
+        talleDesde: null,
+        talleHasta: null,
+        soloUltimo: esUltimo,
+        soloNegativo: esNegativo,
+        question: "",
+      };
+    }
+
     const usarFiltros =
       marca !== null || rubro !== null || talleDesde !== null || talleHasta !== null;
 
@@ -386,6 +382,8 @@ const AppCore = {
       rubro,
       talleDesde,
       talleHasta,
+      soloUltimo: false,
+      soloNegativo: false,
       question: usarFiltros ? "" : q,
     };
   },
@@ -418,8 +416,10 @@ const AppCore = {
       filtros_globales: parsed.filtros_globales,
       marca: parsed.marca,
       rubro: parsed.rubro,
-      talle_desde: parsed.talleDesde,
-      talle_hasta: parsed.talleHasta,
+      talleDesde: parsed.talleDesde,
+      talleHasta: parsed.talleHasta,
+      soloUltimo: parsed.soloUltimo,
+      soloNegativo: parsed.soloNegativo,
     };
 
     try {
@@ -456,7 +456,6 @@ const AppCore = {
       if (window.ORB && ORB.setLoading) ORB.setLoading(false);
     }
   },
-
   // ============================================================
   // FILTROS MANUALES
   // ============================================================
@@ -480,8 +479,10 @@ const AppCore = {
       filtros_globales: true,
       marca: this.state.filtros.marca,
       rubro: this.state.filtros.rubro,
-      talle_desde: this.state.filtros.talleDesde,
-      talle_hasta: this.state.filtros.talleHasta,
+      talleDesde: this.state.filtros.talleDesde,
+      talleHasta: this.state.filtros.talleHasta,
+      soloUltimo: false,
+      soloNegativo: false,
     };
 
     if (window.ORB && ORB.setLoading) ORB.setLoading(true);
@@ -537,11 +538,13 @@ const AppCore = {
     items.forEach((item) => {
       if (item.marca) marcas.add(item.marca);
       if (item.rubro) rubros.add(item.rubro);
+
       let totalItem = 0;
       (item.talles || []).forEach((t) => {
         stockTotal += t.stock;
         totalItem += t.stock;
       });
+
       if (totalItem < 0) stockNegativo++;
     });
 
@@ -582,8 +585,10 @@ const AppCore = {
         filtros_globales: false,
         marca: null,
         rubro: null,
-        talle_desde: null,
-        talle_hasta: null,
+        talleDesde: null,
+        talleHasta: null,
+        soloUltimo: false,
+        soloNegativo: false,
       };
 
       const res = await fetch(this.config.backendUrl, {
@@ -628,7 +633,7 @@ const AppCore = {
   },
 
   // ============================================================
-  // AUTOCOMPLETADO — sugerencias desde catálogo
+  // AUTOCOMPLETADO
   // ============================================================
 
   getAutocompleteSuggestions(term) {
@@ -651,7 +656,6 @@ const AppCore = {
 
     return Array.from(sugerencias).slice(0, 10);
   },
-
   // ============================================================
   // UTILIDADES UI
   // ============================================================
