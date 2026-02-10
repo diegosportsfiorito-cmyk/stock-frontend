@@ -6,8 +6,7 @@
 // {
 //   articulos: number,
 //   pares: number,
-//   negativos: number,
-//   cero: number,
+//   alertas: number,
 //   valorizado: number
 // }
 //
@@ -20,25 +19,19 @@ function actualizarIndicadoresExternos(payload) {
   // Artículos
   if (payload.articulos !== undefined) {
     const el = document.getElementById("metric-articulos-value");
-    if (el) el.textContent = payload.articulos;
+    if (el) el.textContent = payload.articulos.toLocaleString("es-AR");
   }
 
   // Pares
   if (payload.pares !== undefined) {
     const el = document.getElementById("metric-pares-value");
-    if (el) el.textContent = payload.pares;
+    if (el) el.textContent = payload.pares.toLocaleString("es-AR");
   }
 
-  // Stock negativo
-  if (payload.negativos !== undefined) {
-    const el = document.getElementById("metric-negativos-value");
-    if (el) el.textContent = payload.negativos;
-  }
-
-  // Cero stock
-  if (payload.cero !== undefined) {
-    const el = document.getElementById("metric-cero-value");
-    if (el) el.textContent = payload.cero;
+  // Negativos (si el backend lo envía como alertas)
+  if (payload.alertas !== undefined) {
+    const elNeg = document.getElementById("metric-negativos-value");
+    if (elNeg) elNeg.textContent = payload.alertas.toLocaleString("es-AR");
   }
 
   // Valorizado
@@ -47,7 +40,6 @@ function actualizarIndicadoresExternos(payload) {
     if (el) el.textContent = "$" + payload.valorizado.toLocaleString("es-AR");
   }
 
-  // Log para debugging
   console.log("Indicadores actualizados:", payload);
 }
 
