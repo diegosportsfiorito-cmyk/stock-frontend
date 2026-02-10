@@ -1,27 +1,18 @@
-// build 20260210-3-XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-// ============================================================
-// UI ENGINE — Eventos, botones, filtros, vista tabla/tarjetas
-// + dictado, manos libres, scanner overlay, atajos, métricas, autocomplete
-// ============================================================
-
 function initUI(app) {
   const els = app.els;
   const safe = (el) => el !== null && el !== undefined;
 
   const orbCore = document.getElementById("orb-core");
+  const orb = document.getElementById("orb");
   const micButton = document.getElementById("mic-button");
   const modoVozSwitch = document.getElementById("modo-voz-switch");
-  const modoManosLibres = document.getElementById("modo-manos-libres");
+  const modoManosLibresSwitch = document.getElementById("modo-manos-libres");
   const voiceStatus = document.getElementById("voice-status");
   const helpButton = document.getElementById("help-button");
   const helpModal = document.getElementById("help-modal");
   const helpClose = document.getElementById("help-close");
   const scannerOverlay = document.getElementById("scanner-overlay");
   const autoList = document.getElementById("autocomplete-list");
-
-  // ============================================================
-  // AUDIO — BIP
-  // ============================================================
 
   const AudioCtx = window.AudioContext || window.webkitAudioContext;
   let audioCtx = null;
@@ -42,13 +33,8 @@ function initUI(app) {
     } catch (e) {}
   }
 
-  // ============================================================
-  // VOZ — Dictado
-  // ============================================================
-
   function setVoiceUIState(state) {
     if (!voiceStatus) return;
-
     if (state === "off") {
       voiceStatus.textContent = "Dictado desactivado";
       voiceStatus.classList.remove("listening");
@@ -64,7 +50,6 @@ function initUI(app) {
     }
   }
 
-  // Estado inicial dictado desde switch + localStorage
   if (modoVozSwitch && modoVozSwitch.checked) setVoiceUIState("ready");
   else setVoiceUIState("off");
 
@@ -84,21 +69,26 @@ function initUI(app) {
     });
   }
 
-  // Manos libres — solo persistencia y estado
-  if (modoManosLibres) {
-    const savedML = localStorage.getItem("modoManosLibres");
-    if (savedML === "on") modoManosLibres.checked = true;
+  if (modoManosLibresSwitch) {
+    const savedML = localStorage.getItem("manosLibres");
+    if (savedML === "on") {
+      modoManosLibresSwitch.checked = true;
+      window.manosLibresActivo = true;
+    } else {
+      window.manosLibresActivo = false;
+    }
 
-    modoManosLibres.addEventListener("change", (e) => {
+    modoManosLibresSwitch.addEventListener("change", (e) => {
       const on = e.target.checked;
-      localStorage.setItem("modoManosLibres", on ? "on" : "off");
+      window.manosLibresActivo = on;
+      localStorage.setItem("manosLibres", on ? "on" : "off");
+      beep(on ? 1200 : 500);
       app.showToast(on ? "Manos libres activado" : "Manos libres desactivado");
     });
   }
 
   function startDictado() {
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition || null;
-
     if (!SR) {
       app.showToast("Dictado no soportado en este navegador");
       beep(600);
@@ -114,9 +104,9 @@ function initUI(app) {
     beep(1500);
 
     rec.onresult = (ev) => {
-      const text = ev.results[0][0].transcript || "";
-      const limpio = text.replace(/[.,;:]+$/g, "").trim();
-      if (els.searchInput) els.searchInput.value = limpio;
+      let text = ev.results[0][0].transcript || "";
+      text = text.replace(/[.。]+$/g, "").trim();
+      if (els.searchInput) els.searchInput.value = text;
       setVoiceUIState("ready");
       if (autoList) autoList.innerHTML = "";
       app.buscar(true);
@@ -152,10 +142,6 @@ function initUI(app) {
     setOff: () => setVoiceUIState("off"),
   };
 
-  // ============================================================
-  // AUTOCOMPLETADO
-  // ============================================================
-
   function renderAutocomplete(term) {
     if (!autoList || !els.searchInput) return;
     const value = term.trim();
@@ -184,29 +170,10 @@ function initUI(app) {
     els.searchInput.addEventListener("input", (e) => {
       renderAutocomplete(e.target.value || "");
     });
-  }
 
-  if (autoList) {
-    autoList.addEventListener("click", (e) => {
-      const li = e.target;
-      if (li && li.tagName === "LI" && els.searchInput) {
-        const val = li.getAttribute("data-value") || li.textContent || "";
-        els.searchInput.value = val;
-        autoList.innerHTML = "";
-        app.buscar(true);
-      }
-    });
-  }
-
-  // ============================================================
-  // ENTER en input + admin
-  // ============================================================
-
-  if (safe(els.searchInput)) {
     els.searchInput.addEventListener("keydown", (e) => {
       if (e.key === "Enter") {
         const val = e.target.value.trim().toLowerCase();
-
         if (val === "admin") {
           const adminPanel = document.getElementById("admin-panel");
           if (adminPanel) adminPanel.style.display = "flex";
@@ -228,17 +195,38 @@ function initUI(app) {
         app.buscar(true);
       }
     });
+
+    els.searchInput.addEventListener("submit", (e) => {
+      e.preventDefault();
+      app.buscar(true);
+    });
+
+    els.searchInput.addEventListener("change", () => {
+      app.buscar(true);
+    });
   }
 
-  // ============================================================
-  // ORB
-  // ============================================================
+  if (autoList) {
+    autoList.addEventListener("click", (e) => {
+      const li = e.target;
+      if (li && li.tagName === "LI" && els.searchInput) {
+        const val = li.getAttribute("data-value") || li.textContent || "";
+        els.searchInput.value = val;
+        autoList.innerHTML = "";
+        app.buscar(true);
+      }
+    });
+  }
 
-  const orb = document.getElementById("orb");
-  if (safe(orb)) {
+  if (orb) {
     orb.addEventListener("click", () => {
       orb.classList.add("orb-pulse");
       setTimeout(() => orb.classList.remove("orb-pulse"), 300);
+      if (autoList) autoList.innerHTML = "";
+      app.buscar(true);
+    });
+
+    orb.addEventListener("touchend", () => {
       if (autoList) autoList.innerHTML = "";
       app.buscar(true);
     });
@@ -249,27 +237,23 @@ function initUI(app) {
       app.showToast("Modo administrador activado");
     });
   }
-
-  // ============================================================
-  // Botones ORB
-  // ============================================================
-
-  const btnClear = document.getElementById("btn-clear");
-  if (safe(btnClear))
-    btnClear.addEventListener("click", () => {
-      if (autoList) autoList.innerHTML = "";
-      app.limpiarPantalla();
+  if (helpButton && helpModal) {
+    helpButton.addEventListener("click", () => {
+      helpModal.classList.remove("hidden");
     });
+  }
 
-  const btnCopy = document.getElementById("btn-copy");
-  if (safe(btnCopy)) btnCopy.addEventListener("click", () => app.copiarResultados());
+  if (helpClose && helpModal) {
+    helpClose.addEventListener("click", () => {
+      helpModal.classList.add("hidden");
+    });
+  }
 
-  const btnStop = document.getElementById("btn-stop");
-  if (safe(btnStop)) btnStop.addEventListener("click", () => app.stopTodo());
-
-  // ============================================================
-  // SCANNER — overlay
-  // ============================================================
+  if (helpModal) {
+    helpModal.addEventListener("click", (e) => {
+      if (e.target === helpModal) helpModal.classList.add("hidden");
+    });
+  }
 
   function setScannerOverlay(active) {
     if (!scannerOverlay) return;
@@ -328,10 +312,6 @@ function initUI(app) {
     stop: () => setScannerOverlay(false),
   };
 
-  // ============================================================
-  // Modo scanner simple/completo
-  // ============================================================
-
   const modoToggle = document.getElementById("modo-scanner-toggle");
   if (modoToggle) {
     modoToggle.checked = (window.modoScanner || "simple") === "completo";
@@ -343,10 +323,6 @@ function initUI(app) {
     });
   }
 
-  // ============================================================
-  // Día / noche
-  // ============================================================
-
   const toggleDark = document.getElementById("toggle-dark");
   if (toggleDark) {
     toggleDark.checked = document.body.classList.contains("light-mode");
@@ -355,10 +331,6 @@ function initUI(app) {
       else document.body.classList.remove("light-mode");
     });
   }
-
-  // ============================================================
-  // Filtros
-  // ============================================================
 
   const btnFiltros = document.getElementById("btn-filtros");
   if (btnFiltros && els.filtrosPanel) {
@@ -375,9 +347,18 @@ function initUI(app) {
     els.chkSoloStock.addEventListener("change", () => app.buscarPorFiltros());
   }
 
-  // ============================================================
-  // Vista tabla / tarjetas
-  // ============================================================
+  if (els.filtroMarca) {
+    els.filtroMarca.addEventListener("change", () => app.buscarPorFiltros());
+  }
+  if (els.filtroRubro) {
+    els.filtroRubro.addEventListener("change", () => app.buscarPorFiltros());
+  }
+  if (els.filtroTalleDesde) {
+    els.filtroTalleDesde.addEventListener("change", () => app.buscarPorFiltros());
+  }
+  if (els.filtroTalleHasta) {
+    els.filtroTalleHasta.addEventListener("change", () => app.buscarPorFiltros());
+  }
 
   const btnVistaTabla = document.getElementById("btn-vista-tabla");
   const btnVistaTarjetas = document.getElementById("btn-vista-tarjetas");
@@ -398,20 +379,12 @@ function initUI(app) {
     });
   }
 
-  // ============================================================
-  // Cambio de modo de gráfico
-  // ============================================================
-
   const chartMode = document.getElementById("chart-mode");
   if (chartMode && window.actualizarDashboard) {
     chartMode.addEventListener("change", () => {
       window.actualizarDashboard(app.state.items);
     });
   }
-
-  // ============================================================
-  // Panel admin
-  // ============================================================
 
   const adminGuardar = document.getElementById("admin-guardar");
   const adminCerrar = document.getElementById("admin-cerrar");
@@ -443,35 +416,10 @@ function initUI(app) {
     });
   }
 
-  // ============================================================
-  // Ayuda — modal
-  // ============================================================
-
-  if (helpButton && helpModal) {
-    helpButton.addEventListener("click", () => {
-      helpModal.classList.remove("hidden");
-    });
-  }
-
-  if (helpClose && helpModal) {
-    helpClose.addEventListener("click", () => {
-      helpModal.classList.add("hidden");
-    });
-  }
-
-  if (helpModal) {
-    helpModal.addEventListener("click", (e) => {
-      if (e.target === helpModal) helpModal.classList.add("hidden");
-    });
-  }
-
-  // ============================================================
-  // Métricas clickeables
-  // ============================================================
-
   const metricArt = document.getElementById("metric-articulos");
   const metricPares = document.getElementById("metric-pares");
-  const metricAlertas = document.getElementById("metric-alertas");
+  const metricAlertasNeg = document.getElementById("metric-alertas-negativos");
+  const metricAlertasCero = document.getElementById("metric-alertas-cero");
   const metricVal = document.getElementById("metric-valorizado");
 
   if (metricPares && els.chkSoloStock) {
@@ -486,16 +434,12 @@ function initUI(app) {
     });
   }
 
-  [metricArt, metricAlertas, metricVal].forEach((m) => {
+  [metricArt, metricAlertasNeg, metricAlertasCero, metricVal].forEach((m) => {
     if (!m) return;
     m.addEventListener("click", () => {
       AppCore.showToast("Métricas clickeables (futuro)");
     });
   });
-
-  // ============================================================
-  // Atajos
-  // ============================================================
 
   document.addEventListener("keydown", (e) => {
     const tag = (e.target && e.target.tagName) || "";
