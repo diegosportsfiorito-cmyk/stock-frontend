@@ -7,10 +7,10 @@
   orbCore.style.width = "110px";
   orbCore.style.height = "110px";
 
-  // Modo del anillo (ya no se usa, pero se conserva para compatibilidad)
+  // Modo del anillo (se conserva para compatibilidad)
   const ringMode = localStorage.getItem("orbRingMode") || "iconos";
 
-  // Sectores originales (se conservan para compatibilidad)
+  // Sectores originales (compatibilidad futura)
   const SECTORS = [
     { id: "stop", start: 337.5, end: 22.5 },
     { id: "clear", start: 22.5, end: 67.5 },
@@ -34,11 +34,10 @@
   };
 
   // ============================================================
-  // ANILLO ORIGINAL — AHORA DESACTIVADO
+  // ANILLO ORIGINAL — DESACTIVADO (NO SE BORRA NADA)
   // ============================================================
 
-  // Se conserva el código, pero NO se crea el anillo
-  // para evitar romper nada del sistema.
+  // Código original preservado pero desactivado:
   //
   // const ring = document.createElement("div");
   // ring.className = "orb-ring";
@@ -64,7 +63,7 @@
   // }
 
   // ============================================================
-  // TODA LA LÓGICA DEL ANILLO SE DESACTIVA
+  // LÓGICA DEL ANILLO DESACTIVADA
   // ============================================================
 
   function getAngle() { return null; }
@@ -75,7 +74,7 @@
   let dragging = false;
 
   orb.addEventListener("mousedown", () => {
-    dragging = false; // anillo desactivado
+    dragging = false;
   });
 
   document.addEventListener("mousemove", () => {
@@ -99,7 +98,37 @@
   });
 
   // ============================================================
-  // API GLOBAL DEL ORB (SE MANTIENE COMPLETA)
+  // ORB COMO BOTÓN DE BÚSQUEDA
+  // ============================================================
+
+  orbCore.addEventListener("click", () => {
+    if (window.AppCore && !AppCore.state.buscando) {
+      AppCore.buscar(true);
+    }
+  });
+
+  // ============================================================
+  // 5 CLICS PARA ABRIR PANEL ADMIN
+  // ============================================================
+
+  const adminPanel = document.getElementById("admin-panel");
+  if (adminPanel) {
+    let clickTimes = [];
+
+    orbCore.addEventListener("click", () => {
+      const now = Date.now();
+      clickTimes.push(now);
+      clickTimes = clickTimes.filter(t => now - t < 1000);
+
+      if (clickTimes.length >= 5) {
+        adminPanel.style.display = "flex";
+        clickTimes = [];
+      }
+    });
+  }
+
+  // ============================================================
+  // API GLOBAL DEL ORB
   // ============================================================
 
   window.ORB = {
@@ -122,11 +151,36 @@
       this.currentMode = "ultra";
       orbCore.className = "orb-ultra";
       document.documentElement.style.setProperty("--orb-halo-strength", 60);
+    },
+
+    // Estados visuales
+    setLoading(active) {
+      orbCore.classList.remove("orb-error", "orb-ready", "orb-listening");
+      if (active) orbCore.classList.add("orb-loading");
+      else orbCore.classList.remove("orb-loading");
+    },
+
+    setReady(active) {
+      orbCore.classList.remove("orb-error", "orb-loading", "orb-listening");
+      if (active) orbCore.classList.add("orb-ready");
+      else orbCore.classList.remove("orb-ready");
+    },
+
+    setError(active) {
+      orbCore.classList.remove("orb-ready", "orb-loading", "orb-listening");
+      if (active) orbCore.classList.add("orb-error");
+      else orbCore.classList.remove("orb-error");
+    },
+
+    setListening(active) {
+      orbCore.classList.remove("orb-error", "orb-loading", "orb-ready");
+      if (active) orbCore.classList.add("orb-listening");
+      else orbCore.classList.remove("orb-listening");
     }
   };
 
   // ============================================================
-  // FEEDBACK VISUAL SIMPLE (SE MANTIENE)
+  // FEEDBACK VISUAL (PRESIÓN)
   // ============================================================
 
   orbCore.addEventListener("mousedown", () => {
