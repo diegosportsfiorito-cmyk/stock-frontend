@@ -6,7 +6,7 @@ const AppCore = {
   config: {
     backendUrl:
       localStorage.getItem("backendUrl") ||
-      "https://stock-backend-1-0upi.onrender.com/query",
+      "https://stock-backend-1-0upi.onrender.com",
     modoDefecto: localStorage.getItem("modoDefecto") || "simple",
   },
 
