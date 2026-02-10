@@ -5,8 +5,9 @@
     <title>STOCK IA PRO — Asistente inteligente</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <link rel="stylesheet" href="styles_v2.css" />
-    <link rel="stylesheet" href="orb_v2.css" />
+    <!-- CSS con versión anti-cache -->
+    <link rel="stylesheet" href="styles_v2.css?v=20260210" />
+    <link rel="stylesheet" href="orb_v2.css?v=20260210" />
   </head>
 
   <body>
@@ -139,7 +140,6 @@
               <div class="metric-value" id="metric-pares-value">0</div>
             </div>
 
-            <!-- NUEVOS INDICADORES -->
             <div class="metric-card" id="metric-alertas-negativos">
               <div class="metric-label">Stock negativo</div>
               <div class="metric-value" id="metric-alertas-negativos">0</div>
@@ -227,6 +227,7 @@
             <div><strong>Stock negativo:</strong> <span id="fuente-stock-negativo">—</span></div>
           </div>
         </section>
+
         <!-- ============================================================
              FOOTER
         ============================================================ -->
@@ -340,14 +341,14 @@
     <script src="https://unpkg.com/@zxing/library@latest"></script>
 
     <!-- ============================================================
-         SCRIPTS
+         SCRIPTS (con anti-cache)
     ============================================================ -->
-    <script src="orb_engine.js"></script>
-    <script src="orb_admin_engine.js"></script>
-    <script src="dashboard_engine.js"></script>
-    <script src="indicators_engine.js"></script>
-    <script src="scanner_v3.js"></script>
-    <script src="app_core.js"></script>
-    <script src="ui_engine.js"></script>
+    <script src="orb_engine.js?v=20260210"></script>
+    <script src="orb_admin_engine.js?v=20260210"></script>
+    <script src="dashboard_engine.js?v=20260210"></script>
+    <script src="indicators_engine.js?v=20260210"></script>
+    <script src="scanner_v3.js?v=20260210"></script>
+    <script src="app_core.js?v=20260210"></script>
+    <script src="ui_engine.js?v=20260210"></script>
   </body>
 </html>
