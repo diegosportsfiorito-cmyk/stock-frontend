@@ -24,7 +24,6 @@ const AppCore = {
     metricArticulos: document.getElementById("metric-articulos-value"),
     metricPares: document.getElementById("metric-pares-value"),
 
-    // NUEVOS INDICADORES
     metricAlertasNegativos: document.getElementById("metric-alertas-negativos"),
     metricAlertasCero: document.getElementById("metric-alertas-cero"),
 
@@ -131,7 +130,7 @@ const AppCore = {
   },
 
   // ============================================================
-  // INDICADORES (NEGATIVOS + CERO)
+  // INDICADORES
   // ============================================================
 
   actualizarIndicadores(items) {
@@ -244,9 +243,8 @@ const AppCore = {
 
     cont.innerHTML = html;
   },
-
   // ============================================================
-  // PARSER INTELIGENTE (CORREGIDO)
+  // PARSER INTELIGENTE
   // ============================================================
 
   interpretarQuery(raw) {
@@ -295,7 +293,6 @@ const AppCore = {
       }
     }
 
-    // Rango de talles
     const matchRango = qUpper.match(/T?(\d+)\s*(?:A|-|\/)\s*T?(\d+)/);
     if (matchRango) {
       talleDesde = parseInt(matchRango[1]);
@@ -312,7 +309,6 @@ const AppCore = {
       };
     }
 
-    // Talle único
     const matchTalle = qUpper.match(/^T?(\d{1,3})$/);
     if (matchTalle) {
       const t = parseInt(matchTalle[1]);
@@ -328,7 +324,6 @@ const AppCore = {
       };
     }
 
-    // Precio
     const matchPrecio = qUpper.match(/^(?:P|\$)?(\d{2,6})$/);
     if (matchPrecio) {
       return {
@@ -343,7 +338,6 @@ const AppCore = {
       };
     }
 
-    // Código largo
     if (/^\d[\d\- ]{6,14}\d$/.test(qUpper)) {
       return {
         filtros_globales: false,
@@ -357,7 +351,6 @@ const AppCore = {
       };
     }
 
-    // Detectar "último" / "negativos"
     const esUltimo = /\bULTIM[OA]S?\b/.test(qUpper);
     const esNegativo = /\bNEGATIV[OA]S?\b/.test(qUpper);
 
@@ -526,7 +519,7 @@ const AppCore = {
   },
 
   // ============================================================
-  // RESUMEN CATÁLOGO / FUENTE DE DATOS
+  // RESUMEN CATÁLOGO
   // ============================================================
 
   calcularResumenCatalogo() {
@@ -574,7 +567,6 @@ const AppCore = {
       this.els.fuenteStockNegativo.textContent = resumen.stockNegativo;
     }
   },
-
   // ============================================================
   // CATÁLOGO
   // ============================================================
@@ -692,14 +684,30 @@ const AppCore = {
   },
 
   // ============================================================
-  // CONFIG ADMIN
+  // CONFIG ADMIN (CORREGIDO Y BLINDADO)
   // ============================================================
 
   aplicarConfigAdmin() {
-    const url = localStorage.getItem("backendUrl");
+    let url = localStorage.getItem("backendUrl");
     const modo = localStorage.getItem("modoDefecto");
 
-    if (url) this.config.backendUrl = url;
+    if (url) {
+      url = url.trim();
+
+      // Eliminar /query o /query/ si está presente
+      url = url.replace(/\/query\/?$/i, "");
+
+      // Eliminar barras finales repetidas
+      url = url.replace(/\/+$/g, "");
+
+      this.config.backendUrl = url;
+    }
+
+    // Si no hay URL válida, usar la correcta por defecto
+    if (!this.config.backendUrl) {
+      this.config.backendUrl = "https://stock-backend-1-0upi.onrender.com";
+    }
+
     if (modo) {
       this.config.modoDefecto = modo;
       if (window.setModoScanner) {
@@ -711,8 +719,10 @@ const AppCore = {
     const selectModo = document.getElementById("admin-modo-defecto");
     if (inputUrl) inputUrl.value = this.config.backendUrl;
     if (selectModo) selectModo.value = this.config.modoDefecto;
-  },
 
+    // Debug explícito
+    console.log("BACKEND URL EFECTIVA:", this.config.backendUrl);
+  },
   // ============================================================
   // INIT
   // ============================================================
