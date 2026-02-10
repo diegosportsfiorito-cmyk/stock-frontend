@@ -1,180 +1,181 @@
-// ============================================================
-// ORB ADMIN ENGINE — Configuración avanzada del ORB
-// ============================================================
+(function () {
+  const panel = document.getElementById("admin-panel");
+  if (!panel) return;
 
-const ORB_ADMIN = {
-  panel: document.getElementById("admin-panel"),
+  const els = {
+    backendUrl: document.getElementById("admin-backend-url"),
+    modoDefecto: document.getElementById("admin-modo-defecto"),
 
-  inputColorDia: document.getElementById("orb-color"),
-  inputColorNoche: document.getElementById("orb-color-dark"),
-  inputSize: document.getElementById("orb-size"),
-  inputHalo: document.getElementById("orb-halo"),
-  inputModo: document.getElementById("orb-mode"),
-  inputPresets: document.getElementById("orb-presets"),
-  inputRingMode: document.getElementById("orb-ring-mode"), // ← NUEVO
-  btnReset: document.getElementById("orb-reset"),
+    orbColor: document.getElementById("orb-color"),
+    orbColorDark: document.getElementById("orb-color-dark"),
+    orbSize: document.getElementById("orb-size"),
+    orbHalo: document.getElementById("orb-halo"),
+    orbMode: document.getElementById("orb-mode"),
+    orbPresets: document.getElementById("orb-presets"),
+    orbRingMode: document.getElementById("orb-ring-mode"),
 
-  orbEl: document.getElementById("orb-core"),
-
-  // ============================================================
-  // CARGAR CONFIG ACTUAL DEL ORB
-  // ============================================================
-
-  cargarConfig() {
-    if (!this.orbEl) return;
-
-    // Colores
-    this.inputColorDia.value = getComputedStyle(document.documentElement)
-      .getPropertyValue("--orb-color")
-      .trim();
-
-    this.inputColorNoche.value = getComputedStyle(document.documentElement)
-      .getPropertyValue("--orb-color-dark")
-      .trim();
-
-    // Tamaño
-    const size = parseInt(this.orbEl.style.width || 130);
-    this.inputSize.value = size;
-
-    // Halo
-    const halo = parseInt(
-      getComputedStyle(document.documentElement)
-        .getPropertyValue("--orb-halo-strength")
-    );
-    this.inputHalo.value = halo;
-
-    // Modo visual
-    this.inputModo.value = ORB.currentMode;
-
-    // Preset actual
-    this.inputPresets.value = localStorage.getItem("orbPreset") || "default";
-
-    // Modo del anillo (nuevo)
-    const ringMode = localStorage.getItem("orbRingMode") || "minimalista";
-    if (this.inputRingMode) this.inputRingMode.value = ringMode;
-  },
+    btnGuardar: document.getElementById("admin-guardar"),
+    btnCerrar: document.getElementById("admin-cerrar"),
+    btnReset: document.getElementById("orb-reset"),
+  };
 
   // ============================================================
-  // LISTENERS
+  // CARGAR CONFIGURACIÓN GUARDADA
   // ============================================================
 
-  initListeners() {
-    if (!this.orbEl) return;
+  function cargarConfig() {
+    const backendUrl = localStorage.getItem("backendUrl");
+    const modoDefecto = localStorage.getItem("modoDefecto");
 
-    // Color día
-    this.inputColorDia?.addEventListener("input", () => {
-      document.documentElement.style.setProperty("--orb-color", this.inputColorDia.value);
-      ORB.setBase();
-    });
+    const orbColor = localStorage.getItem("orbColor");
+    const orbColorDark = localStorage.getItem("orbColorDark");
+    const orbSize = localStorage.getItem("orbSize");
+    const orbHalo = localStorage.getItem("orbHalo");
+    const orbMode = localStorage.getItem("orbMode");
+    const orbPresets = localStorage.getItem("orbPresets");
+    const orbRingMode = localStorage.getItem("orbRingMode");
 
-    // Color noche
-    this.inputColorNoche?.addEventListener("input", () => {
-      document.documentElement.style.setProperty("--orb-color-dark", this.inputColorNoche.value);
-      ORB.setBase();
-    });
+    if (backendUrl) els.backendUrl.value = backendUrl;
+    if (modoDefecto) els.modoDefecto.value = modoDefecto;
 
-    // Tamaño ORB
-    this.inputSize?.addEventListener("input", () => {
-      const px = this.inputSize.value + "px";
-      this.orbEl.style.width = px;
-      this.orbEl.style.height = px;
-    });
+    if (orbColor) els.orbColor.value = orbColor;
+    if (orbColorDark) els.orbColorDark.value = orbColorDark;
+    if (orbSize) els.orbSize.value = orbSize;
+    if (orbHalo) els.orbHalo.value = orbHalo;
+    if (orbMode) els.orbMode.value = orbMode;
+    if (orbPresets) els.orbPresets.value = orbPresets;
+    if (orbRingMode) els.orbRingMode.value = orbRingMode;
+  }
 
-    // Halo
-    this.inputHalo?.addEventListener("input", () => {
-      ORB.setHalo(parseInt(this.inputHalo.value));
-    });
+  cargarConfig();
 
-    // Modo visual
-    this.inputModo?.addEventListener("change", () => {
-      ORB.setMode(this.inputModo.value);
-    });
+  // ============================================================
+  // GUARDAR CONFIGURACIÓN
+  // ============================================================
 
-    // Presets
-    this.inputPresets?.addEventListener("change", () => {
-      this.aplicarPreset(this.inputPresets.value);
-    });
+  function guardarConfig() {
+    localStorage.setItem("backendUrl", els.backendUrl.value.trim());
+    localStorage.setItem("modoDefecto", els.modoDefecto.value);
 
-    // Modo del anillo (nuevo)
-    this.inputRingMode?.addEventListener("change", () => {
-      localStorage.setItem("orbRingMode", this.inputRingMode.value);
-      if (window.AppCore) AppCore.showToast("Modo del anillo actualizado");
-    });
+    localStorage.setItem("orbColor", els.orbColor.value);
+    localStorage.setItem("orbColorDark", els.orbColorDark.value);
+    localStorage.setItem("orbSize", els.orbSize.value);
+    localStorage.setItem("orbHalo", els.orbHalo.value);
+    localStorage.setItem("orbMode", els.orbMode.value);
+    localStorage.setItem("orbPresets", els.orbPresets.value);
+    localStorage.setItem("orbRingMode", els.orbRingMode.value);
 
-    // Reset
-    this.btnReset?.addEventListener("click", () => {
-      this.resetOrb();
-    });
-  },
+    aplicarCambiosVisuales();
+
+    panel.style.display = "none";
+  }
+
+  // ============================================================
+  // APLICAR CAMBIOS VISUALES AL ORB
+  // ============================================================
+
+  function aplicarCambiosVisuales() {
+    const orbCore = document.getElementById("orb-core");
+    if (!orbCore) return;
+
+    const color = els.orbColor.value;
+    const colorDark = els.orbColorDark.value;
+    const size = els.orbSize.value;
+    const halo = els.orbHalo.value;
+    const mode = els.orbMode.value;
+
+    document.documentElement.style.setProperty("--orb-color", color);
+    document.documentElement.style.setProperty("--orb-color-dark", colorDark);
+    document.documentElement.style.setProperty("--orb-halo-strength", halo);
+
+    orbCore.style.width = size + "px";
+    orbCore.style.height = size + "px";
+
+    if (window.ORB) {
+      ORB.setMode(mode);
+    }
+  }
 
   // ============================================================
   // PRESETS
   // ============================================================
 
-  aplicarPreset(nombre) {
+  function aplicarPreset(nombre) {
     const presets = {
-      default: ["#4fc3f7", "#7c4dff", 60, "ultra"],
-      plasma: ["#b44cff", "#5a00a3", 80, "ultra"],
-      fuego: ["#ff8a00", "#b30000", 90, "ultra"],
-      neon: ["#3dff7d", "#009933", 100, "ultra"],
-      minimal: ["#444444", "#111111", 0, "classic"],
+      default: {
+        color: "#4fc3f7",
+        dark: "#7c4dff",
+        halo: 60,
+        mode: "ultra",
+      },
+      plasma: {
+        color: "#ff00ff",
+        dark: "#5500ff",
+        halo: 90,
+        mode: "ultra",
+      },
+      fuego: {
+        color: "#ff6a00",
+        dark: "#b30000",
+        halo: 110,
+        mode: "classic",
+      },
+      neon: {
+        color: "#39ff14",
+        dark: "#0b3d02",
+        halo: 80,
+        mode: "3d",
+      },
+      minimal: {
+        color: "#ffffff",
+        dark: "#000000",
+        halo: 20,
+        mode: "classic",
+      },
     };
 
     const p = presets[nombre];
     if (!p) return;
 
-    document.documentElement.style.setProperty("--orb-color", p[0]);
-    document.documentElement.style.setProperty("--orb-color-dark", p[1]);
-    ORB.setHalo(parseInt(p[2]));
-    ORB.setMode(p[3]);
+    els.orbColor.value = p.color;
+    els.orbColorDark.value = p.dark;
+    els.orbHalo.value = p.halo;
+    els.orbMode.value = p.mode;
 
-    this.inputColorDia.value = p[0];
-    this.inputColorNoche.value = p[1];
-    this.inputHalo.value = p[2];
-    this.inputModo.value = p[3];
+    aplicarCambiosVisuales();
+  }
 
-    localStorage.setItem("orbPreset", nombre);
-
-    if (window.AppCore) AppCore.showToast("Preset aplicado");
-  },
+  els.orbPresets.addEventListener("change", () => {
+    aplicarPreset(els.orbPresets.value);
+  });
 
   // ============================================================
-  // RESET COMPLETO
+  // RESET ORB
   // ============================================================
 
-  resetOrb() {
-    ORB.reset();
+  els.btnReset.addEventListener("click", () => {
+    localStorage.removeItem("orbColor");
+    localStorage.removeItem("orbColorDark");
+    localStorage.removeItem("orbSize");
+    localStorage.removeItem("orbHalo");
+    localStorage.removeItem("orbMode");
+    localStorage.removeItem("orbPresets");
+    localStorage.removeItem("orbRingMode");
 
-    document.documentElement.style.setProperty("--orb-color", "#4fc3f7");
-    document.documentElement.style.setProperty("--orb-color-dark", "#7c4dff");
+    if (window.ORB) ORB.reset();
 
-    this.orbEl.style.width = "130px";
-    this.orbEl.style.height = "130px";
-
-    this.inputColorDia.value = "#4fc3f7";
-    this.inputColorNoche.value = "#7c4dff";
-    this.inputSize.value = 130;
-    this.inputHalo.value = 60;
-    this.inputModo.value = "ultra";
-    this.inputPresets.value = "default";
-
-    // Reset del modo del anillo
-    localStorage.setItem("orbRingMode", "minimalista");
-    if (this.inputRingMode) this.inputRingMode.value = "minimalista";
-
-    if (window.AppCore) AppCore.showToast("ORB restaurado");
-  },
+    cargarConfig();
+    aplicarCambiosVisuales();
+  });
 
   // ============================================================
-  // INIT
+  // BOTONES GUARDAR / CERRAR
   // ============================================================
 
-  init() {
-    this.cargarConfig();
-    this.initListeners();
-  },
-};
+  els.btnGuardar.addEventListener("click", guardarConfig);
 
-document.addEventListener("DOMContentLoaded", () => {
-  ORB_ADMIN.init();
-});
+  els.btnCerrar.addEventListener("click", () => {
+    panel.style.display = "none";
+  });
+
+})();
