@@ -1,5 +1,4 @@
-// build 20260210-3-XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-// build 20260210-3-XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+// build 20260210-3
 // ============================================================
 // APP CORE — Motor inteligente + filtros estructurados
 // ============================================================
@@ -25,10 +24,8 @@ const AppCore = {
     resultsStatus: document.getElementById("results-status"),
     metricArticulos: document.getElementById("metric-articulos-value"),
     metricPares: document.getElementById("metric-pares-value"),
-
     metricAlertasNegativos: document.getElementById("metric-alertas-negativos"),
     metricAlertasCero: document.getElementById("metric-alertas-cero"),
-
     metricValorizado: document.getElementById("metric-valorizado-value"),
     connectionDot: document.getElementById("connection-dot"),
     fuenteDatosToggle: document.getElementById("fuente-datos-toggle"),
@@ -130,7 +127,6 @@ const AppCore = {
       if (window.ORB && ORB.setReady) ORB.setReady(true);
     }
   },
-
   // ============================================================
   // INDICADORES
   // ============================================================
@@ -244,6 +240,14 @@ const AppCore = {
     `;
 
     cont.innerHTML = html;
+  },
+
+  // ============================================================
+  // 🔥 FIX CRÍTICO — FUNCIÓN QUE FALTABA
+  // ============================================================
+
+  renderResultados(items) {
+    this.renderResultadosTabla(items);
   },
   // ============================================================
   // PARSER INTELIGENTE
@@ -452,7 +456,6 @@ const AppCore = {
       if (window.ORB && ORB.setLoading) ORB.setLoading(false);
     }
   },
-
   // ============================================================
   // FILTROS MANUALES
   // ============================================================
@@ -521,254 +524,4 @@ const AppCore = {
   },
 
   // ============================================================
-  // RESUMEN CATÁLOGO
-  // ============================================================
-
-  calcularResumenCatalogo() {
-    const items = this.state.catalogItems || [];
-    const marcas = new Set();
-    const rubros = new Set();
-    let articulos = items.length;
-    let stockTotal = 0;
-    let stockNegativo = 0;
-
-    items.forEach((item) => {
-      if (item.marca) marcas.add(item.marca);
-      if (item.rubro) rubros.add(item.rubro);
-
-      let totalItem = 0;
-      (item.talles || []).forEach((t) => {
-        stockTotal += t.stock;
-        totalItem += t.stock;
-      });
-
-      if (totalItem < 0) stockNegativo++;
-    });
-
-    const resumen = {
-      archivo: "Catálogo remoto",
-      fecha: new Date().toLocaleString("es-AR"),
-      marcas: marcas.size,
-      rubros: rubros.size,
-      articulos,
-      stockTotal,
-      stockNegativo,
-    };
-
-    this.state.resumenCatalogo = resumen;
-
-    if (this.els.fuenteArchivo) {
-      this.els.fuenteArchivo.textContent = resumen.archivo;
-      this.els.fuenteFecha.textContent = resumen.fecha;
-      this.els.fuenteMarcas.textContent = resumen.marcas;
-      this.els.fuenteRubros.textContent = resumen.rubros;
-      this.els.fuenteArticulos.textContent = resumen.articulos;
-      this.els.fuenteStockTotal.textContent = this.formatNumber(
-        resumen.stockTotal
-      );
-      this.els.fuenteStockNegativo.textContent = resumen.stockNegativo;
-    }
-  },
-  // ============================================================
-  // CATÁLOGO
-  // ============================================================
-
-  async cargarCatalogo() {
-    try {
-      const body = {
-        question: "",
-        solo_stock: false,
-        filtros_globales: false,
-        marca: null,
-        rubro: null,
-        talleDesde: null,
-        talleHasta: null,
-        soloUltimo: false,
-        soloNegativo: false,
-      };
-
-      const res = await fetch(this.config.backendUrl + "/query", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      });
-
-      const data = await res.json();
-      this.state.catalogItems = data.items || [];
-
-      const marcasSet = new Map();
-      const rubrosSet = new Map();
-
-      this.state.catalogItems.forEach((i) => {
-        if (i.marca) {
-          const norm = this.normalizarTexto(i.marca);
-          if (norm && !marcasSet.has(norm)) marcasSet.set(norm, i.marca);
-        }
-        if (i.rubro) {
-          const norm = this.normalizarTexto(i.rubro);
-          if (norm && !rubrosSet.has(norm)) rubrosSet.set(norm, i.rubro);
-        }
-      });
-
-      const marcas = Array.from(marcasSet.values());
-      const rubros = Array.from(rubrosSet.values());
-
-      this.els.filtroMarca.innerHTML =
-        '<option value="">Marca</option>' +
-        marcas.map((m) => `<option value="${m}">${m}</option>`).join("");
-
-      this.els.filtroRubro.innerHTML =
-        '<option value="">Rubro</option>' +
-        rubros.map((r) => `<option value="${r}">${r}</option>`).join("");
-
-      this.calcularResumenCatalogo();
-      this.setConnectionStatus(true);
-    } catch (err) {
-      this.setConnectionStatus(false);
-    }
-  },
-
-  // ============================================================
-  // AUTOCOMPLETADO
-  // ============================================================
-
-  getAutocompleteSuggestions(term) {
-    const q = this.normalizarTexto(term);
-    if (!q || !this.state.catalogItems.length) return [];
-
-    const sugerencias = new Set();
-
-    this.state.catalogItems.forEach((item) => {
-      const marca = this.normalizarTexto(item.marca);
-      const rubro = this.normalizarTexto(item.rubro);
-      const desc = this.normalizarTexto(item.descripcion);
-      const codigo = this.normalizarTexto(item.codigo);
-
-      if (marca && marca.includes(q)) sugerencias.add(item.marca);
-      if (rubro && rubro.includes(q)) sugerencias.add(item.rubro);
-      if (desc && desc.includes(q)) sugerencias.add(item.descripcion);
-      if (codigo && codigo.includes(q)) sugerencias.add(item.codigo);
-    });
-
-    return Array.from(sugerencias).slice(0, 10);
-  },
-
-  // ============================================================
-  // UTILIDADES UI
-  // ============================================================
-
-  limpiarPantalla() {
-    this.els.searchInput.value = "";
-    this.state.lastQuery = "";
-    this.els.resultsContainer.innerHTML = "";
-    this.els.resultsStatus.textContent = "Esperando consulta";
-    if (window.ORB && ORB.setReady) ORB.setReady(false);
-    this.actualizarIndicadores([]);
-    if (window.actualizarDashboard) {
-      window.actualizarDashboard([]);
-    }
-  },
-
-  copiarResultados() {
-    const text = this.els.resultsContainer.innerText;
-    if (!text.trim()) {
-      this.showToast("No hay resultados para copiar");
-      return;
-    }
-    navigator.clipboard.writeText(text);
-    this.showToast("Copiado");
-  },
-
-  stopTodo() {
-    if (this.state.currentAbort) this.state.currentAbort.abort();
-    if (window.ORB && ORB.setError) ORB.setError(true);
-    this.els.resultsStatus.textContent = "Cancelado";
-  },
-
-  // ============================================================
-  // CONFIG ADMIN (CORREGIDO Y BLINDADO)
-  // ============================================================
-
-  aplicarConfigAdmin() {
-    let url = localStorage.getItem("backendUrl");
-    const modo = localStorage.getItem("modoDefecto");
-
-    if (url) {
-      url = url.trim();
-
-      // Eliminar /query o /query/ si está presente
-      url = url.replace(/\/query\/?$/i, "");
-
-      // Eliminar barras finales repetidas
-      url = url.replace(/\/+$/g, "");
-
-      this.config.backendUrl = url;
-    }
-
-    // Si no hay URL válida, usar la correcta por defecto
-    if (!this.config.backendUrl) {
-      this.config.backendUrl = "https://stock-backend-1-0upi.onrender.com";
-    }
-
-    if (modo) {
-      this.config.modoDefecto = modo;
-      if (window.setModoScanner) {
-        window.setModoScanner(modo);
-      }
-    }
-
-    const inputUrl = document.getElementById("admin-backend-url");
-    const selectModo = document.getElementById("admin-modo-defecto");
-    if (inputUrl) inputUrl.value = this.config.backendUrl;
-    if (selectModo) selectModo.value = this.config.modoDefecto;
-
-    // Debug explícito
-    console.log("BACKEND URL EFECTIVA:", this.config.backendUrl);
-  },
-  // ============================================================
-  // INIT
-  // ============================================================
-
-  async init() {
-    this.aplicarConfigAdmin();
-
-    if (window.initUI) {
-      window.initUI(this);
-    }
-
-    // 5 clics en el ORB para abrir admin
-    const orb = document.getElementById("orb-core");
-    const adminPanel = document.getElementById("admin-panel");
-    if (orb && adminPanel) {
-      let orbClicks = 0;
-      orb.addEventListener("click", () => {
-        orbClicks++;
-        if (orbClicks >= 5) {
-          adminPanel.style.display = "flex";
-          orbClicks = 0;
-        }
-        setTimeout(() => {
-          orbClicks = 0;
-        }, 1200);
-      });
-    }
-
-    // Toggle fuente de datos
-    if (this.els.fuenteDatosToggle && this.els.fuenteDatosPanel) {
-      this.els.fuenteDatosToggle.addEventListener("click", () => {
-        this.els.fuenteDatosPanel.classList.toggle("visible");
-      });
-    }
-
-    await this.cargarCatalogo();
-
-    if (window.ORB && ORB.setReady) ORB.setReady(false);
-    this.els.resultsStatus.textContent = "Esperando consulta";
-  },
-};
-
-window.AppCore = AppCore;
-
-document.addEventListener("DOMContentLoaded", () => {
-  AppCore.init();
-});
+  // RES
