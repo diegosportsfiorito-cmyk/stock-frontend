@@ -5,7 +5,6 @@
     <title>STOCK IA PRO — Asistente inteligente</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <!-- CSS con versión para romper caché -->
     <link rel="stylesheet" href="styles_v2.css?v=3001" />
     <link rel="stylesheet" href="orb_v2.css?v=3001" />
   </head>
@@ -29,17 +28,6 @@
             <div class="connection-indicator">
               <span class="connection-dot" id="connection-dot"></span>
               <span>Estado conexión</span>
-            </div>
-
-            <!-- SWITCH ESCUCHANDO (DICTADO) -->
-            <div class="header-switch-row">
-              <label class="orb-mode-switch">
-                <span>Escuchando</span>
-                <label class="switch small">
-                  <input id="modo-voz-switch" type="checkbox" />
-                  <span class="slider"></span>
-                </label>
-              </label>
             </div>
 
             <!-- SWITCH DÍA/NOCHE -->
@@ -72,26 +60,31 @@
                 placeholder="Buscar artículo, marca, rubro, talle, color, precio..."
                 autocomplete="off"
               />
-
-              <!-- AUTOCOMPLETE -->
               <ul id="autocomplete-list" class="autocomplete-list"></ul>
             </div>
 
-            <!-- MICRÓFONO (DICTADO / ESCUCHANDO) -->
             <button id="mic-button" class="mic-btn" title="Dictado al input">
               🎙️
             </button>
 
-            <!-- MANOS LIBRES (CONVERSACIÓN COMPLETA) -->
             <button id="btn-handsfree" class="mic-btn" title="Modo manos libres">
               📢
             </button>
           </div>
 
-          <!-- ESTADO BÚSQUEDA -->
+          <!-- SWITCH ESCUCHANDO (DEBAJO DEL INPUT) -->
+          <div class="voice-toggle-row">
+            <label class="orb-mode-switch">
+              <span>Escuchando</span>
+              <label class="switch small">
+                <input id="modo-voz-switch" type="checkbox" />
+                <span class="slider"></span>
+              </label>
+            </label>
+          </div>
+
           <div id="search-status" class="search-status"></div>
 
-          <!-- ACCIONES -->
           <div class="search-actions-row">
             <div class="search-actions-right">
               <button id="btn-clear" class="orb-action-btn" title="Limpiar">🧹</button>
@@ -100,16 +93,14 @@
             </div>
           </div>
 
-          <!-- ESTADO DE VOZ -->
           <div id="voice-status" class="voice-status">Dictado desactivado</div>
 
-          <!-- SCANNERS -->
           <div class="scanner-row">
             <div class="scanner-buttons">
-              <button id="btn-scanner-interno-1" class="scanner-big-btn" title="Scanner interno A">📷</button>
-              <button id="btn-scanner-interno-2" class="scanner-big-btn" title="Scanner interno B">🎦</button>
-              <button id="btn-scanner-externo-preferido" class="scanner-big-btn" title="Scanner externo">📲</button>
-              <button id="btn-scanner-externo-selector" class="scanner-big-btn" title="Elegir app de scanner">🧭</button>
+              <button id="btn-scanner-interno-1" class="scanner-big-btn">📷</button>
+              <button id="btn-scanner-interno-2" class="scanner-big-btn">🎦</button>
+              <button id="btn-scanner-externo-preferido" class="scanner-big-btn">📲</button>
+              <button id="btn-scanner-externo-selector" class="scanner-big-btn">🧭</button>
             </div>
 
             <div class="scanner-mode-switch">
@@ -124,7 +115,6 @@
             </div>
           </div>
 
-          <!-- FILTROS -->
           <div class="search-filters-row">
             <button id="btn-filtros" class="btn-secondary">Filtros</button>
 
@@ -137,7 +127,7 @@
             </label>
           </div>
 
-          <!-- ORB (SIN ANILLO) -->
+          <!-- ORB -->
           <div class="orb-zone">
             <div class="orb-actions-ring">
               <div id="orb" class="orb-container">
@@ -148,27 +138,27 @@
 
           <!-- MÉTRICAS -->
           <div class="metrics-row">
-            <div class="metric-card" id="metric-articulos">
+            <div class="metric-card">
               <div class="metric-label">Artículos</div>
               <div class="metric-value" id="metric-articulos-value">0</div>
             </div>
 
-            <div class="metric-card" id="metric-pares">
+            <div class="metric-card">
               <div class="metric-label">Pares</div>
               <div class="metric-value" id="metric-pares-value">0</div>
             </div>
 
-            <div class="metric-card" id="metric-negativos">
+            <div class="metric-card">
               <div class="metric-label">Negativos</div>
               <div class="metric-value" id="metric-negativos-value">0</div>
             </div>
 
-            <div class="metric-card" id="metric-cero">
+            <div class="metric-card">
               <div class="metric-label">Cero stock</div>
               <div class="metric-value" id="metric-cero-value">0</div>
             </div>
 
-            <div class="metric-card" id="metric-valorizado">
+            <div class="metric-card">
               <div class="metric-label">Valorizado</div>
               <div class="metric-value" id="metric-valorizado-value">$0</div>
             </div>
@@ -198,7 +188,7 @@
         </section>
 
         <!-- ============================================================
-             FUENTE DE DATOS (DESPLEGABLE)
+             FUENTE DE DATOS
         ============================================================ -->
         <section class="fuente-datos-wrapper">
           <button id="fuente-datos-toggle" class="btn-secondary">Fuente de datos</button>
@@ -211,6 +201,34 @@
             <div><strong>Artículos:</strong> <span id="fuente-articulos">—</span></div>
             <div><strong>Stock total:</strong> <span id="fuente-stock-total">—</span></div>
             <div><strong>Stock negativo:</strong> <span id="fuente-stock-negativo">—</span></div>
+          </div>
+        </section>
+
+        <!-- ============================================================
+             RESULTADOS + DASHBOARD (RESTAURADO)
+        ============================================================ -->
+        <section class="main-row">
+          <div class="results-card">
+            <div class="results-header">
+              <div class="results-title">Resultados</div>
+              <div id="results-status" class="results-status">Esperando consulta</div>
+            </div>
+            <div id="results-container"></div>
+          </div>
+
+          <div class="dashboard-card">
+            <div class="dashboard-header">
+              <div class="dashboard-title">Distribución de stock</div>
+              <div class="dashboard-subtitle">Por talle / marca / rubro</div>
+            </div>
+
+            <select id="chart-mode">
+              <option value="talle">Por talle</option>
+              <option value="marca">Por marca</option>
+              <option value="rubro">Por rubro</option>
+            </select>
+
+            <canvas id="stockChart"></canvas>
           </div>
         </section>
 
@@ -304,21 +322,15 @@
       </div>
     </div>
 
-    <!-- ============================================================
-         OVERLAY SCANNER
-    ============================================================ -->
     <div id="scanner-overlay" class="scanner-overlay hidden"></div>
 
-    <!-- ============================================================
-         MODAL AYUDA
-    ============================================================ -->
     <div id="help-modal" class="help-modal hidden">
       <div class="help-modal-content">
         <h2>Ayuda rápida</h2>
         <ul>
           <li>Escribí o escaneá un código, marca, rubro o talle.</li>
           <li>Usá el botón 🎙️ para dictar si el modo “Escuchando” está activo.</li>
-          <li>Usá 📢 para modo manos libres (conversación completa).</li>
+          <li>Usá 📢 para modo manos libres.</li>
           <li>Click en métricas para filtros rápidos.</li>
           <li>Atajos: ESC limpia, F2 scanner, F3 dictado.</li>
         </ul>
@@ -326,20 +338,11 @@
       </div>
     </div>
 
-    <!-- ============================================================
-         TOAST
-    ============================================================ -->
     <div id="toast" class="toast"></div>
 
-    <!-- ============================================================
-         LIBS
-    ============================================================ -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://unpkg.com/@zxing/library@latest"></script>
 
-    <!-- ============================================================
-         SCRIPTS (con versión para romper caché)
-    ============================================================ -->
     <script src="orb_engine.js?v=3001"></script>
     <script src="orb_admin_engine.js?v=3001"></script>
     <script src="dashboard_engine.js?v=3001"></script>
@@ -348,9 +351,6 @@
     <script src="app_core.js?v=3001"></script>
     <script src="ui_engine.js?v=3001"></script>
 
-    <!-- ============================================================
-         FUENTE DE DATOS — SCRIPT
-    ============================================================ -->
     <script>
       const toggleFuente = document.getElementById("fuente-datos-toggle");
       const panelFuente = document.getElementById("fuente-datos-panel");
