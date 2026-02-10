@@ -298,30 +298,36 @@ const AppCore = {
     let rubro = null;
     let talleDesde = null;
     let talleHasta = null;
-    let question = "";
+
+    // tokens para evitar falsos positivos
+    const tokens = qUpper.split(/\W+/);
 
     const marcasOrdenadas = marcasNorm.sort((a, b) => b.length - a.length);
     for (const mNorm of marcasOrdenadas) {
-      if (mNorm && qUpper.includes(mNorm)) {
-        marca = mapMarcas.get(mNorm); // valor crudo para backend
+      if (!mNorm) continue;
+      if (tokens.includes(mNorm)) {
+        marca = mapMarcas.get(mNorm);
         break;
       }
     }
 
     const rubrosOrdenados = rubrosNorm.sort((a, b) => b.length - a.length);
     for (const rNorm of rubrosOrdenados) {
-      if (rNorm && qUpper.includes(rNorm)) {
+      if (!rNorm) continue;
+      if (tokens.includes(rNorm)) {
         rubro = mapRubros.get(rNorm);
         break;
       }
     }
 
-    const matchRango = qUpper.match(/T?(\d+)\s*A\s*T?(\d+)/);
+    // Rango de talles flexible: T40 A 42, 40-42, 40/42, T40-42, etc.
+    const matchRango = qUpper.match(/T?(\d+)\s*(?:A|-|\/)\s*T?(\d+)/);
     if (matchRango) {
       talleDesde = parseInt(matchRango[1]);
       talleHasta = parseInt(matchRango[2]);
+      const usarFiltros = true;
       return {
-        filtros_globales: true,
+        filtros_globales: usarFiltros,
         marca,
         rubro,
         talleDesde,
@@ -330,11 +336,13 @@ const AppCore = {
       };
     }
 
+    // Talle único
     const matchTalle = qUpper.match(/^T?(\d{1,3})$/);
     if (matchTalle) {
       const t = parseInt(matchTalle[1]);
+      const usarFiltros = true;
       return {
-        filtros_globales: true,
+        filtros_globales: usarFiltros,
         marca,
         rubro,
         talleDesde: t,
@@ -343,19 +351,34 @@ const AppCore = {
       };
     }
 
-    const matchPrecio = qUpper.match(/^P(\d{2,6})$/);
+    // Precio flexible: P15000, 15000, $15000
+    const matchPrecio = qUpper.match(/^(?:P|\$)?(\d{2,6})$/);
     if (matchPrecio) {
-      return { filtros_globales: false, question: "PRECIO " + matchPrecio[1] };
+      return {
+        filtros_globales: false,
+        marca: null,
+        rubro: null,
+        talleDesde: null,
+        talleHasta: null,
+        question: "PRECIO " + matchPrecio[1],
+      };
     }
 
-    if (/^\d{8,14}$/.test(qUpper)) {
-      return { filtros_globales: false, question: qUpper };
+    // Código numérico largo (permitiendo guiones/espacios)
+    if (/^\d[\d\- ]{6,14}\d$/.test(qUpper)) {
+      return {
+        filtros_globales: false,
+        marca: null,
+        rubro: null,
+        talleDesde: null,
+        talleHasta: null,
+        question: qUpper.replace(/[\s\-]/g, ""),
+      };
     }
 
-    question = q;
-
+    // Texto libre + posibles filtros
     const usarFiltros =
-      marca || rubro || talleDesde !== null || talleHasta !== null;
+      marca !== null || rubro !== null || talleDesde !== null || talleHasta !== null;
 
     return {
       filtros_globales: usarFiltros,
@@ -363,7 +386,7 @@ const AppCore = {
       rubro,
       talleDesde,
       talleHasta,
-      question,
+      question: usarFiltros ? "" : q,
     };
   },
 
@@ -448,6 +471,9 @@ const AppCore = {
   async buscarPorFiltros() {
     this.actualizarFiltrosDesdeUI();
 
+    if (this.state.currentAbort) this.state.currentAbort.abort();
+    this.state.currentAbort = new AbortController();
+
     const body = {
       question: "",
       solo_stock: this.els.chkSoloStock.checked,
@@ -466,7 +492,10 @@ const AppCore = {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
+        signal: this.state.currentAbort.signal,
       });
+
+      if (!res.ok) throw new Error("Error en servidor");
 
       const data = await res.json();
       this.state.items = data.items || [];
@@ -483,9 +512,11 @@ const AppCore = {
 
       this.speakResultados();
     } catch (err) {
-      this.setConnectionStatus(false);
-      if (window.ORB && ORB.setError) ORB.setError(true);
-      this.els.resultsStatus.textContent = "Error de conexión";
+      if (err.name !== "AbortError") {
+        this.setConnectionStatus(false);
+        if (window.ORB && ORB.setError) ORB.setError(true);
+        this.els.resultsStatus.textContent = "Error de conexión";
+      }
     } finally {
       if (window.ORB && ORB.setLoading) ORB.setLoading(false);
     }
