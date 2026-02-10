@@ -5,7 +5,6 @@
     <title>STOCK IA PRO — Asistente inteligente</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <!-- CSS con versión anti-cache -->
     <link rel="stylesheet" href="styles_v2.css?v=20260210" />
     <link rel="stylesheet" href="orb_v2.css?v=20260210" />
   </head>
@@ -13,9 +12,7 @@
   <body>
     <div class="app-shell">
       <div class="app-container">
-        <!-- ============================================================
-             HEADER
-        ============================================================ -->
+
         <header class="app-header">
           <div class="branding">
             <div class="brand-orb-mini">IA</div>
@@ -56,9 +53,6 @@
           </div>
         </header>
 
-        <!-- ============================================================
-             SEARCH + ORB
-        ============================================================ -->
         <section class="search-card">
           <div class="search-row">
             <div class="search-input-wrapper">
@@ -69,13 +63,10 @@
                 placeholder="Buscar artículo, marca, rubro, talle, color, precio..."
                 autocomplete="off"
               />
-
               <ul id="autocomplete-list" class="autocomplete-list"></ul>
             </div>
 
-            <button id="mic-button" class="mic-btn" title="Dictado por voz">
-              👂
-            </button>
+            <button id="mic-button" class="mic-btn" title="Dictado por voz">👂</button>
           </div>
 
           <div class="search-actions-row">
@@ -128,7 +119,6 @@
             </div>
           </div>
 
-          <!-- MÉTRICAS -->
           <div class="metrics-row">
             <div class="metric-card" id="metric-articulos">
               <div class="metric-label">Artículos</div>
@@ -140,14 +130,14 @@
               <div class="metric-value" id="metric-pares-value">0</div>
             </div>
 
-            <div class="metric-card" id="metric-alertas-negativos">
+            <div class="metric-card" id="metric-alertas">
               <div class="metric-label">Stock negativo</div>
-              <div class="metric-value" id="metric-alertativos-negativos">0</div>
+              <div class="metric-value" id="metric-alertas-value">0</div>
             </div>
 
-            <div class="metric-card" id="metric-alertas-cero">
+            <div class="metric-card" id="metric-sinstock">
               <div class="metric-label">Sin stock</div>
-              <div class="metric-value" id="metric-alertas-cero">0</div>
+              <div class="metric-value" id="metric-sinstock-value">0</div>
             </div>
 
             <div class="metric-card" id="metric-valorizado">
@@ -177,9 +167,6 @@
             </div>
           </div>
         </section>
-        <!-- ============================================================
-             MAIN ROW
-        ============================================================ -->
         <section class="main-row">
           <div class="results-card">
             <div class="results-header">
@@ -227,9 +214,6 @@
           </div>
         </section>
 
-        <!-- ============================================================
-             FOOTER
-        ============================================================ -->
         <footer class="app-footer">
           <div class="footer-logo">SCL</div>
           <div class="footer-text">Salas Creative Lab</div>
@@ -237,9 +221,6 @@
       </div>
     </div>
 
-    <!-- ============================================================
-         PANEL ADMIN
-    ============================================================ -->
     <div id="admin-panel">
       <h2>Panel administrador</h2>
 
@@ -307,14 +288,8 @@
       </div>
     </div>
 
-    <!-- ============================================================
-         OVERLAY SCANNER
-    ============================================================ -->
     <div id="scanner-overlay" class="scanner-overlay hidden"></div>
 
-    <!-- ============================================================
-         MODAL AYUDA
-    ============================================================ -->
     <div id="help-modal" class="help-modal hidden">
       <div class="help-modal-content">
         <h2>Ayuda rápida</h2>
@@ -328,27 +303,17 @@
       </div>
     </div>
 
-    <!-- ============================================================
-         TOAST
-    ============================================================ -->
     <div id="toast" class="toast"></div>
 
-    <!-- ============================================================
-         LIBS
-    ============================================================ -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://unpkg.com/@zxing/library@latest"></script>
 
-    <!-- ============================================================
-         SCRIPTS (con anti-cache)
-    ============================================================ -->
     <script src="orb_engine_v2.js?v=20260210"></script>
     <script src="orb_admin_engine.js?v=20260210"></script>
     <script src="dashboard_engine.js?v=20260210"></script>
     <script src="indicators_engine.js?v=20260210"></script>
     <script src="scanner_v3.js?v=20260210"></script>
 
-    <!-- ORDEN CORRECTO -->
     <script src="ui_engine_v2.js?v=20260210"></script>
     <script src="app_core_v2.js?v=20260210"></script>
 
