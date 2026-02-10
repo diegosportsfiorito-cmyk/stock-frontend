@@ -186,6 +186,7 @@ body.light-mode {
 
 .search-input-wrapper {
   flex: 1;
+  position: relative;
 }
 
 .search-input {
@@ -398,6 +399,11 @@ input:checked + .slider:before {
   margin: 4px 0;
 }
 
+#orb {
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
 .orb-mode-switch {
   display: inline-flex;
   align-items: center;
@@ -549,11 +555,6 @@ input:checked + .slider:before {
   font-size: 0.75rem;
   line-height: 1.3;
 }
-.result-talles {
-  margin-top: 6px;
-  font-size: 0.75rem;
-  line-height: 1.3;
-}
 
 /* Vista tabla / tarjetas */
 
@@ -583,13 +584,14 @@ input:checked + .slider:before {
 .tabla-wrapper {
   width: 100%;
   overflow-x: auto;
+  padding-bottom: 6px;
 }
 
 .tabla-resultados {
   width: 100%;
   border-collapse: separate;
   border-spacing: 8px 4px;
-  min-width: 750px;
+  min-width: 900px;
 }
 
 .tabla-resultados th,
@@ -631,7 +633,7 @@ input:checked + .slider:before {
 
 #stockChart {
   width: 100%;
-  max-height: 220px;
+  max-height: 260px !important;
 }
 
 /* PANEL ADMIN */
@@ -903,20 +905,6 @@ input:checked + .slider:before {
 }
 
 /* ============================================================
-   TABLA — SCROLL HORIZONTAL MEJORADO
-============================================================ */
-
-.tabla-wrapper {
-  width: 100%;
-  overflow-x: auto;
-  padding-bottom: 6px;
-}
-
-.tabla-resultados {
-  min-width: 900px;
-}
-
-/* ============================================================
    MODO DÍA — AJUSTE COMPLETO
 ============================================================ */
 
@@ -994,24 +982,6 @@ body.scanner-active {
 }
 
 /* ============================================================
-   GRÁFICO DE TORTA — AJUSTES VISUALES
-============================================================ */
-
-#stockChart {
-  max-height: 260px !important;
-}
-/* Precios destacados en vista tarjeta */
-
-.precio-publico {
-  color: #b8860b;
-  font-weight: 700;
-}
-
-.precio-valorizado {
-  color: #ff8c00;
-  font-weight: 700;
-}
-/* ============================================================
    ACCIONES DE BÚSQUEDA — BOTONES DEBAJO DEL INPUT
 ============================================================ */
 
@@ -1055,13 +1025,10 @@ body.scanner-active {
 .fuente-datos-panel div {
   margin-bottom: 4px;
 }
+
 /* ============================================================
    AUTOCOMPLETE — LISTA DE SUGERENCIAS
 ============================================================ */
-
-.search-input-wrapper {
-  position: relative;
-}
 
 .autocomplete-list {
   position: absolute;
@@ -1103,6 +1070,11 @@ body.light-mode .autocomplete-list li {
 body.light-mode .autocomplete-list li:hover {
   background: #e5e7eb;
 }
+
+/* ============================================================
+   SWITCHES DE VOZ — CONTENEDOR
+============================================================ */
+
 .voice-switches {
   margin-top: 6px;
   display: flex;
