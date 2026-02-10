@@ -1,3 +1,4 @@
+// build 20260210-3-XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 // ============================================================
 // UI ENGINE — Eventos, botones, filtros, vista tabla/tarjetas
 // + dictado, manos libres, scanner overlay, atajos, métricas, autocomplete
