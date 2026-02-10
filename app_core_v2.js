@@ -127,6 +127,7 @@ const AppCore = {
       if (window.ORB && ORB.setReady) ORB.setReady(true);
     }
   },
+
   // ============================================================
   // INDICADORES
   // ============================================================
@@ -243,12 +244,14 @@ const AppCore = {
   },
 
   // ============================================================
-  // 🔥 FIX CRÍTICO — FUNCIÓN QUE FALTABA
+  // RENDER RESULTADOS (VISTA ÚNICA)
   // ============================================================
 
   renderResultados(items) {
+    // Por ahora usamos solo tabla; el toggle tabla/tarjetas sigue funcionando a nivel estado.
     this.renderResultadosTabla(items);
   },
+
   // ============================================================
   // PARSER INTELIGENTE
   // ============================================================
@@ -456,6 +459,7 @@ const AppCore = {
       if (window.ORB && ORB.setLoading) ORB.setLoading(false);
     }
   },
+
   // ============================================================
   // FILTROS MANUALES
   // ============================================================
@@ -524,4 +528,204 @@ const AppCore = {
   },
 
   // ============================================================
-  // RES
+  // LIMPIAR / COPIAR / STOP
+  // ============================================================
+
+  limpiarPantalla() {
+    this.state.items = [];
+    if (this.els.resultsContainer) {
+      this.els.resultsContainer.innerHTML = "";
+    }
+    if (this.els.resultsStatus) {
+      this.els.resultsStatus.textContent = "Esperando consulta";
+    }
+    this.actualizarIndicadores([]);
+    if (window.actualizarDashboard) {
+      window.actualizarDashboard([]);
+    }
+    if (this.els.searchInput) {
+      this.els.searchInput.value = "";
+    }
+  },
+
+  async copiarResultados() {
+    try {
+      const cont = this.els.resultsContainer;
+      if (!cont) return;
+      const texto = cont.innerText || cont.textContent || "";
+      if (!texto.trim()) {
+        this.showToast("No hay resultados para copiar");
+        return;
+      }
+      await navigator.clipboard.writeText(texto);
+      this.showToast("Resultados copiados al portapapeles");
+    } catch (e) {
+      this.showToast("No se pudo copiar");
+    }
+  },
+
+  stopTodo() {
+    if (this.state.currentAbort) {
+      this.state.currentAbort.abort();
+      this.state.currentAbort = null;
+    }
+    if ("speechSynthesis" in window) {
+      window.speechSynthesis.cancel();
+    }
+    if (window.ORB && ORB.setReady) ORB.setReady(true);
+    this.els.resultsStatus.textContent = "Operación detenida";
+  },
+
+  // ============================================================
+  // AUTOCOMPLETE
+  // ============================================================
+
+  getAutocompleteSuggestions(term) {
+    const q = this.normalizarTexto(term);
+    if (!q || !this.state.catalogItems || !this.state.catalogItems.length) return [];
+
+    const resultados = [];
+    const ya = new Set();
+
+    for (const item of this.state.catalogItems) {
+      const desc = this.normalizarTexto(item.descripcion || "");
+      const marca = this.normalizarTexto(item.marca || "");
+      const rubro = this.normalizarTexto(item.rubro || "");
+
+      let match = false;
+
+      if (desc.includes(q)) match = true;
+      else if (marca.includes(q)) match = true;
+      else if (rubro.includes(q)) match = true;
+
+      if (match) {
+        const sugerencia = item.descripcion || item.marca || item.rubro;
+        if (sugerencia && !ya.has(sugerencia)) {
+          ya.add(sugerencia);
+          resultados.push(sugerencia);
+        }
+      }
+
+      if (resultados.length >= 10) break;
+    }
+
+    return resultados;
+  },
+
+  // ============================================================
+  // CARGA DE CATÁLOGO
+  // ============================================================
+
+  async cargarCatalogo() {
+    try {
+      const res = await fetch(this.config.backendUrl + "/catalog", {
+        method: "GET",
+      });
+      if (!res.ok) throw new Error("Error al cargar catálogo");
+
+      const data = await res.json();
+      this.state.catalogItems = data.items || [];
+      this.state.resumenCatalogo = data.resumen || null;
+
+      // Poblar filtros
+      const marcas = new Set();
+      const rubros = new Set();
+
+      this.state.catalogItems.forEach((i) => {
+        if (i.marca) marcas.add(i.marca);
+        if (i.rubro) rubros.add(i.rubro);
+      });
+
+      if (this.els.filtroMarca) {
+        this.els.filtroMarca.innerHTML =
+          '<option value="">Marca</option>' +
+          Array.from(marcas)
+            .sort()
+            .map((m) => `<option value="${m}">${m}</option>`)
+            .join("");
+      }
+
+      if (this.els.filtroRubro) {
+        this.els.filtroRubro.innerHTML =
+          '<option value="">Rubro</option>' +
+          Array.from(rubros)
+            .sort()
+            .map((r) => `<option value="${r}">${r}</option>`)
+            .join("");
+      }
+
+      // Fuente de datos
+      if (this.state.resumenCatalogo) {
+        const r = this.state.resumenCatalogo;
+        if (this.els.fuenteArchivo) this.els.fuenteArchivo.textContent = r.archivo || "—";
+        if (this.els.fuenteFecha) this.els.fuenteFecha.textContent = r.fecha || "—";
+        if (this.els.fuenteMarcas) this.els.fuenteMarcas.textContent = r.marcas || "—";
+        if (this.els.fuenteRubros) this.els.fuenteRubros.textContent = r.rubros || "—";
+        if (this.els.fuenteArticulos)
+          this.els.fuenteArticulos.textContent = this.formatNumber(r.articulos || 0);
+        if (this.els.fuenteStockTotal)
+          this.els.fuenteStockTotal.textContent = this.formatNumber(r.stock_total || 0);
+        if (this.els.fuenteStockNegativo)
+          this.els.fuenteStockNegativo.textContent = this.formatNumber(
+            r.stock_negativo || 0
+          );
+      }
+
+      this.setConnectionStatus(true);
+    } catch (e) {
+      this.setConnectionStatus(false);
+    }
+  },
+
+  // ============================================================
+  // CONFIG ADMIN
+  // ============================================================
+
+  aplicarConfigAdmin() {
+    const url = localStorage.getItem("backendUrl");
+    const modo = localStorage.getItem("modoDefecto");
+
+    if (url) this.config.backendUrl = url;
+    if (modo) this.config.modoDefecto = modo;
+
+    if (window.setModoScanner) {
+      window.setModoScanner(this.config.modoDefecto);
+    }
+  },
+
+  // ============================================================
+  // INIT
+  // ============================================================
+
+  async init() {
+    try {
+      this.aplicarConfigAdmin();
+
+      if (this.els.fuenteDatosToggle && this.els.fuenteDatosPanel) {
+        this.els.fuenteDatosToggle.addEventListener("click", () => {
+          this.els.fuenteDatosPanel.classList.toggle("visible");
+        });
+      }
+
+      await this.cargarCatalogo();
+
+      if (window.initUI) {
+        window.initUI(this);
+      }
+
+      this.setConnectionStatus(true);
+    } catch (e) {
+      this.setConnectionStatus(false);
+    }
+  },
+};
+
+// ============================================================
+// EXPOSE + ARRANQUE
+// ============================================================
+
+window.AppCore = AppCore;
+
+window.addEventListener("DOMContentLoaded", () => {
+  AppCore.init();
+});
