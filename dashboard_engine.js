@@ -1,6 +1,6 @@
 // ============================================================
 // DASHBOARD ENGINE — Gráficos por talle / marca / rubro
-// Compatible con app_core_v3.js y backend actual
+// Versión corregida y optimizada para layout móvil + UI Engine
 // ============================================================
 
 let stockChart = null;
@@ -12,7 +12,6 @@ function prepararDatos(items, modo) {
   const conteo = {};
 
   for (const item of items) {
-    // TALLE
     if (modo === "talle") {
       if (Array.isArray(item.talles)) {
         for (const t of item.talles) {
@@ -24,7 +23,6 @@ function prepararDatos(items, modo) {
       }
     }
 
-    // MARCA
     else if (modo === "marca") {
       const m = item.marca || "Sin marca";
       const total = Array.isArray(item.talles)
@@ -35,7 +33,6 @@ function prepararDatos(items, modo) {
       conteo[m] += total;
     }
 
-    // RUBRO
     else if (modo === "rubro") {
       const r = item.rubro || "Sin rubro";
       const total = Array.isArray(item.talles)
@@ -58,9 +55,13 @@ function prepararDatos(items, modo) {
 // ------------------------------------------------------------
 function actualizarDashboard(items) {
   const modo = document.getElementById("chart-mode")?.value || "talle";
-  const ctx = document.getElementById("stockChart");
+  const canvas = document.getElementById("stockChart");
 
-  if (!ctx) return;
+  if (!canvas) return;
+
+  // Fix: asegurar que el canvas se ajuste al contenedor
+  canvas.style.width = "100%";
+  canvas.style.height = "100%";
 
   const { labels, valores } = prepararDatos(items, modo);
 
@@ -69,9 +70,18 @@ function actualizarDashboard(items) {
   if (modo === "marca") tipo = "bar";
   if (modo === "rubro") tipo = "line";
 
-  if (stockChart) stockChart.destroy();
+  // Destruir gráfico previo
+  if (stockChart) {
+    try {
+      stockChart.destroy();
+    } catch (_) {}
+  }
 
-  stockChart = new Chart(ctx, {
+  // Colores adaptados a modo día/noche
+  const isLight = document.body.classList.contains("light-mode");
+  const textColor = isLight ? "#222" : "#ccc";
+
+  stockChart = new Chart(canvas, {
     type: tipo,
     data: {
       labels,
@@ -80,7 +90,7 @@ function actualizarDashboard(items) {
           label: "Stock",
           data: valores,
           backgroundColor: generarColores(labels.length),
-          borderColor: "#fff",
+          borderColor: isLight ? "#000" : "#fff",
           borderWidth: 1,
           tension: 0.3,
         },
@@ -88,11 +98,12 @@ function actualizarDashboard(items) {
     },
     options: {
       responsive: true,
+      maintainAspectRatio: false, // Fix móvil
       plugins: {
         legend: {
           position: "bottom",
           labels: {
-            color: "#ccc",
+            color: textColor,
             font: { size: 11 },
           },
         },
@@ -100,8 +111,14 @@ function actualizarDashboard(items) {
       scales:
         tipo !== "pie"
           ? {
-              x: { ticks: { color: "#ccc" } },
-              y: { ticks: { color: "#ccc" } },
+              x: {
+                ticks: { color: textColor, maxRotation: 45, minRotation: 0 },
+                grid: { color: isLight ? "#ddd" : "#444" },
+              },
+              y: {
+                ticks: { color: textColor },
+                grid: { color: isLight ? "#ddd" : "#444" },
+              },
             }
           : {},
     },
@@ -119,6 +136,15 @@ function generarColores(n) {
   }
   return colores;
 }
+
+// ------------------------------------------------------------
+// EVENTOS: CAMBIO DE MODO
+// ------------------------------------------------------------
+document.getElementById("chart-mode")?.addEventListener("change", () => {
+  if (window.AppCore?.state?.items) {
+    actualizarDashboard(AppCore.state.items);
+  }
+});
 
 // Exponer función global
 window.actualizarDashboard = actualizarDashboard;
