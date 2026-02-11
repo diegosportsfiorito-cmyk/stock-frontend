@@ -1,12 +1,29 @@
+// ============================================================
+// ORB ENGINE V2 — Núcleo visual del asistente
+// ============================================================
+// Correcciones aplicadas:
+// - Estados sincronizados con app_core_v3.js
+// - Modo día/noche real
+// - Presets consistentes
+// - Animaciones limpias (sin superposición)
+// - Reset visual correcto después de error
+// - Sin loops de animación
+// - Tamaño dinámico estable
+// ============================================================
+
 const ORB = {
   el: null,
   core: null,
+
+  // Config visual
   size: 140,
   halo: 60,
   color: "#4f8cff",
   colorDark: "#4f8cff",
   mode: "ultra",
   preset: "default",
+
+  // Estados
   isDark: false,
   isSpeaking: false,
   isLoading: false,
@@ -23,6 +40,9 @@ const ORB = {
     this.bindEvents();
   },
 
+  // ------------------------------------------------------------
+  // Cargar configuración guardada
+  // ------------------------------------------------------------
   loadConfig() {
     const c1 = localStorage.getItem("orbColor");
     const c2 = localStorage.getItem("orbColorDark");
@@ -48,9 +68,13 @@ const ORB = {
     localStorage.setItem("orbPreset", this.preset);
   },
 
+  // ------------------------------------------------------------
+  // Eventos globales
+  // ------------------------------------------------------------
   bindEvents() {
     const toggleDark = document.getElementById("toggle-dark");
     if (toggleDark) {
+      this.isDark = toggleDark.checked;
       toggleDark.addEventListener("change", () => {
         this.isDark = toggleDark.checked;
         this.applyVisuals();
@@ -58,30 +82,37 @@ const ORB = {
     }
   },
 
+  // ------------------------------------------------------------
+  // Aplicar visuales base (idle)
+  // ------------------------------------------------------------
   applyVisuals() {
     if (!this.core) return;
 
     const color = this.isDark ? this.colorDark : this.color;
-    const halo = this.halo;
-    const size = this.size;
 
-    this.core.style.width = size + "px";
-    this.core.style.height = size + "px";
+    this.core.style.width = this.size + "px";
+    this.core.style.height = this.size + "px";
+    this.core.style.animation = "";
+    this.core.style.filter = "";
 
     if (this.mode === "ultra") {
       this.core.style.background = `radial-gradient(circle at 30% 20%, ${color}, #111)`;
-      this.core.style.boxShadow = `0 0 ${halo}px ${color}`;
+      this.core.style.boxShadow = `0 0 ${this.halo}px ${color}`;
     } else if (this.mode === "3d") {
       this.core.style.background = `linear-gradient(145deg, ${color}, #000)`;
-      this.core.style.boxShadow = `inset 0 0 20px #000, 0 0 ${halo}px ${color}`;
+      this.core.style.boxShadow = `inset 0 0 20px #000, 0 0 ${this.halo}px ${color}`;
     } else {
       this.core.style.background = color;
-      this.core.style.boxShadow = `0 0 ${halo}px ${color}`;
+      this.core.style.boxShadow = `0 0 ${this.halo}px ${color}`;
     }
   },
 
+  // ------------------------------------------------------------
+  // Presets visuales
+  // ------------------------------------------------------------
   applyPreset(p) {
     this.preset = p;
+
     if (p === "default") {
       this.color = "#4f8cff";
       this.colorDark = "#4f8cff";
@@ -112,32 +143,49 @@ const ORB = {
     this.saveConfig();
     this.applyVisuals();
   },
+
+  // ------------------------------------------------------------
+  // Estado: hablando (dictado / manos libres)
+  // ------------------------------------------------------------
   setSpeaking(v) {
     this.isSpeaking = v;
     if (!this.core) return;
+
     if (v) {
       this.core.style.animation = "orbSpeaking 0.6s infinite alternate";
     } else {
       this.core.style.animation = "";
+      this.applyVisuals();
     }
   },
 
+  // ------------------------------------------------------------
+  // Estado: cargando (búsqueda)
+  // ------------------------------------------------------------
   setLoading(v) {
     this.isLoading = v;
     if (!this.core) return;
+
     if (v) {
-      this.core.style.filter = "blur(2px) brightness(1.4)";
       this.core.style.animation = "orbLoading 1s infinite linear";
+      this.core.style.filter = "blur(2px) brightness(1.4)";
     } else {
-      this.core.style.filter = "";
       this.core.style.animation = "";
+      this.core.style.filter = "";
+      this.applyVisuals();
     }
   },
 
+  // ------------------------------------------------------------
+  // Estado: error
+  // ------------------------------------------------------------
   setError(v) {
     this.isError = v;
     if (!this.core) return;
+
     if (v) {
+      this.core.style.animation = "";
+      this.core.style.filter = "";
       this.core.style.boxShadow = `0 0 ${this.halo}px #ff4f6a`;
       this.core.style.background = `radial-gradient(circle at 30% 20%, #ff4f6a, #111)`;
     } else {
@@ -145,6 +193,9 @@ const ORB = {
     }
   },
 
+  // ------------------------------------------------------------
+  // Reset total
+  // ------------------------------------------------------------
   reset() {
     this.color = "#4f8cff";
     this.colorDark = "#4f8cff";
@@ -157,10 +208,12 @@ const ORB = {
   },
 };
 
+// Inicializar
 window.addEventListener("DOMContentLoaded", () => ORB.init());
 
-/* ANIMACIONES */
-
+// ------------------------------------------------------------
+// Animaciones
+// ------------------------------------------------------------
 const style = document.createElement("style");
 style.textContent = `
 @keyframes orbSpeaking {
