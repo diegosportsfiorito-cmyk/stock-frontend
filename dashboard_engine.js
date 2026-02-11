@@ -1,33 +1,61 @@
+// ============================================================
+// DASHBOARD ENGINE — Gráficos por talle / marca / rubro
+// Compatible con app_core_v3.js y backend actual
+// ============================================================
+
 let stockChart = null;
 
+// ------------------------------------------------------------
+// PREPARAR DATOS SEGÚN MODO
+// ------------------------------------------------------------
 function prepararDatos(items, modo) {
   const conteo = {};
 
   for (const item of items) {
+    // TALLE
     if (modo === "talle") {
-      const talles = item.talles || {};
-      for (const t in talles) {
-        const cant = talles[t] || 0;
-        if (!conteo[t]) conteo[t] = 0;
-        conteo[t] += cant;
+      if (Array.isArray(item.talles)) {
+        for (const t of item.talles) {
+          const talle = t.talle;
+          const cant = t.stock || 0;
+          if (!conteo[talle]) conteo[talle] = 0;
+          conteo[talle] += cant;
+        }
       }
-    } else if (modo === "marca") {
+    }
+
+    // MARCA
+    else if (modo === "marca") {
       const m = item.marca || "Sin marca";
+      const total = Array.isArray(item.talles)
+        ? item.talles.reduce((acc, t) => acc + t.stock, 0)
+        : 0;
+
       if (!conteo[m]) conteo[m] = 0;
-      conteo[m] += item.stockTotal || 0;
-    } else if (modo === "rubro") {
+      conteo[m] += total;
+    }
+
+    // RUBRO
+    else if (modo === "rubro") {
       const r = item.rubro || "Sin rubro";
+      const total = Array.isArray(item.talles)
+        ? item.talles.reduce((acc, t) => acc + t.stock, 0)
+        : 0;
+
       if (!conteo[r]) conteo[r] = 0;
-      conteo[r] += item.stockTotal || 0;
+      conteo[r] += total;
     }
   }
 
-  const labels = Object.keys(conteo);
-  const valores = Object.values(conteo);
-
-  return { labels, valores };
+  return {
+    labels: Object.keys(conteo),
+    valores: Object.values(conteo),
+  };
 }
 
+// ------------------------------------------------------------
+// ACTUALIZAR DASHBOARD
+// ------------------------------------------------------------
 function actualizarDashboard(items) {
   const modo = document.getElementById("chart-mode")?.value || "talle";
   const ctx = document.getElementById("stockChart");
@@ -36,19 +64,25 @@ function actualizarDashboard(items) {
 
   const { labels, valores } = prepararDatos(items, modo);
 
-  if (stockChart) {
-    stockChart.destroy();
-  }
+  // Tipo de gráfico según modo
+  let tipo = "pie";
+  if (modo === "marca") tipo = "bar";
+  if (modo === "rubro") tipo = "line";
+
+  if (stockChart) stockChart.destroy();
 
   stockChart = new Chart(ctx, {
-    type: "pie",
+    type: tipo,
     data: {
       labels,
       datasets: [
         {
+          label: "Stock",
           data: valores,
           backgroundColor: generarColores(labels.length),
+          borderColor: "#fff",
           borderWidth: 1,
+          tension: 0.3,
         },
       ],
     },
@@ -63,10 +97,20 @@ function actualizarDashboard(items) {
           },
         },
       },
+      scales:
+        tipo !== "pie"
+          ? {
+              x: { ticks: { color: "#ccc" } },
+              y: { ticks: { color: "#ccc" } },
+            }
+          : {},
     },
   });
 }
 
+// ------------------------------------------------------------
+// GENERAR PALETA DE COLORES
+// ------------------------------------------------------------
 function generarColores(n) {
   const colores = [];
   for (let i = 0; i < n; i++) {
@@ -76,40 +120,5 @@ function generarColores(n) {
   return colores;
 }
 
+// Exponer función global
 window.actualizarDashboard = actualizarDashboard;
-/* INDICADORES — MÉTRICAS SUPERIORES */
-
-function actualizarIndicadores(items) {
-  const totalArticulos = items.length;
-
-  let totalPares = 0;
-  let negativos = 0;
-  let sinStock = 0;
-  let valorizado = 0;
-
-  for (const item of items) {
-    const stock = item.stockTotal || 0;
-    const precio = item.precioPublico || 0;
-
-    totalPares += stock;
-
-    if (stock < 0) negativos++;
-    if (stock === 0) sinStock++;
-
-    valorizado += stock * precio;
-  }
-
-  const elArt = document.getElementById("metric-articulos-value");
-  const elPares = document.getElementById("metric-pares-value");
-  const elNeg = document.getElementById("metric-alertas-negativos");
-  const elCero = document.getElementById("metric-alertas-cero");
-  const elVal = document.getElementById("metric-valorizado-value");
-
-  if (elArt) elArt.textContent = totalArticulos;
-  if (elPares) elPares.textContent = totalPares;
-  if (elNeg) elNeg.textContent = negativos;
-  if (elCero) elCero.textContent = sinStock;
-  if (elVal) elVal.textContent = "$" + valorizado.toLocaleString("es-AR");
-}
-
-window.actualizarIndicadores = actualizarIndicadores;
