@@ -5,9 +5,8 @@
 
 const AppCore = {
   config: {
-    backendUrl:
-      localStorage.getItem("backendUrl") ||
-      "https://stock-backend-1-0upi.onrender.com",
+    // URL FIJA — no se lee más de localStorage
+    backendUrl: "https://stock-backend-1-0upi.onrender.com",
     modoDefecto: localStorage.getItem("modoDefecto") || "simple",
   },
 
@@ -52,6 +51,7 @@ const AppCore = {
     },
     modoTabla: false,
     resumenCatalogo: null,
+    retryTimeout: null,
   },
 
   // ============================================================
@@ -185,7 +185,7 @@ const AppCore = {
 
   // ============================================================
   // RENDER RESULTADOS (TABLA)
-  // ============================================================
+// ============================================================
 
   renderResultadosTabla(items) {
     const cont = this.els.resultsContainer;
@@ -250,6 +250,7 @@ const AppCore = {
 
     cont.innerHTML = html;
   },
+
   // ============================================================
   // RENDER RESULTADOS (TARJETAS)
   // ============================================================
@@ -337,7 +338,7 @@ const AppCore = {
   },
 
   // ============================================================
-  // PARSER INTELIGENTE
+  // PARSER INTELIGENTE (CORREGIDO)
   // ============================================================
 
   interpretarQuery(raw) {
@@ -367,6 +368,34 @@ const AppCore = {
     let talleHasta = null;
 
     const tokens = qUpper.split(/\W+/);
+
+    // Marca exacta (una sola palabra)
+    if (tokens.length === 1 && marcasNorm.includes(qUpper)) {
+      return {
+        filtros_globales: true,
+        marca: mapMarcas.get(qUpper),
+        rubro: null,
+        talleDesde: null,
+        talleHasta: null,
+        soloUltimo: false,
+        soloNegativo: false,
+        question: "",
+      };
+    }
+
+    // Rubro exacto (una sola palabra)
+    if (tokens.length === 1 && rubrosNorm.includes(qUpper)) {
+      return {
+        filtros_globales: true,
+        marca: null,
+        rubro: mapRubros.get(qUpper),
+        talleDesde: null,
+        talleHasta: null,
+        soloUltimo: false,
+        soloNegativo: false,
+        question: "",
+      };
+    }
 
     const marcasOrdenadas = marcasNorm.sort((a, b) => b.length - a.length);
     for (const mNorm of marcasOrdenadas) {
@@ -541,11 +570,17 @@ const AppCore = {
         if (window.ORB && ORB.setError) ORB.setError(true);
         if (this.els.resultsStatus)
           this.els.resultsStatus.textContent = "Error de conexión";
+
+        if (this.state.retryTimeout) clearTimeout(this.state.retryTimeout);
+        this.state.retryTimeout = setTimeout(() => {
+          this.cargarCatalogo();
+        }, 3000);
       }
     } finally {
       if (window.ORB && ORB.setLoading) ORB.setLoading(false);
     }
   },
+
   // ============================================================
   // FILTROS MANUALES
   // ============================================================
@@ -618,6 +653,11 @@ const AppCore = {
         if (window.ORB && ORB.setError) ORB.setError(true);
         if (this.els.resultsStatus)
           this.els.resultsStatus.textContent = "Error de conexión";
+
+        if (this.state.retryTimeout) clearTimeout(this.state.retryTimeout);
+        this.state.retryTimeout = setTimeout(() => {
+          this.cargarCatalogo();
+        }, 3000);
       }
     } finally {
       if (window.ORB && ORB.setLoading) ORB.setLoading(false);
@@ -778,10 +818,8 @@ const AppCore = {
   // ============================================================
 
   aplicarConfigAdmin() {
-    const url = localStorage.getItem("backendUrl");
+    // Ya no se lee backendUrl de localStorage, solo modoDefecto
     const modo = localStorage.getItem("modoDefecto");
-
-    if (url) this.config.backendUrl = url;
     if (modo) this.config.modoDefecto = modo;
 
     if (window.setModoScanner) {
