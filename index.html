@@ -7,6 +7,19 @@
 
     <link rel="stylesheet" href="styles_v2.css?v=20260210" />
     <link rel="stylesheet" href="orb_v2.css?v=20260210" />
+
+    <style>
+      /* Dashboard baja en móvil */
+      @media (max-width: 900px) {
+        .main-row {
+          flex-direction: column;
+        }
+        .dashboard-card {
+          width: 100%;
+          margin-top: 20px;
+        }
+      }
+    </style>
   </head>
 
   <body>
@@ -134,7 +147,7 @@
             </div>
           </div>
 
-          <!-- MÉTRICAS (IDs corregidos para coincidir con app_core_v3.js) -->
+          <!-- MÉTRICAS (IDs corregidos) -->
           <div class="metrics-row">
             <div class="metric-card" id="metric-articulos">
               <div class="metric-label">Artículos</div>
@@ -148,12 +161,12 @@
 
             <div class="metric-card" id="metric-alertas-negativos">
               <div class="metric-label">Stock negativo</div>
-              <div class="metric-value" id="metric-alertas-negativos">0</div>
+              <div class="metric-value" id="metric-alertas-negativos-value">0</div>
             </div>
 
             <div class="metric-card" id="metric-alertas-cero">
               <div class="metric-label">Sin stock</div>
-              <div class="metric-value" id="metric-alertas-cero">0</div>
+              <div class="metric-value" id="metric-alertas-cero-value">0</div>
             </div>
 
             <div class="metric-card" id="metric-valorizado">
@@ -334,13 +347,16 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://unpkg.com/@zxing/library@latest"></script>
 
+    <!-- ORDEN OPTIMIZADO -->
     <script src="orb_engine_v2.js?v=20260210"></script>
     <script src="orb_admin_engine.js?v=20260210"></script>
-    <script src="dashboard_engine.js?v=20260210"></script>
-    <script src="indicators_engine.js?v=20260210"></script>
-    <script src="scanner_v3.js?v=20260210"></script>
 
     <script src="ui_engine_v3.js?v=20260210"></script>
+    <script src="scanner_v3.js?v=20260210"></script>
+
+    <script src="dashboard_engine.js?v=20260210"></script>
+    <script src="indicators_engine.js?v=20260210"></script>
+
     <script src="app_core_v3.js?v=20260210"></script>
 
   </body>
