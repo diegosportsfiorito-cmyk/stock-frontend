@@ -1,6 +1,22 @@
+// ============================================================
+// SCANNER V3 — Integración estable con ZXing + UI
+// ============================================================
+// Correcciones aplicadas:
+// - Sin dobles disparos
+// - Cierre correcto del overlay
+// - Cámara liberada siempre
+// - Callback unificado hacia ui_engine_v3.js
+// - Manejo correcto de facingMode
+// - Manejo correcto de errores
+// - Compatible con AppCore y layout móvil
+// ============================================================
+
 let scannerActivo = false;
 let selectedDeviceId = null;
 
+// ------------------------------------------------------------
+// SCANNERS INTERNOS (A = environment, B = user)
+// ------------------------------------------------------------
 function startScannerInterno1(onClose) {
   iniciarScanner("environment", onClose);
 }
@@ -9,19 +25,26 @@ function startScannerInterno2(onClose) {
   iniciarScanner("user", onClose);
 }
 
+// ------------------------------------------------------------
+// INICIAR SCANNER INTERNO
+// ------------------------------------------------------------
 function iniciarScanner(facingMode, onClose) {
   if (scannerActivo) return;
-
   scannerActivo = true;
 
-  const codeReader = new ZXing.BrowserMultiFormatReader();
   const overlay = document.getElementById("scanner-overlay");
-
   if (overlay) overlay.classList.remove("hidden");
+
+  const codeReader = new ZXing.BrowserMultiFormatReader();
 
   codeReader
     .listVideoInputDevices()
     .then((videoInputDevices) => {
+      if (!videoInputDevices.length) {
+        throw new Error("No hay cámaras disponibles");
+      }
+
+      // Selección de cámara
       let deviceId = null;
 
       if (selectedDeviceId) {
@@ -30,35 +53,52 @@ function iniciarScanner(facingMode, onClose) {
         const cam = videoInputDevices.find((d) =>
           d.label.toLowerCase().includes(facingMode)
         );
-        deviceId = cam ? cam.deviceId : videoInputDevices[0]?.deviceId;
+        deviceId = cam ? cam.deviceId : videoInputDevices[0].deviceId;
       }
 
+      // Decodificación en vivo
       return codeReader.decodeFromVideoDevice(
         deviceId,
         "scanner-overlay",
         (result, err) => {
           if (result) {
             const text = result.text || "";
-            if (window.AppCore && AppCore.els && AppCore.els.searchInput) {
+
+            // Cargar valor en input
+            if (window.AppCore?.els?.searchInput) {
               AppCore.els.searchInput.value = text;
             }
+
+            // Cerrar overlay
             if (overlay) overlay.classList.add("hidden");
+
+            // Liberar cámara
             codeReader.reset();
             scannerActivo = false;
+
+            // Callback hacia UI
             if (onClose) onClose();
-            if (window.AppCore) AppCore.buscar(true);
           }
         }
       );
     })
-    .catch(() => {
+    .catch((err) => {
       if (overlay) overlay.classList.add("hidden");
       scannerActivo = false;
+
       if (onClose) onClose();
-      if (window.AppCore) AppCore.showToast("Error iniciando scanner");
+
+      if (window.AppCore) {
+        AppCore.showToast("Error iniciando scanner");
+      }
+
+      console.error("Scanner error:", err);
     });
 }
 
+// ------------------------------------------------------------
+// SCANNER EXTERNO (preferido)
+// ------------------------------------------------------------
 function startScannerExternoPreferido(onClose) {
   const apps = [
     "zxing://scan",
@@ -75,6 +115,9 @@ function startScannerExternoPreferido(onClose) {
   }, 1500);
 }
 
+// ------------------------------------------------------------
+// SCANNER EXTERNO (selector manual)
+// ------------------------------------------------------------
 function startScannerExternoSelector(onClose) {
   const opciones = [
     "zxing://scan",
@@ -96,6 +139,9 @@ function startScannerExternoSelector(onClose) {
   }, 1500);
 }
 
+// ------------------------------------------------------------
+// EXPORTAR
+// ------------------------------------------------------------
 window.startScannerInterno1 = startScannerInterno1;
 window.startScannerInterno2 = startScannerInterno2;
 window.startScannerExternoPreferido = startScannerExternoPreferido;
