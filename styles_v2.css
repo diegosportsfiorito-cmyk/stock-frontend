@@ -200,7 +200,6 @@ body.light-mode {
   outline: none;
   border-color: var(--accent);
 }
-
 /* MIC */
 
 .mic-btn {
@@ -439,9 +438,8 @@ input:checked + .slider:before {
 /* MAIN ROW */
 
 .main-row {
-  display: grid;
-  grid-template-columns: minmax(0, 2.1fr) minmax(260px, 1.2fr);
-  gap: 10px;
+  display: flex;
+  gap: 20px;
   align-items: flex-start;
 }
 
@@ -513,7 +511,6 @@ input:checked + .slider:before {
   font-size: 0.75rem;
   line-height: 1.3;
 }
-
 /* Vista tabla / tarjetas */
 
 .results-view-toggle {
@@ -563,35 +560,6 @@ input:checked + .slider:before {
 
 .tabla-resultados th {
   color: var(--text-muted);
-}
-
-/* DASHBOARD */
-
-.dashboard-card {
-  background: var(--card-bg);
-  border: 1px solid var(--border-soft);
-  border-radius: var(--radius-lg);
-  padding: 16px;
-  width: 320px;
-}
-
-.dashboard-header {
-  margin-bottom: 10px;
-}
-
-.dashboard-title {
-  font-size: 1rem;
-  font-weight: 700;
-}
-
-.dashboard-subtitle {
-  font-size: 0.75rem;
-  color: var(--text-muted);
-}
-
-#stockChart {
-  width: 100%;
-  max-height: 260px !important;
 }
 
 /* PANEL ADMIN */
@@ -692,32 +660,25 @@ input:checked + .slider:before {
   display: flex;
   justify-content: flex-end;
   gap: 8px;
-  margin-top:
+  margin-top: 10px;
+}
+
 /* ================================
    DASHBOARD — Correcciones finales
    ================================ */
 
-/* Layout general */
-.main-row {
-  display: flex;
-  gap: 20px;
-  align-items: flex-start;
-}
-
-/* Tarjeta del dashboard */
 .dashboard-card {
   background: var(--card-bg);
   border-radius: 12px;
   padding: 20px;
   width: 360px;
   min-width: 300px;
-  box-shadow: var(--card-shadow);
+  box-shadow: var(--shadow-soft);
   display: flex;
   flex-direction: column;
   gap: 15px;
 }
 
-/* Títulos */
 .dashboard-header {
   margin-bottom: 10px;
 }
@@ -732,21 +693,18 @@ input:checked + .slider:before {
   opacity: 0.7;
 }
 
-/* Select */
 #chart-mode {
   width: 100%;
   margin-bottom: 10px;
 }
 
-/* Canvas */
 #stockChart {
   width: 100% !important;
   height: 280px !important;
 }
 
-/* ================================
-   MÓVIL — Dashboard debajo
-   ================================ */
+/* MÓVIL — Dashboard debajo */
+
 @media (max-width: 900px) {
   .main-row {
     flex-direction: column;
@@ -763,9 +721,8 @@ input:checked + .slider:before {
   }
 }
 
-/* ================================
-   MÓVIL CHICO — Ajustes extra
-   ================================ */
+/* MÓVIL CHICO — Ajustes extra */
+
 @media (max-width: 600px) {
   .dashboard-card {
     padding: 15px;
