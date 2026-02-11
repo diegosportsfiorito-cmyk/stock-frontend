@@ -693,3 +693,85 @@ input:checked + .slider:before {
   justify-content: flex-end;
   gap: 8px;
   margin-top:
+/* ================================
+   DASHBOARD — Correcciones finales
+   ================================ */
+
+/* Layout general */
+.main-row {
+  display: flex;
+  gap: 20px;
+  align-items: flex-start;
+}
+
+/* Tarjeta del dashboard */
+.dashboard-card {
+  background: var(--card-bg);
+  border-radius: 12px;
+  padding: 20px;
+  width: 360px;
+  min-width: 300px;
+  box-shadow: var(--card-shadow);
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+/* Títulos */
+.dashboard-header {
+  margin-bottom: 10px;
+}
+
+.dashboard-title {
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+
+.dashboard-subtitle {
+  font-size: 0.9rem;
+  opacity: 0.7;
+}
+
+/* Select */
+#chart-mode {
+  width: 100%;
+  margin-bottom: 10px;
+}
+
+/* Canvas */
+#stockChart {
+  width: 100% !important;
+  height: 280px !important;
+}
+
+/* ================================
+   MÓVIL — Dashboard debajo
+   ================================ */
+@media (max-width: 900px) {
+  .main-row {
+    flex-direction: column;
+  }
+
+  .dashboard-card {
+    width: 100%;
+    min-width: unset;
+    margin-top: 20px;
+  }
+
+  #stockChart {
+    height: 240px !important;
+  }
+}
+
+/* ================================
+   MÓVIL CHICO — Ajustes extra
+   ================================ */
+@media (max-width: 600px) {
+  .dashboard-card {
+    padding: 15px;
+  }
+
+  #stockChart {
+    height: 200px !important;
+  }
+}
