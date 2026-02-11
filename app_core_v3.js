@@ -540,6 +540,7 @@ const AppCore = {
       ORB.setLoading?.(false);
     }
   },
+
   // ============================================================
   // FILTROS MANUALES
   // ============================================================
@@ -554,4 +555,183 @@ const AppCore = {
   async buscarPorFiltros() {
     this.actualizarFiltrosDesdeUI();
 
-    if (this.state.currentAbort)
+    if (this.state.currentAbort) {
+      this.state.currentAbort.abort();
+    }
+    this.state.currentAbort = new AbortController();
+
+    ORB.setError?.(false);
+    ORB.setLoading?.(true);
+    if (this.els.resultsStatus) this.els.resultsStatus.textContent = "Buscando…";
+
+    const body = {
+      question: "",
+      solo_stock: this.els.chkSoloStock?.checked || false,
+      filtros_globales: true,
+      marca: this.state.filtros.marca,
+      rubro: this.state.filtros.rubro,
+      talleDesde: this.state.filtros.talleDesde
+        ? parseInt(this.state.filtros.talleDesde)
+        : null,
+      talleHasta: this.state.filtros.talleHasta
+        ? parseInt(this.state.filtros.talleHasta)
+        : null,
+      soloUltimo: false,
+      soloNegativo: false,
+    };
+
+    try {
+      const res = await fetch(this.config.backendUrl + "/query", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+        signal: this.state.currentAbort.signal,
+      });
+
+      if (!res.ok) throw new Error("Error en servidor");
+
+      const data = await res.json();
+      this.state.items = data.items || [];
+
+      this.renderResultados(this.state.items);
+      window.actualizarDashboard?.(this.state.items);
+      this.actualizarIndicadores(this.state.items);
+
+      this.setConnectionStatus(true);
+      this.setOrbIdle();
+      if (this.els.resultsStatus)
+        this.els.resultsStatus.textContent = `${this.state.items.length} resultados`;
+    } catch (err) {
+      if (err.name !== "AbortError") {
+        this.setConnectionStatus(false);
+        ORB.setError?.(true);
+        if (this.els.resultsStatus)
+          this.els.resultsStatus.textContent = "Error de conexión";
+
+        clearTimeout(this.state.retryTimeout);
+        this.state.retryTimeout = setTimeout(() => this.cargarCatalogo(), 3000);
+      }
+    } finally {
+      ORB.setLoading?.(false);
+    }
+  },
+
+  // ============================================================
+  // CARGA DE CATÁLOGO / AUTOCOMPLETE
+  // ============================================================
+
+  async cargarCatalogo() {
+    try {
+      const res = await fetch(this.config.backendUrl + "/catalogo-resumen");
+      if (!res.ok) throw new Error("Error en servidor");
+      const data = await res.json();
+
+      this.state.catalogItems = data.items || [];
+      this.state.resumenCatalogo = data.resumen || null;
+
+      if (this.state.resumenCatalogo && this.els.fuenteArchivo) {
+        const r = this.state.resumenCatalogo;
+        this.els.fuenteArchivo.textContent = r.archivo || "—";
+        this.els.fuenteFecha.textContent = r.fecha || "—";
+        this.els.fuenteMarcas.textContent = this.formatNumber(r.marcas || 0);
+        this.els.fuenteRubros.textContent = this.formatNumber(r.rubros || 0);
+        this.els.fuenteArticulos.textContent = this.formatNumber(r.articulos || 0);
+        this.els.fuenteStockTotal.textContent = this.formatNumber(r.stock_total || 0);
+        this.els.fuenteStockNegativo.textContent = this.formatNumber(
+          r.stock_negativo || 0
+        );
+      }
+
+      this.setConnectionStatus(true);
+    } catch (err) {
+      this.setConnectionStatus(false);
+    }
+  },
+
+  getAutocompleteSuggestions(term) {
+    const q = this.normalizarTexto(term);
+    if (!q || !this.state.catalogItems.length) return [];
+
+    const set = new Set();
+
+    this.state.catalogItems.forEach((item) => {
+      const desc = this.normalizarTexto(item.descripcion || "");
+      const marca = this.normalizarTexto(item.marca || "");
+      const rubro = this.normalizarTexto(item.rubro || "");
+      const codigo = this.normalizarTexto(item.codigo || "");
+
+      if (desc.includes(q)) set.add(item.descripcion);
+      if (marca.includes(q)) set.add(item.marca);
+      if (rubro.includes(q)) set.add(item.rubro);
+      if (codigo.includes(q)) set.add(item.codigo);
+    });
+
+    return Array.from(set).slice(0, 20);
+  },
+
+  // ============================================================
+  // UTILIDADES DE UI: LIMPIAR / COPIAR / STOP
+  // ============================================================
+
+  limpiarPantalla() {
+    if (this.els.searchInput) this.els.searchInput.value = "";
+    if (this.els.resultsContainer) this.els.resultsContainer.innerHTML = "";
+    if (this.els.resultsStatus) this.els.resultsStatus.textContent = "Esperando consulta";
+    this.state.items = [];
+    this.actualizarIndicadores([]);
+    window.actualizarDashboard?.([]);
+    this.setOrbIdle();
+  },
+
+  async copiarResultados() {
+    try {
+      if (!this.state.items.length) {
+        this.showToast("No hay resultados para copiar");
+        return;
+      }
+
+      let texto = "";
+      this.state.items.forEach((item) => {
+        texto += `${item.codigo} - ${item.descripcion} - ${item.marca} - ${item.rubro}\n`;
+        item.talles.forEach((t) => {
+          texto += `  Talle ${t.talle}: ${t.stock}\n`;
+        });
+        texto += "\n";
+      });
+
+      await navigator.clipboard.writeText(texto);
+      this.showToast("Resultados copiados al portapapeles");
+    } catch {
+      this.showToast("No se pudo copiar");
+    }
+  },
+
+  stopTodo() {
+    try {
+      if ("speechSynthesis" in window) speechSynthesis.cancel();
+    } catch {}
+    if (this.state.currentAbort) {
+      this.state.currentAbort.abort();
+      this.state.currentAbort = null;
+    }
+    this.setOrbIdle();
+    this.showToast("Procesos detenidos");
+  },
+
+  // ============================================================
+  // INIT
+  // ============================================================
+
+  init() {
+    this.cargarCatalogo();
+    window.initUI?.(this);
+  },
+};
+
+// Exponer para otros módulos
+window.AppCore = AppCore;
+
+// Inicializar al cargar
+document.addEventListener("DOMContentLoaded", () => {
+  AppCore.init();
+});
