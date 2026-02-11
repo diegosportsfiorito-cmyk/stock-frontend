@@ -46,6 +46,10 @@ function initUI(app) {
   const adminGuardar = document.getElementById("admin-guardar");
   const adminCerrar = document.getElementById("admin-cerrar");
 
+  const toggleDark = document.getElementById("toggle-dark");
+  const fuenteToggle = document.getElementById("fuente-datos-toggle");
+  const fuentePanel = document.getElementById("fuente-datos-panel");
+
   // ------------------------------------------------------------
   // BEEP (feedback sonoro)
   // ------------------------------------------------------------
@@ -448,9 +452,41 @@ function initUI(app) {
   [metricArt, metricAlertasNeg, metricAlertasCero, metricVal].forEach((m) => {
     if (!m) return;
     m.addEventListener("click", () => {
-      AppCore.showToast("Métricas clickeables (futuro)");
+      app.showToast("Métricas clickeables (futuro)");
     });
   });
+
+  // ------------------------------------------------------------
+  // MODO DÍA / NOCHE
+  // ------------------------------------------------------------
+  if (toggleDark) {
+    toggleDark.addEventListener("change", () => {
+      document.body.classList.toggle("light-mode", toggleDark.checked);
+    });
+  }
+
+  // ------------------------------------------------------------
+  // AYUDA
+  // ------------------------------------------------------------
+  if (helpButton && helpModal && helpClose) {
+    helpModal.classList.add("hidden");
+    helpButton.addEventListener("click", () => {
+      helpModal.classList.remove("hidden");
+    });
+    helpClose.addEventListener("click", () => {
+      helpModal.classList.add("hidden");
+    });
+  }
+
+  // ------------------------------------------------------------
+  // PANEL FUENTE DE DATOS
+  // ------------------------------------------------------------
+  if (fuentePanel) fuentePanel.classList.remove("visible");
+  if (fuenteToggle && fuentePanel) {
+    fuenteToggle.addEventListener("click", () => {
+      fuentePanel.classList.toggle("visible");
+    });
+  }
 
   // ------------------------------------------------------------
   // ATAJOS DE TECLADO
