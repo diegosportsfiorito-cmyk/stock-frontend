@@ -1,4 +1,4 @@
-// build 20260210-5
+// build 20260210-6
 // ============================================================
 // APP CORE — Motor inteligente + filtros estructurados
 // ============================================================
@@ -97,7 +97,6 @@ const AppCore = {
     ORB.setError?.(false);
     ORB.setLoading?.(false);
   },
-
   // ============================================================
   // TTS
   // ============================================================
@@ -229,7 +228,6 @@ const AppCore = {
 
     cont.innerHTML = html;
   },
-
   // ============================================================
   // RENDER TARJETAS
   // ============================================================
@@ -467,80 +465,6 @@ const AppCore = {
       question: usarFiltros ? "" : q,
     };
   },
-
-  // ============================================================
-  // BÚSQUEDA PRINCIPAL
-  // ============================================================
-
-  async buscar(force = false) {
-    const raw = this.els.searchInput?.value.trim() || "";
-    if (!raw) {
-      this.showToast("Ingresá un código o descripción");
-      return;
-    }
-
-    if (!force && raw === this.state.lastQuery) return;
-    this.state.lastQuery = raw;
-
-    const parsed = this.interpretarQuery(raw);
-
-    if (this.state.currentAbort) this.state.currentAbort.abort();
-    this.state.currentAbort = new AbortController();
-
-    ORB.setError?.(false);
-    ORB.setLoading?.(true);
-    if (this.els.resultsStatus) this.els.resultsStatus.textContent = "Buscando…";
-
-    const body = {
-      question: parsed.question || "",
-      solo_stock: this.els.chkSoloStock?.checked || false,
-      filtros_globales: parsed.filtros_globales,
-      marca: parsed.marca,
-      rubro: parsed.rubro,
-      talleDesde: parsed.talleDesde,
-      talleHasta: parsed.talleHasta,
-      soloUltimo: parsed.soloUltimo,
-      soloNegativo: parsed.soloNegativo,
-    };
-
-    try {
-      const res = await fetch(this.config.backendUrl + "/query", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-        signal: this.state.currentAbort.signal,
-      });
-
-      if (!res.ok) throw new Error("Error en servidor");
-
-      const data = await res.json();
-      this.state.items = data.items || [];
-
-      this.renderResultados(this.state.items);
-      window.actualizarDashboard?.(this.state.items);
-      this.actualizarIndicadores(this.state.items);
-
-      this.setConnectionStatus(true);
-      this.setOrbIdle();
-      if (this.els.resultsStatus)
-        this.els.resultsStatus.textContent = `${this.state.items.length} resultados`;
-
-      this.speakResultados();
-    } catch (err) {
-      if (err.name !== "AbortError") {
-        this.setConnectionStatus(false);
-        ORB.setError?.(true);
-        if (this.els.resultsStatus)
-          this.els.resultsStatus.textContent = "Error de conexión";
-
-        clearTimeout(this.state.retryTimeout);
-        this.state.retryTimeout = setTimeout(() => this.cargarCatalogo(), 3000);
-      }
-    } finally {
-      ORB.setLoading?.(false);
-    }
-  },
-
   // ============================================================
   // FILTROS MANUALES
   // ============================================================
@@ -554,15 +478,6 @@ const AppCore = {
 
   async buscarPorFiltros() {
     this.actualizarFiltrosDesdeUI();
-
-    if (this.state.currentAbort) {
-      this.state.currentAbort.abort();
-    }
-    this.state.currentAbort = new AbortController();
-
-    ORB.setError?.(false);
-    ORB.setLoading?.(true);
-    if (this.els.resultsStatus) this.els.resultsStatus.textContent = "Buscando…";
 
     const body = {
       question: "",
@@ -580,6 +495,13 @@ const AppCore = {
       soloNegativo: false,
     };
 
+    if (this.state.currentAbort) this.state.currentAbort.abort();
+    this.state.currentAbort = new AbortController();
+
+    ORB.setError?.(false);
+    ORB.setLoading?.(true);
+    if (this.els.resultsStatus) this.els.resultsStatus.textContent = "Buscando…";
+
     try {
       const res = await fetch(this.config.backendUrl + "/query", {
         method: "POST",
@@ -617,105 +539,81 @@ const AppCore = {
   },
 
   // ============================================================
-  // CARGA DE CATÁLOGO / AUTOCOMPLETE
+  // CARGA DEL CATÁLOGO (CORREGIDO: /catalog)
   // ============================================================
 
   async cargarCatalogo() {
     try {
-      const res = await fetch(this.config.backendUrl + "/catalogo-resumen");
-      if (!res.ok) throw new Error("Error en servidor");
+      const res = await fetch(this.config.backendUrl + "/catalog");
+      if (!res.ok) throw new Error("Error catálogo");
+
       const data = await res.json();
 
       this.state.catalogItems = data.items || [];
       this.state.resumenCatalogo = data.resumen || null;
 
-      if (this.state.resumenCatalogo && this.els.fuenteArchivo) {
-        const r = this.state.resumenCatalogo;
-        this.els.fuenteArchivo.textContent = r.archivo || "—";
-        this.els.fuenteFecha.textContent = r.fecha || "—";
-        this.els.fuenteMarcas.textContent = this.formatNumber(r.marcas || 0);
-        this.els.fuenteRubros.textContent = this.formatNumber(r.rubros || 0);
-        this.els.fuenteArticulos.textContent = this.formatNumber(r.articulos || 0);
-        this.els.fuenteStockTotal.textContent = this.formatNumber(r.stock_total || 0);
-        this.els.fuenteStockNegativo.textContent = this.formatNumber(
-          r.stock_negativo || 0
-        );
-      }
+      if (this.els.fuenteArchivo) this.els.fuenteArchivo.textContent = data.resumen?.archivo || "—";
+      if (this.els.fuenteFecha) this.els.fuenteFecha.textContent = data.resumen?.fecha || "—";
+      if (this.els.fuenteMarcas) this.els.fuenteMarcas.textContent = data.resumen?.marcas || "—";
+      if (this.els.fuenteRubros) this.els.fuenteRubros.textContent = data.resumen?.rubros || "—";
+      if (this.els.fuenteArticulos) this.els.fuenteArticulos.textContent = data.resumen?.articulos || "—";
+      if (this.els.fuenteStockTotal) this.els.fuenteStockTotal.textContent = data.resumen?.stock_total || "—";
+      if (this.els.fuenteStockNegativo) this.els.fuenteStockNegativo.textContent = data.resumen?.stock_negativo || "—";
 
       this.setConnectionStatus(true);
     } catch (err) {
       this.setConnectionStatus(false);
+      clearTimeout(this.state.retryTimeout);
+      this.state.retryTimeout = setTimeout(() => this.cargarCatalogo(), 3000);
     }
   },
 
-  getAutocompleteSuggestions(term) {
-    const q = this.normalizarTexto(term);
-    if (!q || !this.state.catalogItems.length) return [];
-
-    const set = new Set();
-
-    this.state.catalogItems.forEach((item) => {
-      const desc = this.normalizarTexto(item.descripcion || "");
-      const marca = this.normalizarTexto(item.marca || "");
-      const rubro = this.normalizarTexto(item.rubro || "");
-      const codigo = this.normalizarTexto(item.codigo || "");
-
-      if (desc.includes(q)) set.add(item.descripcion);
-      if (marca.includes(q)) set.add(item.marca);
-      if (rubro.includes(q)) set.add(item.rubro);
-      if (codigo.includes(q)) set.add(item.codigo);
-    });
-
-    return Array.from(set).slice(0, 20);
-  },
-
   // ============================================================
-  // UTILIDADES DE UI: LIMPIAR / COPIAR / STOP
+  // LIMPIAR PANTALLA
   // ============================================================
 
   limpiarPantalla() {
-    if (this.els.searchInput) this.els.searchInput.value = "";
-    if (this.els.resultsContainer) this.els.resultsContainer.innerHTML = "";
-    if (this.els.resultsStatus) this.els.resultsStatus.textContent = "Esperando consulta";
     this.state.items = [];
-    this.actualizarIndicadores([]);
+    this.renderResultados([]);
     window.actualizarDashboard?.([]);
+    this.actualizarIndicadores([]);
+    if (this.els.resultsStatus) this.els.resultsStatus.textContent = "Sin resultados";
     this.setOrbIdle();
   },
 
-  async copiarResultados() {
-    try {
-      if (!this.state.items.length) {
-        this.showToast("No hay resultados para copiar");
-        return;
-      }
+  // ============================================================
+  // COPIAR RESULTADOS
+  // ============================================================
 
-      let texto = "";
-      this.state.items.forEach((item) => {
-        texto += `${item.codigo} - ${item.descripcion} - ${item.marca} - ${item.rubro}\n`;
-        item.talles.forEach((t) => {
-          texto += `  Talle ${t.talle}: ${t.stock}\n`;
-        });
-        texto += "\n";
-      });
-
-      await navigator.clipboard.writeText(texto);
-      this.showToast("Resultados copiados al portapapeles");
-    } catch {
-      this.showToast("No se pudo copiar");
+  copiarResultados() {
+    if (!this.state.items.length) {
+      this.showToast("No hay resultados para copiar");
+      return;
     }
+
+    let txt = "";
+    this.state.items.forEach((item) => {
+      txt += `${item.codigo} — ${item.descripcion} — ${item.marca} — ${item.rubro}\n`;
+      item.talles.forEach((t) => {
+        txt += `  Talle ${t.talle}: ${t.stock}\n`;
+      });
+      txt += "\n";
+    });
+
+    navigator.clipboard.writeText(txt);
+    this.showToast("Copiado");
   },
+
+  // ============================================================
+  // STOP TODO
+  // ============================================================
 
   stopTodo() {
-    try {
-      if ("speechSynthesis" in window) speechSynthesis.cancel();
-    } catch {}
-    if (this.state.currentAbort) {
-      this.state.currentAbort.abort();
-      this.state.currentAbort = null;
-    }
-    this.setOrbIdle();
-    this.showToast("Procesos detenidos");
+    if (this.state.currentAbort) this.state.currentAbort.abort();
+    speechSynthesis.cancel();
+    ORB.setError?.(false);
+    ORB.setLoading?.(false);
+    ORB.setSpeaking?.(false);
   },
 
   // ============================================================
@@ -724,14 +622,15 @@ const AppCore = {
 
   init() {
     this.cargarCatalogo();
-    window.initUI?.(this);
+
+    this.els.btnAplicarFiltros?.addEventListener("click", () =>
+      this.buscarPorFiltros()
+    );
+
+    this.els.searchInput?.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") this.buscar();
+    });
   },
 };
 
-// Exponer para otros módulos
-window.AppCore = AppCore;
-
-// Inicializar al cargar
-document.addEventListener("DOMContentLoaded", () => {
-  AppCore.init();
-});
+window.addEventListener("DOMContentLoaded", () => AppCore.init());
