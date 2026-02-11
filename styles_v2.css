@@ -1082,3 +1082,73 @@ body.light-mode .autocomplete-list li:hover {
   align-items: flex-start;
   gap: 4px;
 }
+/* ============================================================
+   LAYOUT MÓVIL DEFINITIVO — BOTONES DEBAJO DEL INPUT
+   (solo < 768px)
+============================================================ */
+
+@media (max-width: 768px) {
+
+  /* Fila 1: Solo stock + Simple/Completo + Limpiar + Copiar + Stop */
+  .search-actions-row {
+    order: 2;
+    width: 100%;
+    margin-top: 8px;
+  }
+
+  .search-actions-right {
+    display: flex;
+    flex-wrap: wrap;
+    width: 100%;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  /* Solo stock + Simple/Completo */
+  .search-filters-row {
+    order: 1;
+    width: 100%;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: space-between;
+  }
+
+  .solo-stock {
+    flex: 1;
+    min-width: 120px;
+  }
+
+  .scanner-mode-switch {
+    flex: 1;
+    min-width: 120px;
+  }
+
+  /* Fila 2: Micrófono + Manos libres + Dictado + Filtros */
+  .voice-switches {
+    order: 3;
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  #mic-button {
+    order: 0;
+    width: 48px;
+    height: 48px;
+    font-size: 1.3rem;
+  }
+
+  #btn-filtros {
+    order: 4;
+    flex: 1;
+    text-align: center;
+  }
+
+  /* Ocultar scanner en móvil (queda en menú secundario) */
+  .scanner-row {
+    display: none;
+  }
+}
