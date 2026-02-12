@@ -161,7 +161,7 @@ function initUI(app) {
       if (els.searchInput) els.searchInput.value = text;
       setVoiceUIState("ready");
       if (autoList) autoList.innerHTML = "";
-      app.buscar(true);
+      app.buscar();
     };
 
     rec.onerror = () => {
@@ -199,11 +199,9 @@ function initUI(app) {
       return;
     }
 
-    // Si no existe getAutocompleteSuggestions, no romper
     const sugerencias =
-      typeof AppCore !== "undefined" &&
-      typeof AppCore.getAutocompleteSuggestions === "function"
-        ? AppCore.getAutocompleteSuggestions(value)
+      app && typeof app.getAutocompleteSuggestions === "function"
+        ? app.getAutocompleteSuggestions(value)
         : [];
 
     if (!sugerencias.length) {
@@ -245,7 +243,7 @@ function initUI(app) {
           }
         }
 
-        app.buscar(true);
+        app.buscar();
       }
     });
   }
@@ -257,7 +255,7 @@ function initUI(app) {
         const val = li.getAttribute("data-value") || li.textContent || "";
         els.searchInput.value = val;
         autoList.innerHTML = "";
-        app.buscar(true);
+        app.buscar();
       }
     });
   }
@@ -271,14 +269,14 @@ function initUI(app) {
     if (isMobile) {
       orb.addEventListener("touchend", () => {
         if (autoList) autoList.innerHTML = "";
-        app.buscar(true);
+        app.buscar();
       });
     } else {
       orb.addEventListener("click", () => {
         orb.classList.add("orb-pulse");
         setTimeout(() => orb.classList.remove("orb-pulse"), 300);
         if (autoList) autoList.innerHTML = "";
-        app.buscar(true);
+        app.buscar();
       });
     }
 
@@ -294,7 +292,6 @@ function initUI(app) {
   // ------------------------------------------------------------
   if (btnClear) {
     btnClear.addEventListener("click", () => {
-      // Solo limpiar resultados, NO el input
       app.limpiarPantalla();
       beep(800);
     });
@@ -336,7 +333,7 @@ function initUI(app) {
   function scannerCallback() {
     setScannerOverlay(false);
     if (els.searchInput && els.searchInput.value.trim()) {
-      app.buscar(true);
+      app.buscar();
     }
   }
 
@@ -377,8 +374,6 @@ function initUI(app) {
     });
   }
 
-  // Estos listeners son redundantes con AppCore.conectarEventosUI,
-  // pero no rompen nada; los dejamos para asegurar reacción inmediata.
   if (els.btnAplicarFiltros) {
     els.btnAplicarFiltros.addEventListener("click", () => app.buscarPorFiltros());
   }
