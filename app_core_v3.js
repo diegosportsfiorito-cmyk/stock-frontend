@@ -124,15 +124,14 @@ const AppCore = {
     this.setConnectionStatus(false);
 
     try {
-      const res = await fetch(this.config.backendUrl + "/ping", {
-        method: "GET",
-      });
+      const res = await fetch(this.config.backendUrl + "/ping");
       if (!res.ok) throw new Error("Backend no listo");
 
       this.setSearchStatus("Conectado", "green");
       this.setConnectionStatus(true);
       this.state.warmingUp = false;
       return true;
+
     } catch (err) {
       this.setSearchStatus("Activando servidor…", "orange");
       this.setConnectionStatus(false);
@@ -147,16 +146,6 @@ const AppCore = {
       return;
     }
     this.cargarCatalogo();
-  },
-
-  // ============================================================
-  // RENDER SEGÚN MODO
-  // ============================================================
-
-  renderResultados(items) {
-    this.state.modoTabla
-      ? this.renderResultadosTabla(items)
-      : this.renderResultadosTarjetas(items);
   },
 
   // ============================================================
@@ -190,35 +179,6 @@ const AppCore = {
     let talleHasta = null;
 
     const tokens = qUpper.split(/\W+/);
-
-    // Marca exacta
-    if (tokens.length === 1 && marcasNorm.includes(qUpper)) {
-      return {
-        filtros_globales: true,
-        marca: mapMarcas.get(qUpper),
-        rubro: null,
-        talleDesde: null,
-        talleHasta: null,
-        soloUltimo: false,
-        soloNegativo: false,
-        question: "",
-      };
-    }
-
-    // Rubro exacto
-    if (tokens.length === 1 && rubrosNorm.includes(qUpper)) {
-      return {
-        filtros_globales: true,
-        marca: null,
-        rubro: mapRubros.get(qUpper),
-        talleDesde: null,
-        talleHasta: null,
-        soloUltimo: false,
-        soloNegativo: false,
-        question: "",
-      };
-    }
-
     // Marca parcial
     for (const m of marcasNorm.sort((a, b) => b.length - a.length)) {
       if (tokens.includes(m)) {
@@ -387,6 +347,7 @@ const AppCore = {
       this.setSearchStatus("Conectado", "green");
       if (this.els.resultsStatus)
         this.els.resultsStatus.textContent = `${this.state.items.length} resultados`;
+
     } catch (err) {
       if (err.name !== "AbortError") {
         this.setConnectionStatus(false);
@@ -403,7 +364,6 @@ const AppCore = {
       ORB.setLoading?.(false);
     }
   },
-
   // ============================================================
   // CARGA DEL CATÁLOGO
   // ============================================================
@@ -430,6 +390,7 @@ const AppCore = {
 
       this.setConnectionStatus(true);
       this.setSearchStatus("Conectado", "green");
+
     } catch (err) {
       this.setConnectionStatus(false);
       this.setSearchStatus("Error de conexión", "red");
@@ -553,6 +514,7 @@ const AppCore = {
       if (window.ORB?.isVoiceMode?.()) {
         this.speakResultados();
       }
+
     } catch (err) {
       if (err.name !== "AbortError") {
         this.setConnectionStatus(false);
@@ -569,20 +531,22 @@ const AppCore = {
       ORB.setLoading?.(false);
     }
   },
-
   // ============================================================
   // EVENTOS DE UI
   // ============================================================
 
   conectarEventosUI() {
+    // Botón aplicar filtros
     this.els.btnAplicarFiltros?.addEventListener("click", () => {
       this.buscarPorFiltros();
     });
 
+    // ENTER en el input
     this.els.searchInput?.addEventListener("keydown", (e) => {
       if (e.key === "Enter") this.buscar();
     });
 
+    // Toggle tabla / tarjetas
     const btnTabla = document.getElementById("btn-ver-tabla");
     const btnTarjetas = document.getElementById("btn-ver-tarjetas");
 
@@ -600,16 +564,24 @@ const AppCore = {
       this.renderResultados(this.state.items);
     });
 
+    // Botón copiar
     const btnCopiar = document.getElementById("btn-copiar");
     btnCopiar?.addEventListener("click", () => this.copiarResultados());
 
+    // Botón limpiar
     const btnLimpiar = document.getElementById("btn-limpiar");
     btnLimpiar?.addEventListener("click", () => this.limpiarPantalla());
 
+    // Botón STOP
+    const btnStop = document.getElementById("btn-stop");
+    btnStop?.addEventListener("click", () => this.stopTodo());
+
+    // Toggle fuente de datos
     this.els.fuenteDatosToggle?.addEventListener("click", () => {
       this.els.fuenteDatosPanel?.classList.toggle("visible");
     });
 
+    // ORB: clic inicia búsqueda
     const orb = document.getElementById("orb");
     orb?.addEventListener("click", () => this.buscar());
   },
