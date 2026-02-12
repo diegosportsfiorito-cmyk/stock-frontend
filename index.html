@@ -1,272 +1,484 @@
 <!DOCTYPE html>
 <html lang="es">
-<head>
-  <meta charset="UTF-8">
+  <head>
+    <meta charset="UTF-8" />
 
-  <!-- ========================================================= -->
-  <!-- BUILD VERSION IDENTIFIER (para verificar en DevTools)     -->
-  <!-- ========================================================= -->
-  <!-- BUILD VERSION: 2026-02-10_23:45_UI-V3 -->
-  <meta name="build-version" content="2026-02-10_23:45_UI-V3">
+    <!-- ========================================================= -->
+    <!-- BUILD VERSION IDENTIFIER                                 -->
+    <!-- ========================================================= -->
+    <!-- BUILD VERSION: 2026-02-10_optimized_UI-V3 -->
+    <meta name="build-version" content="2026-02-10_optimized_UI-V3" />
 
-  <title>STOCK IA PRO – Asistente inteligente</title>
+    <title>STOCK IA PRO — Asistente inteligente</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-  <!-- Permitir zoom en móvil -->
-  <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes">
+    <link rel="stylesheet" href="styles_v2.css?v=20260210" />
+    <link rel="stylesheet" href="orb_v2.css?v=20260210" />
 
-  <!-- CSS PRINCIPAL -->
-  <link rel="stylesheet" href="styles_v2.css?v=20260210">
-  <link rel="stylesheet" href="orb_v2.css?v=20260210">
+    <style>
+      /* Dashboard baja en móvil */
+      @media (max-width: 900px) {
+        .main-row {
+          flex-direction: column;
+        }
+        .dashboard-card {
+          width: 100%;
+          margin-top: 20px;
+        }
+      }
 
-  <!-- Consola: mostrar versión -->
-  <script>
-    console.log("%cBUILD VERSION: 2026-02-10_23:45_UI-V3",
-      "color:#4f8cff;font-size:14px;font-weight:bold");
-  </script>
-</head>
+      /* Métricas en 2 columnas en móvil */
+      @media (max-width: 600px) {
+        .metrics-row {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 8px;
+        }
+        .metric-card {
+          flex: 0 0 calc(50% - 8px);
+        }
+      }
 
-<body>
+      /* Indicador de estado */
+      .search-status {
+        margin-bottom: 6px;
+        font-weight: bold;
+        font-size: 14px;
+        text-align: left;
+        color: #0ea5e9;
+      }
+      .search-status.orange { color: #f59e0b; }
+      .search-status.green { color: #10b981; }
+      .search-status.red { color: #ef4444; }
+      .search-status.blue { color: #0ea5e9; }
 
-  <!-- DIV OCULTO PARA VERIFICAR VERSIÓN -->
-  <div id="build-version" style="display:none">2026-02-10_23:45_UI-V3</div>
+      /* Botones LIMPIAR + COPIAR + STOP en horizontal */
+      .search-actions-row {
+        display: flex;
+        flex-direction: row;
+        gap: 10px;
+        margin-top: 10px;
+      }
 
-  <div class="app-shell">
-    <div class="app-container">
+      /* Panel de fuente de datos oculto por defecto */
+      .fuente-datos-panel {
+        display: none;
+      }
+      .fuente-datos-panel.visible {
+        display: block;
+      }
 
-      <!-- ========================================================= -->
-      <!-- HEADER -->
-      <!-- ========================================================= -->
-      <header class="app-header">
-        <div class="branding">
-          <div class="brand-orb-mini">IA</div>
-          <div>
-            <div class="brand-title">STOCK IA PRO</div>
-            <div class="brand-subtitle">Asistente inteligente de stock</div>
+      /* Botón STOP rojo suave */
+      .orb-action-btn.stop {
+        background-color: #ffffff;
+        color: #c62828;
+        border: 1px solid #c62828;
+      }
+
+      /* Fila de controles de voz */
+      .voice-row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-top: 8px;
+        flex-wrap: wrap;
+      }
+
+      /* Modal de ayuda centrado */
+      .help-modal {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.55);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 999;
+      }
+      .help-modal.visible {
+        display: flex;
+      }
+      .help-modal-content {
+        background: #111827;
+        color: #e5e7eb;
+        padding: 20px;
+        border-radius: 12px;
+        max-width: 420px;
+        width: 90%;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+      }
+    </style>
+
+    <script>
+      console.log(
+        "%cBUILD VERSION: 2026-02-10_optimized_UI-V3",
+        "color:#4f8cff;font-size:14px;font-weight:bold"
+      );
+    </script>
+  </head>
+
+  <body>
+    <div id="build-version" style="display:none">
+      2026-02-10_optimized_UI-V3
+    </div>
+
+    <div class="app-shell">
+      <div class="app-container">
+        <!-- HEADER -->
+        <header class="app-header">
+          <div class="branding">
+            <div class="brand-orb-mini">IA</div>
+            <div>
+              <div class="brand-title">STOCK IA PRO</div>
+              <div class="brand-subtitle">Asistente inteligente de stock</div>
+            </div>
           </div>
-        </div>
 
-        <div class="header-right">
-          <div class="connection-indicator">
-            <span>Servidor:</span>
-            <div id="connection-dot" class="connection-dot"></div>
+          <div class="header-right">
+            <div class="connection-indicator">
+              <span class="connection-dot" id="connection-dot"></span>
+              <span>Estado conexión</span>
+            </div>
+
+            <div class="header-switch-row">
+              <label class="orb-mode-switch">
+                <span>Modo día</span>
+                <label class="switch small">
+                  <input id="toggle-dark" type="checkbox" />
+                  <span class="slider"></span>
+                </label>
+                <span>Noche</span>
+              </label>
+            </div>
+
+            <button id="help-button" class="btn-help">❓</button>
+          </div>
+        </header>
+
+        <!-- SEARCH + ORB -->
+        <section class="search-card">
+          <!-- INDICADOR -->
+          <div id="search-status" class="search-status">Listo</div>
+
+          <!-- INPUT -->
+          <div class="search-row">
+            <div class="search-input-wrapper">
+              <input
+                id="search-input"
+                type="text"
+                class="search-input"
+                placeholder="Buscar artículo, marca, rubro, talle, color, precio..."
+                autocomplete="off"
+              />
+              <ul id="autocomplete-list" class="autocomplete-list"></ul>
+            </div>
           </div>
 
-          <button id="help-button" class="btn-help">?</button>
-        </div>
-      </header>
-
-      <!-- ========================================================= -->
-      <!-- SEARCH + ORB -->
-      <!-- ========================================================= -->
-      <section class="search-card">
-
-        <!-- INDICADOR -->
-        <div id="search-status" class="search-status">Activando servidor…</div>
-
-        <!-- INPUT -->
-        <div class="search-row">
-          <div class="search-input-wrapper">
-            <input id="search-input" class="search-input"
-              placeholder="Buscar artículo, marca, rubro, talle, color, precio…">
-            <ul id="autocomplete-list" class="autocomplete-list"></ul>
+          <!-- BOTONES LIMPIAR + COPIAR + STOP -->
+          <div class="search-actions-row">
+            <button id="btn-limpiar" class="orb-action-btn">🧹</button>
+            <button id="btn-copiar" class="orb-action-btn">📋</button>
+            <button id="btn-stop" class="orb-action-btn stop">⏹</button>
           </div>
 
-          <button id="mic-button" class="mic-btn">🎤</button>
-        </div>
+          <!-- VOZ -->
+          <div class="voice-row">
+            <button id="mic-button" class="mic-btn">🎤</button>
 
-        <!-- BOTONES LIMPIAR + COPIAR + STOP -->
-        <div class="search-actions-row">
-          <button id="btn-limpiar" class="btn-secondary">Limpiar</button>
-          <button id="btn-copiar" class="btn-secondary">Copiar</button>
-          <button id="btn-stop" class="btn-secondary stop">Stop</button>
-        </div>
+            <label class="orb-mode-switch">
+              <span>Dictado</span>
+              <label class="switch small">
+                <input id="modo-voz-switch" type="checkbox" />
+                <span class="slider"></span>
+              </label>
+            </label>
 
-        <!-- VOZ -->
-        <div class="voice-row">
-          <label class="switch small">
-            <input type="checkbox" id="modo-voz-switch">
-            <span class="slider"></span>
-          </label>
-          <span>Dictado</span>
+            <label class="orb-mode-switch">
+              <span>Manos libres</span>
+              <label class="switch small">
+                <input id="modo-manos-libres" type="checkbox" />
+                <span class="slider"></span>
+              </label>
+            </label>
+          </div>
 
-          <label class="switch small">
-            <input type="checkbox" id="modo-manos-libres">
-            <span class="slider"></span>
-          </label>
-          <span>Manos libres</span>
-        </div>
+          <div id="voice-status" class="voice-status">Dictado desactivado</div>
 
-        <div id="voice-status" class="voice-status">Dictado desactivado</div>
+          <!-- SCANNERS -->
+          <div class="scanner-row">
+            <div class="scanner-buttons">
+              <button id="btn-scanner-interno-1" class="scanner-big-btn">📷</button>
+              <button id="btn-scanner-interno-2" class="scanner-big-btn">🎦</button>
+              <button id="btn-scanner-externo-preferido" class="scanner-big-btn">📲</button>
+              <button id="btn-scanner-externo-selector" class="scanner-big-btn">🧭</button>
+            </div>
 
-        <!-- SCANNERS -->
-        <div class="scanner-row">
-          <button id="btn-scanner-interno-1" class="btn-secondary">Scanner A</button>
-          <button id="btn-scanner-interno-2" class="btn-secondary">Scanner B</button>
-          <button id="btn-scanner-externo-preferido" class="btn-secondary">ZXing</button>
-          <button id="btn-scanner-externo-selector" class="btn-secondary">Opciones</button>
-        </div>
+            <div class="scanner-mode-switch">
+              <label class="orb-mode-switch">
+                <span>Simple</span>
+                <label class="switch small">
+                  <input id="modo-scanner-toggle" type="checkbox" />
+                  <span class="slider"></span>
+                </label>
+                <span>Completo</span>
+              </label>
+            </div>
+          </div>
 
-        <!-- SOLO STOCK + FILTROS -->
-        <div class="search-filters-row">
-          <label class="solo-stock">
-            <input type="checkbox" id="chk-solo-stock">
-            Solo stock
-          </label>
+          <!-- SOLO STOCK + FILTROS -->
+          <div class="search-filters-row">
+            <label class="solo-stock">
+              <span>Solo con stock</span>
+              <label class="switch">
+                <input id="chk-solo-stock" type="checkbox" />
+                <span class="slider"></span>
+              </label>
+            </label>
 
-          <button id="btn-filtros" class="btn-secondary">Filtros</button>
-        </div>
+            <button id="btn-filtros" class="btn-secondary">Filtros</button>
+          </div>
 
-        <!-- PANEL DE FILTROS -->
-        <div id="filtros-panel" class="filtros-panel">
-          <div class="filtros-row">
-            <select id="filtro-marca" class="filtro-select">
-              <option value="">Marca</option>
+          <!-- ORB -->
+          <div class="orb-zone">
+            <div class="orb-actions-ring">
+              <div id="orb" class="orb-container">
+                <div id="orb-core" class="orb-ultra"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- MÉTRICAS -->
+          <div class="metrics-row">
+            <div id="metric-articulos" class="metric-card">
+              <div class="metric-label">Artículos</div>
+              <div class="metric-value" id="metric-articulos-value">0</div>
+            </div>
+
+            <div id="metric-pares" class="metric-card">
+              <div class="metric-label">Pares</div>
+              <div class="metric-value" id="metric-pares-value">0</div>
+            </div>
+
+            <div id="metric-alertas-negativos" class="metric-card">
+              <div class="metric-label">Stock negativo</div>
+              <div class="metric-value" id="metric-alertas-negativos-value">0</div>
+            </div>
+
+            <div id="metric-alertas-cero" class="metric-card">
+              <div class="metric-label">Sin stock</div>
+              <div class="metric-value" id="metric-alertas-cero-value">0</div>
+            </div>
+
+            <div id="metric-valorizado" class="metric-card">
+              <div class="metric-label">Valorizado</div>
+              <div class="metric-value" id="metric-valorizado-value">$0</div>
+            </div>
+          </div>
+
+          <!-- PANEL DE FILTROS -->
+          <div id="filtros-panel" class="filtros-panel">
+            <div class="filtros-row filtros-row-stack">
+              <select id="filtro-marca" class="filtro-select">
+                <option value="">Marca</option>
+              </select>
+
+              <select id="filtro-rubro" class="filtro-select">
+                <option value="">Rubro</option>
+              </select>
+            </div>
+
+            <div class="filtros-row filtros-row-stack">
+              <input
+                id="filtro-talle-desde"
+                type="number"
+                class="filtro-input"
+                placeholder="Talle desde"
+              />
+              <input
+                id="filtro-talle-hasta"
+                type="number"
+                class="filtro-input"
+                placeholder="Talle hasta"
+              />
+            </div>
+
+            <div class="filtros-row">
+              <button id="btn-aplicar-filtros" class="btn-secondary">
+                Aplicar filtros
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <!-- MAIN ROW -->
+        <section class="main-row">
+          <div class="results-card">
+            <div class="results-header">
+              <div class="results-title">Resultados</div>
+
+              <div class="results-right">
+                <div class="results-view-toggle">
+                  <button id="btn-ver-tabla" class="view-btn">Tabla</button>
+                  <button id="btn-ver-tarjetas" class="view-btn active">Tarjetas</button>
+                </div>
+              </div>
+            </div>
+
+            <div id="results-status" class="results-status">Esperando consulta</div>
+            <div id="results-container"></div>
+          </div>
+
+          <aside class="dashboard-card">
+            <div class="dashboard-header">
+              <div class="dashboard-title">Visión rápida</div>
+              <div class="dashboard-subtitle">
+                Distribución por talle / marca / rubro
+              </div>
+            </div>
+
+            <select id="chart-mode" class="filtro-select">
+              <option value="talle">Por talle</option>
+              <option value="marca">Por marca</option>
+              <option value="rubro">Por rubro</option>
             </select>
 
-            <select id="filtro-rubro" class="filtro-select">
-              <option value="">Rubro</option>
-            </select>
+            <canvas id="stockChart"></canvas>
+          </aside>
+        </section>
+
+        <!-- FUENTE DE DATOS -->
+        <section class="fuente-datos-wrapper">
+          <button id="fuente-datos-toggle" class="btn-secondary">
+            Fuente de datos
+          </button>
+
+          <div id="fuente-datos-panel" class="fuente-datos-panel">
+            <div><strong>Archivo:</strong> <span id="fuente-archivo">—</span></div>
+            <div><strong>Fecha:</strong> <span id="fuente-fecha">—</span></div>
+            <div><strong>Marcas:</strong> <span id="fuente-marcas">—</span></div>
+            <div><strong>Rubros:</strong> <span id="fuente-rubros">—</span></div>
+            <div><strong>Artículos:</strong> <span id="fuente-articulos">—</span></div>
+            <div><strong>Stock total:</strong> <span id="fuente-stock-total">—</span></div>
+            <div>
+              <strong>Stock negativo:</strong>
+              <span id="fuente-stock-negativo">—</span>
+            </div>
           </div>
+        </section>
 
-          <div class="filtros-row">
-            <input id="filtro-talle-desde" class="filtro-input" placeholder="Talle desde">
-            <input id="filtro-talle-hasta" class="filtro-input" placeholder="Talle hasta">
-          </div>
-
-          <button id="btn-aplicar-filtros" class="btn-secondary">Aplicar</button>
-        </div>
-
-        <!-- ORB -->
-        <div class="orb-zone">
-          <div class="orb-container">
-            <div id="orb-core"></div>
-            <div id="orb"></div>
-          </div>
-        </div>
-
-      </section>
-
-      <!-- ========================================================= -->
-      <!-- MÉTRICAS -->
-      <!-- ========================================================= -->
-      <div class="metrics-row">
-        <div id="metric-articulos" class="metric-card">
-          <div class="metric-label">Artículos</div>
-          <div id="metric-articulos-value" class="metric-value">0</div>
-        </div>
-
-        <div id="metric-pares" class="metric-card">
-          <div class="metric-label">Pares</div>
-          <div id="metric-pares-value" class="metric-value">0</div>
-        </div>
-
-        <div id="metric-alertas-negativos" class="metric-card">
-          <div class="metric-label">Stock negativo</div>
-          <div id="metric-alertas-negativos-value" class="metric-value">0</div>
-        </div>
-
-        <div id="metric-alertas-cero" class="metric-card">
-          <div class="metric-label">Sin stock</div>
-          <div id="metric-alertas-cero-value" class="metric-value">0</div>
-        </div>
-
-        <div id="metric-valorizado" class="metric-card">
-          <div class="metric-label">Valorizado</div>
-          <div id="metric-valorizado-value" class="metric-value">$0</div>
-        </div>
+        <!-- FOOTER -->
+        <footer class="app-footer">
+          <div class="footer-logo">SCL</div>
+          <div class="footer-text">Salas Creative Lab</div>
+        </footer>
       </div>
+    </div>
 
-      <!-- ========================================================= -->
-      <!-- RESULTADOS -->
-      <!-- ========================================================= -->
-      <section class="results-card">
-        <div class="results-header">
-          <div class="results-title">Resultados</div>
-          <div id="results-status" class="results-status">Sin resultados</div>
-        </div>
+    <!-- PANEL ADMIN -->
+    <div id="admin-panel">
+      <h2>Panel administrador</h2>
 
-        <div class="results-view-toggle">
-          <button id="btn-ver-tarjetas" class="view-btn active">Tarjetas</button>
-          <button id="btn-ver-tabla" class="view-btn">Tabla</button>
-        </div>
+      <h3>Backend</h3>
+      <label>
+        URL backend
+        <input id="admin-backend-url" type="text" />
+      </label>
 
-        <div id="results-container"></div>
-      </section>
-
-      <!-- ========================================================= -->
-      <!-- VISIÓN RÁPIDA (Dashboard) -->
-      <!-- ========================================================= -->
-      <section class="dashboard-card">
-        <div class="dashboard-header">
-          <div class="dashboard-title">Visión rápida</div>
-        </div>
-
-        <select id="chart-mode">
-          <option value="talle">Por talle</option>
-          <option value="marca">Por marca</option>
-          <option value="rubro">Por rubro</option>
+      <label>
+        Modo por defecto
+        <select id="admin-modo-defecto">
+          <option value="simple">Simple</option>
+          <option value="completo">Completo</option>
         </select>
+      </label>
 
-        <canvas id="stockChart"></canvas>
-      </section>
+      <h3>ORB — Apariencia</h3>
 
-      <!-- ========================================================= -->
-      <!-- PANEL FUENTE DE DATOS -->
-      <!-- ========================================================= -->
-      <button id="fuente-datos-toggle" class="btn-secondary">Fuente de datos</button>
+      <label>
+        Color día
+        <input id="orb-color" type="color" />
+      </label>
 
-      <div id="fuente-datos-panel" class="filtros-panel">
-        <div>Archivo: <span id="fuente-archivo">—</span></div>
-        <div>Fecha: <span id="fuente-fecha">—</span></div>
-        <div>Marcas: <span id="fuente-marcas">—</span></div>
-        <div>Rubros: <span id="fuente-rubros">—</span></div>
-        <div>Artículos: <span id="fuente-articulos">—</span></div>
-        <div>Stock total: <span id="fuente-stock-total">—</span></div>
-        <div>Stock negativo: <span id="fuente-stock-negativo">—</span></div>
+      <label>
+        Color noche
+        <input id="orb-color-dark" type="color" />
+      </label>
+
+      <label>
+        Tamaño ORB (px)
+        <input id="orb-size" type="range" min="80" max="200" />
+      </label>
+
+      <label>
+        Intensidad halo
+        <input id="orb-halo" type="range" min="0" max="120" />
+      </label>
+
+      <label>
+        Modo visual
+        <select id="orb-mode">
+          <option value="ultra">Ultra</option>
+          <option value="3d">3D</option>
+          <option value="classic">Classic</option>
+        </select>
+      </label>
+
+      <label>
+        Presets
+        <select id="orb-presets">
+          <option value="default">Default</option>
+          <option value="plasma">Plasma</option>
+          <option value="fuego">Fuego</option>
+          <option value="neon">Neón</option>
+          <option value="minimal">Minimal</option>
+        </select>
+      </label>
+
+      <button id="orb-reset">Reset ORB</button>
+
+      <div class="admin-actions">
+        <button id="admin-guardar">Guardar</button>
+        <button id="admin-cerrar">Cerrar</button>
       </div>
-
     </div>
-  </div>
 
-  <!-- ========================================================= -->
-  <!-- MODAL AYUDA -->
-  <!-- ========================================================= -->
-  <div id="help-modal" class="modal hidden">
-    <div class="modal-content">
-      <button id="help-close" class="btn-secondary">Cerrar</button>
-      <h2>Ayuda</h2>
-      <p>Usá el buscador para consultar artículos por código, marca, rubro, talle o color.</p>
-      <p>Podés usar el scanner, dictado por voz y filtros avanzados.</p>
+    <div id="scanner-overlay" class="scanner-overlay hidden"></div>
+
+    <!-- MODAL DE AYUDA -->
+    <div id="help-modal" class="help-modal hidden">
+      <div class="help-modal-content">
+        <h2>Ayuda rápida</h2>
+        <ul>
+          <li>Escribí o escaneá un código, marca, rubro o talle.</li>
+          <li>Usá el botón 🎤 si el modo dictado está activo.</li>
+          <li>Activá manos libres para consultas continuas.</li>
+          <li>Usá “Solo con stock” y “Filtros” para acotar resultados.</li>
+          <li>Click en métricas para entender el stock global.</li>
+          <li>Atajos: ESC limpia, F2 scanner, F3 voz.</li>
+        </ul>
+        <button id="help-close">Cerrar</button>
+      </div>
     </div>
-  </div>
 
-  <!-- ========================================================= -->
-  <!-- OVERLAY SCANNER -->
-  <!-- ========================================================= -->
-  <div id="scanner-overlay" class="hidden"></div>
+    <div id="toast" class="toast"></div>
 
-  <!-- ========================================================= -->
-  <!-- TOAST -->
-  <!-- ========================================================= -->
-  <div id="toast" class="toast"></div>
+    <!-- SCRIPTS -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://unpkg.com/@zxing/library@latest"></script>
 
-  <!-- ========================================================= -->
-  <!-- SCRIPTS -->
-  <!-- ========================================================= -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="app_core_v3.js?v=20260210"></script>
+    <script src="ui_engine_v3.js?v=20260210"></script>
+    <script src="orb_engine_v2.js?v=20260210"></script>
+    <script src="orb_admin_engine.js?v=20260210"></script>
+    <script src="scanner_v3.js?v=20260210"></script>
+    <script src="dashboard_engine.js?v=20260210"></script>
+    <script src="indicators_engine.js?v=20260210"></script>
 
-  <script src="app_core_v3.js?v=20260210"></script>
-  <script src="ui_engine_v3.js?v=20260210"></script>
-  <script src="scanner_v3.js?v=20260210"></script>
-  <script src="dashboard_engine.js?v=20260210"></script>
-  <script src="indicators_engine.js?v=20260210"></script>
-
-  <script>
-    window.addEventListener("DOMContentLoaded", () => {
-      if (window.appCore) appCore.init();
-      if (window.initUI) initUI(appCore);
-    });
-  </script>
-
-</body>
+    <script>
+      window.addEventListener("DOMContentLoaded", () => {
+        if (window.appCore && window.initUI) {
+          initUI(appCore);
+        }
+      });
+    </script>
+  </body>
 </html>
