@@ -9,7 +9,6 @@
     <link rel="stylesheet" href="orb_v2.css?v=20260210" />
 
     <style>
-      /* Dashboard baja en móvil */
       @media (max-width: 900px) {
         .main-row {
           flex-direction: column;
@@ -99,8 +98,8 @@
 
           <div class="search-actions-row">
             <div class="search-actions-right">
-              <button id="btn-clear" class="orb-action-btn" title="Limpiar">🧹</button>
-              <button id="btn-copy" class="orb-action-btn" title="Copiar resultados">📋</button>
+              <button id="btn-limpiar" class="orb-action-btn" title="Limpiar">🧹</button>
+              <button id="btn-copiar" class="orb-action-btn" title="Copiar resultados">📋</button>
               <button id="btn-stop" class="orb-action-btn" title="Detener">⏹</button>
             </div>
           </div>
@@ -109,10 +108,10 @@
 
           <div class="scanner-row">
             <div class="scanner-buttons">
-              <button id="btn-scanner-interno-1" class="scanner-big-btn" title="Scanner interno A">📷</button>
-              <button id="btn-scanner-interno-2" class="scanner-big-btn" title="Scanner interno B">🎦</button>
-              <button id="btn-scanner-externo-preferido" class="scanner-big-btn" title="Scanner externo">📲</button>
-              <button id="btn-scanner-externo-selector" class="scanner-big-btn" title="Elegir app de scanner">🧭</button>
+              <button id="btn-scanner-interno-1" class="scanner-big-btn">📷</button>
+              <button id="btn-scanner-interno-2" class="scanner-big-btn">🎦</button>
+              <button id="btn-scanner-externo-preferido" class="scanner-big-btn">📲</button>
+              <button id="btn-scanner-externo-selector" class="scanner-big-btn">🧭</button>
             </div>
 
             <div class="scanner-mode-switch">
@@ -147,29 +146,29 @@
             </div>
           </div>
 
-          <!-- MÉTRICAS (IDs corregidos) -->
+          <!-- MÉTRICAS -->
           <div class="metrics-row">
-            <div class="metric-card" id="metric-articulos">
+            <div class="metric-card">
               <div class="metric-label">Artículos</div>
               <div class="metric-value" id="metric-articulos-value">0</div>
             </div>
 
-            <div class="metric-card" id="metric-pares">
+            <div class="metric-card">
               <div class="metric-label">Pares</div>
               <div class="metric-value" id="metric-pares-value">0</div>
             </div>
 
-            <div class="metric-card" id="metric-alertas-negativos">
+            <div class="metric-card">
               <div class="metric-label">Stock negativo</div>
               <div class="metric-value" id="metric-alertas-negativos-value">0</div>
             </div>
 
-            <div class="metric-card" id="metric-alertas-cero">
+            <div class="metric-card">
               <div class="metric-label">Sin stock</div>
               <div class="metric-value" id="metric-alertas-cero-value">0</div>
             </div>
 
-            <div class="metric-card" id="metric-valorizado">
+            <div class="metric-card">
               <div class="metric-label">Valorizado</div>
               <div class="metric-value" id="metric-valorizado-value">$0</div>
             </div>
@@ -207,8 +206,8 @@
 
               <div class="results-right">
                 <div class="results-view-toggle">
-                  <button id="btn-vista-tabla" class="view-btn" title="Vista tabla">Tabla</button>
-                  <button id="btn-vista-tarjetas" class="view-btn active" title="Vista tarjetas">Tarjetas</button>
+                  <button id="btn-ver-tabla" class="view-btn">Tabla</button>
+                  <button id="btn-ver-tarjetas" class="view-btn active">Tarjetas</button>
                 </div>
               </div>
             </div>
@@ -342,22 +341,31 @@
     <div id="toast" class="toast"></div>
 
     <!-- ============================================================
-         SCRIPTS
+         SCRIPTS (ORDEN CORRECTO)
     ============================================================ -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://unpkg.com/@zxing/library@latest"></script>
 
-    <!-- ORDEN OPTIMIZADO -->
+    <!-- 1) MOTOR PRINCIPAL -->
+    <script src="app_core_v3.js?v=20260210"></script>
+
+    <!-- 2) UI -->
+    <script src="ui_engine_v3.js?v=20260210"></script>
+
+    <!-- 3) ORB -->
     <script src="orb_engine_v2.js?v=20260210"></script>
     <script src="orb_admin_engine.js?v=20260210"></script>
 
-    <script src="ui_engine_v3.js?v=20260210"></script>
+    <!-- 4) SCANNER -->
     <script src="scanner_v3.js?v=20260210"></script>
 
+    <!-- 5) DASHBOARD -->
     <script src="dashboard_engine.js?v=20260210"></script>
+
+    <!-- 6) INDICADORES -->
     <script src="indicators_engine.js?v=20260210"></script>
 
-    <script src="app_core_v3.js?v=20260210"></script>
+    <!-- 7) LIBRERÍAS -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://unpkg.com/@zxing/library@latest"></script>
 
   </body>
 </html>
