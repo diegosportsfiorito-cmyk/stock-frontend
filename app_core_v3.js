@@ -1,6 +1,6 @@
-// build 20260210-REBUILD — VERSION CORREGIDA
 // ============================================================
 // APP CORE — Motor inteligente + warm-up + indicador visual
+// Versión corregida y optimizada 2026-02-10
 // ============================================================
 
 const AppCore = {
@@ -61,16 +61,6 @@ const AppCore = {
   },
 
   // ============================================================
-  // INDICADOR VISUAL
-  // ============================================================
-
-  setSearchStatus(text, color = "blue") {
-    if (!this.els.searchStatus) return;
-    this.els.searchStatus.textContent = text;
-    this.els.searchStatus.className = "search-status " + color;
-  },
-
-  // ============================================================
   // UTILIDADES
   // ============================================================
 
@@ -105,8 +95,13 @@ const AppCore = {
   },
 
   setConnectionStatus(ok) {
-    if (!this.els.connectionDot) return;
-    this.els.connectionDot.classList.toggle("online", ok);
+    this.els.connectionDot?.classList.toggle("online", ok);
+  },
+
+  setSearchStatus(text, color = "blue") {
+    if (!this.els.searchStatus) return;
+    this.els.searchStatus.textContent = text;
+    this.els.searchStatus.className = "search-status " + color;
   },
 
   setOrbIdle() {
@@ -116,7 +111,30 @@ const AppCore = {
   },
 
   // ============================================================
-  // WARM-UP PROFESIONAL DEL BACKEND
+  // AUTOCOMPLETE — NUEVO
+  // ============================================================
+
+  getAutocompleteSuggestions(term) {
+    const q = this.normalizarTexto(term);
+    if (!q || !this.state.catalogItems.length) return [];
+
+    const set = new Set();
+
+    this.state.catalogItems.forEach((item) => {
+      const desc = this.normalizarTexto(item.descripcion || "");
+      const marca = this.normalizarTexto(item.marca || "");
+      const rubro = this.normalizarTexto(item.rubro || "");
+
+      if (desc.includes(q)) set.add(item.descripcion);
+      if (marca.includes(q)) set.add(item.marca);
+      if (rubro.includes(q)) set.add(item.rubro);
+    });
+
+    return Array.from(set).slice(0, 12);
+  },
+
+  // ============================================================
+  // WARM-UP + CARGA CATÁLOGO
   // ============================================================
 
   async pingBackend() {
@@ -125,15 +143,14 @@ const AppCore = {
 
     try {
       const res = await fetch(this.config.backendUrl + "/ping");
-      if (!res.ok) throw new Error("Backend no listo");
+      if (!res.ok) throw new Error();
 
       this.setSearchStatus("Conectado", "green");
       this.setConnectionStatus(true);
       this.state.warmingUp = false;
       return true;
-    } catch (err) {
+    } catch {
       this.setSearchStatus("Activando servidor…", "orange");
-      this.setConnectionStatus(false);
       return false;
     }
   },
@@ -145,6 +162,60 @@ const AppCore = {
       return;
     }
     this.cargarCatalogo();
+  },
+
+  async cargarCatalogo() {
+    this.setSearchStatus("Cargando catálogo…", "blue");
+
+    try {
+      const res = await fetch(this.config.backendUrl + "/catalog");
+      if (!res.ok) throw new Error();
+
+      const data = await res.json();
+
+      this.state.catalogItems = data.items || [];
+      this.state.resumenCatalogo = data.resumen || null;
+
+      // Fuente de datos
+      this.els.fuenteArchivo.textContent = data.resumen?.archivo || "—";
+      this.els.fuenteFecha.textContent = data.resumen?.fecha || "—";
+      this.els.fuenteMarcas.textContent = data.resumen?.marcas || "—";
+      this.els.fuenteRubros.textContent = data.resumen?.rubros || "—";
+      this.els.fuenteArticulos.textContent = data.resumen?.articulos || "—";
+      this.els.fuenteStockTotal.textContent = data.resumen?.stock_total || "—";
+      this.els.fuenteStockNegativo.textContent =
+        data.resumen?.stock_negativo || "—";
+
+      // Poblar combos
+      this.poblarFiltros();
+
+      this.setConnectionStatus(true);
+      this.setSearchStatus("Conectado", "green");
+    } catch {
+      this.setConnectionStatus(false);
+      this.setSearchStatus("Error de conexión", "red");
+
+      clearTimeout(this.state.retryTimeout);
+      this.state.retryTimeout = setTimeout(() => this.warmUpLoop(), 2000);
+    }
+  },
+
+  poblarFiltros() {
+    const marcas = new Set();
+    const rubros = new Set();
+
+    this.state.catalogItems.forEach((i) => {
+      if (i.marca) marcas.add(i.marca);
+      if (i.rubro) rubros.add(i.rubro);
+    });
+
+    this.els.filtroMarca.innerHTML =
+      `<option value="">Marca</option>` +
+      [...marcas].sort().map((m) => `<option>${m}</option>`).join("");
+
+    this.els.filtroRubro.innerHTML =
+      `<option value="">Rubro</option>` +
+      [...rubros].sort().map((r) => `<option>${r}</option>`).join("");
   },
 
   // ============================================================
@@ -159,14 +230,8 @@ const AppCore = {
     const mapRubros = new Map();
 
     this.state.catalogItems.forEach((i) => {
-      if (i.marca) {
-        const n = this.normalizarTexto(i.marca);
-        if (!mapMarcas.has(n)) mapMarcas.set(n, i.marca);
-      }
-      if (i.rubro) {
-        const n = this.normalizarTexto(i.rubro);
-        if (!mapRubros.has(n)) mapRubros.set(n, i.rubro);
-      }
+      if (i.marca) mapMarcas.set(this.normalizarTexto(i.marca), i.marca);
+      if (i.rubro) mapRubros.set(this.normalizarTexto(i.rubro), i.rubro);
     });
 
     const marcasNorm = [...mapMarcas.keys()];
@@ -174,28 +239,18 @@ const AppCore = {
 
     let marca = null;
     let rubro = null;
-    let talleDesde = null;
-    let talleHasta = null;
 
     const tokens = qUpper.split(/\W+/);
 
-    // Marca parcial
     for (const m of marcasNorm.sort((a, b) => b.length - a.length)) {
-      if (tokens.includes(m)) {
-        marca = mapMarcas.get(m);
-        break;
-      }
+      if (tokens.includes(m)) marca = mapMarcas.get(m);
     }
 
-    // Rubro parcial
     for (const r of rubrosNorm.sort((a, b) => b.length - a.length)) {
-      if (tokens.includes(r)) {
-        rubro = mapRubros.get(r);
-        break;
-      }
+      if (tokens.includes(r)) rubro = mapRubros.get(r);
     }
 
-    // Rango de talles
+    // Talles
     const matchRango = qUpper.match(/T?(\d+)\s*(?:A|-|\/)\s*T?(\d+)/);
     if (matchRango) {
       return {
@@ -210,7 +265,6 @@ const AppCore = {
       };
     }
 
-    // Talle único
     const matchTalle = qUpper.match(/^T?(\d{1,3})$/);
     if (matchTalle) {
       const t = parseInt(matchTalle[1]);
@@ -272,29 +326,33 @@ const AppCore = {
       };
     }
 
-    const usarFiltros = marca || rubro || talleDesde || talleHasta;
+    const usarFiltros = marca || rubro;
 
     return {
       filtros_globales: usarFiltros,
       marca,
       rubro,
-      talleDesde,
-      talleHasta,
+      talleDesde: null,
+      talleHasta: null,
       soloUltimo: false,
       soloNegativo: false,
       question: usarFiltros ? "" : q,
     };
   },
+    } finally {
+      ORB.setLoading?.(false);
+    }
+  },
 
   // ============================================================
-  // FILTROS MANUALES
+  // BÚSQUEDA POR FILTROS
   // ============================================================
 
   actualizarFiltrosDesdeUI() {
-    this.state.filtros.marca = this.els.filtroMarca?.value || null;
-    this.state.filtros.rubro = this.els.filtroRubro?.value || null;
-    this.state.filtros.talleDesde = this.els.filtroTalleDesde?.value || null;
-    this.state.filtros.talleHasta = this.els.filtroTalleHasta?.value || null;
+    this.state.filtros.marca = this.els.filtroMarca.value || null;
+    this.state.filtros.rubro = this.els.filtroRubro.value || null;
+    this.state.filtros.talleDesde = this.els.filtroTalleDesde.value || null;
+    this.state.filtros.talleHasta = this.els.filtroTalleHasta.value || null;
   },
 
   async buscarPorFiltros() {
@@ -302,7 +360,6 @@ const AppCore = {
 
     const body = {
       question: "",
-      solo_stock: this.els.chkSoloStock?.checked || false,
       filtros_globales: true,
       marca: this.state.filtros.marca || null,
       rubro: this.state.filtros.rubro || null,
@@ -314,15 +371,15 @@ const AppCore = {
         : null,
       soloUltimo: false,
       soloNegativo: false,
+      solo_stock: this.els.chkSoloStock.checked || false,
     };
 
     if (this.state.currentAbort) this.state.currentAbort.abort();
     this.state.currentAbort = new AbortController();
 
     this.setSearchStatus("Buscando…", "blue");
-    ORB.setError?.(false);
     ORB.setLoading?.(true);
-    if (this.els.resultsStatus) this.els.resultsStatus.textContent = "Buscando…";
+    this.els.resultsStatus.textContent = "Buscando…";
 
     try {
       const res = await fetch(this.config.backendUrl + "/query", {
@@ -332,7 +389,7 @@ const AppCore = {
         signal: this.state.currentAbort.signal,
       });
 
-      if (!res.ok) throw new Error("Error en servidor");
+      if (!res.ok) throw new Error();
 
       const data = await res.json();
       this.state.items = data.items || [];
@@ -345,67 +402,17 @@ const AppCore = {
       this.setOrbIdle();
 
       this.setSearchStatus("Conectado", "green");
-      if (this.els.resultsStatus)
-        this.els.resultsStatus.textContent = `${this.state.items.length} resultados`;
-    } catch (err) {
-      if (err.name !== "AbortError") {
-        this.setConnectionStatus(false);
-        ORB.setError?.(true);
-
-        this.setSearchStatus("Error de conexión", "red");
-        if (this.els.resultsStatus)
-          this.els.resultsStatus.textContent = "Error de conexión";
-
-        clearTimeout(this.state.retryTimeout);
-        this.state.retryTimeout = setTimeout(() => this.warmUpLoop(), 2000);
-      }
+      this.els.resultsStatus.textContent = `${this.state.items.length} resultados`;
+    } catch {
+      this.setConnectionStatus(false);
+      ORB.setError?.(true);
+      this.setSearchStatus("Error de conexión", "red");
+      this.els.resultsStatus.textContent = "Error de conexión";
     } finally {
       ORB.setLoading?.(false);
     }
   },
 
-  // ============================================================
-  // CARGA DEL CATÁLOGO
-  // ============================================================
-
-  async cargarCatalogo() {
-    this.setSearchStatus("Cargando catálogo…", "blue");
-
-    try {
-      const res = await fetch(this.config.backendUrl + "/catalog");
-      if (!res.ok) throw new Error("Error catálogo");
-
-      const data = await res.json();
-
-      this.state.catalogItems = data.items || [];
-      this.state.resumenCatalogo = data.resumen || null;
-
-      if (this.els.fuenteArchivo)
-        this.els.fuenteArchivo.textContent = data.resumen?.archivo || "—";
-      if (this.els.fuenteFecha)
-        this.els.fuenteFecha.textContent = data.resumen?.fecha || "—";
-      if (this.els.fuenteMarcas)
-        this.els.fuenteMarcas.textContent = data.resumen?.marcas || "—";
-      if (this.els.fuenteRubros)
-        this.els.fuenteRubros.textContent = data.resumen?.rubros || "—";
-      if (this.els.fuenteArticulos)
-        this.els.fuenteArticulos.textContent = data.resumen?.articulos || "—";
-      if (this.els.fuenteStockTotal)
-        this.els.fuenteStockTotal.textContent = data.resumen?.stock_total || "—";
-      if (this.els.fuenteStockNegativo)
-        this.els.fuenteStockNegativo.textContent =
-          data.resumen?.stock_negativo || "—";
-
-      this.setConnectionStatus(true);
-      this.setSearchStatus("Conectado", "green");
-    } catch (err) {
-      this.setConnectionStatus(false);
-      this.setSearchStatus("Error de conexión", "red");
-
-      clearTimeout(this.state.retryTimeout);
-      this.state.retryTimeout = setTimeout(() => this.warmUpLoop(), 2000);
-    }
-  },
   // ============================================================
   // RENDER RESULTADOS
   // ============================================================
@@ -523,18 +530,13 @@ const AppCore = {
       if (stockItem > 0) pares += stockItem;
     });
 
-    if (this.els.metricArticulos)
-      this.els.metricArticulos.textContent = this.formatNumber(articulos);
-    if (this.els.metricPares)
-      this.els.metricPares.textContent = this.formatNumber(pares);
-    if (this.els.metricAlertasNegativos)
-      this.els.metricAlertasNegativos.textContent =
-        this.formatNumber(stockNegativo);
-    if (this.els.metricAlertasCero)
-      this.els.metricAlertasCero.textContent = this.formatNumber(sinStock);
-    if (this.els.metricValorizado)
-      this.els.metricValorizado.textContent =
-        "$" + this.formatNumber(valorizadoTotal);
+    this.els.metricArticulos.textContent = this.formatNumber(articulos);
+    this.els.metricPares.textContent = this.formatNumber(pares);
+    this.els.metricAlertasNegativos.textContent =
+      this.formatNumber(stockNegativo);
+    this.els.metricAlertasCero.textContent = this.formatNumber(sinStock);
+    this.els.metricValorizado.textContent =
+      "$" + this.formatNumber(valorizadoTotal);
   },
 
   // ============================================================
@@ -576,7 +578,7 @@ const AppCore = {
   },
 
   // ============================================================
-  // VOZ — LECTURA DE RESULTADOS (SAFE)
+  // VOZ — LECTURA DE RESULTADOS
   // ============================================================
 
   speakResultados() {
@@ -597,88 +599,6 @@ const AppCore = {
     speechSynthesis.cancel();
     speechSynthesis.speak(utter);
   },
-
-  // ============================================================
-  // BUSCAR (motor principal reconstruido)
-  // ============================================================
-
-  async buscar() {
-    const raw = this.els.searchInput?.value || "";
-    const q = raw.trim();
-
-    if (!q) {
-      this.limpiarPantalla();
-      return;
-    }
-
-    this.state.lastQuery = q;
-
-    const parsed = this.interpretarQuery(q);
-
-    const body = {
-      question: parsed.question || "",
-      filtros_globales: !!parsed.filtros_globales,
-      marca: parsed.marca || null,
-      rubro: parsed.rubro || null,
-      talleDesde: parsed.talleDesde ? parseInt(parsed.talleDesde) : null,
-      talleHasta: parsed.talleHasta ? parseInt(parsed.talleHasta) : null,
-      soloUltimo: !!parsed.soloUltimo,
-      soloNegativo: !!parsed.soloNegativo,
-      solo_stock: this.els.chkSoloStock?.checked || false,
-    };
-
-    if (this.state.currentAbort) this.state.currentAbort.abort();
-    this.state.currentAbort = new AbortController();
-
-    this.setSearchStatus("Buscando…", "blue");
-    ORB.setError?.(false);
-    ORB.setLoading?.(true);
-    if (this.els.resultsStatus) this.els.resultsStatus.textContent = "Buscando…";
-
-    try {
-      const res = await fetch(this.config.backendUrl + "/query", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-        signal: this.state.currentAbort.signal,
-      });
-
-      if (!res.ok) throw new Error("Error en servidor");
-
-      const data = await res.json();
-      this.state.items = data.items || [];
-
-      this.renderResultados(this.state.items);
-      window.actualizarDashboard?.(this.state.items);
-      this.actualizarIndicadores(this.state.items);
-
-      this.setConnectionStatus(true);
-      this.setOrbIdle();
-
-      this.setSearchStatus("Conectado", "green");
-      if (this.els.resultsStatus)
-        this.els.resultsStatus.textContent = `${this.state.items.length} resultados`;
-
-      if (window.ORB?.isVoiceMode?.()) {
-        this.speakResultados();
-      }
-    } catch (err) {
-      if (err.name !== "AbortError") {
-        this.setConnectionStatus(false);
-        ORB.setError?.(true);
-
-        this.setSearchStatus("Error de conexión", "red");
-        if (this.els.resultsStatus)
-          this.els.resultsStatus.textContent = "Error de conexión";
-
-        clearTimeout(this.state.retryTimeout);
-        this.state.retryTimeout = setTimeout(() => this.warmUpLoop(), 2000);
-      }
-    } finally {
-      ORB.setLoading?.(false);
-    }
-  },
-
   // ============================================================
   // LIMPIAR PANTALLA
   // ============================================================
@@ -688,9 +608,13 @@ const AppCore = {
     this.renderResultados([]);
     window.actualizarDashboard?.([]);
     this.actualizarIndicadores([]);
+
     if (this.els.resultsStatus)
       this.els.resultsStatus.textContent = "Sin resultados";
-    if (this.els.searchInput) this.els.searchInput.value = ""; // FIX: limpiar input
+
+    if (this.els.searchInput)
+      this.els.searchInput.value = "";
+
     this.setOrbIdle();
     this.setSearchStatus("Listo", "blue");
   },
