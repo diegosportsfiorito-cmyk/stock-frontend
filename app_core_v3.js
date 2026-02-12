@@ -1,4 +1,4 @@
-// build 20260210-6
+// build 20260210-REBUILD
 // ============================================================
 // APP CORE — Motor inteligente + filtros estructurados
 // ============================================================
@@ -22,8 +22,8 @@ const AppCore = {
     resultsStatus: document.getElementById("results-status"),
     metricArticulos: document.getElementById("metric-articulos-value"),
     metricPares: document.getElementById("metric-pares-value"),
-    metricAlertasNegativos: document.getElementById("metric-alertas-negativos"),
-    metricAlertasCero: document.getElementById("metric-alertas-cero"),
+    metricAlertasNegativos: document.getElementById("metric-alertas-negativos-value"),
+    metricAlertasCero: document.getElementById("metric-alertas-cero-value"),
     metricValorizado: document.getElementById("metric-valorizado-value"),
     connectionDot: document.getElementById("connection-dot"),
     fuenteDatosToggle: document.getElementById("fuente-datos-toggle"),
@@ -98,207 +98,6 @@ const AppCore = {
     ORB.setLoading?.(false);
   },
   // ============================================================
-  // TTS
-  // ============================================================
-
-  speakResultados() {
-    if (!("speechSynthesis" in window)) return;
-    if (!this.state.items.length) return;
-
-    const total = this.state.items.length;
-    const pares = this.state.items.reduce(
-      (acc, item) => acc + item.talles.reduce((s, t) => s + t.stock, 0),
-      0
-    );
-
-    const p = this.state.items[0];
-    const texto = `Tengo ${total} resultados, con un total de ${pares} unidades. 
-    Primer artículo: ${p.descripcion || "sin descripción"}, marca ${
-      p.marca || "sin marca"
-    }, rubro ${p.rubro || "sin rubro"}.`;
-
-    try {
-      ORB.setSpeaking?.(true);
-      const u = new SpeechSynthesisUtterance(texto);
-      u.lang = "es-AR";
-      u.onend = () => {
-        ORB.setSpeaking?.(false);
-        this.setOrbIdle();
-      };
-      speechSynthesis.cancel();
-      speechSynthesis.speak(u);
-    } catch {
-      this.setOrbIdle();
-    }
-  },
-
-  // ============================================================
-  // INDICADORES
-  // ============================================================
-
-  actualizarIndicadores(items) {
-    let articulos = items.length;
-    let pares = 0;
-    let valorizado = 0;
-    let neg = 0;
-    let cero = 0;
-
-    items.forEach((item) => {
-      let totalItem = 0;
-      let todosCero = true;
-
-      item.talles.forEach((t) => {
-        pares += t.stock;
-        totalItem += t.stock;
-        if (t.stock !== 0) todosCero = false;
-      });
-
-      if (totalItem < 0) neg++;
-      else if (totalItem === 0 && todosCero) cero++;
-
-      valorizado += item.valorizado || 0;
-    });
-
-    this.els.metricArticulos.textContent = this.formatNumber(articulos);
-    this.els.metricPares.textContent = this.formatNumber(pares);
-    this.els.metricAlertasNegativos.textContent = this.formatNumber(neg);
-    this.els.metricAlertasCero.textContent = this.formatNumber(cero);
-    this.els.metricValorizado.textContent = `$${this.formatNumber(valorizado)}`;
-  },
-
-  // ============================================================
-  // RENDER TABLA
-  // ============================================================
-
-  renderResultadosTabla(items) {
-    const cont = this.els.resultsContainer;
-    cont.innerHTML = "";
-
-    if (!items.length) {
-      cont.innerHTML = '<div class="results-empty">Sin resultados.</div>';
-      return;
-    }
-
-    let totalStock = 0;
-    let html = `
-      <div class="tabla-wrapper">
-        <table class="tabla-resultados">
-          <thead>
-            <tr>
-              <th>Código</th>
-              <th>Descripción</th>
-              <th>Marca</th>
-              <th>Rubro</th>
-              <th>Color</th>
-              <th>Talle</th>
-              <th>Precio</th>
-              <th>Stock</th>
-            </tr>
-          </thead>
-          <tbody>
-    `;
-
-    items.forEach((item) => {
-      item.talles.forEach((t) => {
-        totalStock += t.stock;
-        html += `
-          <tr>
-            <td>${this.normalizarCampo(item.codigo)}</td>
-            <td>${this.normalizarCampo(item.descripcion)}</td>
-            <td>${this.normalizarCampo(item.marca)}</td>
-            <td>${this.normalizarCampo(item.rubro)}</td>
-            <td>${this.normalizarCampo(item.color)}</td>
-            <td>${t.talle}</td>
-            <td>$${this.formatNumber(item.precio)}</td>
-            <td>${t.stock}</td>
-          </tr>`;
-      });
-    });
-
-    html += `
-          </tbody>
-          <tfoot>
-            <tr>
-              <td colspan="7" style="text-align:right;"><strong>Total unidades</strong></td>
-              <td><strong>${totalStock}</strong></td>
-            </tr>
-          </tfoot>
-        </table>
-      </div>`;
-
-    cont.innerHTML = html;
-  },
-  // ============================================================
-  // RENDER TARJETAS
-  // ============================================================
-
-  renderResultadosTarjetas(items) {
-    const cont = this.els.resultsContainer;
-    cont.innerHTML = "";
-
-    if (!items.length) {
-      cont.innerHTML = '<div class="results-empty">Sin resultados.</div>';
-      return;
-    }
-
-    let totalStock = 0;
-    const frag = document.createDocumentFragment();
-
-    items.forEach((item) => {
-      const card = document.createElement("div");
-      card.className = "result-item";
-
-      const titulo = document.createElement("div");
-      titulo.className = "result-title";
-      titulo.textContent = `${this.normalizarCampo(item.descripcion)} (${this.normalizarCampo(
-        item.codigo
-      )})`;
-
-      const sub = document.createElement("div");
-      sub.className = "result-sub";
-      sub.textContent = `${this.normalizarCampo(item.marca)} — ${this.normalizarCampo(
-        item.rubro
-      )} — ${this.normalizarCampo(item.color)}`;
-
-      const tallesDiv = document.createElement("div");
-      tallesDiv.className = "result-talles";
-
-      tallesDiv.textContent = item.talles
-        .map((t) => {
-          totalStock += t.stock;
-          return `Talle ${t.talle}: ${t.stock}`;
-        })
-        .join(" | ");
-
-      const preciosDiv = document.createElement("div");
-      preciosDiv.className = "result-precios";
-      preciosDiv.innerHTML = `
-        <span class="precio-publico">$${this.formatNumber(item.precio || 0)}</span>
-        ${
-          item.valorizado
-            ? `<span class="precio-valorizado">Valorizado: $${this.formatNumber(
-                item.valorizado
-              )}</span>`
-            : ""
-        }`;
-
-      card.appendChild(titulo);
-      card.appendChild(sub);
-      card.appendChild(tallesDiv);
-      card.appendChild(preciosDiv);
-
-      frag.appendChild(card);
-    });
-
-    const totalDiv = document.createElement("div");
-    totalDiv.className = "results-status";
-    totalDiv.textContent = `Total unidades: ${this.formatNumber(totalStock)}`;
-
-    cont.appendChild(frag);
-    cont.appendChild(totalDiv);
-  },
-
-  // ============================================================
   // RENDER SEGÚN MODO
   // ============================================================
 
@@ -340,6 +139,7 @@ const AppCore = {
 
     const tokens = qUpper.split(/\W+/);
 
+    // Marca exacta
     if (tokens.length === 1 && marcasNorm.includes(qUpper)) {
       return {
         filtros_globales: true,
@@ -353,6 +153,7 @@ const AppCore = {
       };
     }
 
+    // Rubro exacto
     if (tokens.length === 1 && rubrosNorm.includes(qUpper)) {
       return {
         filtros_globales: true,
@@ -366,6 +167,7 @@ const AppCore = {
       };
     }
 
+    // Marca parcial
     for (const m of marcasNorm.sort((a, b) => b.length - a.length)) {
       if (tokens.includes(m)) {
         marca = mapMarcas.get(m);
@@ -373,6 +175,7 @@ const AppCore = {
       }
     }
 
+    // Rubro parcial
     for (const r of rubrosNorm.sort((a, b) => b.length - a.length)) {
       if (tokens.includes(r)) {
         rubro = mapRubros.get(r);
@@ -380,6 +183,7 @@ const AppCore = {
       }
     }
 
+    // Rango de talles
     const matchRango = qUpper.match(/T?(\d+)\s*(?:A|-|\/)\s*T?(\d+)/);
     if (matchRango) {
       return {
@@ -394,6 +198,7 @@ const AppCore = {
       };
     }
 
+    // Talle único
     const matchTalle = qUpper.match(/^T?(\d{1,3})$/);
     if (matchTalle) {
       const t = parseInt(matchTalle[1]);
@@ -409,6 +214,7 @@ const AppCore = {
       };
     }
 
+    // Precio
     const matchPrecio = qUpper.match(/^(?:P|\$)?(\d{2,6})$/);
     if (matchPrecio) {
       return {
@@ -423,6 +229,7 @@ const AppCore = {
       };
     }
 
+    // Código
     if (/^\d[\d\- ]{6,14}\d$/.test(qUpper)) {
       return {
         filtros_globales: false,
@@ -436,6 +243,7 @@ const AppCore = {
       };
     }
 
+    // Últimos / negativos
     const esUltimo = /\bULTIM[OA]S?\b/.test(qUpper);
     const esNegativo = /\bNEGATIV[OA]S?\b/.test(qUpper);
 
@@ -465,6 +273,7 @@ const AppCore = {
       question: usarFiltros ? "" : q,
     };
   },
+
   // ============================================================
   // FILTROS MANUALES
   // ============================================================
@@ -539,7 +348,7 @@ const AppCore = {
   },
 
   // ============================================================
-  // CARGA DEL CATÁLOGO (CORREGIDO: /catalog)
+  // CARGA DEL CATÁLOGO
   // ============================================================
 
   async cargarCatalogo() {
@@ -615,6 +424,137 @@ const AppCore = {
     ORB.setLoading?.(false);
     ORB.setSpeaking?.(false);
   },
+  // ============================================================
+  // BUSCAR (motor principal reconstruido)
+  // ============================================================
+
+  async buscar() {
+    const raw = this.els.searchInput?.value || "";
+    const q = raw.trim();
+
+    if (!q) {
+      this.limpiarPantalla();
+      return;
+    }
+
+    this.state.lastQuery = q;
+
+    // Interpretación inteligente
+    const parsed = this.interpretarQuery(q);
+
+    const body = {
+      question: parsed.question,
+      filtros_globales: parsed.filtros_globales,
+      marca: parsed.marca,
+      rubro: parsed.rubro,
+      talleDesde: parsed.talleDesde,
+      talleHasta: parsed.talleHasta,
+      soloUltimo: parsed.soloUltimo,
+      soloNegativo: parsed.soloNegativo,
+      solo_stock: this.els.chkSoloStock?.checked || false,
+    };
+
+    // Cancelar búsqueda anterior
+    if (this.state.currentAbort) this.state.currentAbort.abort();
+    this.state.currentAbort = new AbortController();
+
+    ORB.setError?.(false);
+    ORB.setLoading?.(true);
+    if (this.els.resultsStatus) this.els.resultsStatus.textContent = "Buscando…";
+
+    try {
+      const res = await fetch(this.config.backendUrl + "/query", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+        signal: this.state.currentAbort.signal,
+      });
+
+      if (!res.ok) throw new Error("Error en servidor");
+
+      const data = await res.json();
+      this.state.items = data.items || [];
+
+      // Render
+      this.renderResultados(this.state.items);
+      window.actualizarDashboard?.(this.state.items);
+      this.actualizarIndicadores(this.state.items);
+
+      this.setConnectionStatus(true);
+      this.setOrbIdle();
+
+      if (this.els.resultsStatus)
+        this.els.resultsStatus.textContent = `${this.state.items.length} resultados`;
+
+      // TTS opcional
+      if (window.ORB?.isVoiceMode?.()) {
+        this.speakResultados();
+      }
+    } catch (err) {
+      if (err.name !== "AbortError") {
+        this.setConnectionStatus(false);
+        ORB.setError?.(true);
+
+        if (this.els.resultsStatus)
+          this.els.resultsStatus.textContent = "Error de conexión";
+
+        clearTimeout(this.state.retryTimeout);
+        this.state.retryTimeout = setTimeout(() => this.cargarCatalogo(), 3000);
+      }
+    } finally {
+      ORB.setLoading?.(false);
+    }
+  },
+  // ============================================================
+  // EVENTOS DE UI
+  // ============================================================
+
+  conectarEventosUI() {
+    // Botón aplicar filtros
+    this.els.btnAplicarFiltros?.addEventListener("click", () => {
+      this.buscarPorFiltros();
+    });
+
+    // ENTER en el input
+    this.els.searchInput?.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") this.buscar();
+    });
+
+    // Toggle tabla / tarjetas
+    const btnTabla = document.getElementById("btn-ver-tabla");
+    const btnTarjetas = document.getElementById("btn-ver-tarjetas");
+
+    btnTabla?.addEventListener("click", () => {
+      this.state.modoTabla = true;
+      btnTabla.classList.add("active");
+      btnTarjetas.classList.remove("active");
+      this.renderResultados(this.state.items);
+    });
+
+    btnTarjetas?.addEventListener("click", () => {
+      this.state.modoTabla = false;
+      btnTarjetas.classList.add("active");
+      btnTabla.classList.remove("active");
+      this.renderResultados(this.state.items);
+    });
+
+    // Botón copiar
+    const btnCopiar = document.getElementById("btn-copiar");
+    btnCopiar?.addEventListener("click", () => this.copiarResultados());
+
+    // Botón limpiar
+    const btnLimpiar = document.getElementById("btn-limpiar");
+    btnLimpiar?.addEventListener("click", () => this.limpiarPantalla());
+
+    // Toggle fuente de datos
+    this.els.fuenteDatosToggle?.addEventListener("click", () => {
+      this.els.fuenteDatosPanel?.classList.toggle("visible");
+    });
+
+    // ORB: clic inicia búsqueda
+    const orb = document.getElementById("orb");
+    orb?.addEventListener("click", () => this.buscar());
+  },
 
   // ============================================================
   // INIT
@@ -622,15 +562,16 @@ const AppCore = {
 
   init() {
     this.cargarCatalogo();
-
-    this.els.btnAplicarFiltros?.addEventListener("click", () =>
-      this.buscarPorFiltros()
-    );
-
-    this.els.searchInput?.addEventListener("keydown", (e) => {
-      if (e.key === "Enter") this.buscar();
-    });
+    this.conectarEventosUI();
   },
 };
 
-window.addEventListener("DOMContentLoaded", () => AppCore.init());
+// ============================================================
+// INSTANCIA GLOBAL (CRÍTICO PARA QUE TODO FUNCIONE)
+// ============================================================
+
+window.appCore = AppCore;
+
+window.addEventListener("DOMContentLoaded", () => {
+  appCore.init();
+});
