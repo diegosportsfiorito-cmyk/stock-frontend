@@ -785,3 +785,32 @@ input:checked + .slider:before {
 .scanner-overlay.hidden {
   display: none;
 }
+/* CONTENEDOR DE BOTONES DEL SCANNER */
+.scanner-buttons {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 18px; /* separación entre botones */
+  margin-top: 14px;
+  padding: 10px;
+}
+
+/* BOTONES DEL SCANNER */
+.scanner-button {
+  width: 70px;      /* más grandes */
+  height: 70px;
+  border-radius: 14px;
+  background: #ffffffee;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 34px;  /* iconos más grandes */
+  cursor: pointer;
+  box-shadow: 0 3px 8px rgba(0,0,0,0.25);
+  transition: transform 0.15s ease, background 0.2s ease;
+}
+
+.scanner-button:active {
+  transform: scale(0.90);
+  background: #eaeaea;
+}
