@@ -260,7 +260,6 @@ body.light-mode .result-sub {
 .autocomplete-list li:hover {
   background: rgba(79, 140, 255, 0.2);
 }
-
 /* MIC */
 
 .mic-btn {
@@ -499,7 +498,7 @@ input:checked + .slider:before {
   flex-direction: column;
   gap: 10px;
   max-height: 420px;
-  overflow-y: scroll; /* barra siempre visible */
+  overflow-y: scroll;
 }
 
 .results-header {
@@ -590,7 +589,7 @@ input:checked + .slider:before {
 
 .tabla-wrapper {
   width: 100%;
-  overflow-x: scroll; /* barra SIEMPRE visible */
+  overflow-x: scroll;
   padding-bottom: 6px;
 }
 
@@ -700,8 +699,7 @@ input:checked + .slider:before {
     height: 200px !important;
   }
 }
-
-/* HELP MODAL (alineado con .hidden en JS) */
+/* HELP MODAL */
 
 .help-modal {
   position: fixed;
@@ -780,47 +778,38 @@ input:checked + .slider:before {
   inset: 0;
   background: rgba(0, 0, 0, 0.75);
   z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
 }
 
 .scanner-overlay.hidden {
   display: none;
 }
+
+/* VIDEO DEL SCANNER */
+
+#scanner-video {
+  width: 90%;
+  max-width: 480px;
+  border-radius: 12px;
+  background: #000;
+  box-shadow: 0 0 20px rgba(0,0,0,0.6);
+}
+
 /* CONTENEDOR DE BOTONES DEL SCANNER */
-.scanner-buttons {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 18px; /* separación entre botones */
-  margin-top: 14px;
-  padding: 10px;
-}
 
-/* BOTONES DEL SCANNER */
-.scanner-button {
-  width: 70px;      /* más grandes */
-  height: 70px;
-  border-radius: 14px;
-  background: #ffffffee;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  font-size: 34px;  /* iconos más grandes */
-  cursor: pointer;
-  box-shadow: 0 3px 8px rgba(0,0,0,0.25);
-  transition: transform 0.15s ease, background 0.2s ease;
-}
-
-.scanner-button:active {
-  transform: scale(0.90);
-  background: #eaeaea;
-}
 .scanner-buttons {
   display: flex;
   justify-content: center;
   align-items: center;
   gap: 20px;
-  padding: 12px;
+  padding: 16px;
+  margin-top: 12px;
 }
+
+/* BOTONES DEL SCANNER (VERSIÓN ÚNICA Y CORRECTA) */
 
 .scanner-button {
   width: 70px;
@@ -833,4 +822,10 @@ input:checked + .slider:before {
   font-size: 34px;
   cursor: pointer;
   box-shadow: 0 3px 8px rgba(0,0,0,0.25);
+  transition: transform 0.15s ease, background 0.2s ease;
+}
+
+.scanner-button:active {
+  transform: scale(0.90);
+  background: #eaeaea;
 }
