@@ -1,4 +1,4 @@
-// build 20260210-REBUILD
+// build 20260210-REBUILD — VERSION CORREGIDA
 // ============================================================
 // APP CORE — Motor inteligente + warm-up + indicador visual
 // ============================================================
@@ -406,7 +406,6 @@ const AppCore = {
       this.state.retryTimeout = setTimeout(() => this.warmUpLoop(), 2000);
     }
   },
-
   // ============================================================
   // RENDER RESULTADOS
   // ============================================================
@@ -426,6 +425,7 @@ const AppCore = {
     if (this.state.modoTabla) {
       // Tabla
       let html = `
+        <div class="tabla-wrapper">
         <table class="tabla-resultados">
           <thead>
             <tr>
@@ -434,6 +434,7 @@ const AppCore = {
               <th>Marca</th>
               <th>Rubro</th>
               <th>Color</th>
+              <th>Precio</th>
               <th>Talles</th>
               <th>Valorizado</th>
             </tr>
@@ -453,13 +454,14 @@ const AppCore = {
             <td>${this.normalizarCampo(item.marca)}</td>
             <td>${this.normalizarCampo(item.rubro)}</td>
             <td>${this.normalizarCampo(item.color)}</td>
+            <td>$${this.formatNumber(item.precio)}</td>
             <td>${talles}</td>
             <td>$${this.formatNumber(item.valorizado)}</td>
           </tr>
         `;
       });
 
-      html += "</tbody></table>";
+      html += "</tbody></table></div>";
       container.innerHTML = html;
       return;
     }
@@ -484,6 +486,7 @@ const AppCore = {
           Rubro: ${this.normalizarCampo(item.rubro)} |
           Color: ${this.normalizarCampo(item.color)}
         </div>
+        <div class="result-precio">Precio: $${this.formatNumber(item.precio)}</div>
         <div class="result-talles">${talles}</div>
         <div class="result-sub">
           Valorizado: $${this.formatNumber(item.valorizado)}
@@ -563,7 +566,9 @@ const AppCore = {
 
   stopTodo() {
     if (this.state.currentAbort) this.state.currentAbort.abort();
-    speechSynthesis.cancel();
+    try {
+      speechSynthesis.cancel();
+    } catch (_) {}
     ORB.setError?.(false);
     ORB.setLoading?.(false);
     ORB.setSpeaking?.(false);
@@ -685,6 +690,7 @@ const AppCore = {
     this.actualizarIndicadores([]);
     if (this.els.resultsStatus)
       this.els.resultsStatus.textContent = "Sin resultados";
+    if (this.els.searchInput) this.els.searchInput.value = ""; // FIX: limpiar input
     this.setOrbIdle();
     this.setSearchStatus("Listo", "blue");
   },
