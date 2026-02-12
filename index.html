@@ -38,12 +38,28 @@
         font-weight: bold;
         font-size: 14px;
         text-align: left;
-        color: #0ea5e9; /* azul por defecto */
+        color: #0ea5e9;
       }
       .search-status.orange { color: #f59e0b; }
       .search-status.green { color: #10b981; }
       .search-status.red { color: #ef4444; }
       .search-status.blue { color: #0ea5e9; }
+
+      /* Botones LIMPIAR + COPIAR + STOP en horizontal */
+      .search-actions-row {
+        display: flex;
+        flex-direction: row;
+        gap: 10px;
+        margin-top: 10px;
+      }
+
+      /* Panel de fuente de datos oculto por defecto */
+      .fuente-datos-panel {
+        display: none;
+      }
+      .fuente-datos-panel.visible {
+        display: block;
+      }
 
       /* Botón STOP rojo suave */
       .orb-action-btn.stop {
@@ -90,9 +106,7 @@
     <div class="app-shell">
       <div class="app-container">
 
-        <!-- ============================================================
-             HEADER
-        ============================================================ -->
+        <!-- HEADER -->
         <header class="app-header">
           <div class="branding">
             <div class="brand-orb-mini">IA</div>
@@ -123,12 +137,10 @@
           </div>
         </header>
 
-        <!-- ============================================================
-             SEARCH + ORB
-        ============================================================ -->
+        <!-- SEARCH + ORB -->
         <section class="search-card">
 
-          <!-- INDICADOR DE ESTADO (OPCIÓN B) -->
+          <!-- INDICADOR -->
           <div id="search-status" class="search-status">Listo</div>
 
           <!-- INPUT -->
@@ -145,14 +157,14 @@
             </div>
           </div>
 
-          <!-- LÍNEA 1: LIMPIAR + COPIAR + STOP -->
+          <!-- BOTONES LIMPIAR + COPIAR + STOP -->
           <div class="search-actions-row">
             <button id="btn-limpiar" class="orb-action-btn">🧹</button>
             <button id="btn-copiar" class="orb-action-btn">📋</button>
             <button id="btn-stop" class="orb-action-btn stop">⏹</button>
           </div>
 
-          <!-- LÍNEA 2: MIC + DICTADO + MANOS LIBRES -->
+          <!-- VOZ -->
           <div class="voice-row">
             <button id="mic-button" class="mic-btn">🎤</button>
 
@@ -175,7 +187,7 @@
 
           <div id="voice-status" class="voice-status">Dictado desactivado</div>
 
-          <!-- LÍNEA 3: SCANNERS -->
+          <!-- SCANNERS -->
           <div class="scanner-row">
             <div class="scanner-buttons">
               <button id="btn-scanner-interno-1" class="scanner-big-btn">📷</button>
@@ -196,7 +208,7 @@
             </div>
           </div>
 
-          <!-- LÍNEA 4: SOLO STOCK + FILTROS -->
+          <!-- SOLO STOCK + FILTROS -->
           <div class="search-filters-row">
             <label class="solo-stock">
               <span>Solo con stock</span>
@@ -209,7 +221,7 @@
             <button id="btn-filtros" class="btn-secondary">Filtros</button>
           </div>
 
-          <!-- LÍNEA 5: ORB -->
+          <!-- ORB -->
           <div class="orb-zone">
             <div class="orb-actions-ring">
               <div id="orb" class="orb-container">
@@ -218,7 +230,7 @@
             </div>
           </div>
 
-          <!-- LÍNEA 6: MÉTRICAS -->
+          <!-- MÉTRICAS -->
           <div class="metrics-row">
             <div class="metric-card">
               <div class="metric-label">Artículos</div>
@@ -269,9 +281,7 @@
           </div>
         </section>
 
-        <!-- ============================================================
-             MAIN ROW
-        ============================================================ -->
+        <!-- MAIN ROW -->
         <section class="main-row">
           <div class="results-card">
             <div class="results-header">
@@ -328,9 +338,7 @@
       </div>
     </div>
 
-    <!-- ============================================================
-         PANEL ADMIN
-    ============================================================ -->
+    <!-- PANEL ADMIN -->
     <div id="admin-panel">
       <h2>Panel administrador</h2>
 
@@ -418,31 +426,16 @@
 
     <div id="toast" class="toast"></div>
 
-    <!-- ============================================================
-         SCRIPTS (ORDEN CORRECTO)
-    ============================================================ -->
-
-    <!-- LIBRERÍAS -->
+    <!-- SCRIPTS -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://unpkg.com/@zxing/library@latest"></script>
 
-    <!-- MOTOR PRINCIPAL -->
     <script src="app_core_v3.js?v=20260210"></script>
-
-    <!-- UI -->
     <script src="ui_engine_v3.js?v=20260210"></script>
-
-    <!-- ORB -->
     <script src="orb_engine_v2.js?v=20260210"></script>
     <script src="orb_admin_engine.js?v=20260210"></script>
-
-    <!-- SCANNER -->
     <script src="scanner_v3.js?v=20260210"></script>
-
-    <!-- DASHBOARD -->
     <script src="dashboard_engine.js?v=20260210"></script>
-
-    <!-- INDICADORES -->
     <script src="indicators_engine.js?v=20260210"></script>
 
   </body>
