@@ -75,7 +75,7 @@ const AppCore = {
   // ============================================================
 
   normalizarCampo(v) {
-    if (!v) return "—";
+    if (!v && v !== 0) return "—";
     const t = String(v).trim().toUpperCase();
     if (["NAN", "NULL", "UNDEFINED"].includes(t)) return "—";
     return v;
@@ -131,7 +131,6 @@ const AppCore = {
       this.setConnectionStatus(true);
       this.state.warmingUp = false;
       return true;
-
     } catch (err) {
       this.setSearchStatus("Activando servidor…", "orange");
       this.setConnectionStatus(false);
@@ -179,6 +178,7 @@ const AppCore = {
     let talleHasta = null;
 
     const tokens = qUpper.split(/\W+/);
+
     // Marca parcial
     for (const m of marcasNorm.sort((a, b) => b.length - a.length)) {
       if (tokens.includes(m)) {
@@ -304,8 +304,8 @@ const AppCore = {
       question: "",
       solo_stock: this.els.chkSoloStock?.checked || false,
       filtros_globales: true,
-      marca: this.state.filtros.marca,
-      rubro: this.state.filtros.rubro,
+      marca: this.state.filtros.marca || null,
+      rubro: this.state.filtros.rubro || null,
       talleDesde: this.state.filtros.talleDesde
         ? parseInt(this.state.filtros.talleDesde)
         : null,
@@ -347,7 +347,6 @@ const AppCore = {
       this.setSearchStatus("Conectado", "green");
       if (this.els.resultsStatus)
         this.els.resultsStatus.textContent = `${this.state.items.length} resultados`;
-
     } catch (err) {
       if (err.name !== "AbortError") {
         this.setConnectionStatus(false);
@@ -364,6 +363,7 @@ const AppCore = {
       ORB.setLoading?.(false);
     }
   },
+
   // ============================================================
   // CARGA DEL CATÁLOGO
   // ============================================================
@@ -380,17 +380,24 @@ const AppCore = {
       this.state.catalogItems = data.items || [];
       this.state.resumenCatalogo = data.resumen || null;
 
-      if (this.els.fuenteArchivo) this.els.fuenteArchivo.textContent = data.resumen?.archivo || "—";
-      if (this.els.fuenteFecha) this.els.fuenteFecha.textContent = data.resumen?.fecha || "—";
-      if (this.els.fuenteMarcas) this.els.fuenteMarcas.textContent = data.resumen?.marcas || "—";
-      if (this.els.fuenteRubros) this.els.fuenteRubros.textContent = data.resumen?.rubros || "—";
-      if (this.els.fuenteArticulos) this.els.fuenteArticulos.textContent = data.resumen?.articulos || "—";
-      if (this.els.fuenteStockTotal) this.els.fuenteStockTotal.textContent = data.resumen?.stock_total || "—";
-      if (this.els.fuenteStockNegativo) this.els.fuenteStockNegativo.textContent = data.resumen?.stock_negativo || "—";
+      if (this.els.fuenteArchivo)
+        this.els.fuenteArchivo.textContent = data.resumen?.archivo || "—";
+      if (this.els.fuenteFecha)
+        this.els.fuenteFecha.textContent = data.resumen?.fecha || "—";
+      if (this.els.fuenteMarcas)
+        this.els.fuenteMarcas.textContent = data.resumen?.marcas || "—";
+      if (this.els.fuenteRubros)
+        this.els.fuenteRubros.textContent = data.resumen?.rubros || "—";
+      if (this.els.fuenteArticulos)
+        this.els.fuenteArticulos.textContent = data.resumen?.articulos || "—";
+      if (this.els.fuenteStockTotal)
+        this.els.fuenteStockTotal.textContent = data.resumen?.stock_total || "—";
+      if (this.els.fuenteStockNegativo)
+        this.els.fuenteStockNegativo.textContent =
+          data.resumen?.stock_negativo || "—";
 
       this.setConnectionStatus(true);
       this.setSearchStatus("Conectado", "green");
-
     } catch (err) {
       this.setConnectionStatus(false);
       this.setSearchStatus("Error de conexión", "red");
@@ -401,17 +408,130 @@ const AppCore = {
   },
 
   // ============================================================
-  // LIMPIAR PANTALLA
+  // RENDER RESULTADOS
   // ============================================================
 
-  limpiarPantalla() {
-    this.state.items = [];
-    this.renderResultados([]);
-    window.actualizarDashboard?.([]);
-    this.actualizarIndicadores([]);
-    if (this.els.resultsStatus) this.els.resultsStatus.textContent = "Sin resultados";
-    this.setOrbIdle();
-    this.setSearchStatus("Listo", "blue");
+  renderResultados(items) {
+    const container = this.els.resultsContainer;
+    if (!container) return;
+
+    container.innerHTML = "";
+
+    if (!items || !items.length) {
+      container.innerHTML =
+        '<div class="results-empty">Sin resultados.</div>';
+      return;
+    }
+
+    if (this.state.modoTabla) {
+      // Tabla
+      let html = `
+        <table class="tabla-resultados">
+          <thead>
+            <tr>
+              <th>Código</th>
+              <th>Descripción</th>
+              <th>Marca</th>
+              <th>Rubro</th>
+              <th>Color</th>
+              <th>Talles</th>
+              <th>Valorizado</th>
+            </tr>
+          </thead>
+          <tbody>
+      `;
+
+      items.forEach((item) => {
+        const talles = (item.talles || [])
+          .map((t) => `${this.normalizarCampo(t.talle)}: ${t.stock}`)
+          .join(" | ");
+
+        html += `
+          <tr>
+            <td>${this.normalizarCampo(item.codigo)}</td>
+            <td>${this.normalizarCampo(item.descripcion)}</td>
+            <td>${this.normalizarCampo(item.marca)}</td>
+            <td>${this.normalizarCampo(item.rubro)}</td>
+            <td>${this.normalizarCampo(item.color)}</td>
+            <td>${talles}</td>
+            <td>$${this.formatNumber(item.valorizado)}</td>
+          </tr>
+        `;
+      });
+
+      html += "</tbody></table>";
+      container.innerHTML = html;
+      return;
+    }
+
+    // Tarjetas
+    items.forEach((item) => {
+      const div = document.createElement("div");
+      div.className = "result-item";
+
+      const talles = (item.talles || [])
+        .map((t) => `${this.normalizarCampo(t.talle)}: ${t.stock}`)
+        .join(" | ");
+
+      div.innerHTML = `
+        <div class="result-title">
+          ${this.normalizarCampo(item.codigo)} — ${this.normalizarCampo(
+        item.descripcion
+      )}
+        </div>
+        <div class="result-sub">
+          Marca: ${this.normalizarCampo(item.marca)} |
+          Rubro: ${this.normalizarCampo(item.rubro)} |
+          Color: ${this.normalizarCampo(item.color)}
+        </div>
+        <div class="result-talles">${talles}</div>
+        <div class="result-sub">
+          Valorizado: $${this.formatNumber(item.valorizado)}
+        </div>
+      `;
+
+      container.appendChild(div);
+    });
+  },
+
+  // ============================================================
+  // INDICADORES / MÉTRICAS
+  // ============================================================
+
+  actualizarIndicadores(items) {
+    const arr = items || [];
+
+    const articulos = arr.length;
+
+    let pares = 0;
+    let stockNegativo = 0;
+    let sinStock = 0;
+    let valorizadoTotal = 0;
+
+    arr.forEach((item) => {
+      let stockItem = 0;
+      (item.talles || []).forEach((t) => {
+        const s = Number(t.stock || 0);
+        stockItem += s;
+        if (s < 0) stockNegativo += 1;
+      });
+      if (stockItem === 0) sinStock += 1;
+      if (item.valorizado) valorizadoTotal += Number(item.valorizado || 0);
+      if (stockItem > 0) pares += stockItem;
+    });
+
+    if (this.els.metricArticulos)
+      this.els.metricArticulos.textContent = this.formatNumber(articulos);
+    if (this.els.metricPares)
+      this.els.metricPares.textContent = this.formatNumber(pares);
+    if (this.els.metricAlertasNegativos)
+      this.els.metricAlertasNegativos.textContent =
+        this.formatNumber(stockNegativo);
+    if (this.els.metricAlertasCero)
+      this.els.metricAlertasCero.textContent = this.formatNumber(sinStock);
+    if (this.els.metricValorizado)
+      this.els.metricValorizado.textContent =
+        "$" + this.formatNumber(valorizadoTotal);
   },
 
   // ============================================================
@@ -427,7 +547,7 @@ const AppCore = {
     let txt = "";
     this.state.items.forEach((item) => {
       txt += `${item.codigo} — ${item.descripcion} — ${item.marca} — ${item.rubro}\n`;
-      item.talles.forEach((t) => {
+      (item.talles || []).forEach((t) => {
         txt += `  Talle ${t.talle}: ${t.stock}\n`;
       });
       txt += "\n";
@@ -451,6 +571,29 @@ const AppCore = {
   },
 
   // ============================================================
+  // VOZ — LECTURA DE RESULTADOS (SAFE)
+  // ============================================================
+
+  speakResultados() {
+    if (!("speechSynthesis" in window)) return;
+    if (!this.state.items.length) return;
+
+    const top = this.state.items.slice(0, 5);
+    let text = "Resultados de stock. ";
+
+    top.forEach((item) => {
+      text += `${item.descripcion || "Artículo"} de marca ${
+        item.marca || "sin marca"
+      }, rubro ${item.rubro || "sin rubro"}. `;
+    });
+
+    const utter = new SpeechSynthesisUtterance(text);
+    utter.lang = "es-AR";
+    speechSynthesis.cancel();
+    speechSynthesis.speak(utter);
+  },
+
+  // ============================================================
   // BUSCAR (motor principal reconstruido)
   // ============================================================
 
@@ -468,14 +611,14 @@ const AppCore = {
     const parsed = this.interpretarQuery(q);
 
     const body = {
-      question: parsed.question,
-      filtros_globales: parsed.filtros_globales,
-      marca: parsed.marca,
-      rubro: parsed.rubro,
-      talleDesde: parsed.talleDesde,
-      talleHasta: parsed.talleHasta,
-      soloUltimo: parsed.soloUltimo,
-      soloNegativo: parsed.soloNegativo,
+      question: parsed.question || "",
+      filtros_globales: !!parsed.filtros_globales,
+      marca: parsed.marca || null,
+      rubro: parsed.rubro || null,
+      talleDesde: parsed.talleDesde ? parseInt(parsed.talleDesde) : null,
+      talleHasta: parsed.talleHasta ? parseInt(parsed.talleHasta) : null,
+      soloUltimo: !!parsed.soloUltimo,
+      soloNegativo: !!parsed.soloNegativo,
       solo_stock: this.els.chkSoloStock?.checked || false,
     };
 
@@ -514,7 +657,6 @@ const AppCore = {
       if (window.ORB?.isVoiceMode?.()) {
         this.speakResultados();
       }
-
     } catch (err) {
       if (err.name !== "AbortError") {
         this.setConnectionStatus(false);
@@ -531,6 +673,22 @@ const AppCore = {
       ORB.setLoading?.(false);
     }
   },
+
+  // ============================================================
+  // LIMPIAR PANTALLA
+  // ============================================================
+
+  limpiarPantalla() {
+    this.state.items = [];
+    this.renderResultados([]);
+    window.actualizarDashboard?.([]);
+    this.actualizarIndicadores([]);
+    if (this.els.resultsStatus)
+      this.els.resultsStatus.textContent = "Sin resultados";
+    this.setOrbIdle();
+    this.setSearchStatus("Listo", "blue");
+  },
+
   // ============================================================
   // EVENTOS DE UI
   // ============================================================
