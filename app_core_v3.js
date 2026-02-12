@@ -66,7 +66,6 @@ const AppCore = {
 
   setSearchStatus(text, color = "blue") {
     if (!this.els.searchStatus) return;
-
     this.els.searchStatus.textContent = text;
     this.els.searchStatus.className = "search-status " + color;
   },
@@ -128,32 +127,36 @@ const AppCore = {
       const res = await fetch(this.config.backendUrl + "/ping", {
         method: "GET",
       });
-
       if (!res.ok) throw new Error("Backend no listo");
 
       this.setSearchStatus("Conectado", "green");
       this.setConnectionStatus(true);
       this.state.warmingUp = false;
-
       return true;
     } catch (err) {
       this.setSearchStatus("Activando servidor…", "orange");
       this.setConnectionStatus(false);
-
       return false;
     }
   },
 
   async warmUpLoop() {
-    let ok = await this.pingBackend();
-
+    const ok = await this.pingBackend();
     if (!ok) {
       setTimeout(() => this.warmUpLoop(), 2000);
       return;
     }
-
-    // Cuando el backend despierta → cargar catálogo
     this.cargarCatalogo();
+  },
+
+  // ============================================================
+  // RENDER SEGÚN MODO
+  // ============================================================
+
+  renderResultados(items) {
+    this.state.modoTabla
+      ? this.renderResultadosTabla(items)
+      : this.renderResultadosTarjetas(items);
   },
 
   // ============================================================
@@ -322,17 +325,6 @@ const AppCore = {
       question: usarFiltros ? "" : q,
     };
   },
-    return {
-      filtros_globales: usarFiltros,
-      marca,
-      rubro,
-      talleDesde,
-      talleHasta,
-      soloUltimo: false,
-      soloNegativo: false,
-      question: usarFiltros ? "" : q,
-    };
-  },
 
   // ============================================================
   // FILTROS MANUALES
@@ -364,11 +356,9 @@ const AppCore = {
       soloNegativo: false,
     };
 
-    // Cancelar búsqueda anterior
     if (this.state.currentAbort) this.state.currentAbort.abort();
     this.state.currentAbort = new AbortController();
 
-    // Indicadores
     this.setSearchStatus("Buscando…", "blue");
     ORB.setError?.(false);
     ORB.setLoading?.(true);
@@ -387,7 +377,6 @@ const AppCore = {
       const data = await res.json();
       this.state.items = data.items || [];
 
-      // Render
       this.renderResultados(this.state.items);
       window.actualizarDashboard?.(this.state.items);
       this.actualizarIndicadores(this.state.items);
@@ -398,7 +387,6 @@ const AppCore = {
       this.setSearchStatus("Conectado", "green");
       if (this.els.resultsStatus)
         this.els.resultsStatus.textContent = `${this.state.items.length} resultados`;
-
     } catch (err) {
       if (err.name !== "AbortError") {
         this.setConnectionStatus(false);
@@ -442,7 +430,6 @@ const AppCore = {
 
       this.setConnectionStatus(true);
       this.setSearchStatus("Conectado", "green");
-
     } catch (err) {
       this.setConnectionStatus(false);
       this.setSearchStatus("Error de conexión", "red");
@@ -501,6 +488,7 @@ const AppCore = {
     ORB.setSpeaking?.(false);
     this.setSearchStatus("Listo", "blue");
   },
+
   // ============================================================
   // BUSCAR (motor principal reconstruido)
   // ============================================================
@@ -516,7 +504,6 @@ const AppCore = {
 
     this.state.lastQuery = q;
 
-    // Interpretación inteligente
     const parsed = this.interpretarQuery(q);
 
     const body = {
@@ -531,11 +518,9 @@ const AppCore = {
       solo_stock: this.els.chkSoloStock?.checked || false,
     };
 
-    // Cancelar búsqueda anterior
     if (this.state.currentAbort) this.state.currentAbort.abort();
     this.state.currentAbort = new AbortController();
 
-    // Indicadores visuales
     this.setSearchStatus("Buscando…", "blue");
     ORB.setError?.(false);
     ORB.setLoading?.(true);
@@ -554,7 +539,6 @@ const AppCore = {
       const data = await res.json();
       this.state.items = data.items || [];
 
-      // Render
       this.renderResultados(this.state.items);
       window.actualizarDashboard?.(this.state.items);
       this.actualizarIndicadores(this.state.items);
@@ -566,11 +550,9 @@ const AppCore = {
       if (this.els.resultsStatus)
         this.els.resultsStatus.textContent = `${this.state.items.length} resultados`;
 
-      // TTS opcional
       if (window.ORB?.isVoiceMode?.()) {
         this.speakResultados();
       }
-
     } catch (err) {
       if (err.name !== "AbortError") {
         this.setConnectionStatus(false);
@@ -593,17 +575,14 @@ const AppCore = {
   // ============================================================
 
   conectarEventosUI() {
-    // Botón aplicar filtros
     this.els.btnAplicarFiltros?.addEventListener("click", () => {
       this.buscarPorFiltros();
     });
 
-    // ENTER en el input
     this.els.searchInput?.addEventListener("keydown", (e) => {
       if (e.key === "Enter") this.buscar();
     });
 
-    // Toggle tabla / tarjetas
     const btnTabla = document.getElementById("btn-ver-tabla");
     const btnTarjetas = document.getElementById("btn-ver-tarjetas");
 
@@ -621,39 +600,33 @@ const AppCore = {
       this.renderResultados(this.state.items);
     });
 
-    // Botón copiar
     const btnCopiar = document.getElementById("btn-copiar");
     btnCopiar?.addEventListener("click", () => this.copiarResultados());
 
-    // Botón limpiar
     const btnLimpiar = document.getElementById("btn-limpiar");
     btnLimpiar?.addEventListener("click", () => this.limpiarPantalla());
 
-    // Toggle fuente de datos
     this.els.fuenteDatosToggle?.addEventListener("click", () => {
       this.els.fuenteDatosPanel?.classList.toggle("visible");
     });
 
-    // ORB: clic inicia búsqueda
     const orb = document.getElementById("orb");
     orb?.addEventListener("click", () => this.buscar());
   },
+
   // ============================================================
   // INIT
   // ============================================================
 
   init() {
-    // Iniciar warm-up del backend
     this.setSearchStatus("Activando servidor…", "orange");
     this.warmUpLoop();
-
-    // Conectar eventos de UI
     this.conectarEventosUI();
   },
 };
 
 // ============================================================
-// INSTANCIA GLOBAL (CRÍTICO PARA QUE TODO FUNCIONE)
+// INSTANCIA GLOBAL
 // ============================================================
 
 window.appCore = AppCore;
