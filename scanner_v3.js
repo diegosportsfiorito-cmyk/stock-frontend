@@ -1,14 +1,13 @@
 // ============================================================
 // SCANNER V3 — Integración estable con ZXing + UI
 // ============================================================
-// Correcciones:
-// - No depende de que #scanner-overlay sea <video>
-// - Crea y usa <video> interno (#scanner-video)
-// - Sin dobles disparos
-// - Cierre correcto del overlay
-// - Cámara liberada siempre (reset)
-// - Callback unificado hacia ui_engine_v3.js
-// - Manejo correcto de errores
+// Correcciones finales:
+// - Uso correcto de appCore (no AppCore)
+// - Cierre seguro del overlay
+// - Reset garantizado del lector
+// - Prevención de doble inicio
+// - Callback unificado hacia UI Engine
+// - Manejo robusto de errores
 // ============================================================
 
 let scannerActivo = false;
@@ -42,6 +41,7 @@ function getScannerVideoElement() {
     video.style.width = "100%";
     video.style.height = "100%";
     video.style.objectFit = "cover";
+
     overlay.innerHTML = "";
     overlay.appendChild(video);
   }
@@ -60,8 +60,8 @@ function iniciarScanner(facingMode, onClose) {
 
   if (!overlay || !videoEl) {
     scannerActivo = false;
-    if (window.AppCore) AppCore.showToast("No se pudo iniciar el scanner");
-    if (onClose) onClose();
+    appCore?.showToast?.("No se pudo iniciar el scanner");
+    onClose?.();
     return;
   }
 
@@ -80,11 +80,9 @@ function iniciarScanner(facingMode, onClose) {
       }
 
       // Selección de cámara
-      let deviceId = null;
+      let deviceId = selectedDeviceId;
 
-      if (selectedDeviceId) {
-        deviceId = selectedDeviceId;
-      } else {
+      if (!deviceId) {
         const cam = videoInputDevices.find((d) =>
           d.label.toLowerCase().includes(facingMode)
         );
@@ -93,45 +91,47 @@ function iniciarScanner(facingMode, onClose) {
       }
 
       // Decodificación en vivo
-      return codeReader.decodeFromVideoDevice(deviceId, videoEl, (result, err) => {
-        if (result) {
-          const text = result.text || "";
+      return codeReader.decodeFromVideoDevice(
+        deviceId,
+        videoEl,
+        (result, err) => {
+          if (result) {
+            const text = result.text || "";
 
-          // Cargar valor en input
-          if (window.AppCore?.els?.searchInput) {
-            AppCore.els.searchInput.value = text;
+            // Cargar valor en input
+            if (appCore?.els?.searchInput) {
+              appCore.els.searchInput.value = text;
+            }
+
+            // Cerrar overlay
+            overlay.classList.add("hidden");
+            document.body.classList.remove("scanner-active");
+
+            // Liberar cámara
+            try {
+              codeReader.reset();
+            } catch (_) {}
+
+            scannerActivo = false;
+
+            // Callback hacia UI (dispara búsqueda)
+            onClose?.();
           }
-
-          // Cerrar overlay
-          overlay.classList.add("hidden");
-          document.body.classList.remove("scanner-active");
-
-          // Liberar cámara
-          codeReader.reset();
-          scannerActivo = false;
-
-          // Callback hacia UI (dispara búsqueda)
-          if (onClose) onClose();
         }
-      });
+      );
     })
     .catch((err) => {
       overlay.classList.add("hidden");
       document.body.classList.remove("scanner-active");
       scannerActivo = false;
 
-      if (codeReader) {
-        try {
-          codeReader.reset();
-        } catch (_) {}
-      }
+      try {
+        codeReader?.reset();
+      } catch (_) {}
 
-      if (onClose) onClose();
+      onClose?.();
 
-      if (window.AppCore) {
-        AppCore.showToast("Error iniciando scanner");
-      }
-
+      appCore?.showToast?.("Error iniciando scanner");
       console.error("Scanner error:", err);
     });
 }
@@ -150,9 +150,7 @@ function startScannerExternoPreferido(onClose) {
     window.location.href = url;
   }
 
-  setTimeout(() => {
-    if (onClose) onClose();
-  }, 1500);
+  setTimeout(() => onClose?.(), 1500);
 }
 
 // ------------------------------------------------------------
@@ -174,9 +172,7 @@ function startScannerExternoSelector(onClose) {
     window.location.href = opciones[idx];
   }
 
-  setTimeout(() => {
-    if (onClose) onClose();
-  }, 1500);
+  setTimeout(() => onClose?.(), 1500);
 }
 
 // ------------------------------------------------------------
