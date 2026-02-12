@@ -1,6 +1,6 @@
 // build 20260210-REBUILD
 // ============================================================
-// APP CORE — Motor inteligente + filtros estructurados
+// APP CORE — Motor inteligente + warm-up + indicador visual
 // ============================================================
 
 const AppCore = {
@@ -11,6 +11,8 @@ const AppCore = {
 
   els: {
     searchInput: document.getElementById("search-input"),
+    searchStatus: document.getElementById("search-status"),
+
     chkSoloStock: document.getElementById("chk-solo-stock"),
     filtroMarca: document.getElementById("filtro-marca"),
     filtroRubro: document.getElementById("filtro-rubro"),
@@ -18,14 +20,18 @@ const AppCore = {
     filtroTalleHasta: document.getElementById("filtro-talle-hasta"),
     filtrosPanel: document.getElementById("filtros-panel"),
     btnAplicarFiltros: document.getElementById("btn-aplicar-filtros"),
+
     resultsContainer: document.getElementById("results-container"),
     resultsStatus: document.getElementById("results-status"),
+
     metricArticulos: document.getElementById("metric-articulos-value"),
     metricPares: document.getElementById("metric-pares-value"),
     metricAlertasNegativos: document.getElementById("metric-alertas-negativos-value"),
     metricAlertasCero: document.getElementById("metric-alertas-cero-value"),
     metricValorizado: document.getElementById("metric-valorizado-value"),
+
     connectionDot: document.getElementById("connection-dot"),
+
     fuenteDatosToggle: document.getElementById("fuente-datos-toggle"),
     fuenteDatosPanel: document.getElementById("fuente-datos-panel"),
     fuenteArchivo: document.getElementById("fuente-archivo"),
@@ -51,6 +57,18 @@ const AppCore = {
     modoTabla: false,
     resumenCatalogo: null,
     retryTimeout: null,
+    warmingUp: true,
+  },
+
+  // ============================================================
+  // INDICADOR VISUAL
+  // ============================================================
+
+  setSearchStatus(text, color = "blue") {
+    if (!this.els.searchStatus) return;
+
+    this.els.searchStatus.textContent = text;
+    this.els.searchStatus.className = "search-status " + color;
   },
 
   // ============================================================
@@ -97,14 +115,45 @@ const AppCore = {
     ORB.setError?.(false);
     ORB.setLoading?.(false);
   },
+
   // ============================================================
-  // RENDER SEGÚN MODO
+  // WARM-UP PROFESIONAL DEL BACKEND
   // ============================================================
 
-  renderResultados(items) {
-    this.state.modoTabla
-      ? this.renderResultadosTabla(items)
-      : this.renderResultadosTarjetas(items);
+  async pingBackend() {
+    this.setSearchStatus("Activando servidor…", "orange");
+    this.setConnectionStatus(false);
+
+    try {
+      const res = await fetch(this.config.backendUrl + "/ping", {
+        method: "GET",
+      });
+
+      if (!res.ok) throw new Error("Backend no listo");
+
+      this.setSearchStatus("Conectado", "green");
+      this.setConnectionStatus(true);
+      this.state.warmingUp = false;
+
+      return true;
+    } catch (err) {
+      this.setSearchStatus("Activando servidor…", "orange");
+      this.setConnectionStatus(false);
+
+      return false;
+    }
+  },
+
+  async warmUpLoop() {
+    let ok = await this.pingBackend();
+
+    if (!ok) {
+      setTimeout(() => this.warmUpLoop(), 2000);
+      return;
+    }
+
+    // Cuando el backend despierta → cargar catálogo
+    this.cargarCatalogo();
   },
 
   // ============================================================
@@ -273,6 +322,17 @@ const AppCore = {
       question: usarFiltros ? "" : q,
     };
   },
+    return {
+      filtros_globales: usarFiltros,
+      marca,
+      rubro,
+      talleDesde,
+      talleHasta,
+      soloUltimo: false,
+      soloNegativo: false,
+      question: usarFiltros ? "" : q,
+    };
+  },
 
   // ============================================================
   // FILTROS MANUALES
@@ -304,9 +364,12 @@ const AppCore = {
       soloNegativo: false,
     };
 
+    // Cancelar búsqueda anterior
     if (this.state.currentAbort) this.state.currentAbort.abort();
     this.state.currentAbort = new AbortController();
 
+    // Indicadores
+    this.setSearchStatus("Buscando…", "blue");
     ORB.setError?.(false);
     ORB.setLoading?.(true);
     if (this.els.resultsStatus) this.els.resultsStatus.textContent = "Buscando…";
@@ -324,23 +387,29 @@ const AppCore = {
       const data = await res.json();
       this.state.items = data.items || [];
 
+      // Render
       this.renderResultados(this.state.items);
       window.actualizarDashboard?.(this.state.items);
       this.actualizarIndicadores(this.state.items);
 
       this.setConnectionStatus(true);
       this.setOrbIdle();
+
+      this.setSearchStatus("Conectado", "green");
       if (this.els.resultsStatus)
         this.els.resultsStatus.textContent = `${this.state.items.length} resultados`;
+
     } catch (err) {
       if (err.name !== "AbortError") {
         this.setConnectionStatus(false);
         ORB.setError?.(true);
+
+        this.setSearchStatus("Error de conexión", "red");
         if (this.els.resultsStatus)
           this.els.resultsStatus.textContent = "Error de conexión";
 
         clearTimeout(this.state.retryTimeout);
-        this.state.retryTimeout = setTimeout(() => this.cargarCatalogo(), 3000);
+        this.state.retryTimeout = setTimeout(() => this.warmUpLoop(), 2000);
       }
     } finally {
       ORB.setLoading?.(false);
@@ -352,6 +421,8 @@ const AppCore = {
   // ============================================================
 
   async cargarCatalogo() {
+    this.setSearchStatus("Cargando catálogo…", "blue");
+
     try {
       const res = await fetch(this.config.backendUrl + "/catalog");
       if (!res.ok) throw new Error("Error catálogo");
@@ -370,10 +441,14 @@ const AppCore = {
       if (this.els.fuenteStockNegativo) this.els.fuenteStockNegativo.textContent = data.resumen?.stock_negativo || "—";
 
       this.setConnectionStatus(true);
+      this.setSearchStatus("Conectado", "green");
+
     } catch (err) {
       this.setConnectionStatus(false);
+      this.setSearchStatus("Error de conexión", "red");
+
       clearTimeout(this.state.retryTimeout);
-      this.state.retryTimeout = setTimeout(() => this.cargarCatalogo(), 3000);
+      this.state.retryTimeout = setTimeout(() => this.warmUpLoop(), 2000);
     }
   },
 
@@ -388,6 +463,7 @@ const AppCore = {
     this.actualizarIndicadores([]);
     if (this.els.resultsStatus) this.els.resultsStatus.textContent = "Sin resultados";
     this.setOrbIdle();
+    this.setSearchStatus("Listo", "blue");
   },
 
   // ============================================================
@@ -423,6 +499,7 @@ const AppCore = {
     ORB.setError?.(false);
     ORB.setLoading?.(false);
     ORB.setSpeaking?.(false);
+    this.setSearchStatus("Listo", "blue");
   },
   // ============================================================
   // BUSCAR (motor principal reconstruido)
@@ -458,6 +535,8 @@ const AppCore = {
     if (this.state.currentAbort) this.state.currentAbort.abort();
     this.state.currentAbort = new AbortController();
 
+    // Indicadores visuales
+    this.setSearchStatus("Buscando…", "blue");
     ORB.setError?.(false);
     ORB.setLoading?.(true);
     if (this.els.resultsStatus) this.els.resultsStatus.textContent = "Buscando…";
@@ -483,6 +562,7 @@ const AppCore = {
       this.setConnectionStatus(true);
       this.setOrbIdle();
 
+      this.setSearchStatus("Conectado", "green");
       if (this.els.resultsStatus)
         this.els.resultsStatus.textContent = `${this.state.items.length} resultados`;
 
@@ -490,21 +570,24 @@ const AppCore = {
       if (window.ORB?.isVoiceMode?.()) {
         this.speakResultados();
       }
+
     } catch (err) {
       if (err.name !== "AbortError") {
         this.setConnectionStatus(false);
         ORB.setError?.(true);
 
+        this.setSearchStatus("Error de conexión", "red");
         if (this.els.resultsStatus)
           this.els.resultsStatus.textContent = "Error de conexión";
 
         clearTimeout(this.state.retryTimeout);
-        this.state.retryTimeout = setTimeout(() => this.cargarCatalogo(), 3000);
+        this.state.retryTimeout = setTimeout(() => this.warmUpLoop(), 2000);
       }
     } finally {
       ORB.setLoading?.(false);
     }
   },
+
   // ============================================================
   // EVENTOS DE UI
   // ============================================================
@@ -555,13 +638,16 @@ const AppCore = {
     const orb = document.getElementById("orb");
     orb?.addEventListener("click", () => this.buscar());
   },
-
   // ============================================================
   // INIT
   // ============================================================
 
   init() {
-    this.cargarCatalogo();
+    // Iniciar warm-up del backend
+    this.setSearchStatus("Activando servidor…", "orange");
+    this.warmUpLoop();
+
+    // Conectar eventos de UI
     this.conectarEventosUI();
   },
 };
