@@ -1,13 +1,13 @@
 // ============================================================
 // SCANNER V3 — Integración estable con ZXing + UI
-// Versión restaurada + mejorada según requerimientos 2026
+// Versión final corregida 2026
 // ============================================================
 // - Botón 1 → lector interno (cámara trasera)
 // - Botón 2 → lector interno robusto (cámara trasera)
 // - Botón 3 → abrir Barcode Scanner+ (app instalada)
 // - Botón 4 → selector Android/iOS para abrir/descargar apps
 // - Todos devuelven el código al input y disparan búsqueda
-// - Sin cámara selfie en ningún caso
+// - Soporte CODE128, CODE39, EAN13, UPC, QR
 // ============================================================
 
 let scannerActivo = false;
@@ -40,7 +40,7 @@ function getScannerVideoElement() {
 // ------------------------------------------------------------
 // INICIAR SCANNER INTERNO (SIEMPRE CÁMARA TRASERA)
 // ------------------------------------------------------------
-function iniciarScannerInterno(facingMode, onClose) {
+function iniciarScannerInterno(onClose) {
   if (scannerActivo) return;
   scannerActivo = true;
 
@@ -57,8 +57,20 @@ function iniciarScannerInterno(facingMode, onClose) {
   overlay.classList.remove("hidden");
   document.body.classList.add("scanner-active");
 
+  // Forzar formatos soportados
   if (!codeReader) {
-    codeReader = new ZXing.BrowserMultiFormatReader();
+    codeReader = new ZXing.BrowserMultiFormatReader(
+      ZXing.BarcodeFormat,
+      [
+        ZXing.BarcodeFormat.CODE_128,
+        ZXing.BarcodeFormat.CODE_39,
+        ZXing.BarcodeFormat.EAN_13,
+        ZXing.BarcodeFormat.EAN_8,
+        ZXing.BarcodeFormat.UPC_A,
+        ZXing.BarcodeFormat.UPC_E,
+        ZXing.BarcodeFormat.QR_CODE
+      ]
+    );
   }
 
   codeReader
@@ -126,33 +138,33 @@ function iniciarScannerInterno(facingMode, onClose) {
 // BOTÓN 1 — LECTOR INTERNO (TRASERA)
 // ------------------------------------------------------------
 function startScannerInterno1(onClose) {
-  iniciarScannerInterno("environment", onClose);
+  iniciarScannerInterno(onClose);
 }
 
 // ------------------------------------------------------------
 // BOTÓN 2 — LECTOR INTERNO ROBUSTO (TRASERA)
 // ------------------------------------------------------------
 function startScannerInterno2(onClose) {
-  iniciarScannerInterno("environment", onClose);
+  iniciarScannerInterno(onClose);
 }
 
 // ------------------------------------------------------------
 // BOTÓN 3 — ABRIR APP INSTALADA "BARCODE SCANNER+"
 // ------------------------------------------------------------
-// Esta app devuelve el código vía intent → window.location.href
-// Formato estándar ZXing
-// ------------------------------------------------------------
 function startScannerExternoPreferido(onClose) {
   const intent =
     "intent://scan/#Intent;scheme=zxing;package=com.srowen.bs.android;end";
 
+  // Abrir app
   window.location.href = intent;
 
-  // Esperamos retorno
+  // Esperar retorno
   setTimeout(() => {
-    // Si la app devolvió el código, ZXing lo pone en la URL como ?q=xxxx
     const params = new URLSearchParams(window.location.search);
-    const code = params.get("q");
+    const code =
+      params.get("q") ||
+      params.get("SCAN_RESULT") ||
+      params.get("code");
 
     if (code && appCore?.els?.searchInput) {
       appCore.els.searchInput.value = code;
@@ -198,7 +210,10 @@ function startScannerExternoSelector(onClose) {
 
   setTimeout(() => {
     const params = new URLSearchParams(window.location.search);
-    const code = params.get("q");
+    const code =
+      params.get("q") ||
+      params.get("SCAN_RESULT") ||
+      params.get("code");
 
     if (code && appCore?.els?.searchInput) {
       appCore.els.searchInput.value = code;
