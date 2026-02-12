@@ -1,7 +1,7 @@
 // ============================================================
 // UI ENGINE V3 — Control total de UI + Layout móvil
 // ============================================================
-// Este archivo controla:
+// Controla:
 // - ORB (click/touch)
 // - Enter en PC y móvil
 // - Autocomplete
@@ -12,6 +12,7 @@
 // - Vista tabla/tarjetas
 // - Panel admin (sin backendUrl)
 // - Layout móvil (<768px)
+// - Modo día/noche persistente
 // ============================================================
 
 function initUI(app) {
@@ -33,14 +34,15 @@ function initUI(app) {
   const scannerOverlay = document.getElementById("scanner-overlay");
   const autoList = document.getElementById("autocomplete-list");
 
-  const btnClear = document.getElementById("btn-clear");
-  const btnCopy = document.getElementById("btn-copy");
+  // IDs alineados con el HTML actual
+  const btnClear = document.getElementById("btn-limpiar");
+  const btnCopy = document.getElementById("btn-copiar");
   const btnStop = document.getElementById("btn-stop");
 
   const btnFiltros = document.getElementById("btn-filtros");
 
-  const btnVistaTabla = document.getElementById("btn-vista-tabla");
-  const btnVistaTarjetas = document.getElementById("btn-vista-tarjetas");
+  const btnVistaTabla = document.getElementById("btn-ver-tabla");
+  const btnVistaTarjetas = document.getElementById("btn-ver-tarjetas");
 
   const adminPanel = document.getElementById("admin-panel");
   const adminGuardar = document.getElementById("admin-guardar");
@@ -197,7 +199,13 @@ function initUI(app) {
       return;
     }
 
-    const sugerencias = AppCore.getAutocompleteSuggestions(value);
+    // Si no existe getAutocompleteSuggestions, no romper
+    const sugerencias =
+      typeof AppCore !== "undefined" &&
+      typeof AppCore.getAutocompleteSuggestions === "function"
+        ? AppCore.getAutocompleteSuggestions(value)
+        : [];
+
     if (!sugerencias.length) {
       autoList.innerHTML = "";
       return;
@@ -286,6 +294,7 @@ function initUI(app) {
   // ------------------------------------------------------------
   if (btnClear) {
     btnClear.addEventListener("click", () => {
+      // Solo limpiar resultados, NO el input
       app.limpiarPantalla();
       beep(800);
     });
@@ -368,6 +377,8 @@ function initUI(app) {
     });
   }
 
+  // Estos listeners son redundantes con AppCore.conectarEventosUI,
+  // pero no rompen nada; los dejamos para asegurar reacción inmediata.
   if (els.btnAplicarFiltros) {
     els.btnAplicarFiltros.addEventListener("click", () => app.buscarPorFiltros());
   }
@@ -457,11 +468,18 @@ function initUI(app) {
   });
 
   // ------------------------------------------------------------
-  // MODO DÍA / NOCHE
+  // MODO DÍA / NOCHE (persistente)
   // ------------------------------------------------------------
   if (toggleDark) {
+    const savedTheme = localStorage.getItem("theme") || "dark";
+    const isLight = savedTheme === "light";
+    document.body.classList.toggle("light-mode", isLight);
+    toggleDark.checked = isLight;
+
     toggleDark.addEventListener("change", () => {
-      document.body.classList.toggle("light-mode", toggleDark.checked);
+      const on = toggleDark.checked;
+      document.body.classList.toggle("light-mode", on);
+      localStorage.setItem("theme", on ? "light" : "dark");
     });
   }
 
@@ -470,11 +488,19 @@ function initUI(app) {
   // ------------------------------------------------------------
   if (helpButton && helpModal && helpClose) {
     helpModal.classList.add("hidden");
+
     helpButton.addEventListener("click", () => {
       helpModal.classList.remove("hidden");
     });
+
     helpClose.addEventListener("click", () => {
       helpModal.classList.add("hidden");
+    });
+
+    helpModal.addEventListener("click", (e) => {
+      if (e.target === helpModal) {
+        helpModal.classList.add("hidden");
+      }
     });
   }
 
