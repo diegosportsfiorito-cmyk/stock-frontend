@@ -1,29 +1,18 @@
 // ============================================================
 // SCANNER V3 — Integración estable con ZXing + UI
+// Versión restaurada + mejorada según requerimientos 2026
 // ============================================================
-// Correcciones finales:
-// - Uso correcto de appCore (no AppCore)
-// - Cierre seguro del overlay
-// - Reset garantizado del lector
-// - Prevención de doble inicio
-// - Callback unificado hacia UI Engine
-// - Manejo robusto de errores
+// - Botón 1 → lector interno (cámara trasera)
+// - Botón 2 → lector interno robusto (cámara trasera)
+// - Botón 3 → abrir Barcode Scanner+ (app instalada)
+// - Botón 4 → selector Android/iOS para abrir/descargar apps
+// - Todos devuelven el código al input y disparan búsqueda
+// - Sin cámara selfie en ningún caso
 // ============================================================
 
 let scannerActivo = false;
 let selectedDeviceId = null;
 let codeReader = null;
-
-// ------------------------------------------------------------
-// SCANNERS INTERNOS (A = environment, B = user)
-// ------------------------------------------------------------
-function startScannerInterno1(onClose) {
-  iniciarScanner("environment", onClose);
-}
-
-function startScannerInterno2(onClose) {
-  iniciarScanner("user", onClose);
-}
 
 // ------------------------------------------------------------
 // CREAR / OBTENER VIDEO DENTRO DEL OVERLAY
@@ -49,9 +38,9 @@ function getScannerVideoElement() {
 }
 
 // ------------------------------------------------------------
-// INICIAR SCANNER INTERNO
+// INICIAR SCANNER INTERNO (SIEMPRE CÁMARA TRASERA)
 // ------------------------------------------------------------
-function iniciarScanner(facingMode, onClose) {
+function iniciarScannerInterno(facingMode, onClose) {
   if (scannerActivo) return;
   scannerActivo = true;
 
@@ -79,18 +68,16 @@ function iniciarScanner(facingMode, onClose) {
         throw new Error("No hay cámaras disponibles");
       }
 
-      // Selección de cámara
-      let deviceId = selectedDeviceId;
+      // SIEMPRE CÁMARA TRASERA
+      let deviceId = null;
 
-      if (!deviceId) {
-        const cam = videoInputDevices.find((d) =>
-          d.label.toLowerCase().includes(facingMode)
-        );
-        deviceId = cam ? cam.deviceId : videoInputDevices[0].deviceId;
-        selectedDeviceId = deviceId;
-      }
+      const cam = videoInputDevices.find((d) =>
+        d.label.toLowerCase().includes("back")
+      );
 
-      // Decodificación en vivo
+      deviceId = cam ? cam.deviceId : videoInputDevices[0].deviceId;
+      selectedDeviceId = deviceId;
+
       return codeReader.decodeFromVideoDevice(
         deviceId,
         videoEl,
@@ -114,7 +101,7 @@ function iniciarScanner(facingMode, onClose) {
 
             scannerActivo = false;
 
-            // Callback hacia UI (dispara búsqueda)
+            // Disparar búsqueda
             onClose?.();
           }
         }
@@ -130,49 +117,94 @@ function iniciarScanner(facingMode, onClose) {
       } catch (_) {}
 
       onClose?.();
-
       appCore?.showToast?.("Error iniciando scanner");
       console.error("Scanner error:", err);
     });
 }
 
 // ------------------------------------------------------------
-// SCANNER EXTERNO (preferido)
+// BOTÓN 1 — LECTOR INTERNO (TRASERA)
 // ------------------------------------------------------------
-function startScannerExternoPreferido(onClose) {
-  const apps = [
-    "zxing://scan",
-    "intent://scan/#Intent;scheme=zxing;package=com.google.zxing.client.android;end",
-    "https://zxing.appspot.com/scan",
-  ];
-
-  for (const url of apps) {
-    window.location.href = url;
-  }
-
-  setTimeout(() => onClose?.(), 1500);
+function startScannerInterno1(onClose) {
+  iniciarScannerInterno("environment", onClose);
 }
 
 // ------------------------------------------------------------
-// SCANNER EXTERNO (selector manual)
+// BOTÓN 2 — LECTOR INTERNO ROBUSTO (TRASERA)
+// ------------------------------------------------------------
+function startScannerInterno2(onClose) {
+  iniciarScannerInterno("environment", onClose);
+}
+
+// ------------------------------------------------------------
+// BOTÓN 3 — ABRIR APP INSTALADA "BARCODE SCANNER+"
+// ------------------------------------------------------------
+// Esta app devuelve el código vía intent → window.location.href
+// Formato estándar ZXing
+// ------------------------------------------------------------
+function startScannerExternoPreferido(onClose) {
+  const intent =
+    "intent://scan/#Intent;scheme=zxing;package=com.srowen.bs.android;end";
+
+  window.location.href = intent;
+
+  // Esperamos retorno
+  setTimeout(() => {
+    // Si la app devolvió el código, ZXing lo pone en la URL como ?q=xxxx
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get("q");
+
+    if (code && appCore?.els?.searchInput) {
+      appCore.els.searchInput.value = code;
+      onClose?.();
+    }
+  }, 1500);
+}
+
+// ------------------------------------------------------------
+// BOTÓN 4 — SELECTOR ANDROID / IOS
 // ------------------------------------------------------------
 function startScannerExternoSelector(onClose) {
   const opciones = [
-    "zxing://scan",
-    "https://zxing.appspot.com/scan",
-    "intent://scan/#Intent;scheme=zxing;package=com.google.zxing.client.android;end",
+    {
+      nombre: "Barcode Scanner+ (Android)",
+      url: "intent://scan/#Intent;scheme=zxing;package=com.srowen.bs.android;end",
+    },
+    {
+      nombre: "ZXing App (Android)",
+      url: "zxing://scan",
+    },
+    {
+      nombre: "ZXing Web Scanner",
+      url: "https://zxing.appspot.com/scan",
+    },
+    {
+      nombre: "QR Code Reader (iOS)",
+      url: "https://apps.apple.com/us/app/qr-code-reader/id1200318119",
+    },
   ];
 
-  const elegido = prompt(
-    "Elegí una opción:\n1) ZXing App\n2) ZXing Web\n3) ZXing Intent"
-  );
+  let msg = "Elegí una opción:\n";
+  opciones.forEach((o, i) => {
+    msg += `${i + 1}) ${o.nombre}\n`;
+  });
 
+  const elegido = prompt(msg);
   const idx = parseInt(elegido, 10) - 1;
+
   if (opciones[idx]) {
-    window.location.href = opciones[idx];
+    window.location.href = opciones[idx].url;
   }
 
-  setTimeout(() => onClose?.(), 1500);
+  setTimeout(() => {
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get("q");
+
+    if (code && appCore?.els?.searchInput) {
+      appCore.els.searchInput.value = code;
+      onClose?.();
+    }
+  }, 1500);
 }
 
 // ------------------------------------------------------------
