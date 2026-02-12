@@ -339,6 +339,84 @@ const AppCore = {
       question: usarFiltros ? "" : q,
     };
   },
+
+  // ============================================================
+  // BÚSQUEDA PRINCIPAL
+  // ============================================================
+
+  async buscar() {
+    const raw = this.els.searchInput?.value || "";
+    const q = raw.trim();
+
+    if (!q) {
+      this.limpiarPantalla();
+      return;
+    }
+
+    this.state.lastQuery = q;
+
+    const parsed = this.interpretarQuery(q);
+
+    const body = {
+      question: parsed.question || "",
+      filtros_globales: !!parsed.filtros_globales,
+      marca: parsed.marca || null,
+      rubro: parsed.rubro || null,
+      talleDesde: parsed.talleDesde || null,
+      talleHasta: parsed.talleHasta || null,
+      soloUltimo: parsed.soloUltimo || false,
+      soloNegativo: parsed.soloNegativo || false,
+      solo_stock: this.els.chkSoloStock?.checked || false,
+    };
+
+    if (this.state.currentAbort) this.state.currentAbort.abort();
+    this.state.currentAbort = new AbortController();
+
+    this.setSearchStatus("Buscando…", "blue");
+    ORB.setError?.(false);
+    ORB.setLoading?.(true);
+    if (this.els.resultsStatus)
+      this.els.resultsStatus.textContent = "Buscando…";
+
+    try {
+      const res = await fetch(this.config.backendUrl + "/query", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+        signal: this.state.currentAbort.signal,
+      });
+
+      if (!res.ok) throw new Error();
+
+      const data = await res.json();
+      this.state.items = data.items || [];
+
+      this.renderResultados(this.state.items);
+      window.actualizarDashboard?.(this.state.items);
+      this.actualizarIndicadores(this.state.items);
+
+      this.setConnectionStatus(true);
+      this.setOrbIdle();
+
+      this.setSearchStatus("Conectado", "green");
+      if (this.els.resultsStatus)
+        this.els.resultsStatus.textContent = `${this.state.items.length} resultados`;
+
+      if (window.ORB?.isVoiceMode?.()) {
+        this.speakResultados();
+      }
+    } catch (err) {
+      if (err.name !== "AbortError") {
+        this.setConnectionStatus(false);
+        ORB.setError?.(true);
+
+        this.setSearchStatus("Error de conexión", "red");
+        if (this.els.resultsStatus)
+          this.els.resultsStatus.textContent = "Error de conexión";
+
+        clearTimeout(this.state.retryTimeout);
+        this.state.retryTimeout = setTimeout(() => this.warmUpLoop(), 2000);
+      }
     } finally {
       ORB.setLoading?.(false);
     }
@@ -379,7 +457,8 @@ const AppCore = {
 
     this.setSearchStatus("Buscando…", "blue");
     ORB.setLoading?.(true);
-    this.els.resultsStatus.textContent = "Buscando…";
+    if (this.els.resultsStatus)
+      this.els.resultsStatus.textContent = "Buscando…";
 
     try {
       const res = await fetch(this.config.backendUrl + "/query", {
@@ -402,12 +481,14 @@ const AppCore = {
       this.setOrbIdle();
 
       this.setSearchStatus("Conectado", "green");
-      this.els.resultsStatus.textContent = `${this.state.items.length} resultados`;
+      if (this.els.resultsStatus)
+        this.els.resultsStatus.textContent = `${this.state.items.length} resultados`;
     } catch {
       this.setConnectionStatus(false);
       ORB.setError?.(true);
       this.setSearchStatus("Error de conexión", "red");
-      this.els.resultsStatus.textContent = "Error de conexión";
+      if (this.els.resultsStatus)
+        this.els.resultsStatus.textContent = "Error de conexión";
     } finally {
       ORB.setLoading?.(false);
     }
@@ -599,6 +680,7 @@ const AppCore = {
     speechSynthesis.cancel();
     speechSynthesis.speak(utter);
   },
+
   // ============================================================
   // LIMPIAR PANTALLA
   // ============================================================
