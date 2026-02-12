@@ -814,3 +814,23 @@ input:checked + .slider:before {
   transform: scale(0.90);
   background: #eaeaea;
 }
+.scanner-buttons {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 20px;
+  padding: 12px;
+}
+
+.scanner-button {
+  width: 70px;
+  height: 70px;
+  border-radius: 14px;
+  background: #ffffffee;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 34px;
+  cursor: pointer;
+  box-shadow: 0 3px 8px rgba(0,0,0,0.25);
+}
