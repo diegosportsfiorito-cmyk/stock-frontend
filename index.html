@@ -20,7 +20,7 @@
         }
       }
 
-      /* Métricas en 2 columnas en móvil, sin salirse de pantalla */
+      /* Métricas en 2 columnas en móvil */
       @media (max-width: 600px) {
         .metrics-row {
           display: flex;
@@ -32,24 +32,33 @@
         }
       }
 
-      /* Botón STOP: rojo suave, borde rojo, fondo blanco */
+      /* Indicador de estado */
+      .search-status {
+        margin-bottom: 6px;
+        font-weight: bold;
+        font-size: 14px;
+        text-align: left;
+        color: #0ea5e9; /* azul por defecto */
+      }
+      .search-status.orange { color: #f59e0b; }
+      .search-status.green { color: #10b981; }
+      .search-status.red { color: #ef4444; }
+      .search-status.blue { color: #0ea5e9; }
+
+      /* Botón STOP rojo suave */
       .orb-action-btn.stop {
         background-color: #ffffff;
         color: #c62828;
         border: 1px solid #c62828;
       }
 
-      /* Fila de controles de voz (mic + dictado + manos libres) */
+      /* Fila de controles de voz */
       .voice-row {
         display: flex;
         align-items: center;
         gap: 12px;
         margin-top: 8px;
         flex-wrap: wrap;
-      }
-
-      .voice-row .mic-btn {
-        margin: 0;
       }
 
       /* Modal de ayuda centrado */
@@ -62,11 +71,9 @@
         justify-content: center;
         z-index: 999;
       }
-
       .help-modal.visible {
         display: flex;
       }
-
       .help-modal-content {
         background: #111827;
         color: #e5e7eb;
@@ -75,21 +82,6 @@
         max-width: 420px;
         width: 90%;
         box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
-      }
-
-      .help-modal-content h2 {
-        margin-top: 0;
-        margin-bottom: 10px;
-      }
-
-      .help-modal-content ul {
-        padding-left: 18px;
-        margin-bottom: 16px;
-      }
-
-      .help-modal-content button {
-        display: inline-block;
-        margin-top: 4px;
       }
     </style>
   </head>
@@ -127,7 +119,7 @@
               </label>
             </div>
 
-            <button id="help-button" class="btn-help" title="Ayuda">❓</button>
+            <button id="help-button" class="btn-help">❓</button>
           </div>
         </header>
 
@@ -135,6 +127,10 @@
              SEARCH + ORB
         ============================================================ -->
         <section class="search-card">
+
+          <!-- INDICADOR DE ESTADO (OPCIÓN B) -->
+          <div id="search-status" class="search-status">Listo</div>
+
           <!-- INPUT -->
           <div class="search-row">
             <div class="search-input-wrapper">
@@ -149,9 +145,16 @@
             </div>
           </div>
 
-          <!-- LÍNEA 1: MIC + DICTADO + MANOS LIBRES -->
+          <!-- LÍNEA 1: LIMPIAR + COPIAR + STOP -->
+          <div class="search-actions-row">
+            <button id="btn-limpiar" class="orb-action-btn">🧹</button>
+            <button id="btn-copiar" class="orb-action-btn">📋</button>
+            <button id="btn-stop" class="orb-action-btn stop">⏹</button>
+          </div>
+
+          <!-- LÍNEA 2: MIC + DICTADO + MANOS LIBRES -->
           <div class="voice-row">
-            <button id="mic-button" class="mic-btn" title="Dictado por voz">🎤</button>
+            <button id="mic-button" class="mic-btn">🎤</button>
 
             <label class="orb-mode-switch">
               <span>Dictado</span>
@@ -170,24 +173,15 @@
             </label>
           </div>
 
-          <!-- LÍNEA 2: LIMPIAR + COPIAR + STOP (ROJO SUAVE) -->
-          <div class="search-actions-row">
-            <div class="search-actions-right">
-              <button id="btn-limpiar" class="orb-action-btn" title="Limpiar">🧹</button>
-              <button id="btn-copiar" class="orb-action-btn" title="Copiar resultados">📋</button>
-              <button id="btn-stop" class="orb-action-btn stop" title="Detener">⏹</button>
-            </div>
-          </div>
-
           <div id="voice-status" class="voice-status">Dictado desactivado</div>
 
           <!-- LÍNEA 3: SCANNERS -->
           <div class="scanner-row">
             <div class="scanner-buttons">
-              <button id="btn-scanner-interno-1" class="scanner-big-btn" title="Scanner interno A">📷</button>
-              <button id="btn-scanner-interno-2" class="scanner-big-btn" title="Scanner interno B">🎦</button>
-              <button id="btn-scanner-externo-preferido" class="scanner-big-btn" title="Scanner externo preferido">📲</button>
-              <button id="btn-scanner-externo-selector" class="scanner-big-btn" title="Elegir app de scanner">🧭</button>
+              <button id="btn-scanner-interno-1" class="scanner-big-btn">📷</button>
+              <button id="btn-scanner-interno-2" class="scanner-big-btn">🎦</button>
+              <button id="btn-scanner-externo-preferido" class="scanner-big-btn">📲</button>
+              <button id="btn-scanner-externo-selector" class="scanner-big-btn">🧭</button>
             </div>
 
             <div class="scanner-mode-switch">
@@ -215,7 +209,7 @@
             <button id="btn-filtros" class="btn-secondary">Filtros</button>
           </div>
 
-          <!-- LÍNEA 5: ORB CENTRADO -->
+          <!-- LÍNEA 5: ORB -->
           <div class="orb-zone">
             <div class="orb-actions-ring">
               <div id="orb" class="orb-container">
@@ -406,14 +400,14 @@
 
     <div id="scanner-overlay" class="scanner-overlay hidden"></div>
 
-    <!-- MODAL DE AYUDA CORREGIDO -->
+    <!-- MODAL DE AYUDA -->
     <div id="help-modal" class="help-modal hidden">
       <div class="help-modal-content">
         <h2>Ayuda rápida</h2>
         <ul>
           <li>Escribí o escaneá un código, marca, rubro o talle.</li>
           <li>Usá el botón 🎤 si el modo dictado está activo.</li>
-          <li>Activá manos libres para consultas continuas sin tocar la pantalla.</li>
+          <li>Activá manos libres para consultas continuas.</li>
           <li>Usá “Solo con stock” y “Filtros” para acotar resultados.</li>
           <li>Click en métricas para entender el stock global.</li>
           <li>Atajos: ESC limpia, F2 scanner, F3 voz.</li>
@@ -432,23 +426,23 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://unpkg.com/@zxing/library@latest"></script>
 
-    <!-- 1) MOTOR PRINCIPAL -->
+    <!-- MOTOR PRINCIPAL -->
     <script src="app_core_v3.js?v=20260210"></script>
 
-    <!-- 2) UI -->
+    <!-- UI -->
     <script src="ui_engine_v3.js?v=20260210"></script>
 
-    <!-- 3) ORB -->
+    <!-- ORB -->
     <script src="orb_engine_v2.js?v=20260210"></script>
     <script src="orb_admin_engine.js?v=20260210"></script>
 
-    <!-- 4) SCANNER -->
+    <!-- SCANNER -->
     <script src="scanner_v3.js?v=20260210"></script>
 
-    <!-- 5) DASHBOARD -->
+    <!-- DASHBOARD -->
     <script src="dashboard_engine.js?v=20260210"></script>
 
-    <!-- 6) INDICADORES -->
+    <!-- INDICADORES -->
     <script src="indicators_engine.js?v=20260210"></script>
 
   </body>
