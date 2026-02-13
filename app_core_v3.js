@@ -24,6 +24,10 @@ const AppCore = {
     resultsContainer: document.getElementById("results-container"),
     resultsStatus: document.getElementById("results-status"),
 
+    vistaTabla: document.getElementById("vista-tabla"),
+    vistaTarjeta: document.getElementById("vista-tarjeta"),
+    vistaArticulo: document.getElementById("vista-articulo"),
+
     metricArticulos: document.getElementById("metric-articulos-value"),
     metricPares: document.getElementById("metric-pares-value"),
     metricAlertasNegativos: document.getElementById("metric-alertas-negativos-value"),
@@ -54,7 +58,7 @@ const AppCore = {
       talleDesde: null,
       talleHasta: null,
     },
-    modoTabla: false,
+    vistaActual: "tarjeta", // tabla | tarjeta | articulo
     resumenCatalogo: null,
     retryTimeout: null,
     warmingUp: true,
@@ -495,66 +499,78 @@ const AppCore = {
   },
 
   // ============================================================
-  // RENDER RESULTADOS
+  // RENDER RESULTADOS (3 VISTAS)
   // ============================================================
 
   renderResultados(items) {
-    const container = this.els.resultsContainer;
-    if (!container) return;
+    const vTabla = this.els.vistaTabla;
+    const vTarjeta = this.els.vistaTarjeta;
+    const vArticulo = this.els.vistaArticulo;
 
-    container.innerHTML = "";
+    if (!vTabla || !vTarjeta || !vArticulo) return;
 
     if (!items || !items.length) {
-      container.innerHTML =
-        '<div class="results-empty">Sin resultados.</div>';
+      vTabla.innerHTML = '<div class="results-empty">Sin resultados.</div>';
+      vTarjeta.innerHTML = '<div class="results-empty">Sin resultados.</div>';
+      vArticulo.innerHTML = '<div class="results-empty">Sin resultados.</div>';
       return;
     }
 
-    if (this.state.modoTabla) {
-      // Tabla
-      let html = `
-        <div class="tabla-wrapper">
-        <table class="tabla-resultados">
-          <thead>
-            <tr>
-              <th>Código</th>
-              <th>Descripción</th>
-              <th>Marca</th>
-              <th>Rubro</th>
-              <th>Color</th>
-              <th>Precio</th>
-              <th>Talles</th>
-              <th>Valorizado</th>
-            </tr>
-          </thead>
-          <tbody>
-      `;
+    this.renderVistaTabla(items);
+    this.renderVistaTarjeta(items);
+    this.renderVistaArticulo(items);
+  },
 
-      items.forEach((item) => {
-        const talles = (item.talles || [])
-          .map((t) => `${this.normalizarCampo(t.talle)}: ${t.stock}`)
-          .join(" | ");
+  renderVistaTabla(items) {
+    const container = this.els.vistaTabla;
+    if (!container) return;
 
-        html += `
+    let html = `
+      <div class="tabla-wrapper">
+      <table class="tabla-resultados">
+        <thead>
           <tr>
-            <td>${this.normalizarCampo(item.codigo)}</td>
-            <td>${this.normalizarCampo(item.descripcion)}</td>
-            <td>${this.normalizarCampo(item.marca)}</td>
-            <td>${this.normalizarCampo(item.rubro)}</td>
-            <td>${this.normalizarCampo(item.color)}</td>
-            <td>$${this.formatNumber(item.precio)}</td>
-            <td>${talles}</td>
-            <td>$${this.formatNumber(item.valorizado)}</td>
+            <th>Código</th>
+            <th>Descripción</th>
+            <th>Marca</th>
+            <th>Rubro</th>
+            <th>Color</th>
+            <th>Precio</th>
+            <th>Talles</th>
+            <th>Valorizado</th>
           </tr>
-        `;
-      });
+        </thead>
+        <tbody>
+    `;
 
-      html += "</tbody></table></div>";
-      container.innerHTML = html;
-      return;
-    }
+    items.forEach((item) => {
+      const talles = (item.talles || [])
+        .map((t) => `${this.normalizarCampo(t.talle)}: ${t.stock}`)
+        .join(" | ");
 
-    // Tarjetas
+      html += `
+        <tr>
+          <td>${this.normalizarCampo(item.codigo)}</td>
+          <td>${this.normalizarCampo(item.descripcion)}</td>
+          <td>${this.normalizarCampo(item.marca)}</td>
+          <td>${this.normalizarCampo(item.rubro)}</td>
+          <td>${this.normalizarCampo(item.color)}</td>
+          <td>$${this.formatNumber(item.precio)}</td>
+          <td>${talles}</td>
+          <td>$${this.formatNumber(item.valorizado)}</td>
+        </tr>
+      `;
+    });
+
+    html += "</tbody></table></div>";
+    container.innerHTML = html;
+  },
+
+  renderVistaTarjeta(items) {
+    const container = this.els.vistaTarjeta;
+    if (!container) return;
+    container.innerHTML = "";
+
     items.forEach((item) => {
       const div = document.createElement("div");
       div.className = "result-item";
@@ -583,6 +599,77 @@ const AppCore = {
 
       container.appendChild(div);
     });
+  },
+
+  renderVistaArticulo(items) {
+    const container = this.els.vistaArticulo;
+    if (!container) return;
+
+    if (!items.length) {
+      container.innerHTML = '<div class="results-empty">Sin resultados.</div>';
+      return;
+    }
+
+    const base = items[0];
+    const talles = base.talles || [];
+
+    if (!talles.length) {
+      container.innerHTML = `
+        <div class="detalle-header">
+          <h2>${this.normalizarCampo(base.codigo)} — ${this.normalizarCampo(
+        base.descripcion
+      )}</h2>
+          <p>${this.normalizarCampo(base.marca)} / ${this.normalizarCampo(
+        base.rubro
+      )}</p>
+        </div>
+        <div class="results-empty">Este artículo no tiene talles detallados.</div>
+      `;
+      return;
+    }
+
+    const rowsHtml = talles
+      .map((t) => {
+        const stock = Number(t.stock || 0);
+        const precio = Number(base.precio || 0);
+        const total = stock * precio;
+        return `
+        <tr>
+          <td>${this.normalizarCampo(t.talle)}</td>
+          <td>${stock}</td>
+          <td>$${this.formatNumber(precio)}</td>
+          <td>$${this.formatNumber(total)}</td>
+        </tr>
+      `;
+      })
+      .join("");
+
+    const html = `
+      <div class="detalle-header">
+        <h2>${this.normalizarCampo(base.codigo)} — ${this.normalizarCampo(
+      base.descripcion
+    )}</h2>
+        <p>${this.normalizarCampo(base.marca)} / ${this.normalizarCampo(
+      base.rubro
+    )}</p>
+      </div>
+
+      <table class="tabla-talles">
+        <thead>
+          <tr>
+            <th>Talle</th>
+            <th>Cantidad</th>
+            <th>Precio</th>
+            <th>Total</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rowsHtml}
+        </tbody>
+      </table>
+    `;
+
+    container.innerHTML = html;
   },
 
   // ============================================================
@@ -714,24 +801,6 @@ const AppCore = {
     // ENTER en el input
     this.els.searchInput?.addEventListener("keydown", (e) => {
       if (e.key === "Enter") this.buscar();
-    });
-
-    // Toggle tabla / tarjetas
-    const btnTabla = document.getElementById("btn-ver-tabla");
-    const btnTarjetas = document.getElementById("btn-ver-tarjetas");
-
-    btnTabla?.addEventListener("click", () => {
-      this.state.modoTabla = true;
-      btnTabla.classList.add("active");
-      btnTarjetas.classList.remove("active");
-      this.renderResultados(this.state.items);
-    });
-
-    btnTarjetas?.addEventListener("click", () => {
-      this.state.modoTabla = false;
-      btnTarjetas.classList.add("active");
-      btnTabla.classList.remove("active");
-      this.renderResultados(this.state.items);
     });
 
     // Botón copiar
