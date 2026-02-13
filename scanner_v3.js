@@ -7,8 +7,12 @@
 // - Botón 3 → abrir Barcode Scanner+ (app instalada)
 // - Botón 4 → selector Android/iOS para abrir/descargar apps
 // - Todos devuelven el código al input y disparan búsqueda
-// - Soporte CODE128, CODE39, EAN13, UPC, QR
-// - Respeta modo SIMPLE / COMPLETO (switch)
+// - Interno: EAN13 / UPC / QR (ZXing web)
+// - CODE128: usar SIEMPRE botón 3 (Barcode Scanner+)
+// - Modo SIMPLE / COMPLETO:
+//   SIMPLE  = primer tramo hasta ! / \
+//   COMPLETO = código completo
+//   El guion "-" ES parte del artículo, NO separador
 // ============================================================
 
 let scannerActivo = false;
@@ -16,14 +20,23 @@ let selectedDeviceId = null;
 let codeReader = null;
 
 // ------------------------------------------------------------
-// MODO SIMPLE / COMPLETO
+// MODO SIMPLE / COMPLETO (lógica de artículo)
 // ------------------------------------------------------------
 function aplicarModo(code) {
   const modo = localStorage.getItem("modoDefecto") || "simple";
 
   if (modo === "simple") {
-    // SIMPLE = solo números del código
-    return code.replace(/\D+/g, "");
+    // separadores de tramo: !  /  \
+    const separadores = ["!", "/", "\\"];
+
+    let corte = code.length;
+
+    separadores.forEach(sep => {
+      const idx = code.indexOf(sep);
+      if (idx !== -1 && idx < corte) corte = idx;
+    });
+
+    return code.substring(0, corte).trim();
   }
 
   // COMPLETO = código tal cual
@@ -78,15 +91,13 @@ function iniciarScannerInterno(onClose) {
     codeReader = new ZXing.BrowserMultiFormatReader();
   }
 
-  // Forzar formatos soportados
+  // Formatos soportados por ZXing web (interno)
   const formatos = [
-    ZXing.BarcodeFormat.CODE_128,
-    ZXing.BarcodeFormat.CODE_39,
     ZXing.BarcodeFormat.EAN_13,
     ZXing.BarcodeFormat.EAN_8,
     ZXing.BarcodeFormat.UPC_A,
     ZXing.BarcodeFormat.UPC_E,
-    ZXing.BarcodeFormat.QR_CODE,
+    ZXing.BarcodeFormat.QR_CODE
   ];
 
   codeReader.hints = new Map();
@@ -149,6 +160,7 @@ function iniciarScannerInterno(onClose) {
       console.error("Scanner error:", err);
     });
 }
+
 // ------------------------------------------------------------
 // BOTÓN 1 — LECTOR INTERNO (TRASERA)
 // ------------------------------------------------------------
@@ -158,7 +170,7 @@ function startScannerInterno1(onClose) {
 
 // ------------------------------------------------------------
 // BOTÓN 2 — LECTOR INTERNO ROBUSTO (TRASERA)
-// (por ahora mismo flujo, pero separado por si luego diferenciamos)
+// (mismo flujo por ahora, separado por si luego diferenciamos)
 // ------------------------------------------------------------
 function startScannerInterno2(onClose) {
   iniciarScannerInterno(onClose);
@@ -166,29 +178,40 @@ function startScannerInterno2(onClose) {
 
 // ------------------------------------------------------------
 // BOTÓN 3 — ABRIR APP INSTALADA "BARCODE SCANNER+"
+// (para CODE128 / CODE39 / todo lo complejo)
 // ------------------------------------------------------------
 function startScannerExternoPreferido(onClose) {
   const intent =
     "intent://scan/#Intent;scheme=zxing;package=com.srowen.bs.android;end";
 
-  // Abrir app
+  // Abrir app externa
   window.location.href = intent;
 
   // Esperar retorno
   setTimeout(() => {
     const params = new URLSearchParams(window.location.search);
 
-    const code =
+    // Barcode Scanner+ devuelve SCAN_RESULT
+    const raw =
       params.get("SCAN_RESULT") ||
       params.get("q") ||
       params.get("code");
 
-    if (code && appCore?.els?.searchInput) {
-      const finalCode = aplicarModo(code);
+    if (!raw) return;
+
+    const finalCode = aplicarModo(raw);
+
+    if (appCore?.els?.searchInput) {
       appCore.els.searchInput.value = finalCode;
-      onClose?.();
     }
-  }, 1500);
+
+    // Cerrar overlay si estuviera abierto
+    const overlay = document.getElementById("scanner-overlay");
+    if (overlay) overlay.classList.add("hidden");
+    document.body.classList.remove("scanner-active");
+
+    onClose?.();
+  }, 1200);
 }
 
 // ------------------------------------------------------------
@@ -229,18 +252,27 @@ function startScannerExternoSelector(onClose) {
   setTimeout(() => {
     const params = new URLSearchParams(window.location.search);
 
-    const code =
+    const raw =
       params.get("SCAN_RESULT") ||
       params.get("q") ||
       params.get("code");
 
-    if (code && appCore?.els?.searchInput) {
-      const finalCode = aplicarModo(code);
+    if (!raw) return;
+
+    const finalCode = aplicarModo(raw);
+
+    if (appCore?.els?.searchInput) {
       appCore.els.searchInput.value = finalCode;
-      onClose?.();
     }
-  }, 1500);
+
+    const overlay = document.getElementById("scanner-overlay");
+    if (overlay) overlay.classList.add("hidden");
+    document.body.classList.remove("scanner-active");
+
+    onClose?.();
+  }, 1200);
 }
+
 // ------------------------------------------------------------
 // EXPORTAR
 // ------------------------------------------------------------
