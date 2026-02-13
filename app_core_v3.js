@@ -1,6 +1,6 @@
 // ============================================================
 // APP CORE — Motor inteligente + warm-up + indicador visual
-// Versión corregida y optimizada 2026-02-10
+// Versión final 2026 — Vista Artículo OPCIÓN A
 // ============================================================
 
 const AppCore = {
@@ -115,7 +115,7 @@ const AppCore = {
   },
 
   // ============================================================
-  // AUTOCOMPLETE — NUEVO
+  // AUTOCOMPLETE
   // ============================================================
 
   getAutocompleteSuggestions(term) {
@@ -180,7 +180,6 @@ const AppCore = {
       this.state.catalogItems = data.items || [];
       this.state.resumenCatalogo = data.resumen || null;
 
-      // Fuente de datos
       this.els.fuenteArchivo.textContent = data.resumen?.archivo || "—";
       this.els.fuenteFecha.textContent = data.resumen?.fecha || "—";
       this.els.fuenteMarcas.textContent = data.resumen?.marcas || "—";
@@ -190,7 +189,6 @@ const AppCore = {
       this.els.fuenteStockNegativo.textContent =
         data.resumen?.stock_negativo || "—";
 
-      // Poblar combos
       this.poblarFiltros();
 
       this.setConnectionStatus(true);
@@ -221,283 +219,6 @@ const AppCore = {
       `<option value="">Rubro</option>` +
       [...rubros].sort().map((r) => `<option>${r}</option>`).join("");
   },
-
-  // ============================================================
-  // PARSER INTELIGENTE
-  // ============================================================
-
-  interpretarQuery(raw) {
-    const q = raw.trim();
-    const qUpper = this.normalizarTexto(q);
-
-    const mapMarcas = new Map();
-    const mapRubros = new Map();
-
-    this.state.catalogItems.forEach((i) => {
-      if (i.marca) mapMarcas.set(this.normalizarTexto(i.marca), i.marca);
-      if (i.rubro) mapRubros.set(this.normalizarTexto(i.rubro), i.rubro);
-    });
-
-    const marcasNorm = [...mapMarcas.keys()];
-    const rubrosNorm = [...mapRubros.keys()];
-
-    let marca = null;
-    let rubro = null;
-
-    const tokens = qUpper.split(/\W+/);
-
-    for (const m of marcasNorm.sort((a, b) => b.length - a.length)) {
-      if (tokens.includes(m)) marca = mapMarcas.get(m);
-    }
-
-    for (const r of rubrosNorm.sort((a, b) => b.length - a.length)) {
-      if (tokens.includes(r)) rubro = mapRubros.get(r);
-    }
-
-    // Talles
-    const matchRango = qUpper.match(/T?(\d+)\s*(?:A|-|\/)\s*T?(\d+)/);
-    if (matchRango) {
-      return {
-        filtros_globales: true,
-        marca,
-        rubro,
-        talleDesde: parseInt(matchRango[1]),
-        talleHasta: parseInt(matchRango[2]),
-        soloUltimo: false,
-        soloNegativo: false,
-        question: "",
-      };
-    }
-
-    const matchTalle = qUpper.match(/^T?(\d{1,3})$/);
-    if (matchTalle) {
-      const t = parseInt(matchTalle[1]);
-      return {
-        filtros_globales: true,
-        marca,
-        rubro,
-        talleDesde: t,
-        talleHasta: t,
-        soloUltimo: false,
-        soloNegativo: false,
-        question: "",
-      };
-    }
-
-    // Precio
-    const matchPrecio = qUpper.match(/^(?:P|\$)?(\d{2,6})$/);
-    if (matchPrecio) {
-      return {
-        filtros_globales: false,
-        marca: null,
-        rubro: null,
-        talleDesde: null,
-        talleHasta: null,
-        soloUltimo: false,
-        soloNegativo: false,
-        question: matchPrecio[1],
-      };
-    }
-
-    // Código
-    if (/^\d[\d\- ]{6,14}\d$/.test(qUpper)) {
-      return {
-        filtros_globales: false,
-        marca: null,
-        rubro: null,
-        talleDesde: null,
-        talleHasta: null,
-        soloUltimo: false,
-        soloNegativo: false,
-        question: qUpper.replace(/[\s\-]/g, ""),
-      };
-    }
-
-    // Últimos / negativos
-    const esUltimo = /\bULTIM[OA]S?\b/.test(qUpper);
-    const esNegativo = /\bNEGATIV[OA]S?\b/.test(qUpper);
-
-    if (esUltimo || esNegativo) {
-      return {
-        filtros_globales: true,
-        marca,
-        rubro,
-        talleDesde: null,
-        talleHasta: null,
-        soloUltimo: esUltimo,
-        soloNegativo: esNegativo,
-        question: "",
-      };
-    }
-
-    const usarFiltros = marca || rubro;
-
-    return {
-      filtros_globales: usarFiltros,
-      marca,
-      rubro,
-      talleDesde: null,
-      talleHasta: null,
-      soloUltimo: false,
-      soloNegativo: false,
-      question: usarFiltros ? "" : q,
-    };
-  },
-
-  // ============================================================
-  // BÚSQUEDA PRINCIPAL
-  // ============================================================
-
-  async buscar() {
-    const raw = this.els.searchInput?.value || "";
-    const q = raw.trim();
-
-    if (!q) {
-      this.limpiarPantalla();
-      return;
-    }
-
-    this.state.lastQuery = q;
-
-    const parsed = this.interpretarQuery(q);
-
-    const body = {
-      question: parsed.question || "",
-      filtros_globales: !!parsed.filtros_globales,
-      marca: parsed.marca || null,
-      rubro: parsed.rubro || null,
-      talleDesde: parsed.talleDesde || null,
-      talleHasta: parsed.talleHasta || null,
-      soloUltimo: parsed.soloUltimo || false,
-      soloNegativo: parsed.soloNegativo || false,
-      solo_stock: this.els.chkSoloStock?.checked || false,
-    };
-
-    if (this.state.currentAbort) this.state.currentAbort.abort();
-    this.state.currentAbort = new AbortController();
-
-    this.setSearchStatus("Buscando…", "blue");
-    ORB.setError?.(false);
-    ORB.setLoading?.(true);
-    if (this.els.resultsStatus)
-      this.els.resultsStatus.textContent = "Buscando…";
-
-    try {
-      const res = await fetch(this.config.backendUrl + "/query", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-        signal: this.state.currentAbort.signal,
-      });
-
-      if (!res.ok) throw new Error();
-
-      const data = await res.json();
-      this.state.items = data.items || [];
-
-      this.renderResultados(this.state.items);
-      window.actualizarDashboard?.(this.state.items);
-      this.actualizarIndicadores(this.state.items);
-
-      this.setConnectionStatus(true);
-      this.setOrbIdle();
-
-      this.setSearchStatus("Conectado", "green");
-      if (this.els.resultsStatus)
-        this.els.resultsStatus.textContent = `${this.state.items.length} resultados`;
-
-      if (window.ORB?.isVoiceMode?.()) {
-        this.speakResultados();
-      }
-    } catch (err) {
-      if (err.name !== "AbortError") {
-        this.setConnectionStatus(false);
-        ORB.setError?.(true);
-
-        this.setSearchStatus("Error de conexión", "red");
-        if (this.els.resultsStatus)
-          this.els.resultsStatus.textContent = "Error de conexión";
-
-        clearTimeout(this.state.retryTimeout);
-        this.state.retryTimeout = setTimeout(() => this.warmUpLoop(), 2000);
-      }
-    } finally {
-      ORB.setLoading?.(false);
-    }
-  },
-
-  // ============================================================
-  // BÚSQUEDA POR FILTROS
-  // ============================================================
-
-  actualizarFiltrosDesdeUI() {
-    this.state.filtros.marca = this.els.filtroMarca.value || null;
-    this.state.filtros.rubro = this.els.filtroRubro.value || null;
-    this.state.filtros.talleDesde = this.els.filtroTalleDesde.value || null;
-    this.state.filtros.talleHasta = this.els.filtroTalleHasta.value || null;
-  },
-
-  async buscarPorFiltros() {
-    this.actualizarFiltrosDesdeUI();
-
-    const body = {
-      question: "",
-      filtros_globales: true,
-      marca: this.state.filtros.marca || null,
-      rubro: this.state.filtros.rubro || null,
-      talleDesde: this.state.filtros.talleDesde
-        ? parseInt(this.state.filtros.talleDesde)
-        : null,
-      talleHasta: this.state.filtros.talleHasta
-        ? parseInt(this.state.filtros.talleHasta)
-        : null,
-      soloUltimo: false,
-      soloNegativo: false,
-      solo_stock: this.els.chkSoloStock.checked || false,
-    };
-
-    if (this.state.currentAbort) this.state.currentAbort.abort();
-    this.state.currentAbort = new AbortController();
-
-    this.setSearchStatus("Buscando…", "blue");
-    ORB.setLoading?.(true);
-    if (this.els.resultsStatus)
-      this.els.resultsStatus.textContent = "Buscando…";
-
-    try {
-      const res = await fetch(this.config.backendUrl + "/query", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-        signal: this.state.currentAbort.signal,
-      });
-
-      if (!res.ok) throw new Error();
-
-      const data = await res.json();
-      this.state.items = data.items || [];
-
-      this.renderResultados(this.state.items);
-      window.actualizarDashboard?.(this.state.items);
-      this.actualizarIndicadores(this.state.items);
-
-      this.setConnectionStatus(true);
-      this.setOrbIdle();
-
-      this.setSearchStatus("Conectado", "green");
-      if (this.els.resultsStatus)
-        this.els.resultsStatus.textContent = `${this.state.items.length} resultados`;
-    } catch {
-      this.setConnectionStatus(false);
-      ORB.setError?.(true);
-      this.setSearchStatus("Error de conexión", "red");
-      if (this.els.resultsStatus)
-        this.els.resultsStatus.textContent = "Error de conexión";
-    } finally {
-      ORB.setLoading?.(false);
-    }
-  },
-
   // ============================================================
   // RENDER RESULTADOS (3 VISTAS)
   // ============================================================
@@ -520,6 +241,10 @@ const AppCore = {
     this.renderVistaTarjeta(items);
     this.renderVistaArticulo(items);
   },
+
+  // ============================================================
+  // VISTA TABLA
+  // ============================================================
 
   renderVistaTabla(items) {
     const container = this.els.vistaTabla;
@@ -566,6 +291,10 @@ const AppCore = {
     container.innerHTML = html;
   },
 
+  // ============================================================
+  // VISTA TARJETA
+  // ============================================================
+
   renderVistaTarjeta(items) {
     const container = this.els.vistaTarjeta;
     if (!container) return;
@@ -601,6 +330,10 @@ const AppCore = {
     });
   },
 
+  // ============================================================
+  // ⭐ VISTA ARTÍCULO (OPCIÓN A — SIEMPRE EXPANDIDA POR TALLE)
+  // ============================================================
+
   renderVistaArticulo(items) {
     const container = this.els.vistaArticulo;
     if (!container) return;
@@ -610,68 +343,59 @@ const AppCore = {
       return;
     }
 
-    const base = items[0];
-    const talles = base.talles || [];
+    let html = `
+      <div class="tabla-wrapper-articulo">
+        <table class="tabla-articulo">
+          <thead>
+            <tr>
+              <th>Marca</th>
+              <th>Rubro</th>
+              <th>Código</th>
+              <th>Descripción</th>
+              <th>Talle</th>
+              <th>Cantidad</th>
+              <th>Precio</th>
+              <th>Total</th>
+            </tr>
+          </thead>
+          <tbody>
+    `;
 
-    if (!talles.length) {
-      container.innerHTML = `
-        <div class="detalle-header">
-          <h2>${this.normalizarCampo(base.codigo)} — ${this.normalizarCampo(
-        base.descripcion
-      )}</h2>
-          <p>${this.normalizarCampo(base.marca)} / ${this.normalizarCampo(
-        base.rubro
-      )}</p>
-        </div>
-        <div class="results-empty">Este artículo no tiene talles detallados.</div>
-      `;
-      return;
-    }
+    items.forEach(item => {
+      const marca = this.normalizarCampo(item.marca);
+      const rubro = this.normalizarCampo(item.rubro);
+      const codigo = this.normalizarCampo(item.codigo);
+      const descripcion = this.normalizarCampo(item.descripcion);
+      const precio = Number(item.precio || 0);
 
-    const rowsHtml = talles
-      .map((t) => {
-        const stock = Number(t.stock || 0);
-        const precio = Number(base.precio || 0);
-        const total = stock * precio;
-        return `
-        <tr>
-          <td>${this.normalizarCampo(t.talle)}</td>
-          <td>${stock}</td>
-          <td>$${this.formatNumber(precio)}</td>
-          <td>$${this.formatNumber(total)}</td>
-        </tr>
-      `;
-      })
-      .join("");
+      (item.talles || []).forEach(t => {
+        const talle = this.normalizarCampo(t.talle);
+        const cantidad = Number(t.stock || 0);
+        const total = cantidad * precio;
 
-    const html = `
-      <div class="detalle-header">
-        <h2>${this.normalizarCampo(base.codigo)} — ${this.normalizarCampo(
-      base.descripcion
-    )}</h2>
-        <p>${this.normalizarCampo(base.marca)} / ${this.normalizarCampo(
-      base.rubro
-    )}</p>
-      </div>
-
-      <table class="tabla-talles">
-        <thead>
+        html += `
           <tr>
-            <th>Talle</th>
-            <th>Cantidad</th>
-            <th>Precio</th>
-            <th>Total</th>
+            <td>${marca}</td>
+            <td>${rubro}</td>
+            <td>${codigo}</td>
+            <td>${descripcion}</td>
+            <td>${talle}</td>
+            <td>${cantidad}</td>
+            <td>$${this.formatNumber(precio)}</td>
+            <td>$${this.formatNumber(total)}</td>
           </tr>
-        </thead>
-        <tbody>
-          ${rowsHtml}
-        </tbody>
-      </table>
+        `;
+      });
+    });
+
+    html += `
+          </tbody>
+        </table>
+      </div>
     `;
 
     container.innerHTML = html;
   },
-
   // ============================================================
   // INDICADORES / MÉTRICAS
   // ============================================================
@@ -688,11 +412,13 @@ const AppCore = {
 
     arr.forEach((item) => {
       let stockItem = 0;
+
       (item.talles || []).forEach((t) => {
         const s = Number(t.stock || 0);
         stockItem += s;
         if (s < 0) stockNegativo += 1;
       });
+
       if (stockItem === 0) sinStock += 1;
       if (item.valorizado) valorizadoTotal += Number(item.valorizado || 0);
       if (stockItem > 0) pares += stockItem;
@@ -739,9 +465,11 @@ const AppCore = {
     try {
       speechSynthesis.cancel();
     } catch (_) {}
+
     ORB.setError?.(false);
     ORB.setLoading?.(false);
     ORB.setSpeaking?.(false);
+
     this.setSearchStatus("Listo", "blue");
   },
 
@@ -764,6 +492,7 @@ const AppCore = {
 
     const utter = new SpeechSynthesisUtterance(text);
     utter.lang = "es-AR";
+
     speechSynthesis.cancel();
     speechSynthesis.speak(utter);
   },
@@ -774,6 +503,7 @@ const AppCore = {
 
   limpiarPantalla() {
     this.state.items = [];
+
     this.renderResultados([]);
     window.actualizarDashboard?.([]);
     this.actualizarIndicadores([]);
@@ -834,13 +564,17 @@ const AppCore = {
     this.warmUpLoop();
     this.conectarEventosUI();
   },
-};
+}; // ← CIERRE DEL OBJETO AppCore
 
 // ============================================================
 // INSTANCIA GLOBAL
 // ============================================================
 
 window.appCore = AppCore;
+
+// ============================================================
+// AUTO-INIT
+// ============================================================
 
 window.addEventListener("DOMContentLoaded", () => {
   appCore.init();
