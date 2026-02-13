@@ -240,7 +240,10 @@
           <!-- SCANNERS -->
           <div class="scanner-row">
             <div class="scanner-buttons">
-              <button id="btn-scanner-interno-1" class="scanner-big-btn">📷</button>
+              <!-- SCANNER NATIVO ANDROID -->
+              <button id="btn-scanner-interno-1" class="scanner-big-btn" onclick="Android.abrirScanner()">📷</button>
+
+              <!-- Tus otros botones quedan igual -->
               <button id="btn-scanner-interno-2" class="scanner-big-btn">🎦</button>
               <button id="btn-scanner-externo-preferido" class="scanner-big-btn">📲</button>
               <button id="btn-scanner-externo-selector" class="scanner-big-btn">🧭</button>
@@ -257,7 +260,6 @@
               </label>
             </div>
           </div>
-
           <!-- SOLO STOCK + FILTROS -->
           <div class="search-filters-row">
             <label class="solo-stock">
@@ -315,7 +317,7 @@
                 <option value="">Marca</option>
               </select>
 
-            <select id="filtro-rubro" class="filtro-select">
+              <select id="filtro-rubro" class="filtro-select">
                 <option value="">Rubro</option>
               </select>
             </div>
@@ -383,7 +385,6 @@
             <canvas id="stockChart"></canvas>
           </aside>
         </section>
-
         <!-- FUENTE DE DATOS -->
         <section class="fuente-datos-wrapper">
           <button id="fuente-datos-toggle" class="btn-secondary">
@@ -518,6 +519,21 @@
           initUI(appCore);
         }
       });
+
+      /* ============================================================
+         SCANNER NATIVO ANDROID → RECIBE EL CÓDIGO
+      ============================================================ */
+      window.onScan = function(code) {
+        const input = document.getElementById("search-input");
+        if (input) {
+          input.value = code;
+
+          // Ejecutar búsqueda automática
+          if (window.app && app.buscar) {
+            app.buscar();
+          }
+        }
+      };
     </script>
   </body>
 </html>
