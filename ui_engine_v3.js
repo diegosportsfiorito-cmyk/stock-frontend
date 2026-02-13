@@ -224,6 +224,7 @@ function initUI(app) {
       renderAutocomplete(e.target.value || "");
     });
 
+    // ENTER — búsqueda estable
     els.searchInput.addEventListener("keydown", (e) => {
       if (e.key === "Enter") {
         const val = e.target.value.trim().toLowerCase();
@@ -290,6 +291,85 @@ function initUI(app) {
       app.showToast("Modo administrador activado");
     });
   }
+
+  // ------------------------------------------------------------
+  // BOTONES DE ACCIÓN
+  // ------------------------------------------------------------
+  if (btnClear) {
+    btnClear.addEventListener("click", () => {
+      app.limpiarPantalla();
+      beep(800);
+    });
+  }
+
+  if (btnCopy) {
+    btnCopy.addEventListener("click", () => {
+      app.copiarResultados();
+      beep(900);
+    });
+  }
+
+  if (btnStop) {
+    btnStop.addEventListener("click", () => {
+      app.stopTodo();
+      beep(500);
+    });
+  }
+
+  // ------------------------------------------------------------
+  // SCANNER
+  // ------------------------------------------------------------
+  function setScannerOverlay(active) {
+    if (!scannerOverlay) return;
+    if (active) {
+      scannerOverlay.classList.remove("hidden");
+      document.body.classList.add("scanner-active");
+    } else {
+      scannerOverlay.classList.add("hidden");
+      document.body.classList.remove("scanner-active");
+    }
+  }
+
+  const btnScanner1 = document.getElementById("btn-scanner-interno-1");
+  const btnScanner2 = document.getElementById("btn-scanner-interno-2");
+  const btnScannerExtPref = document.getElementById("btn-scanner-externo-preferido");
+  const btnScannerExtSel = document.getElementById("btn-scanner-externo-selector");
+
+  function scannerCallback() {
+    setScannerOverlay(false);
+    if (els.searchInput && els.searchInput.value.trim()) {
+      app.buscar();
+    }
+  }
+
+  if (btnScanner1 && typeof startScannerInterno1 === "function") {
+    btnScanner1.addEventListener("click", () => {
+      setScannerOverlay(true);
+      startScannerInterno1(scannerCallback);
+    });
+  }
+
+  if (btnScanner2 && typeof startScannerInterno2 === "function") {
+    btnScanner2.addEventListener("click", () => {
+      setScannerOverlay(true);
+      startScannerInterno2(scannerCallback);
+    });
+  }
+
+  if (btnScannerExtPref && typeof startScannerExternoPreferido === "function") {
+    btnScannerExtPref.addEventListener("click", () => {
+      setScannerOverlay(true);
+      startScannerExternoPreferido(scannerCallback);
+    });
+  }
+
+  if (btnScannerExtSel && typeof startScannerExternoSelector === "function") {
+    btnScannerExtSel.addEventListener("click", () => {
+      setScannerOverlay(true);
+      startScannerExternoSelector(scannerCallback);
+    });
+  }
+
   // ------------------------------------------------------------
   // FILTROS
   // ------------------------------------------------------------
@@ -355,8 +435,7 @@ function initUI(app) {
   // ------------------------------------------------------------
   if (adminGuardar) {
     adminGuardar.addEventListener("click", () => {
-      const modoInput = document.getElementById("admin-modo-defecto");
-      const modo = modoInput ? modoInput.value : "simple";
+      const modo = document.getElementById("admin-modo-defecto").value;
       localStorage.setItem("modoDefecto", modo);
       if (window.setModoScanner) window.setModoScanner(modo);
 
@@ -474,28 +553,7 @@ function initUI(app) {
       return;
     }
   });
-
-  // ------------------------------------------------------------
-  // LAYOUT MÓVIL
-  // ------------------------------------------------------------
-  function aplicarLayoutResponsivo() {
-    const isMobile = window.matchMedia("(max-width: 768px)").matches;
-    document.body.classList.toggle("is-mobile", isMobile);
-  }
-
-  aplicarLayoutResponsivo();
-  window.addEventListener("resize", aplicarLayoutResponsivo);
-} // ← cierre de initUI
+}
 
 // Exponer initUI
 window.initUI = initUI;
-
-// ============================================================
-// AUTO-INIT UI (usa la instancia global de AppCore)
-// ============================================================
-
-window.addEventListener("DOMContentLoaded", () => {
-  if (window.appCore) {
-    initUI(window.appCore);
-  }
-});
