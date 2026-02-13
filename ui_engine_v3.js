@@ -9,7 +9,7 @@
 // - Voz (micrófono, dictado, manos libres)
 // - Botones de acción (limpiar, copiar, stop)
 // - Filtros
-// - Vista tabla/tarjetas
+// - Vista tabla/tarjetas/artículo
 // - Panel admin (sin backendUrl)
 // - Layout móvil (<768px)
 // - Modo día/noche persistente
@@ -43,6 +43,11 @@ function initUI(app) {
 
   const btnVistaTabla = document.getElementById("btn-ver-tabla");
   const btnVistaTarjetas = document.getElementById("btn-ver-tarjetas");
+  const btnVistaArticulo = document.getElementById("btn-ver-articulo");
+
+  const vistaTabla = document.getElementById("vista-tabla");
+  const vistaTarjeta = document.getElementById("vista-tarjeta");
+  const vistaArticulo = document.getElementById("vista-articulo");
 
   const adminPanel = document.getElementById("admin-panel");
   const adminGuardar = document.getElementById("admin-guardar");
@@ -396,23 +401,34 @@ function initUI(app) {
   }
 
   // ------------------------------------------------------------
-  // VISTA TABLA / TARJETAS
+  // VISTAS: TABLA / TARJETAS / ARTÍCULO
   // ------------------------------------------------------------
-  if (btnVistaTabla && btnVistaTarjetas) {
-    btnVistaTabla.addEventListener("click", () => {
-      app.state.modoTabla = true;
-      btnVistaTabla.classList.add("active");
-      btnVistaTarjetas.classList.remove("active");
-      app.renderResultados(app.state.items);
-    });
+  function setVista(v) {
+    app.state.vistaActual = v;
 
-    btnVistaTarjetas.addEventListener("click", () => {
-      app.state.modoTabla = false;
-      btnVistaTarjetas.classList.add("active");
-      btnVistaTabla.classList.remove("active");
-      app.renderResultados(app.state.items);
-    });
+    if (btnVistaTabla) btnVistaTabla.classList.toggle("active", v === "tabla");
+    if (btnVistaTarjetas) btnVistaTarjetas.classList.toggle("active", v === "tarjeta");
+    if (btnVistaArticulo) btnVistaArticulo.classList.toggle("active", v === "articulo");
+
+    if (vistaTabla) vistaTabla.classList.toggle("active", v === "tabla");
+    if (vistaTarjeta) vistaTarjeta.classList.toggle("active", v === "tarjeta");
+    if (vistaArticulo) vistaArticulo.classList.toggle("active", v === "articulo");
+
+    app.renderResultados(app.state.items);
   }
+
+  if (btnVistaTabla) {
+    btnVistaTabla.addEventListener("click", () => setVista("tabla"));
+  }
+  if (btnVistaTarjetas) {
+    btnVistaTarjetas.addEventListener("click", () => setVista("tarjeta"));
+  }
+  if (btnVistaArticulo) {
+    btnVistaArticulo.addEventListener("click", () => setVista("articulo"));
+  }
+
+  // Vista inicial
+  setVista(app.state.vistaActual || "tarjeta");
 
   // ------------------------------------------------------------
   // PANEL ADMIN (sin backendUrl)
