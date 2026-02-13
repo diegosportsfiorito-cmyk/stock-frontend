@@ -106,6 +106,40 @@
         width: 90%;
         box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
       }
+
+      /* Vistas de resultados */
+      .vista {
+        display: none;
+      }
+      .vista.active {
+        display: block;
+      }
+
+      .tabla-talles {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 10px;
+      }
+      .tabla-talles th,
+      .tabla-talles td {
+        border: 1px solid #ddd;
+        padding: 8px;
+      }
+      .tabla-talles th {
+        background: #f4f4f4;
+        font-weight: bold;
+      }
+      .detalle-header {
+        margin-bottom: 12px;
+      }
+      .detalle-header h2 {
+        margin: 0;
+        font-size: 1.3rem;
+      }
+      .detalle-header p {
+        margin: 0;
+        color: #666;
+      }
     </style>
 
     <script>
@@ -319,12 +353,17 @@
                 <div class="results-view-toggle">
                   <button id="btn-ver-tabla" class="view-btn">Tabla</button>
                   <button id="btn-ver-tarjetas" class="view-btn active">Tarjetas</button>
+                  <button id="btn-ver-articulo" class="view-btn">Artículo</button>
                 </div>
               </div>
             </div>
 
             <div id="results-status" class="results-status">Esperando consulta</div>
-            <div id="results-container"></div>
+            <div id="results-container">
+              <div id="vista-tabla" class="vista active"></div>
+              <div id="vista-tarjeta" class="vista"></div>
+              <div id="vista-articulo" class="vista"></div>
+            </div>
           </div>
 
           <aside class="dashboard-card">
