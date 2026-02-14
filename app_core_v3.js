@@ -1,6 +1,6 @@
 // ============================================================
 // APP CORE — Motor inteligente + warm-up + indicador visual
-// Versión corregida y optimizada 2026-02-10
+// Versión corregida y optimizada 2026-02-10 (autocompletado + filtros)
 // ============================================================
 
 const AppCore = {
@@ -81,6 +81,8 @@ const AppCore = {
       .toString()
       .normalize("NFKD")
       .replace(/\u00A0/g, " ")
+      .replace(/[\u0300-\u036f]/g, "") // quitar acentos
+      .replace(/-/g, " ") // guiones como espacio
       .replace(/\s+/g, " ")
       .trim()
       .toUpperCase();
@@ -115,26 +117,116 @@ const AppCore = {
   },
 
   // ============================================================
-  // AUTOCOMPLETE — NUEVO
+  // AUTOCOMPLETE — INTELIGENTE (PRIORIDAD: ARTÍCULO > MARCA > RUBRO > DESCRIPCIÓN)
   // ============================================================
 
   getAutocompleteSuggestions(term) {
     const q = this.normalizarTexto(term);
     if (!q || !this.state.catalogItems.length) return [];
 
-    const set = new Set();
+    const exactArticulo = [];
+    const exactMarca = [];
+    const exactRubro = [];
+    const exactDescripcion = [];
+
+    const prefijoArticulo = [];
+    const prefijoMarca = [];
+    const prefijoRubro = [];
+    const prefijoDescripcion = [];
+
+    const parcialArticulo = [];
+    const parcialMarca = [];
+    const parcialRubro = [];
+    const parcialDescripcion = [];
+
+    const pushUnique = (arr, value) => {
+      if (!value) return;
+      if (!arr.includes(value)) arr.push(value);
+    };
 
     this.state.catalogItems.forEach((item) => {
-      const desc = this.normalizarTexto(item.descripcion || "");
-      const marca = this.normalizarTexto(item.marca || "");
-      const rubro = this.normalizarTexto(item.rubro || "");
+      const descRaw = item.descripcion || "";
+      const marcaRaw = item.marca || "";
+      const rubroRaw = item.rubro || "";
+      const codigoRaw = item.codigo || "";
 
-      if (desc.includes(q)) set.add(item.descripcion);
-      if (marca.includes(q)) set.add(item.marca);
-      if (rubro.includes(q)) set.add(item.rubro);
+      const descN = this.normalizarTexto(descRaw);
+      const marcaN = this.normalizarTexto(marcaRaw);
+      const rubroN = this.normalizarTexto(rubroRaw);
+      const codigoN = this.normalizarTexto(codigoRaw);
+
+      const startsWith = (txt) => txt && txt.startsWith(q);
+      const contains = (txt) => txt && txt.includes(q);
+
+      // ARTÍCULO (código + descripción corta)
+      if (codigoN === q || descN === q) {
+        pushUnique(exactArticulo, descRaw || codigoRaw);
+      } else if (startsWith(codigoN) || startsWith(descN)) {
+        pushUnique(prefijoArticulo, descRaw || codigoRaw);
+      } else if (contains(codigoN) || contains(descN)) {
+        pushUnique(parcialArticulo, descRaw || codigoRaw);
+      }
+
+      // MARCA
+      if (marcaN) {
+        if (marcaN === q) {
+          pushUnique(exactMarca, marcaRaw);
+        } else if (startsWith(marcaN)) {
+          pushUnique(prefijoMarca, marcaRaw);
+        } else if (contains(marcaN)) {
+          pushUnique(parcialMarca, marcaRaw);
+        }
+      }
+
+      // RUBRO
+      if (rubroN) {
+        if (rubroN === q) {
+          pushUnique(exactRubro, rubroRaw);
+        } else if (startsWith(rubroN)) {
+          pushUnique(prefijoRubro, rubroRaw);
+        } else if (contains(rubroN)) {
+          pushUnique(parcialRubro, rubroRaw);
+        }
+      }
+
+      // DESCRIPCIÓN (como texto general, por si no entró en artículo)
+      if (descN) {
+        if (descN === q) {
+          pushUnique(exactDescripcion, descRaw);
+        } else if (startsWith(descN)) {
+          pushUnique(prefijoDescripcion, descRaw);
+        } else if (contains(descN)) {
+          pushUnique(parcialDescripcion, descRaw);
+        }
+      }
     });
 
-    return Array.from(set).slice(0, 12);
+    const ordered = [
+      ...exactArticulo,
+      ...exactMarca,
+      ...exactRubro,
+      ...exactDescripcion,
+      ...prefijoArticulo,
+      ...prefijoMarca,
+      ...prefijoRubro,
+      ...prefijoDescripcion,
+      ...parcialArticulo,
+      ...parcialMarca,
+      ...parcialRubro,
+      ...parcialDescripcion,
+    ];
+
+    const final = [];
+    const seen = new Set();
+    for (const v of ordered) {
+      if (!v) continue;
+      if (seen.has(v)) continue;
+      seen.add(v);
+      final.push(v);
+      if (final.length >= 12) break;
+    }
+
+    return final;
   },
 
   // ============================================================
@@ -252,7 +344,7 @@ const AppCore = {
     let marca = null;
     let rubro = null;
 
-    const tokens = qUpper.split(/\W+/);
+    const tokens = qUpper.split(/\W+/).filter(Boolean);
 
     for (const m of marcasNorm.sort((a, b) => b.length - a.length)) {
       if (tokens.includes(m)) marca = mapMarcas.get(m);
@@ -334,12 +426,15 @@ const AppCore = {
       };
     }
 
-    const usarFiltros = marca || rubro;
+    // Solo usar filtros_globales si la query ES exactamente una marca o un rubro
+    const esMarcaExacta = marcasNorm.includes(qUpper);
+    const esRubroExacto = rubrosNorm.includes(qUpper);
+    const usarFiltros = esMarcaExacta || esRubroExacto;
 
     return {
       filtros_globales: usarFiltros,
-      marca,
-      rubro,
+      marca: usarFiltros ? marca : null,
+      rubro: usarFiltros ? rubro : null,
       talleDesde: null,
       talleHasta: null,
       soloUltimo: false,
@@ -429,7 +524,6 @@ const AppCore = {
       ORB.setLoading?.(false);
     }
   },
-
   // ============================================================
   // BÚSQUEDA POR FILTROS
   // ============================================================
