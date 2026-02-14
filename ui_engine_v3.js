@@ -10,9 +10,10 @@
 // - Botones de acción (limpiar, copiar, stop)
 // - Filtros
 // - Vista tabla/tarjetas/artículo
-// - Panel admin (sin backendUrl)
+// - Panel admin
 // - Layout móvil (<768px)
 // - Modo día/noche persistente
+// - Métricas filtrables (UNIDADES, negativos, sin stock, valorizado)
 // ============================================================
 
 function initUI(app) {
@@ -34,7 +35,6 @@ function initUI(app) {
   const scannerOverlay = document.getElementById("scanner-overlay");
   const autoList = document.getElementById("autocomplete-list");
 
-  // IDs alineados con el HTML actual
   const btnClear = document.getElementById("btn-limpiar");
   const btnCopy = document.getElementById("btn-copiar");
   const btnStop = document.getElementById("btn-stop");
@@ -88,20 +88,20 @@ function initUI(app) {
     if (state === "off") {
       voiceStatus.textContent = "Dictado desactivado";
       voiceStatus.classList.remove("listening");
-      if (orbCore) orbCore.classList.remove("orb-listening");
+      orbCore?.classList.remove("orb-listening");
     } else if (state === "ready") {
       voiceStatus.textContent = "Dictado listo";
       voiceStatus.classList.remove("listening");
-      if (orbCore) orbCore.classList.remove("orb-listening");
+      orbCore?.classList.remove("orb-listening");
     } else if (state === "listening") {
       voiceStatus.textContent = "Escuchando…";
       voiceStatus.classList.add("listening");
-      if (orbCore) orbCore.classList.add("orb-listening");
+      orbCore?.classList.add("orb-listening");
     }
   }
 
-  // Estado inicial de switches de voz
-  if (modoVozSwitch && modoVozSwitch.checked) setVoiceUIState("ready");
+  // Estado inicial
+  if (modoVozSwitch?.checked) setVoiceUIState("ready");
   else setVoiceUIState("off");
 
   // ------------------------------------------------------------
@@ -163,9 +163,9 @@ function initUI(app) {
     rec.onresult = (ev) => {
       let text = ev.results[0][0].transcript || "";
       text = text.replace(/[.。]+$/g, "").trim();
-      if (els.searchInput) els.searchInput.value = text;
+      els.searchInput.value = text;
       setVoiceUIState("ready");
-      if (autoList) autoList.innerHTML = "";
+      autoList.innerHTML = "";
       app.buscar();
     };
 
@@ -175,7 +175,7 @@ function initUI(app) {
     };
 
     rec.onend = () => {
-      if (modoVozSwitch && modoVozSwitch.checked) setVoiceUIState("ready");
+      if (modoVozSwitch?.checked) setVoiceUIState("ready");
       else setVoiceUIState("off");
     };
 
@@ -184,7 +184,7 @@ function initUI(app) {
 
   if (micButton) {
     micButton.addEventListener("click", () => {
-      if (!modoVozSwitch || !modoVozSwitch.checked) {
+      if (!modoVozSwitch?.checked) {
         app.showToast("Activá el dictado para usar el micrófono");
         beep(600);
         return;
@@ -205,9 +205,7 @@ function initUI(app) {
     }
 
     const sugerencias =
-      app && typeof app.getAutocompleteSuggestions === "function"
-        ? app.getAutocompleteSuggestions(value)
-        : [];
+      app.getAutocompleteSuggestions?.(value) || [];
 
     if (!sugerencias.length) {
       autoList.innerHTML = "";
@@ -219,102 +217,92 @@ function initUI(app) {
       .join("");
   }
 
-  if (safe(els.searchInput)) {
-    els.searchInput.addEventListener("input", (e) => {
-      renderAutocomplete(e.target.value || "");
-    });
+  els.searchInput?.addEventListener("input", (e) => {
+    renderAutocomplete(e.target.value || "");
+  });
 
-    // ENTER — búsqueda estable
-    els.searchInput.addEventListener("keydown", (e) => {
-      if (e.key === "Enter") {
-        const val = e.target.value.trim().toLowerCase();
+  els.searchInput?.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+      const val = e.target.value.trim().toLowerCase();
 
-        // Modo admin
-        if (val === "admin") {
-          if (adminPanel) adminPanel.style.display = "flex";
-          e.target.value = "";
-          if (autoList) autoList.innerHTML = "";
-          app.showToast("Modo administrador activado");
-          return;
-        }
-
-        // Autocomplete: tomar primera sugerencia
-        if (autoList && autoList.children.length > 0) {
-          const first = autoList.querySelector("li");
-          if (first) {
-            const v = first.getAttribute("data-value") || first.textContent || "";
-            els.searchInput.value = v;
-            autoList.innerHTML = "";
-          }
-        }
-
-        app.buscar();
-      }
-    });
-  }
-
-  if (autoList) {
-    autoList.addEventListener("click", (e) => {
-      const li = e.target;
-      if (li && li.tagName === "LI" && els.searchInput) {
-        const val = li.getAttribute("data-value") || li.textContent || "";
-        els.searchInput.value = val;
+      if (val === "admin") {
+        adminPanel.style.display = "flex";
+        e.target.value = "";
         autoList.innerHTML = "";
-        app.buscar();
+        app.showToast("Modo administrador activado");
+        return;
       }
-    });
-  }
+
+      if (autoList.children.length > 0) {
+        const first = autoList.querySelector("li");
+        if (first) {
+          els.searchInput.value = first.dataset.value || first.textContent;
+          autoList.innerHTML = "";
+        }
+      }
+
+      app.buscar();
+    }
+  });
+
+  autoList?.addEventListener("click", (e) => {
+    const li = e.target;
+    if (li.tagName === "LI") {
+      els.searchInput.value = li.dataset.value || li.textContent;
+      autoList.innerHTML = "";
+      app.buscar();
+    }
+  });
+
+  document.addEventListener("click", (e) => {
+    if (!autoList) return;
+    if (e.target !== els.searchInput && !autoList.contains(e.target)) {
+      autoList.innerHTML = "";
+    }
+  });
 
   // ------------------------------------------------------------
-  // ORB — botón de búsqueda (sin doble disparo)
+  // ORB — botón de búsqueda
   // ------------------------------------------------------------
   if (orb) {
     const isMobile = window.matchMedia("(max-width: 768px)").matches;
 
     if (isMobile) {
       orb.addEventListener("touchend", () => {
-        if (autoList) autoList.innerHTML = "";
+        autoList.innerHTML = "";
         app.buscar();
       });
     } else {
       orb.addEventListener("click", () => {
         orb.classList.add("orb-pulse");
         setTimeout(() => orb.classList.remove("orb-pulse"), 300);
-        if (autoList) autoList.innerHTML = "";
+        autoList.innerHTML = "";
         app.buscar();
       });
     }
 
-    // Doble click → admin
     orb.addEventListener("dblclick", () => {
-      if (adminPanel) adminPanel.style.display = "flex";
+      adminPanel.style.display = "flex";
       app.showToast("Modo administrador activado");
     });
   }
-
   // ------------------------------------------------------------
   // BOTONES DE ACCIÓN
   // ------------------------------------------------------------
-  if (btnClear) {
-    btnClear.addEventListener("click", () => {
-      app.limpiarPantalla();
-      beep(800);
-    });
-  }
+  btnClear?.addEventListener("click", () => {
+    app.limpiarPantalla();
+    beep(800);
+  });
 
-  if (btnCopy) {
-    btnCopy.addEventListener("click", () => {
-      app.copiarResultados();
-      beep(900);
-    });
-  }
+  btnCopy?.addEventListener("click", () => {
+    app.copiarResultados();
+    beep(900);
+  });
 
-  if (btnStop) {
-    btnStop.addEventListener("click", () => {
-      app.stopTodo();
-      beep(500);
-    });
-  }
+  btnStop?.addEventListener("click", () => {
+    app.stopTodo();
+    beep(500);
+  });
 
   // ------------------------------------------------------------
   // SCANNER
@@ -337,9 +325,7 @@ function initUI(app) {
 
   function scannerCallback() {
     setScannerOverlay(false);
-    if (els.searchInput && els.searchInput.value.trim()) {
-      app.buscar();
-    }
+    if (els.searchInput?.value.trim()) app.buscar();
   }
 
   if (btnScanner1 && typeof startScannerInterno1 === "function") {
@@ -371,34 +357,13 @@ function initUI(app) {
   }
 
   // ------------------------------------------------------------
-  // FILTROS
+  // FILTROS (solo abren/cerran panel)
   // ------------------------------------------------------------
-  if (btnFiltros && els.filtrosPanel) {
-    btnFiltros.addEventListener("click", () => {
-      els.filtrosPanel.classList.toggle("visible");
-    });
-  }
+  btnFiltros?.addEventListener("click", () => {
+    els.filtrosPanel?.classList.toggle("visible");
+  });
 
-  if (els.btnAplicarFiltros) {
-    els.btnAplicarFiltros.addEventListener("click", () => app.buscarPorFiltros());
-  }
-
-  if (els.chkSoloStock) {
-    els.chkSoloStock.addEventListener("change", () => app.buscarPorFiltros());
-  }
-
-  if (els.filtroMarca) {
-    els.filtroMarca.addEventListener("change", () => app.buscarPorFiltros());
-  }
-  if (els.filtroRubro) {
-    els.filtroRubro.addEventListener("change", () => app.buscarPorFiltros());
-  }
-  if (els.filtroTalleDesde) {
-    els.filtroTalleDesde.addEventListener("change", () => app.buscarPorFiltros());
-  }
-  if (els.filtroTalleHasta) {
-    els.filtroTalleHasta.addEventListener("change", () => app.buscarPorFiltros());
-  }
+  els.btnAplicarFiltros?.addEventListener("click", () => app.buscarPorFiltros());
 
   // ------------------------------------------------------------
   // VISTAS: TABLA / TARJETAS / ARTÍCULO
@@ -406,124 +371,139 @@ function initUI(app) {
   function setVista(v) {
     app.state.vistaActual = v;
 
-    if (btnVistaTabla) btnVistaTabla.classList.toggle("active", v === "tabla");
-    if (btnVistaTarjetas) btnVistaTarjetas.classList.toggle("active", v === "tarjeta");
-    if (btnVistaArticulo) btnVistaArticulo.classList.toggle("active", v === "articulo");
+    btnVistaTabla?.classList.toggle("active", v === "tabla");
+    btnVistaTarjetas?.classList.toggle("active", v === "tarjeta");
+    btnVistaArticulo?.classList.toggle("active", v === "articulo");
 
-    if (vistaTabla) vistaTabla.classList.toggle("active", v === "tabla");
-    if (vistaTarjeta) vistaTarjeta.classList.toggle("active", v === "tarjeta");
-    if (vistaArticulo) vistaArticulo.classList.toggle("active", v === "articulo");
+    vistaTabla?.classList.toggle("active", v === "tabla");
+    vistaTarjeta?.classList.toggle("active", v === "tarjeta");
+    vistaArticulo?.classList.toggle("active", v === "articulo");
 
     app.renderResultados(app.state.items);
   }
 
-  if (btnVistaTabla) {
-    btnVistaTabla.addEventListener("click", () => setVista("tabla"));
-  }
-  if (btnVistaTarjetas) {
-    btnVistaTarjetas.addEventListener("click", () => setVista("tarjeta"));
-  }
-  if (btnVistaArticulo) {
-    btnVistaArticulo.addEventListener("click", () => setVista("articulo"));
-  }
+  btnVistaTabla?.addEventListener("click", () => setVista("tabla"));
+  btnVistaTarjetas?.addEventListener("click", () => setVista("tarjeta"));
+  btnVistaArticulo?.addEventListener("click", () => setVista("articulo"));
 
-  // Vista inicial
   setVista(app.state.vistaActual || "tarjeta");
 
   // ------------------------------------------------------------
-  // PANEL ADMIN (sin backendUrl)
+  // PANEL ADMIN
   // ------------------------------------------------------------
-  if (adminGuardar) {
-    adminGuardar.addEventListener("click", () => {
-      const modo = document.getElementById("admin-modo-defecto").value;
-      localStorage.setItem("modoDefecto", modo);
-      if (window.setModoScanner) window.setModoScanner(modo);
+  adminGuardar?.addEventListener("click", () => {
+    const modo = document.getElementById("admin-modo-defecto").value;
+    localStorage.setItem("modoDefecto", modo);
+    if (window.setModoScanner) window.setModoScanner(modo);
 
-      app.showToast("Configuración guardada");
-      if (adminPanel) adminPanel.style.display = "none";
-    });
-  }
+    app.showToast("Configuración guardada");
+    adminPanel.style.display = "none";
+  });
 
-  if (adminCerrar) {
-    adminCerrar.addEventListener("click", () => {
-      if (adminPanel) adminPanel.style.display = "none";
-    });
-  }
-
-  // ------------------------------------------------------------
-  // MÉTRICAS (clickeables)
-  // ------------------------------------------------------------
-  const metricArt = document.getElementById("metric-articulos");
-  const metricPares = document.getElementById("metric-pares");
-  const metricAlertasNeg = document.getElementById("metric-alertas-negativos");
-  const metricAlertasCero = document.getElementById("metric-alertas-cero");
-  const metricVal = document.getElementById("metric-valorizado");
-
-  if (metricPares && els.chkSoloStock) {
-    metricPares.addEventListener("click", () => {
-      els.chkSoloStock.checked = !els.chkSoloStock.checked;
-      app.showToast(
-        els.chkSoloStock.checked
-          ? "Mostrando solo artículos con stock"
-          : "Mostrando todos los artículos"
-      );
-      app.buscarPorFiltros();
-    });
-  }
-
-  [metricArt, metricAlertasNeg, metricAlertasCero, metricVal].forEach((m) => {
-    if (!m) return;
-    m.addEventListener("click", () => {
-      app.showToast("Métricas clickeables (futuro)");
-    });
+  adminCerrar?.addEventListener("click", () => {
+    adminPanel.style.display = "none";
   });
 
   // ------------------------------------------------------------
-  // MODO DÍA / NOCHE (persistente)
+  // MÉTRICAS FILTRABLES (UNIDADES, NEGATIVOS, SIN STOCK, VALORIZADO)
   // ------------------------------------------------------------
-  if (toggleDark) {
-    const savedTheme = localStorage.getItem("theme") || "dark";
-    const isLight = savedTheme === "light";
-    document.body.classList.toggle("light-mode", isLight);
-    toggleDark.checked = isLight;
+  const mArt = document.getElementById("metric-articulos");
+  const mUni = document.getElementById("metric-pares"); // ahora UNIDADES
+  const mNeg = document.getElementById("metric-alertas-negativos");
+  const mCero = document.getElementById("metric-alertas-cero");
+  const mVal = document.getElementById("metric-valorizado");
 
-    toggleDark.addEventListener("change", () => {
-      const on = toggleDark.checked;
-      document.body.classList.toggle("light-mode", on);
-      localStorage.setItem("theme", on ? "light" : "dark");
-    });
+  function filtrarNegativos() {
+    const items = app.state.items.filter((it) =>
+      (it.talles || []).some((t) => Number(t.stock) < 0)
+    );
+    app.renderResultados(items);
+    app.actualizarIndicadores(items);
+    app.showToast("Mostrando artículos con stock negativo");
   }
+
+  function filtrarSinStock() {
+    const items = app.state.items.filter((it) => {
+      const total = (it.talles || []).reduce((a, t) => a + Number(t.stock || 0), 0);
+      return total === 0;
+    });
+    app.renderResultados(items);
+    app.actualizarIndicadores(items);
+    app.showToast("Mostrando artículos sin stock");
+  }
+
+  function filtrarConStock() {
+    const items = app.state.items.filter((it) => {
+      const total = (it.talles || []).reduce((a, t) => a + Number(t.stock || 0), 0);
+      return total > 0;
+    });
+    app.renderResultados(items);
+    app.actualizarIndicadores(items);
+    app.showToast("Mostrando artículos con stock");
+  }
+
+  function ordenarPorValorizado() {
+    const items = [...app.state.items].sort(
+      (a, b) => Number(b.valorizado || 0) - Number(a.valorizado || 0)
+    );
+    app.renderResultados(items);
+    app.actualizarIndicadores(items);
+    app.showToast("Ordenado por valorizado");
+  }
+
+  function mostrarTodos() {
+    app.renderResultados(app.state.items);
+    app.actualizarIndicadores(app.state.items);
+    app.showToast("Mostrando todos los artículos");
+  }
+
+  mArt?.addEventListener("click", mostrarTodos);
+  mUni?.addEventListener("click", filtrarConStock);
+  mNeg?.addEventListener("click", filtrarNegativos);
+  mCero?.addEventListener("click", filtrarSinStock);
+  mVal?.addEventListener("click", ordenarPorValorizado);
+
+  // ------------------------------------------------------------
+  // MODO DÍA / NOCHE
+  // ------------------------------------------------------------
+  function aplicarModoDark(on) {
+    document.body.classList.toggle("light-mode", on);
+    localStorage.setItem("theme", on ? "light" : "dark");
+  }
+
+  const savedTheme = localStorage.getItem("theme") || "dark";
+  aplicarModoDark(savedTheme === "light");
+  toggleDark.checked = savedTheme === "light";
+
+  toggleDark?.addEventListener("change", () => {
+    aplicarModoDark(toggleDark.checked);
+  });
 
   // ------------------------------------------------------------
   // AYUDA
   // ------------------------------------------------------------
-  if (helpButton && helpModal && helpClose) {
+  helpModal?.classList.add("hidden");
+
+  helpButton?.addEventListener("click", () => {
+    helpModal.classList.remove("hidden");
+  });
+
+  helpClose?.addEventListener("click", () => {
     helpModal.classList.add("hidden");
+  });
 
-    helpButton.addEventListener("click", () => {
-      helpModal.classList.remove("hidden");
-    });
-
-    helpClose.addEventListener("click", () => {
-      helpModal.classList.add("hidden");
-    });
-
-    helpModal.addEventListener("click", (e) => {
-      if (e.target === helpModal) {
-        helpModal.classList.add("hidden");
-      }
-    });
-  }
+  helpModal?.addEventListener("click", (e) => {
+    if (e.target === helpModal) helpModal.classList.add("hidden");
+  });
 
   // ------------------------------------------------------------
   // PANEL FUENTE DE DATOS
   // ------------------------------------------------------------
-  if (fuentePanel) fuentePanel.classList.remove("visible");
-  if (fuenteToggle && fuentePanel) {
-    fuenteToggle.addEventListener("click", () => {
-      fuentePanel.classList.toggle("visible");
-    });
-  }
+  fuentePanel?.classList.remove("visible");
+
+  fuenteToggle?.addEventListener("click", () => {
+    fuentePanel.classList.toggle("visible");
+  });
 
   // ------------------------------------------------------------
   // ATAJOS DE TECLADO
@@ -533,7 +513,7 @@ function initUI(app) {
     const isInput = ["INPUT", "TEXTAREA"].includes(tag);
 
     if (e.key === "Escape") {
-      if (autoList && autoList.innerHTML.trim()) {
+      if (autoList?.innerHTML.trim()) {
         autoList.innerHTML = "";
         return;
       }
@@ -542,13 +522,13 @@ function initUI(app) {
     }
 
     if (e.key === "F2" && !isInput) {
-      if (btnScanner1) btnScanner1.click();
+      btnScanner1?.click();
       e.preventDefault();
       return;
     }
 
     if (e.key === "F3" && !isInput) {
-      if (micButton) micButton.click();
+      micButton?.click();
       e.preventDefault();
       return;
     }
