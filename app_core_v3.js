@@ -181,16 +181,22 @@ const AppCore = {
       this.state.resumenCatalogo = data.resumen || null;
 
       // Fuente de datos
-      this.els.fuenteArchivo.textContent = data.resumen?.archivo || "—";
-      this.els.fuenteFecha.textContent = data.resumen?.fecha || "—";
-      this.els.fuenteMarcas.textContent = data.resumen?.marcas || "—";
-      this.els.fuenteRubros.textContent = data.resumen?.rubros || "—";
-      this.els.fuenteArticulos.textContent = data.resumen?.articulos || "—";
-      this.els.fuenteStockTotal.textContent = data.resumen?.stock_total || "—";
-      this.els.fuenteStockNegativo.textContent =
-        data.resumen?.stock_negativo || "—";
+      if (this.els.fuenteArchivo)
+        this.els.fuenteArchivo.textContent = data.resumen?.archivo || "—";
+      if (this.els.fuenteFecha)
+        this.els.fuenteFecha.textContent = data.resumen?.fecha || "—";
+      if (this.els.fuenteMarcas)
+        this.els.fuenteMarcas.textContent = data.resumen?.marcas || "—";
+      if (this.els.fuenteRubros)
+        this.els.fuenteRubros.textContent = data.resumen?.rubros || "—";
+      if (this.els.fuenteArticulos)
+        this.els.fuenteArticulos.textContent = data.resumen?.articulos || "—";
+      if (this.els.fuenteStockTotal)
+        this.els.fuenteStockTotal.textContent = data.resumen?.stock_total || "—";
+      if (this.els.fuenteStockNegativo)
+        this.els.fuenteStockNegativo.textContent =
+          data.resumen?.stock_negativo || "—";
 
-      // Poblar combos
       this.poblarFiltros();
 
       this.setConnectionStatus(true);
@@ -213,13 +219,15 @@ const AppCore = {
       if (i.rubro) rubros.add(i.rubro);
     });
 
-    this.els.filtroMarca.innerHTML =
-      `<option value="">Marca</option>` +
-      [...marcas].sort().map((m) => `<option>${m}</option>`).join("");
+    if (this.els.filtroMarca)
+      this.els.filtroMarca.innerHTML =
+        `<option value="">Marca</option>` +
+        [...marcas].sort().map((m) => `<option>${m}</option>`).join("");
 
-    this.els.filtroRubro.innerHTML =
-      `<option value="">Rubro</option>` +
-      [...rubros].sort().map((r) => `<option>${r}</option>`).join("");
+    if (this.els.filtroRubro)
+      this.els.filtroRubro.innerHTML =
+        `<option value="">Rubro</option>` +
+        [...rubros].sort().map((r) => `<option>${r}</option>`).join("");
   },
 
   // ============================================================
@@ -254,7 +262,6 @@ const AppCore = {
       if (tokens.includes(r)) rubro = mapRubros.get(r);
     }
 
-    // Talles
     const matchRango = qUpper.match(/T?(\d+)\s*(?:A|-|\/)\s*T?(\d+)/);
     if (matchRango) {
       return {
@@ -284,7 +291,6 @@ const AppCore = {
       };
     }
 
-    // Precio
     const matchPrecio = qUpper.match(/^(?:P|\$)?(\d{2,6})$/);
     if (matchPrecio) {
       return {
@@ -299,7 +305,6 @@ const AppCore = {
       };
     }
 
-    // Código
     if (/^\d[\d\- ]{6,14}\d$/.test(qUpper)) {
       return {
         filtros_globales: false,
@@ -313,7 +318,6 @@ const AppCore = {
       };
     }
 
-    // Últimos / negativos
     const esUltimo = /\bULTIM[OA]S?\b/.test(qUpper);
     const esNegativo = /\bNEGATIV[OA]S?\b/.test(qUpper);
 
@@ -431,10 +435,10 @@ const AppCore = {
   // ============================================================
 
   actualizarFiltrosDesdeUI() {
-    this.state.filtros.marca = this.els.filtroMarca.value || null;
-    this.state.filtros.rubro = this.els.filtroRubro.value || null;
-    this.state.filtros.talleDesde = this.els.filtroTalleDesde.value || null;
-    this.state.filtros.talleHasta = this.els.filtroTalleHasta.value || null;
+    this.state.filtros.marca = this.els.filtroMarca?.value || null;
+    this.state.filtros.rubro = this.els.filtroRubro?.value || null;
+    this.state.filtros.talleDesde = this.els.filtroTalleDesde?.value || null;
+    this.state.filtros.talleHasta = this.els.filtroTalleHasta?.value || null;
   },
 
   async buscarPorFiltros() {
@@ -453,7 +457,7 @@ const AppCore = {
         : null,
       soloUltimo: false,
       soloNegativo: false,
-      solo_stock: this.els.chkSoloStock.checked || false,
+      solo_stock: this.els.chkSoloStock?.checked || false,
     };
 
     if (this.state.currentAbort) this.state.currentAbort.abort();
@@ -698,13 +702,18 @@ const AppCore = {
       if (stockItem > 0) pares += stockItem;
     });
 
-    this.els.metricArticulos.textContent = this.formatNumber(articulos);
-    this.els.metricPares.textContent = this.formatNumber(pares);
-    this.els.metricAlertasNegativos.textContent =
-      this.formatNumber(stockNegativo);
-    this.els.metricAlertasCero.textContent = this.formatNumber(sinStock);
-    this.els.metricValorizado.textContent =
-      "$" + this.formatNumber(valorizadoTotal);
+    if (this.els.metricArticulos)
+      this.els.metricArticulos.textContent = this.formatNumber(articulos);
+    if (this.els.metricPares)
+      this.els.metricPares.textContent = this.formatNumber(pares);
+    if (this.els.metricAlertasNegativos)
+      this.els.metricAlertasNegativos.textContent =
+        this.formatNumber(stockNegativo);
+    if (this.els.metricAlertasCero)
+      this.els.metricAlertasCero.textContent = this.formatNumber(sinStock);
+    if (this.els.metricValorizado)
+      this.els.metricValorizado.textContent =
+        "$" + this.formatNumber(valorizadoTotal);
   },
 
   // ============================================================
@@ -793,34 +802,27 @@ const AppCore = {
   // ============================================================
 
   conectarEventosUI() {
-    // Botón aplicar filtros
     this.els.btnAplicarFiltros?.addEventListener("click", () => {
       this.buscarPorFiltros();
     });
 
-    // ENTER en el input
     this.els.searchInput?.addEventListener("keydown", (e) => {
       if (e.key === "Enter") this.buscar();
     });
 
-    // Botón copiar
     const btnCopiar = document.getElementById("btn-copiar");
     btnCopiar?.addEventListener("click", () => this.copiarResultados());
 
-    // Botón limpiar
     const btnLimpiar = document.getElementById("btn-limpiar");
     btnLimpiar?.addEventListener("click", () => this.limpiarPantalla());
 
-    // Botón STOP
     const btnStop = document.getElementById("btn-stop");
     btnStop?.addEventListener("click", () => this.stopTodo());
 
-    // Toggle fuente de datos
     this.els.fuenteDatosToggle?.addEventListener("click", () => {
       this.els.fuenteDatosPanel?.classList.toggle("visible");
     });
 
-    // ORB: clic inicia búsqueda
     const orb = document.getElementById("orb");
     orb?.addEventListener("click", () => this.buscar());
   },
