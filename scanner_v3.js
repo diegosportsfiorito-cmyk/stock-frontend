@@ -1,18 +1,5 @@
 // ============================================================
-// SCANNER V3 — Integración estable con ZXing + UI
-// Versión final integrada 2026
-// ============================================================
-// - Botón 1 → lector interno (cámara trasera)
-// - Botón 2 → lector interno robusto (cámara trasera)
-// - Botón 3 → abrir Barcode Scanner+ (app instalada)
-// - Botón 4 → selector Android/iOS para abrir/descargar apps
-// - Todos devuelven el código al input y disparan búsqueda
-// - Interno: EAN13 / UPC / QR (ZXing web)
-// - CODE128: usar SIEMPRE botón 3 (Barcode Scanner+)
-// - Modo SIMPLE / COMPLETO:
-//   SIMPLE  = primer tramo hasta ! / \
-//   COMPLETO = código completo
-//   El guion "-" ES parte del artículo, NO separador
+// SCANNER V3 — Integración estable con ZXing + UI (2026 FIX)
 // ============================================================
 
 let scannerActivo = false;
@@ -20,15 +7,13 @@ let selectedDeviceId = null;
 let codeReader = null;
 
 // ------------------------------------------------------------
-// MODO SIMPLE / COMPLETO (lógica de artículo)
+// MODO SIMPLE / COMPLETO
 // ------------------------------------------------------------
 function aplicarModo(code) {
   const modo = localStorage.getItem("modoDefecto") || "simple";
 
   if (modo === "simple") {
-    // separadores de tramo: !  /  \
     const separadores = ["!", "/", "\\"];
-
     let corte = code.length;
 
     separadores.forEach((sep) => {
@@ -39,12 +24,11 @@ function aplicarModo(code) {
     return code.substring(0, corte).trim();
   }
 
-  // COMPLETO = código tal cual
   return code;
 }
 
 // ------------------------------------------------------------
-// CREAR / OBTENER VIDEO DENTRO DEL OVERLAY
+// CREAR / OBTENER VIDEO
 // ------------------------------------------------------------
 function getScannerVideoElement() {
   const overlay = document.getElementById("scanner-overlay");
@@ -67,7 +51,7 @@ function getScannerVideoElement() {
 }
 
 // ------------------------------------------------------------
-// INICIAR SCANNER INTERNO (SIEMPRE CÁMARA TRASERA)
+// INICIAR SCANNER INTERNO (CÁMARA TRASERA)
 // ------------------------------------------------------------
 function iniciarScannerInterno(onClose) {
   if (scannerActivo) return;
@@ -86,12 +70,10 @@ function iniciarScannerInterno(onClose) {
   overlay.classList.remove("hidden");
   document.body.classList.add("scanner-active");
 
-  // Inicializar lector
   if (!codeReader) {
     codeReader = new ZXing.BrowserMultiFormatReader();
   }
 
-  // Formatos soportados por ZXing web (interno)
   const formatos = [
     ZXing.BarcodeFormat.EAN_13,
     ZXing.BarcodeFormat.EAN_8,
@@ -105,19 +87,17 @@ function iniciarScannerInterno(onClose) {
 
   codeReader
     .listVideoInputDevices()
-    .then((videoInputDevices) => {
-      if (!videoInputDevices.length) {
-        throw new Error("No hay cámaras disponibles");
-      }
+    .then((devices) => {
+      if (!devices.length) throw new Error("No hay cámaras disponibles");
 
-      // SIEMPRE CÁMARA TRASERA
+      // Buscar cámara trasera
       let deviceId = null;
 
-      const cam = videoInputDevices.find((d) =>
+      const backCam = devices.find((d) =>
         (d.label || "").toLowerCase().includes("back")
       );
 
-      deviceId = cam ? cam.deviceId : videoInputDevices[0].deviceId;
+      deviceId = backCam ? backCam.deviceId : devices[0].deviceId;
       selectedDeviceId = deviceId;
 
       return codeReader.decodeFromVideoDevice(
@@ -132,94 +112,71 @@ function iniciarScannerInterno(onClose) {
               window.appCore.els.searchInput.value = finalCode;
             }
 
-            overlay.classList.add("hidden");
-            document.body.classList.remove("scanner-active");
-
-            try {
-              codeReader.reset();
-            } catch (_) {}
-
-            scannerActivo = false;
-
+            cerrarScanner();
             onClose?.();
           }
         }
       );
     })
     .catch((err) => {
-      overlay.classList.add("hidden");
-      document.body.classList.remove("scanner-active");
-      scannerActivo = false;
-
-      try {
-        codeReader?.reset();
-      } catch (_) {}
-
-      onClose?.();
+      cerrarScanner();
       window.appCore?.showToast?.("Error iniciando scanner");
       console.error("Scanner error:", err);
+      onClose?.();
     });
 }
 
 // ------------------------------------------------------------
-// BOTÓN 1 — LECTOR INTERNO (TRASERA)
+// CERRAR SCANNER (SEGURO)
+// ------------------------------------------------------------
+function cerrarScanner() {
+  const overlay = document.getElementById("scanner-overlay");
+  overlay?.classList.add("hidden");
+  document.body.classList.remove("scanner-active");
+
+  try {
+    codeReader?.reset();
+  } catch (_) {}
+
+  scannerActivo = false;
+}
+
+// ------------------------------------------------------------
+// BOTONES
 // ------------------------------------------------------------
 function startScannerInterno1(onClose) {
   iniciarScannerInterno(onClose);
 }
 
-// ------------------------------------------------------------
-// BOTÓN 2 — LECTOR INTERNO ROBUSTO (TRASERA)
-// (mismo flujo por ahora, separado por si luego diferenciamos)
-// ------------------------------------------------------------
 function startScannerInterno2(onClose) {
   iniciarScannerInterno(onClose);
 }
 
-// ------------------------------------------------------------
-// BOTÓN 3 — ABRIR APP INSTALADA "BARCODE SCANNER+"
-// (para CODE128 / CODE39 / todo lo complejo)
-// ------------------------------------------------------------
 function startScannerExternoPreferido(onClose) {
   const intent =
     "intent://scan/#Intent;scheme=zxing;package=com.srowen.bs.android;end";
 
-  // Abrir app externa
   window.location.href = intent;
 
-  // Esperar retorno
   setTimeout(() => {
     const params = new URLSearchParams(window.location.search);
-
-    // Barcode Scanner+ devuelve SCAN_RESULT
     const raw =
       params.get("SCAN_RESULT") ||
       params.get("q") ||
       params.get("code");
 
-    if (!raw) {
-      onClose?.();
-      return;
+    if (raw) {
+      const finalCode = aplicarModo(raw);
+      if (window.appCore?.els?.searchInput) {
+        window.appCore.els.searchInput.value = finalCode;
+      }
     }
 
-    const finalCode = aplicarModo(raw);
-
-    if (window.appCore?.els?.searchInput) {
-      window.appCore.els.searchInput.value = finalCode;
-    }
-
-    // Cerrar overlay si estuviera abierto
-    const overlay = document.getElementById("scanner-overlay");
-    if (overlay) overlay.classList.add("hidden");
-    document.body.classList.remove("scanner-active");
-
+    cerrarScanner();
     onClose?.();
   }, 800);
 }
 
-// ------------------------------------------------------------
-// BOTÓN 4 — SELECTOR ANDROID / IOS
-// ------------------------------------------------------------
 function startScannerExternoSelector(onClose) {
   const opciones = [
     {
@@ -241,40 +198,28 @@ function startScannerExternoSelector(onClose) {
   ];
 
   let msg = "Elegí una opción:\n";
-  opciones.forEach((o, i) => {
-    msg += `${i + 1}) ${o.nombre}\n`;
-  });
+  opciones.forEach((o, i) => (msg += `${i + 1}) ${o.nombre}\n`));
 
   const elegido = prompt(msg);
   const idx = parseInt(elegido, 10) - 1;
 
-  if (opciones[idx]) {
-    window.location.href = opciones[idx].url;
-  }
+  if (opciones[idx]) window.location.href = opciones[idx].url;
 
   setTimeout(() => {
     const params = new URLSearchParams(window.location.search);
-
     const raw =
       params.get("SCAN_RESULT") ||
       params.get("q") ||
       params.get("code");
 
-    if (!raw) {
-      onClose?.();
-      return;
+    if (raw) {
+      const finalCode = aplicarModo(raw);
+      if (window.appCore?.els?.searchInput) {
+        window.appCore.els.searchInput.value = finalCode;
+      }
     }
 
-    const finalCode = aplicarModo(raw);
-
-    if (window.appCore?.els?.searchInput) {
-      window.appCore.els.searchInput.value = finalCode;
-    }
-
-    const overlay = document.getElementById("scanner-overlay");
-    if (overlay) overlay.classList.add("hidden");
-    document.body.classList.remove("scanner-active");
-
+    cerrarScanner();
     onClose?.();
   }, 800);
 }
