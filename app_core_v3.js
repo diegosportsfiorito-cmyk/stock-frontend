@@ -1,6 +1,6 @@
 // ============================================================
 // APP CORE — Motor inteligente + warm-up + indicador visual
-// Versión corregida y optimizada 2026-02-10 (autocompletado + filtros)
+// Versión corregida y optimizada 2026-02-10
 // ============================================================
 
 const AppCore = {
@@ -262,8 +262,16 @@ const AppCore = {
       this.state.resumenCatalogo = data.resumen || null;
 
       // Fuente de datos
-      if (this.els.fuenteArchivo)
-        this.els.fuenteArchivo.textContent = data.resumen?.archivo || "—";
+      if (this.els.fuenteArchivo) {
+        let archivo = data.resumen?.archivo || "—";
+
+        // Si viene algo genérico tipo "Google Drive", intentamos usar un campo más específico
+        if (archivo.toLowerCase().includes("google")) {
+          archivo = data.resumen?.nombre_excel || "Archivo original no informado";
+        }
+
+        this.els.fuenteArchivo.textContent = archivo;
+      }
       if (this.els.fuenteFecha)
         this.els.fuenteFecha.textContent = data.resumen?.fecha || "—";
       if (this.els.fuenteMarcas)
@@ -430,7 +438,59 @@ const AppCore = {
       question: usarFiltros ? "" : q,
     };
   },
+
+  // ============================================================
+  // RESPUESTA POR VOZ (RESUMEN + TOP ITEMS)
+  // ============================================================
+
+  speakResultados() {
+    if (!("speechSynthesis" in window)) return;
+
+    const synth = window.speechSynthesis;
+    synth.cancel();
+
+    let texto = "";
+
+    if (!this.state.items || !this.state.items.length) {
+      texto = "No se encontraron resultados.";
+    } else {
+      const totalArticulos = this.state.items.length;
+      let totalUnidades = 0;
+
+      this.state.items.forEach((it) => {
+        const sum = (it.talles || []).reduce(
+          (a, t) => a + Number(t.stock || 0),
+          0
+        );
+        totalUnidades += sum;
+      });
+
+      texto = `Encontré ${totalArticulos} artículos, con un total de ${totalUnidades} unidades. `;
+
+      const top = this.state.items.slice(0, 5);
+      top.forEach((item) => {
+        texto += `${item.descripcion || "Artículo"} de marca ${
+          item.marca || "sin marca"
+        }, rubro ${item.rubro || "sin rubro"}. `;
+      });
+    }
+
+    const utter = new SpeechSynthesisUtterance(texto);
+    utter.lang = "es-AR";
+    utter.rate = 1;
+    utter.pitch = 1;
+
+    if (window.ORB?.setSpeaking) {
+      ORB.setSpeaking(true);
+      utter.onend = () => {
+        ORB.setSpeaking(false);
+      };
+    }
+
+    synth.speak(utter);
+  },
 };
+
 // ============================================================
 // APP CORE — PARTE 2/2
 // ============================================================
@@ -495,7 +555,7 @@ AppCore.buscar = async function () {
     if (this.els.resultsStatus)
       this.els.resultsStatus.textContent = `${this.state.items.length} resultados`;
 
-    if (window.ORB?.isVoiceMode?.()) {
+    if (window.ORB?.isVoiceMode?.() || window.manosLibresActivo) {
       this.speakResultados();
     }
   } catch (err) {
@@ -575,6 +635,10 @@ AppCore.buscarPorFiltros = async function () {
     this.setSearchStatus("Conectado", "green");
     if (this.els.resultsStatus)
       this.els.resultsStatus.textContent = `${this.state.items.length} resultados`;
+
+    if (window.ORB?.isVoiceMode?.() || window.manosLibresActivo) {
+      this.speakResultados();
+    }
   } catch {
     this.setConnectionStatus(false);
     ORB.setError(true);
@@ -598,7 +662,6 @@ AppCore.renderResultados = function (items) {
 
   if (!vTabla || !vTarjeta || !vArticulo) return;
 
-  // limpiar autocomplete
   const autoList = document.getElementById("autocomplete-list");
   if (autoList) autoList.innerHTML = "";
 
@@ -839,39 +902,9 @@ AppCore.stopTodo = function () {
   } catch (_) {}
   ORB.setError(false);
   ORB.setLoading(false);
-  ORB.setSpeaking(false);
+  if (ORB.setSpeaking) ORB.setSpeaking(false);
   ORB.setReady();
   this.setSearchStatus("Listo", "blue");
-};
-
-// ============================================================
-// VOZ — LECTURA DE RESULTADOS
-// ============================================================
-
-AppCore.speakResultados = function () {
-  if (!("speechSynthesis" in window)) return;
-  if (!this.state.items.length) return;
-
-  const top = this.state.items.slice(0, 5);
-  let text = "Resultados de stock. ";
-
-  top.forEach((item) => {
-    text += `${item.descripcion || "Artículo"} de marca ${
-      item.marca || "sin marca"
-    }, rubro ${item.rubro || "sin rubro"}. `;
-  });
-
-  const utter = new SpeechSynthesisUtterance(text);
-  utter.lang = "es-AR";
-
-  ORB.setSpeaking(true);
-
-  utter.onend = () => {
-    ORB.setSpeaking(false);
-  };
-
-  speechSynthesis.cancel();
-  speechSynthesis.speak(utter);
 };
 
 // ============================================================
@@ -909,7 +942,7 @@ AppCore.conectarEventosUI = function () {
     this.els.fuenteDatosPanel?.classList.toggle("visible");
   });
 
-  // Enter en input (UI ENGINE también lo maneja, pero este es fallback)
+  // Enter en input (fallback)
   this.els.searchInput?.addEventListener("keydown", (e) => {
     if (e.key === "Enter") this.buscar();
   });
