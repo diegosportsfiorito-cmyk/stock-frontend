@@ -1,7 +1,7 @@
 // ============================================================
 // UI ENGINE V4 — Control total de UI + Layout móvil
 // ============================================================
-// Opción 1: Un solo switch “Dictado automático” + botón mic
+// Opción 1A + B + D: Dictado automático + ORB + Scanner + Vistas
 // ============================================================
 
 function initUI(app) {
@@ -12,7 +12,7 @@ function initUI(app) {
   // ------------------------------------------------------------
   const orbCore = document.getElementById("orb-core");
   const micButton = document.getElementById("mic-button");
-  const dictadoAutoSwitch = document.getElementById("modo-voz-switch"); // ahora: dictado automático
+  const dictadoAutoSwitch = document.getElementById("modo-voz-switch"); // dictado automático
   const voiceStatus = document.getElementById("voice-status");
   const helpButton = document.getElementById("help-button");
   const helpModal = document.getElementById("help-modal");
@@ -39,11 +39,13 @@ function initUI(app) {
   const adminCerrar = document.getElementById("admin-cerrar");
 
   const toggleDark = document.getElementById("toggle-dark");
-  const fuenteToggle = document.getElementById("fuente-datos-toggle");
+  // Fuente de datos: el toggle lo maneja AppCore; acá solo aseguramos estado inicial
   const fuentePanel = document.getElementById("fuente-datos-panel");
 
   // Asegurar filtros cerrados al inicio
   els.filtrosPanel?.classList.remove("visible");
+  // Asegurar panel fuente de datos cerrado al inicio
+  fuentePanel?.classList.remove("visible");
 
   // ------------------------------------------------------------
   // BEEP (feedback sonoro)
@@ -132,16 +134,16 @@ function initUI(app) {
     rec.onresult = (ev) => {
       let text = ev.results[0][0].transcript || "";
       text = text.replace(/[.。]+$/g, "").trim();
-      els.searchInput.value = text;
+      if (els.searchInput) els.searchInput.value = text;
       setVoiceUIState("ready");
-      autoList.innerHTML = "";
+      if (autoList) autoList.innerHTML = "";
 
       ORB.setLoading?.(true);
       app.buscar();
 
       setTimeout(() => {
         app.setOrbIdle?.();
-        app.speakResultados?.();
+        if (dictadoAutoSwitch?.checked) app.speakResultados?.();
       }, 600);
     };
 
@@ -199,13 +201,13 @@ function initUI(app) {
         adminPanel.classList.remove("hidden");
         adminPanel.classList.add("visible");
         e.target.value = "";
-        autoList.innerHTML = "";
+        if (autoList) autoList.innerHTML = "";
         app.showToast("Modo administrador activado");
         return;
       }
 
       // Autocomplete
-      if (autoList.children.length > 0) {
+      if (autoList && autoList.children.length > 0) {
         const first = autoList.querySelector("li");
         if (first) {
           els.searchInput.value = first.dataset.value || first.textContent;
@@ -257,7 +259,7 @@ function initUI(app) {
 
     if (isMobile) {
       orbCore.addEventListener("touchend", () => {
-        autoList.innerHTML = "";
+        if (autoList) autoList.innerHTML = "";
         ORB.setLoading?.(true);
         app.buscar();
         setTimeout(() => {
@@ -268,7 +270,7 @@ function initUI(app) {
     }
 
     orbCore.addEventListener("click", () => {
-      autoList.innerHTML = "";
+      if (autoList) autoList.innerHTML = "";
       ORB.setLoading?.(true);
       app.buscar();
       setTimeout(() => {
@@ -335,31 +337,31 @@ function initUI(app) {
     }
   }
 
-  if (btnScanner1 && typeof startScannerInterno1 === "function") {
+  if (btnScanner1 && typeof window.startScannerInterno1 === "function") {
     btnScanner1.addEventListener("click", () => {
       setScannerOverlay(true);
-      startScannerInterno1(scannerCallback);
+      window.startScannerInterno1(scannerCallback);
     });
   }
 
-  if (btnScanner2 && typeof startScannerInterno2 === "function") {
+  if (btnScanner2 && typeof window.startScannerInterno2 === "function") {
     btnScanner2.addEventListener("click", () => {
       setScannerOverlay(true);
-      startScannerInterno2(scannerCallback);
+      window.startScannerInterno2(scannerCallback);
     });
   }
 
-  if (btnScannerExtPref && typeof startScannerExternoPreferido === "function") {
+  if (btnScannerExtPref && typeof window.startScannerExternoPreferido === "function") {
     btnScannerExtPref.addEventListener("click", () => {
       setScannerOverlay(true);
-      startScannerExternoPreferido(scannerCallback);
+      window.startScannerExternoPreferido(scannerCallback);
     });
   }
 
-  if (btnScannerExtSel && typeof startScannerExternoSelector === "function") {
+  if (btnScannerExtSel && typeof window.startScannerExternoSelector === "function") {
     btnScannerExtSel.addEventListener("click", () => {
       setScannerOverlay(true);
-      startScannerExternoSelector(scannerCallback);
+      window.startScannerExternoSelector(scannerCallback);
     });
   }
 
@@ -393,7 +395,7 @@ function initUI(app) {
     vistaTarjeta?.classList.toggle("active", v === "tarjeta");
     vistaArticulo?.classList.toggle("active", v === "articulo");
 
-    autoList.innerHTML = "";
+    if (autoList) autoList.innerHTML = "";
     app.renderResultados(app.state.items);
   }
 
@@ -515,10 +517,9 @@ function initUI(app) {
 
   // ------------------------------------------------------------
   // PANEL FUENTE DE DATOS
-  // (OJO: AppCore también lo maneja; acá solo aseguramos que arranque cerrado)
-  // ------------------------------------------------------------
+  // (solo aseguramos que arranque cerrado; el toggle lo maneja AppCore)
+// ------------------------------------------------------------
   fuentePanel?.classList.remove("visible");
-  // NO agregamos toggle acá para no duplicar el listener de AppCore
 
   // ------------------------------------------------------------
   // ATAJOS DE TECLADO
