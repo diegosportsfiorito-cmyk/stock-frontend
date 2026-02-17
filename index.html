@@ -352,7 +352,9 @@
     <!-- ========================================================= -->
     <!-- SCANNER OVERLAY                                            -->
     <!-- ========================================================= -->
-    <div id="scanner-overlay" class="scanner-overlay hidden"></div>
+    <div id="scanner-overlay" class="scanner-overlay hidden">
+      <video id="scanner-video" autoplay playsinline></video>
+    </div>
 
     <!-- ========================================================= -->
     <!-- MODAL DE AYUDA                                             -->
@@ -380,11 +382,20 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://unpkg.com/@zxing/library@latest"></script>
 
+    <!-- Scanner primero, depende de ZXing -->
+    <script src="scanner_v3.js?v=20260210"></script>
+
+    <!-- Núcleo de la app -->
     <script src="app_core_v3.js?v=20260210"></script>
+
+    <!-- UI (V4 dentro de ui_engine_v3.js) -->
     <script src="ui_engine_v3.js?v=20260210"></script>
+
+    <!-- ORB -->
     <script src="orb_engine_v2.js?v=20260210"></script>
     <script src="orb_admin_engine.js?v=20260210"></script>
-    <script src="scanner_v3.js?v=20260210"></script>
+
+    <!-- Dashboard + Indicadores -->
     <script src="dashboard_engine.js?v=20260210"></script>
     <script src="indicators_engine.js?v=20260210"></script>
 
