@@ -1,10 +1,38 @@
 // ============================================================
-// SCANNER V3 — Integración estable con ZXing + UI (2026 FIX)
+// SCANNER V3 — Integración estable con ZXing + Autofocus + CODE128 + Beep
+// Versión 2026 — IA PRO ULTRA
+// ============================================================
+// - Botón 1 → lector interno (cámara trasera)
+// - Botón 2 → lector interno robusto (cámara trasera)
+// - Botón 3 → abrir Barcode Scanner+
+// - Botón 4 → selector Android/iOS
+// - Interno: EAN13 / UPC / QR / EAN8 / CODE128 (experimental)
+// - Autofocus dinámico
+// - Beep al detectar código
 // ============================================================
 
 let scannerActivo = false;
 let selectedDeviceId = null;
 let codeReader = null;
+let autofocusInterval = null;
+
+// ------------------------------------------------------------
+// BEEP SUAVE
+// ------------------------------------------------------------
+function beepScanner(freq = 1100, duration = 120) {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = "sine";
+    osc.frequency.value = freq;
+    gain.gain.value = 0.15;
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start();
+    setTimeout(() => osc.stop(), duration);
+  } catch (_) {}
+}
 
 // ------------------------------------------------------------
 // MODO SIMPLE / COMPLETO
@@ -51,7 +79,57 @@ function getScannerVideoElement() {
 }
 
 // ------------------------------------------------------------
-// INICIAR SCANNER INTERNO (CÁMARA TRASERA)
+// AUTOFÓCUS DINÁMICO (SIMULADO)
+// ------------------------------------------------------------
+function iniciarAutofocus(stream) {
+  if (!stream) return;
+
+  const track = stream.getVideoTracks()[0];
+  if (!track) return;
+
+  // Intento real (si el navegador lo soporta)
+  const capabilities = track.getCapabilities?.();
+  if (capabilities && capabilities.focusMode) {
+    try {
+      track.applyConstraints({
+        advanced: [{ focusMode: "continuous" }]
+      });
+      return;
+    } catch (_) {}
+  }
+
+  // Simulación: reiniciar constraints cada 3 segundos
+  autofocusInterval = setInterval(() => {
+    try {
+      track.applyConstraints({
+        advanced: [{ torch: false }]
+      });
+    } catch (_) {}
+  }, 3000);
+}
+
+// ------------------------------------------------------------
+// CERRAR SCANNER
+// ------------------------------------------------------------
+function cerrarScanner() {
+  const overlay = document.getElementById("scanner-overlay");
+  overlay?.classList.add("hidden");
+  document.body.classList.remove("scanner-active");
+
+  try {
+    codeReader?.reset();
+  } catch (_) {}
+
+  if (autofocusInterval) {
+    clearInterval(autofocusInterval);
+    autofocusInterval = null;
+  }
+
+  scannerActivo = false;
+}
+
+// ------------------------------------------------------------
+// INICIAR SCANNER INTERNO
 // ------------------------------------------------------------
 function iniciarScannerInterno(onClose) {
   if (scannerActivo) return;
@@ -74,12 +152,14 @@ function iniciarScannerInterno(onClose) {
     codeReader = new ZXing.BrowserMultiFormatReader();
   }
 
+  // FORMATS: agregamos CODE128 experimental
   const formatos = [
     ZXing.BarcodeFormat.EAN_13,
     ZXing.BarcodeFormat.EAN_8,
     ZXing.BarcodeFormat.UPC_A,
     ZXing.BarcodeFormat.UPC_E,
     ZXing.BarcodeFormat.QR_CODE,
+    ZXing.BarcodeFormat.CODE_128, // experimental
   ];
 
   codeReader.hints = new Map();
@@ -90,7 +170,6 @@ function iniciarScannerInterno(onClose) {
     .then((devices) => {
       if (!devices.length) throw new Error("No hay cámaras disponibles");
 
-      // Buscar cámara trasera
       let deviceId = null;
 
       const backCam = devices.find((d) =>
@@ -103,8 +182,12 @@ function iniciarScannerInterno(onClose) {
       return codeReader.decodeFromVideoDevice(
         deviceId,
         videoEl,
-        (result, err) => {
+        (result, err, controls) => {
+          if (controls?.stream) iniciarAutofocus(controls.stream);
+
           if (result) {
+            beepScanner();
+
             const text = result.text || "";
             const finalCode = aplicarModo(text);
 
@@ -124,21 +207,6 @@ function iniciarScannerInterno(onClose) {
       console.error("Scanner error:", err);
       onClose?.();
     });
-}
-
-// ------------------------------------------------------------
-// CERRAR SCANNER (SEGURO)
-// ------------------------------------------------------------
-function cerrarScanner() {
-  const overlay = document.getElementById("scanner-overlay");
-  overlay?.classList.add("hidden");
-  document.body.classList.remove("scanner-active");
-
-  try {
-    codeReader?.reset();
-  } catch (_) {}
-
-  scannerActivo = false;
 }
 
 // ------------------------------------------------------------
