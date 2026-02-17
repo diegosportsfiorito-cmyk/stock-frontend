@@ -1,301 +1,290 @@
-// ============================================================
-// SCANNER V3 — Integración estable con ZXing + Autofocus + CODE128 + Beep
-// Versión 2026 — IA PRO ULTRA
-// ============================================================
-// - Botón 1 → lector interno (cámara trasera)
-// - Botón 2 → lector interno robusto (cámara trasera)
-// - Botón 3 → abrir Barcode Scanner+
-// - Botón 4 → selector Android/iOS
-// - Interno: EAN13 / UPC / QR / EAN8 / CODE128 (experimental)
-// - Autofocus dinámico
-// - Beep al detectar código
-// ============================================================
+/* ============================================================
+   SCANNER V4 PRO — IA PRO ULTRA
+   scanner_v3.js (versión final)
+   ============================================================ */
 
-let scannerActivo = false;
-let selectedDeviceId = null;
-let codeReader = null;
-let autofocusInterval = null;
+(function () {
+  let codeReader = null;
+  let currentStream = null;
+  let scanning = false;
+  let multiMode = false;
+  let detectedCodes = [];
+  let zoomLevel = 1;
+  let maxZoom = 1;
+  let torchOn = false;
 
-// ------------------------------------------------------------
-// BEEP SUAVE
-// ------------------------------------------------------------
-function beepScanner(freq = 1100, duration = 120) {
-  try {
-    const ctx = new (window.AudioContext || window.webkitAudioContext)();
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    osc.type = "sine";
-    osc.frequency.value = freq;
-    gain.gain.value = 0.15;
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-    osc.start();
-    setTimeout(() => osc.stop(), duration);
-  } catch (_) {}
-}
-
-// ------------------------------------------------------------
-// MODO SIMPLE / COMPLETO
-// ------------------------------------------------------------
-function aplicarModo(code) {
-  const modo = localStorage.getItem("modoDefecto") || "simple";
-
-  if (modo === "simple") {
-    const separadores = ["!", "/", "\\"];
-    let corte = code.length;
-
-    separadores.forEach((sep) => {
-      const idx = code.indexOf(sep);
-      if (idx !== -1 && idx < corte) corte = idx;
-    });
-
-    return code.substring(0, corte).trim();
-  }
-
-  return code;
-}
-
-// ------------------------------------------------------------
-// CREAR / OBTENER VIDEO
-// ------------------------------------------------------------
-function getScannerVideoElement() {
   const overlay = document.getElementById("scanner-overlay");
-  if (!overlay) return null;
+  const video = document.getElementById("scanner-video");
 
-  let video = document.getElementById("scanner-video");
-  if (!video) {
-    video = document.createElement("video");
-    video.id = "scanner-video";
-    video.autoplay = true;
-    video.playsInline = true;
-    video.style.width = "100%";
-    video.style.height = "100%";
-    video.style.objectFit = "cover";
+  /* ============================================================
+     BEEP
+     ============================================================ */
+  const AudioCtx = window.AudioContext || window.webkitAudioContext;
+  let audioCtx = null;
 
-    overlay.innerHTML = "";
-    overlay.appendChild(video);
-  }
-  return video;
-}
-
-// ------------------------------------------------------------
-// AUTOFÓCUS DINÁMICO (SIMULADO)
-// ------------------------------------------------------------
-function iniciarAutofocus(stream) {
-  if (!stream) return;
-
-  const track = stream.getVideoTracks()[0];
-  if (!track) return;
-
-  // Intento real (si el navegador lo soporta)
-  const capabilities = track.getCapabilities?.();
-  if (capabilities && capabilities.focusMode) {
+  function beep(freq = 1200, duration = 120) {
     try {
-      track.applyConstraints({
-        advanced: [{ focusMode: "continuous" }]
-      });
+      if (!AudioCtx) return;
+      if (!audioCtx) audioCtx = new AudioCtx();
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = "sine";
+      osc.frequency.value = freq;
+      gain.gain.value = 0.15;
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start();
+      setTimeout(() => osc.stop(), duration);
+    } catch (_) {}
+  }
+
+  /* ============================================================
+     CREAR CONTROLES (inyectados dinámicamente)
+     ============================================================ */
+  function createControls() {
+    const controls = document.createElement("div");
+    controls.className = "scanner-controls";
+
+    controls.innerHTML = `
+      <button class="scanner-btn" id="scn-torch">🔦</button>
+      <button class="scanner-btn" id="scn-zoom-in">➕</button>
+      <button class="scanner-btn" id="scn-zoom-out">➖</button>
+      <button class="scanner-btn-primary" id="scn-multi">Multi-scan</button>
+      <button class="scanner-btn-danger" id="scn-close">✖</button>
+    `;
+
+    overlay.appendChild(controls);
+
+    // Contador (solo multi-scan)
+    const counter = document.createElement("div");
+    counter.className = "scanner-counter hidden";
+    counter.id = "scn-counter";
+    overlay.appendChild(counter);
+  }
+
+  /* ============================================================
+     MOSTRAR / OCULTAR CONTROLES
+     ============================================================ */
+  function updateControls() {
+    const btnMulti = document.getElementById("scn-multi");
+    const btnClose = document.getElementById("scn-close");
+    const counter = document.getElementById("scn-counter");
+
+    if (!multiMode) {
+      btnMulti.textContent = "Multi-scan";
+      counter.classList.add("hidden");
+    } else {
+      btnMulti.textContent = "Enviar todos";
+      counter.classList.remove("hidden");
+      counter.textContent = `${detectedCodes.length} códigos`;
+    }
+  }
+
+  /* ============================================================
+     TORCH
+     ============================================================ */
+  async function toggleTorch() {
+    if (!currentStream) return;
+
+    const track = currentStream.getVideoTracks()[0];
+    const capabilities = track.getCapabilities();
+
+    if (!capabilities.torch) {
+      appCore.showToast("Linterna no disponible");
       return;
-    } catch (_) {}
-  }
+    }
 
-  // Simulación: reiniciar constraints cada 3 segundos
-  autofocusInterval = setInterval(() => {
+    torchOn = !torchOn;
+
     try {
-      track.applyConstraints({
-        advanced: [{ torch: false }]
+      await track.applyConstraints({
+        advanced: [{ torch: torchOn }],
       });
-    } catch (_) {}
-  }, 3000);
-}
-
-// ------------------------------------------------------------
-// CERRAR SCANNER
-// ------------------------------------------------------------
-function cerrarScanner() {
-  const overlay = document.getElementById("scanner-overlay");
-  overlay?.classList.add("hidden");
-  document.body.classList.remove("scanner-active");
-
-  try {
-    codeReader?.reset();
-  } catch (_) {}
-
-  if (autofocusInterval) {
-    clearInterval(autofocusInterval);
-    autofocusInterval = null;
+    } catch (e) {
+      appCore.showToast("No se pudo activar la linterna");
+    }
   }
 
-  scannerActivo = false;
-}
+  /* ============================================================
+     ZOOM
+     ============================================================ */
+  async function applyZoom() {
+    if (!currentStream) return;
 
-// ------------------------------------------------------------
-// INICIAR SCANNER INTERNO
-// ------------------------------------------------------------
-function iniciarScannerInterno(onClose) {
-  if (scannerActivo) return;
-  scannerActivo = true;
+    const track = currentStream.getVideoTracks()[0];
+    const capabilities = track.getCapabilities();
 
-  const overlay = document.getElementById("scanner-overlay");
-  const videoEl = getScannerVideoElement();
+    if (!capabilities.zoom) {
+      appCore.showToast("Zoom no soportado");
+      return;
+    }
 
-  if (!overlay || !videoEl) {
-    scannerActivo = false;
-    window.appCore?.showToast?.("No se pudo iniciar el scanner");
-    onClose?.();
-    return;
+    maxZoom = capabilities.zoom.max || 1;
+
+    zoomLevel = Math.max(1, Math.min(zoomLevel, maxZoom));
+
+    try {
+      await track.applyConstraints({
+        advanced: [{ zoom: zoomLevel }],
+      });
+    } catch (e) {
+      console.warn("Zoom error:", e);
+    }
   }
 
-  overlay.classList.remove("hidden");
-  document.body.classList.add("scanner-active");
+  /* ============================================================
+     INICIAR CÁMARA
+     ============================================================ */
+  async function startCamera() {
+    try {
+      currentStream = await navigator.mediaDevices.getUserMedia({
+        video: {
+          facingMode: "environment",
+          width: { ideal: 1280 },
+          height: { ideal: 720 },
+          focusMode: "continuous",
+        },
+        audio: false,
+      });
 
-  if (!codeReader) {
-    codeReader = new ZXing.BrowserMultiFormatReader();
+      video.srcObject = currentStream;
+      await video.play();
+
+      return true;
+    } catch (e) {
+      appCore.showToast("No se pudo acceder a la cámara");
+      return false;
+    }
   }
 
-  // FORMATS: agregamos CODE128 experimental
-  const formatos = [
-    ZXing.BarcodeFormat.EAN_13,
-    ZXing.BarcodeFormat.EAN_8,
-    ZXing.BarcodeFormat.UPC_A,
-    ZXing.BarcodeFormat.UPC_E,
-    ZXing.BarcodeFormat.QR_CODE,
-    ZXing.BarcodeFormat.CODE_128, // experimental
-  ];
+  /* ============================================================
+     DETENER CÁMARA
+     ============================================================ */
+  function stopCamera() {
+    if (currentStream) {
+      currentStream.getTracks().forEach((t) => t.stop());
+      currentStream = null;
+    }
+  }
 
-  codeReader.hints = new Map();
-  codeReader.hints.set(ZXing.DecodeHintType.POSSIBLE_FORMATS, formatos);
+  /* ============================================================
+     CERRAR SCANNER
+     ============================================================ */
+  function closeScanner() {
+    scanning = false;
+    multiMode = false;
+    detectedCodes = [];
+    stopCamera();
+    overlay.classList.add("hidden");
+    document.body.classList.remove("scanner-active");
+  }
 
-  codeReader
-    .listVideoInputDevices()
-    .then((devices) => {
-      if (!devices.length) throw new Error("No hay cámaras disponibles");
+  /* ============================================================
+     PROCESAR CÓDIGO DETECTADO
+     ============================================================ */
+  function handleDetected(code) {
+    beep();
 
-      let deviceId = null;
+    if (!multiMode) {
+      // MODO SIMPLE
+      closeScanner();
+      const input = document.getElementById("search-input");
+      if (input) input.value = code;
+      if (window.appCore?.buscar) appCore.buscar();
+      return;
+    }
 
-      const backCam = devices.find((d) =>
-        (d.label || "").toLowerCase().includes("back")
-      );
+    // MODO MULTI-SCAN
+    if (!detectedCodes.includes(code)) {
+      detectedCodes.push(code);
+      updateControls();
+    }
+  }
 
-      deviceId = backCam ? backCam.deviceId : devices[0].deviceId;
-      selectedDeviceId = deviceId;
+  /* ============================================================
+     INICIAR DECODIFICACIÓN ZXING
+     ============================================================ */
+  async function startDecoding() {
+    if (!codeReader) {
+      codeReader = new ZXing.BrowserMultiFormatReader();
+    }
 
-      return codeReader.decodeFromVideoDevice(
-        deviceId,
-        videoEl,
-        (result, err, controls) => {
-          if (controls?.stream) iniciarAutofocus(controls.stream);
+    scanning = true;
 
+    try {
+      await codeReader.decodeFromVideoDevice(
+        null,
+        "scanner-video",
+        (result, err) => {
           if (result) {
-            beepScanner();
-
-            const text = result.text || "";
-            const finalCode = aplicarModo(text);
-
-            if (window.appCore?.els?.searchInput) {
-              window.appCore.els.searchInput.value = finalCode;
-            }
-
-            cerrarScanner();
-            onClose?.();
+            handleDetected(result.text);
           }
         }
       );
-    })
-    .catch((err) => {
-      cerrarScanner();
-      window.appCore?.showToast?.("Error iniciando scanner");
-      console.error("Scanner error:", err);
-      onClose?.();
-    });
-}
+    } catch (e) {
+      console.warn("ZXing error:", e);
+      appCore.showToast("Error iniciando scanner");
+    }
+  }
 
-// ------------------------------------------------------------
-// BOTONES
-// ------------------------------------------------------------
-function startScannerInterno1(onClose) {
-  iniciarScannerInterno(onClose);
-}
+  /* ============================================================
+     INICIAR SCANNER (PÚBLICO)
+     ============================================================ */
+  async function startScanner(callback) {
+    if (scanning) return;
 
-function startScannerInterno2(onClose) {
-  iniciarScannerInterno(onClose);
-}
+    overlay.classList.remove("hidden");
+    document.body.classList.add("scanner-active");
 
-function startScannerExternoPreferido(onClose) {
-  const intent =
-    "intent://scan/#Intent;scheme=zxing;package=com.srowen.bs.android;end";
-
-  window.location.href = intent;
-
-  setTimeout(() => {
-    const params = new URLSearchParams(window.location.search);
-    const raw =
-      params.get("SCAN_RESULT") ||
-      params.get("q") ||
-      params.get("code");
-
-    if (raw) {
-      const finalCode = aplicarModo(raw);
-      if (window.appCore?.els?.searchInput) {
-        window.appCore.els.searchInput.value = finalCode;
-      }
+    if (!document.querySelector(".scanner-controls")) {
+      createControls();
     }
 
-    cerrarScanner();
-    onClose?.();
-  }, 800);
-}
+    updateControls();
 
-function startScannerExternoSelector(onClose) {
-  const opciones = [
-    {
-      nombre: "Barcode Scanner+ (Android)",
-      url: "intent://scan/#Intent;scheme=zxing;package=com.srowen.bs.android;end",
-    },
-    {
-      nombre: "ZXing App (Android)",
-      url: "zxing://scan",
-    },
-    {
-      nombre: "ZXing Web Scanner",
-      url: "https://zxing.appspot.com/scan",
-    },
-    {
-      nombre: "QR Code Reader (iOS)",
-      url: "https://apps.apple.com/us/app/qr-code-reader/id1200318119",
-    },
-  ];
+    const ok = await startCamera();
+    if (!ok) return;
 
-  let msg = "Elegí una opción:\n";
-  opciones.forEach((o, i) => (msg += `${i + 1}) ${o.nombre}\n`));
+    startDecoding();
 
-  const elegido = prompt(msg);
-  const idx = parseInt(elegido, 10) - 1;
+    /* Eventos de controles */
+    document.getElementById("scn-torch").onclick = toggleTorch;
+    document.getElementById("scn-zoom-in").onclick = () => {
+      zoomLevel += 0.3;
+      applyZoom();
+    };
+    document.getElementById("scn-zoom-out").onclick = () => {
+      zoomLevel -= 0.3;
+      applyZoom();
+    };
 
-  if (opciones[idx]) window.location.href = opciones[idx].url;
+    document.getElementById("scn-close").onclick = () => {
+      closeScanner();
+    };
 
-  setTimeout(() => {
-    const params = new URLSearchParams(window.location.search);
-    const raw =
-      params.get("SCAN_RESULT") ||
-      params.get("q") ||
-      params.get("code");
-
-    if (raw) {
-      const finalCode = aplicarModo(raw);
-      if (window.appCore?.els?.searchInput) {
-        window.appCore.els.searchInput.value = finalCode;
+    document.getElementById("scn-multi").onclick = () => {
+      if (!multiMode) {
+        // Activar multi-scan
+        multiMode = true;
+        detectedCodes = [];
+        updateControls();
+      } else {
+        // Enviar todos → copiar al portapapeles
+        const txt = detectedCodes.join("\n");
+        navigator.clipboard.writeText(txt);
+        appCore.showToast("Códigos copiados");
       }
-    }
+    };
 
-    cerrarScanner();
-    onClose?.();
-  }, 800);
-}
+    // Tap en video → torch
+    video.onclick = toggleTorch;
+  }
 
-// ------------------------------------------------------------
-// EXPORTAR
-// ------------------------------------------------------------
-window.startScannerInterno1 = startScannerInterno1;
-window.startScannerInterno2 = startScannerInterno2;
-window.startScannerExternoPreferido = startScannerExternoPreferido;
-window.startScannerExternoSelector = startScannerExternoSelector;
+  /* ============================================================
+     EXPONER FUNCIONES GLOBALES
+     ============================================================ */
+  window.startScannerInterno1 = startScanner;
+  window.startScannerInterno2 = startScanner;
+  window.startScannerExternoPreferido = startScanner;
+  window.startScannerExternoSelector = startScanner;
+})();
