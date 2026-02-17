@@ -1668,3 +1668,171 @@ body.light-mode .scanner-button:active {
     padding: 10px !important;
   }
 }
+/* ============================================================
+   SCANNER V4 PRO — IA PRO ULTRA
+   ============================================================ */
+
+/* Overlay principal */
+.scanner-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999999;
+  opacity: 1;
+  transition: opacity 0.25s ease-out;
+}
+
+.scanner-overlay.hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Video */
+#scanner-video {
+  width: 100%;
+  max-width: 480px;
+  border-radius: 16px;
+  box-shadow: 0 0 40px rgba(0, 0, 0, 0.9);
+  border: 2px solid rgba(255, 255, 255, 0.15);
+  background: #000;
+}
+
+/* Cuando el scanner está activo, bloquea scroll */
+body.scanner-active {
+  overflow: hidden !important;
+}
+
+/* ============================================================
+   BARRA INFERIOR DE CONTROLES
+   ============================================================ */
+
+.scanner-controls {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 12px;
+  background: rgba(15, 23, 42, 0.85);
+  padding: 10px 16px;
+  border-radius: 16px;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  backdrop-filter: blur(12px);
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.85);
+  z-index: 9999999;
+}
+
+/* Botones */
+.scanner-btn,
+.scanner-btn-primary,
+.scanner-btn-danger {
+  padding: 8px 14px;
+  border-radius: 10px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  background: rgba(30, 41, 59, 0.9);
+  color: #e5e7eb;
+  transition: 0.2s ease-out;
+}
+
+.scanner-btn:hover {
+  background: rgba(59, 130, 246, 0.25);
+  border-color: rgba(59, 130, 246, 0.6);
+  transform: translateY(-2px);
+}
+
+/* Botón principal (Multi-scan / Enviar todos) */
+.scanner-btn-primary {
+  background: linear-gradient(135deg, #4f46e5, #0ea5e9);
+  border-color: rgba(79, 140, 255, 0.8);
+  color: white;
+  font-weight: 600;
+}
+
+.scanner-btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 30px rgba(37, 99, 235, 0.7);
+}
+
+/* Botón cerrar */
+.scanner-btn-danger {
+  background: #ff4f6a;
+  border-color: #ff4f6a;
+  color: white;
+  font-weight: 700;
+}
+
+.scanner-btn-danger:hover {
+  background: #e11d48;
+  border-color: #e11d48;
+  transform: translateY(-2px);
+  box-shadow: 0 12px 30px rgba(239, 68, 68, 0.7);
+}
+
+/* ============================================================
+   CONTADOR MULTI-SCAN
+   ============================================================ */
+
+.scanner-counter {
+  position: fixed;
+  bottom: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(15, 23, 42, 0.85);
+  padding: 8px 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  color: #e5e7eb;
+  font-size: 0.85rem;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.85);
+  z-index: 9999999;
+}
+
+.scanner-counter.hidden {
+  display: none;
+}
+
+/* ============================================================
+   MODO DÍA
+   ============================================================ */
+
+body.light-mode .scanner-overlay {
+  background: rgba(255, 255, 255, 0.85);
+}
+
+body.light-mode #scanner-video {
+  border-color: rgba(0, 0, 0, 0.2);
+}
+
+body.light-mode .scanner-controls {
+  background: rgba(255, 255, 255, 0.85);
+  border-color: rgba(0, 0, 0, 0.2);
+}
+
+body.light-mode .scanner-btn {
+  background: rgba(240, 240, 240, 0.9);
+  color: #111;
+  border-color: rgba(0, 0, 0, 0.2);
+}
+
+body.light-mode .scanner-btn-primary {
+  background: linear-gradient(135deg, #3b82f6, #60a5fa);
+  border-color: #3b82f6;
+}
+
+body.light-mode .scanner-btn-danger {
+  background: #ef4444;
+  border-color: #ef4444;
+}
+
+body.light-mode .scanner-counter {
+  background: rgba(255, 255, 255, 0.85);
+  color: #111;
+  border-color: rgba(0, 0, 0, 0.2);
+}
