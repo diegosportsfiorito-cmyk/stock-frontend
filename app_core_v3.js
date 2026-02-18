@@ -117,201 +117,6 @@ const AppCore = {
     ORB.setReady();
   },
   // ============================================================
-  // AUTOCOMPLETE — INTELIGENTE
-  // ============================================================
-
-  getAutocompleteSuggestions(term) {
-    const q = this.normalizarTexto(term);
-    if (!q || !this.state.catalogItems.length) return [];
-
-    const exactArticulo = [];
-    const exactMarca = [];
-    const exactRubro = [];
-    const exactDescripcion = [];
-
-    const prefijoArticulo = [];
-    const prefijoMarca = [];
-    const prefijoRubro = [];
-    const prefijoDescripcion = [];
-
-    const parcialArticulo = [];
-    const parcialMarca = [];
-    const parcialRubro = [];
-    const parcialDescripcion = [];
-
-    const pushUnique = (arr, value) => {
-      if (!value) return;
-      if (!arr.includes(value)) arr.push(value);
-    };
-
-    this.state.catalogItems.forEach((item) => {
-      const descRaw = item.descripcion || "";
-      const marcaRaw = item.marca || "";
-      const rubroRaw = item.rubro || "";
-      const codigoRaw = item.codigo || "";
-
-      const descN = this.normalizarTexto(descRaw);
-      const marcaN = this.normalizarTexto(marcaRaw);
-      const rubroN = this.normalizarTexto(rubroRaw);
-      const codigoN = this.normalizarTexto(codigoRaw);
-
-      const startsWith = (txt) => txt && txt.startsWith(q);
-      const contains = (txt) => txt && txt.includes(q);
-
-      // ARTÍCULO
-      if (codigoN === q || descN === q) {
-        pushUnique(exactArticulo, descRaw || codigoRaw);
-      } else if (startsWith(codigoN) || startsWith(descN)) {
-        pushUnique(prefijoArticulo, descRaw || codigoRaw);
-      } else if (contains(codigoN) || contains(descN)) {
-        pushUnique(parcialArticulo, descRaw || codigoRaw);
-      }
-
-      // MARCA
-      if (marcaN) {
-        if (marcaN === q) pushUnique(exactMarca, marcaRaw);
-        else if (startsWith(marcaN)) pushUnique(prefijoMarca, marcaRaw);
-        else if (contains(marcaN)) pushUnique(parcialMarca, marcaRaw);
-      }
-
-      // RUBRO
-      if (rubroN) {
-        if (rubroN === q) pushUnique(exactRubro, rubroRaw);
-        else if (startsWith(rubroN)) pushUnique(prefijoRubro, rubroRaw);
-        else if (contains(rubroN)) pushUnique(parcialRubro, rubroRaw);
-      }
-
-      // DESCRIPCIÓN
-      if (descN) {
-        if (descN === q) pushUnique(exactDescripcion, descRaw);
-        else if (startsWith(descN)) pushUnique(prefijoDescripcion, descRaw);
-        else if (contains(descN)) pushUnique(parcialDescripcion, descRaw);
-      }
-    });
-
-    const ordered = [
-      ...exactArticulo,
-      ...exactMarca,
-      ...exactRubro,
-      ...exactDescripcion,
-      ...prefijoArticulo,
-      ...prefijoMarca,
-      ...prefijoRubro,
-      ...prefijoDescripcion,
-      ...parcialArticulo,
-      ...parcialMarca,
-      ...parcialRubro,
-      ...parcialDescripcion,
-    ];
-
-    const final = [];
-    const seen = new Set();
-    for (const v of ordered) {
-      if (!v) continue;
-      if (seen.has(v)) continue;
-      seen.add(v);
-      final.push(v);
-      if (final.length >= 12) break;
-    }
-
-    return final;
-  },
-
-  // ============================================================
-  // WARM-UP + CARGA CATÁLOGO
-  // ============================================================
-
-  async pingBackend() {
-    this.setSearchStatus("Activando servidor…", "orange");
-    this.setConnectionStatus(false);
-
-    try {
-      const res = await fetch(this.config.backendUrl + "/ping");
-      if (!res.ok) throw new Error();
-
-      this.setSearchStatus("Conectado", "green");
-      this.setConnectionStatus(true);
-      this.state.warmingUp = false;
-      return true;
-    } catch {
-      this.setSearchStatus("Activando servidor…", "orange");
-      return false;
-    }
-  },
-
-  async warmUpLoop() {
-    const ok = await this.pingBackend();
-    if (!ok) {
-      setTimeout(() => this.warmUpLoop(), 2000);
-      return;
-    }
-    this.cargarCatalogo();
-  },
-
-  async cargarCatalogo() {
-    this.setSearchStatus("Cargando catálogo…", "blue");
-
-    try {
-      const res = await fetch(this.config.backendUrl + "/catalog");
-      if (!res.ok) throw new Error();
-
-      const data = await res.json();
-
-      this.state.catalogItems = data.items || [];
-      this.state.resumenCatalogo = data.resumen || null;
-
-      // Fuente de datos — versión corregida
-      if (this.els.fuenteArchivo) {
-        const archivo = data.resumen?.archivo || "Archivo original no informado";
-        this.els.fuenteArchivo.textContent = archivo;
-      }
-      if (this.els.fuenteFecha)
-        this.els.fuenteFecha.textContent = data.resumen?.fecha || "—";
-      if (this.els.fuenteMarcas)
-        this.els.fuenteMarcas.textContent = data.resumen?.marcas || "—";
-      if (this.els.fuenteRubros)
-        this.els.fuenteRubros.textContent = data.resumen?.rubros || "—";
-      if (this.els.fuenteArticulos)
-        this.els.fuenteArticulos.textContent = data.resumen?.articulos || "—";
-      if (this.els.fuenteStockTotal)
-        this.els.fuenteStockTotal.textContent = data.resumen?.stock_total || "—";
-      if (this.els.fuenteStockNegativo)
-        this.els.fuenteStockNegativo.textContent =
-          data.resumen?.stock_negativo || "—";
-
-      this.poblarFiltros();
-
-      this.setConnectionStatus(true);
-      this.setSearchStatus("Conectado", "green");
-    } catch {
-      this.setConnectionStatus(false);
-      this.setSearchStatus("Error de conexión", "red");
-
-      clearTimeout(this.state.retryTimeout);
-      this.state.retryTimeout = setTimeout(() => this.warmUpLoop(), 2000);
-    }
-  },
-
-  poblarFiltros() {
-    const marcas = new Set();
-    const rubros = new Set();
-
-    this.state.catalogItems.forEach((i) => {
-      if (i.marca) marcas.add(i.marca);
-      if (i.rubro) rubros.add(i.rubro);
-    });
-
-    if (this.els.filtroMarca)
-      this.els.filtroMarca.innerHTML =
-        `<option value="">Marca</option>` +
-        [...marcas].sort().map((m) => `<option>${m}</option>`).join("");
-
-    if (this.els.filtroRubro)
-      this.els.filtroRubro.innerHTML =
-        `<option value="">Rubro</option>` +
-        [...rubros].sort().map((r) => `<option>${r}</option>`).join("");
-  },
-  // ============================================================
   // PARSER INTELIGENTE
   // ============================================================
 
@@ -481,6 +286,7 @@ const AppCore = {
 
     synth.speak(utter);
   },
+
   // ============================================================
   // BÚSQUEDA PRINCIPAL
   // ============================================================
@@ -527,7 +333,6 @@ const AppCore = {
       this.setSearchStatus("Listo", "green");
       this.setConnectionStatus(true);
 
-      // Voz SOLO después de resultados cargados
       this.speakResultados();
 
     } catch (e) {
@@ -598,7 +403,6 @@ const AppCore = {
       this.setSearchStatus("Listo", "green");
       this.setConnectionStatus(true);
 
-      // Voz después de resultados
       this.speakResultados();
 
     } catch (e) {
@@ -614,7 +418,6 @@ const AppCore = {
       this.state.currentAbort = null;
     }
   },
-
   // ============================================================
   // RENDERIZADO DE RESULTADOS
   // ============================================================
@@ -640,6 +443,7 @@ const AppCore = {
       this.renderTarjetas(items);
     }
   },
+
   // ============================================================
   // RENDER TABLA
   // ============================================================
