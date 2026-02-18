@@ -542,6 +542,15 @@ function initUI(app) {
   helpModal?.addEventListener("click", (e) => {
     if (e.target === helpModal) helpModal.classList.add("hidden");
   });
+  // ------------------------------------------------------------
+// FUENTE DE DATOS — TOGGLE
+// ------------------------------------------------------------
+const fuenteToggle = document.getElementById("fuente-datos-toggle");
+const fuentePanel = document.getElementById("fuente-datos-panel");
+
+fuenteToggle?.addEventListener("click", () => {
+  fuentePanel.classList.toggle("visible");
+});
 
   // ------------------------------------------------------------
   // PANEL FUENTE DE DATOS
