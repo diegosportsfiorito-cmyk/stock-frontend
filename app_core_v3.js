@@ -116,7 +116,6 @@ const AppCore = {
     ORB.setLoading(false);
     ORB.setReady();
   },
-
   // ============================================================
   // AUTOCOMPLETE — INTELIGENTE
   // ============================================================
@@ -261,15 +260,9 @@ const AppCore = {
       this.state.catalogItems = data.items || [];
       this.state.resumenCatalogo = data.resumen || null;
 
-      // Fuente de datos
+      // Fuente de datos — versión corregida
       if (this.els.fuenteArchivo) {
-        let archivo = data.resumen?.archivo || "—";
-
-        // Si viene algo genérico tipo "Google Drive", intentamos usar un campo más específico
-        if (archivo.toLowerCase().includes("google")) {
-          archivo = data.resumen?.nombre_excel || "Archivo original no informado";
-        }
-
+        const archivo = data.resumen?.archivo || "Archivo original no informado";
         this.els.fuenteArchivo.textContent = archivo;
       }
       if (this.els.fuenteFecha)
@@ -318,7 +311,6 @@ const AppCore = {
         `<option value="">Rubro</option>` +
         [...rubros].sort().map((r) => `<option>${r}</option>`).join("");
   },
-
   // ============================================================
   // PARSER INTELIGENTE
   // ============================================================
@@ -489,481 +481,364 @@ const AppCore = {
 
     synth.speak(utter);
   },
-};
+  // ============================================================
+  // BÚSQUEDA PRINCIPAL
+  // ============================================================
 
-// ============================================================
-// APP CORE — PARTE 2/2
-// ============================================================
-
-// ============================================================
-// BÚSQUEDA PRINCIPAL
-// ============================================================
-
-AppCore.buscar = async function () {
-  const raw = this.els.searchInput?.value || "";
-  const q = raw.trim();
-
-  if (!q) {
-    this.limpiarPantalla();
-    return;
-  }
-
-  this.state.lastQuery = q;
-
-  const parsed = this.interpretarQuery(q);
-
-  const body = {
-    question: parsed.question || "",
-    filtros_globales: !!parsed.filtros_globales,
-    marca: parsed.marca || null,
-    rubro: parsed.rubro || null,
-    talleDesde: parsed.talleDesde || null,
-    talleHasta: parsed.talleHasta || null,
-    soloUltimo: parsed.soloUltimo || false,
-    soloNegativo: parsed.soloNegativo || false,
-    solo_stock: this.els.chkSoloStock?.checked || false,
-  };
-
-  if (this.state.currentAbort) this.state.currentAbort.abort();
-  this.state.currentAbort = new AbortController();
-
-  this.setSearchStatus("Buscando…", "blue");
-  ORB.setError(false);
-  ORB.setLoading(true);
-  if (this.els.resultsStatus)
-    this.els.resultsStatus.textContent = "Buscando…";
-
-  try {
-    const res = await fetch(this.config.backendUrl + "/query", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-      signal: this.state.currentAbort.signal,
-    });
-
-    if (!res.ok) throw new Error();
-
-    const data = await res.json();
-    this.state.items = data.items || [];
-
-    this.renderResultados(this.state.items);
-    window.actualizarDashboard?.(this.state.items);
-    this.actualizarIndicadores(this.state.items);
-
-    this.setConnectionStatus(true);
-    this.setSearchStatus("Conectado", "green");
-    if (this.els.resultsStatus)
-      this.els.resultsStatus.textContent = `${this.state.items.length} resultados`;
-
-    if (window.ORB?.isVoiceMode?.() || window.manosLibresActivo) {
-      this.speakResultados();
+  async buscar() {
+    const q = this.els.searchInput?.value.trim() || "";
+    if (!q) {
+      this.showToast("Ingresá un artículo, marca o rubro");
+      return;
     }
-  } catch (err) {
-    if (err.name !== "AbortError") {
+
+    this.state.lastQuery = q;
+
+    const parsed = this.interpretarQuery(q);
+
+    if (this.state.currentAbort) {
+      this.state.currentAbort.abort();
+      this.state.currentAbort = null;
+    }
+
+    const controller = new AbortController();
+    this.state.currentAbort = controller;
+
+    this.setSearchStatus("Buscando…", "blue");
+    ORB.setLoading?.(true);
+
+    try {
+      const res = await fetch(this.config.backendUrl + "/buscar", {
+        method: "POST",
+        body: JSON.stringify(parsed),
+        headers: { "Content-Type": "application/json" },
+        signal: controller.signal,
+      });
+
+      if (!res.ok) throw new Error("Error en backend");
+
+      const data = await res.json();
+
+      this.state.items = data.items || [];
+
+      this.renderResultados(this.state.items);
+      this.actualizarIndicadores(this.state.items);
+
+      this.setSearchStatus("Listo", "green");
+      this.setConnectionStatus(true);
+
+      // Voz SOLO después de resultados cargados
+      this.speakResultados();
+
+    } catch (e) {
+      if (e.name === "AbortError") return;
+
+      this.setSearchStatus("Error", "red");
       this.setConnectionStatus(false);
-      ORB.setError(true);
+      ORB.setError?.(true);
 
-      this.setSearchStatus("Error de conexión", "red");
-      if (this.els.resultsStatus)
-        this.els.resultsStatus.textContent = "Error de conexión";
-
-      clearTimeout(this.state.retryTimeout);
-      this.state.retryTimeout = setTimeout(() => this.warmUpLoop(), 2000);
+      this.showToast("Error de conexión");
+    } finally {
+      ORB.setLoading?.(false);
+      this.state.currentAbort = null;
     }
-  } finally {
-    ORB.setLoading(false);
-    ORB.setReady();
-  }
-};
+  },
 
-// ============================================================
-// BÚSQUEDA POR FILTROS
-// ============================================================
+  // ============================================================
+  // BÚSQUEDA POR FILTROS
+  // ============================================================
 
-AppCore.actualizarFiltrosDesdeUI = function () {
-  this.state.filtros.marca = this.els.filtroMarca?.value || null;
-  this.state.filtros.rubro = this.els.filtroRubro?.value || null;
-  this.state.filtros.talleDesde = this.els.filtroTalleDesde?.value || null;
-  this.state.filtros.talleHasta = this.els.filtroTalleHasta?.value || null;
-};
+  async buscarPorFiltros() {
+    const marca = this.els.filtroMarca?.value || "";
+    const rubro = this.els.filtroRubro?.value || "";
+    const talleDesde = this.els.filtroTalleDesde?.value || "";
+    const talleHasta = this.els.filtroTalleHasta?.value || "";
+    const soloStock = this.els.chkSoloStock?.checked || false;
 
-AppCore.buscarPorFiltros = async function () {
-  this.actualizarFiltrosDesdeUI();
+    const payload = {
+      filtros_globales: true,
+      marca: marca || null,
+      rubro: rubro || null,
+      talleDesde: talleDesde ? Number(talleDesde) : null,
+      talleHasta: talleHasta ? Number(talleHasta) : null,
+      soloUltimo: false,
+      soloNegativo: false,
+      soloStock,
+      question: "",
+    };
 
-  const body = {
-    question: "",
-    filtros_globales: true,
-    marca: this.state.filtros.marca || null,
-    rubro: this.state.filtros.rubro || null,
-    talleDesde: this.state.filtros.talleDesde
-      ? parseInt(this.state.filtros.talleDesde)
-      : null,
-    talleHasta: this.state.filtros.talleHasta
-      ? parseInt(this.state.filtros.talleHasta)
-      : null,
-    soloUltimo: false,
-    soloNegativo: false,
-    solo_stock: this.els.chkSoloStock?.checked || false,
-  };
+    if (this.state.currentAbort) {
+      this.state.currentAbort.abort();
+      this.state.currentAbort = null;
+    }
 
-  if (this.state.currentAbort) this.state.currentAbort.abort();
-  this.state.currentAbort = new AbortController();
+    const controller = new AbortController();
+    this.state.currentAbort = controller;
 
-  this.setSearchStatus("Buscando…", "blue");
-  ORB.setLoading(true);
-  if (this.els.resultsStatus)
-    this.els.resultsStatus.textContent = "Buscando…";
+    this.setSearchStatus("Filtrando…", "blue");
+    ORB.setLoading?.(true);
 
-  try {
-    const res = await fetch(this.config.backendUrl + "/query", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-      signal: this.state.currentAbort.signal,
-    });
+    try {
+      const res = await fetch(this.config.backendUrl + "/buscar", {
+        method: "POST",
+        body: JSON.stringify(payload),
+        headers: { "Content-Type": "application/json" },
+        signal: controller.signal,
+      });
 
-    if (!res.ok) throw new Error();
+      if (!res.ok) throw new Error("Error en backend");
 
-    const data = await res.json();
-    this.state.items = data.items || [];
+      const data = await res.json();
 
-    this.renderResultados(this.state.items);
-    window.actualizarDashboard?.(this.state.items);
-    this.actualizarIndicadores(this.state.items);
+      this.state.items = data.items || [];
 
-    this.setConnectionStatus(true);
-    this.setSearchStatus("Conectado", "green");
-    if (this.els.resultsStatus)
-      this.els.resultsStatus.textContent = `${this.state.items.length} resultados`;
+      this.renderResultados(this.state.items);
+      this.actualizarIndicadores(this.state.items);
 
-    if (window.ORB?.isVoiceMode?.() || window.manosLibresActivo) {
+      this.setSearchStatus("Listo", "green");
+      this.setConnectionStatus(true);
+
+      // Voz después de resultados
       this.speakResultados();
+
+    } catch (e) {
+      if (e.name === "AbortError") return;
+
+      this.setSearchStatus("Error", "red");
+      this.setConnectionStatus(false);
+      ORB.setError?.(true);
+
+      this.showToast("Error de conexión");
+    } finally {
+      ORB.setLoading?.(false);
+      this.state.currentAbort = null;
     }
-  } catch {
-    this.setConnectionStatus(false);
-    ORB.setError(true);
-    this.setSearchStatus("Error de conexión", "red");
-    if (this.els.resultsStatus)
-      this.els.resultsStatus.textContent = "Error de conexión";
-  } finally {
-    ORB.setLoading(false);
-    ORB.setReady();
-  }
-};
+  },
 
-// ============================================================
-// RENDER RESULTADOS (3 VISTAS)
-// ============================================================
+  // ============================================================
+  // RENDERIZADO DE RESULTADOS
+  // ============================================================
 
-AppCore.renderResultados = function (items) {
-  const vTabla = this.els.vistaTabla;
-  const vTarjeta = this.els.vistaTarjeta;
-  const vArticulo = this.els.vistaArticulo;
+  renderResultados(items) {
+    if (!this.els.resultsContainer) return;
 
-  if (!vTabla || !vTarjeta || !vArticulo) return;
+    const vista = this.state.vistaActual;
 
-  const autoList = document.getElementById("autocomplete-list");
-  if (autoList) autoList.innerHTML = "";
+    if (!items || !items.length) {
+      this.els.resultsContainer.innerHTML = `
+        <div class="no-results">
+          <p>No se encontraron resultados</p>
+        </div>`;
+      return;
+    }
 
-  if (!items || !items.length) {
-    vTabla.innerHTML = '<div class="results-empty">Sin resultados.</div>';
-    vTarjeta.innerHTML = '<div class="results-empty">Sin resultados.</div>';
-    vArticulo.innerHTML = '<div class="results-empty">Sin resultados.</div>';
-    return;
-  }
+    if (vista === "tabla") {
+      this.renderTabla(items);
+    } else if (vista === "articulo") {
+      this.renderArticulo(items);
+    } else {
+      this.renderTarjetas(items);
+    }
+  },
+  // ============================================================
+  // RENDER TABLA
+  // ============================================================
 
-  this.renderVistaTabla(items);
-  this.renderVistaTarjeta(items);
-  this.renderVistaArticulo(items);
-};
+  renderTabla(items) {
+    this.els.resultsContainer.innerHTML = `
+      <table class="tabla-stock">
+        <thead>
+          <tr>
+            <th>Artículo</th>
+            <th>Marca</th>
+            <th>Rubro</th>
+            <th>Talles</th>
+            <th>Total</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${items
+            .map((it) => {
+              const total = (it.talles || []).reduce(
+                (a, t) => a + Number(t.stock || 0),
+                0
+              );
+              const talles = (it.talles || [])
+                .map((t) => `${t.talle}: ${t.stock}`)
+                .join(" • ");
 
-AppCore.renderVistaTabla = function (items) {
-  const container = this.els.vistaTabla;
-  if (!container) return;
-
-  let html = `
-    <div class="tabla-wrapper">
-    <table class="tabla-resultados">
-      <thead>
-        <tr>
-          <th>Código</th>
-          <th>Descripción</th>
-          <th>Marca</th>
-          <th>Rubro</th>
-          <th>Color</th>
-          <th>Precio</th>
-          <th>Talles</th>
-          <th>Valorizado</th>
-        </tr>
-      </thead>
-      <tbody>
-  `;
-
-  items.forEach((item) => {
-    const talles = (item.talles || [])
-      .map((t) => `${this.normalizarCampo(t.talle)}: ${t.stock}`)
-      .join(" | ");
-
-    html += `
-      <tr>
-        <td>${this.normalizarCampo(item.codigo)}</td>
-        <td>${this.normalizarCampo(item.descripcion)}</td>
-        <td>${this.normalizarCampo(item.marca)}</td>
-        <td>${this.normalizarCampo(item.rubro)}</td>
-        <td>${this.normalizarCampo(item.color)}</td>
-        <td>$${this.formatNumber(item.precio)}</td>
-        <td>${talles}</td>
-        <td>$${this.formatNumber(item.valorizado)}</td>
-      </tr>
+              return `
+                <tr>
+                  <td>${it.descripcion || "—"}</td>
+                  <td>${it.marca || "—"}</td>
+                  <td>${it.rubro || "—"}</td>
+                  <td>${talles}</td>
+                  <td class="${total <= 0 ? "negativo" : ""}">${total}</td>
+                </tr>`;
+            })
+            .join("")}
+        </tbody>
+      </table>
     `;
-  });
+  },
 
-  html += "</tbody></table></div>";
-  container.innerHTML = html;
-};
+  // ============================================================
+  // RENDER TARJETAS
+  // ============================================================
 
-AppCore.renderVistaTarjeta = function (items) {
-  const container = this.els.vistaTarjeta;
-  if (!container) return;
-  container.innerHTML = "";
+  renderTarjetas(items) {
+    this.els.resultsContainer.innerHTML = items
+      .map((it) => {
+        const total = (it.talles || []).reduce(
+          (a, t) => a + Number(t.stock || 0),
+          0
+        );
 
-  items.forEach((item) => {
-    const div = document.createElement("div");
-    div.className = "result-item";
+        const talles = (it.talles || [])
+          .map(
+            (t) =>
+              `<span class="talle ${t.stock <= 0 ? "neg" : ""}">
+                ${t.talle}: ${t.stock}
+              </span>`
+          )
+          .join("");
 
-    const talles = (item.talles || [])
-      .map((t) => `${this.normalizarCampo(t.talle)}: ${t.stock}`)
-      .join(" | ");
+        return `
+          <div class="card-item">
+            <h3>${it.descripcion || "—"}</h3>
+            <p class="marca">${it.marca || "—"}</p>
+            <p class="rubro">${it.rubro || "—"}</p>
+            <div class="talles">${talles}</div>
+            <div class="total ${total <= 0 ? "negativo" : ""}">
+              Total: ${total}
+            </div>
+          </div>
+        `;
+      })
+      .join("");
+  },
 
-    div.innerHTML = `
-      <div class="result-title">
-        ${this.normalizarCampo(item.codigo)} — ${this.normalizarCampo(
-      item.descripcion
-    )}
-      </div>
-      <div class="result-sub">
-        Marca: ${this.normalizarCampo(item.marca)} |
-        Rubro: ${this.normalizarCampo(item.rubro)} |
-        Color: ${this.normalizarCampo(item.color)}
-      </div>
-      <div class="result-precio">Precio: $${this.formatNumber(item.precio)}</div>
-      <div class="result-talles">${talles}</div>
-      <div class="result-sub">
-        Valorizado: $${this.formatNumber(item.valorizado)}
+  // ============================================================
+  // RENDER ARTÍCULO (vista detallada)
+  // ============================================================
+
+  renderArticulo(items) {
+    const it = items[0];
+    if (!it) {
+      this.els.resultsContainer.innerHTML = `<p>No hay artículo para mostrar</p>`;
+      return;
+    }
+
+    const total = (it.talles || []).reduce(
+      (a, t) => a + Number(t.stock || 0),
+      0
+    );
+
+    const talles = (it.talles || [])
+      .map(
+        (t) =>
+          `<div class="fila-talle ${t.stock <= 0 ? "neg" : ""}">
+            <span>${t.talle}</span>
+            <span>${t.stock}</span>
+          </div>`
+      )
+      .join("");
+
+    this.els.resultsContainer.innerHTML = `
+      <div class="articulo-detalle">
+        <h2>${it.descripcion || "—"}</h2>
+        <p><strong>Marca:</strong> ${it.marca || "—"}</p>
+        <p><strong>Rubro:</strong> ${it.rubro || "—"}</p>
+
+        <h3>Talles</h3>
+        <div class="talles-detalle">${talles}</div>
+
+        <h3>Total</h3>
+        <p class="total ${total <= 0 ? "negativo" : ""}">${total}</p>
       </div>
     `;
+  },
 
-    container.appendChild(div);
-  });
-};
+  // ============================================================
+  // INDICADORES
+  // ============================================================
 
-AppCore.renderVistaArticulo = function (items) {
-  const container = this.els.vistaArticulo;
-  if (!container) return;
+  actualizarIndicadores(items) {
+    if (!items) return;
 
-  if (!items.length) {
-    container.innerHTML = '<div class="results-empty">Sin resultados.</div>';
-    return;
-  }
+    const totalArt = items.length;
+    let totalPares = 0;
+    let negativos = 0;
+    let ceros = 0;
+    let valorizado = 0;
 
-  const base = items[0];
-  const talles = base.talles || [];
+    items.forEach((it) => {
+      const sum = (it.talles || []).reduce(
+        (a, t) => a + Number(t.stock || 0),
+        0
+      );
 
-  if (!talles.length) {
-    container.innerHTML = `
-      <div class="detalle-header">
-        <h2>${this.normalizarCampo(base.codigo)} — ${this.normalizarCampo(
-      base.descripcion
-    )}</h2>
-        <p>${this.normalizarCampo(base.marca)} / ${this.normalizarCampo(
-      base.rubro
-    )}</p>
-      </div>
-      <div class="results-empty">Este artículo no tiene talles detallados.</div>
-    `;
-    return;
-  }
+      totalPares += sum;
+      if (sum < 0) negativos++;
+      if (sum === 0) ceros++;
 
-  const rowsHtml = talles
-    .map((t) => {
-      const stock = Number(t.stock || 0);
-      const precio = Number(base.precio || 0);
-      const total = stock * precio;
-      return `
-      <tr>
-        <td>${this.normalizarCampo(t.talle)}</td>
-        <td>${stock}</td>
-        <td>$${this.formatNumber(precio)}</td>
-        <td>$${this.formatNumber(total)}</td>
-      </tr>
-    `;
-    })
-    .join("");
-
-  const html = `
-    <div class="detalle-header">
-      <h2>${this.normalizarCampo(base.codigo)} — ${this.normalizarCampo(
-    base.descripcion
-  )}</h2>
-      <p>${this.normalizarCampo(base.marca)} / ${this.normalizarCampo(
-    base.rubro
-  )}</p>
-    </div>
-
-    <table class="tabla-talles">
-      <thead>
-        <tr>
-          <th>Talle</th>
-          <th>Cantidad</th>
-          <th>Precio</th>
-          <th>Total</th>
-        </tr>
-      </thead>
-      <tbody>
-        ${rowsHtml}
-      </tbody>
-    </table>
-  `;
-
-  container.innerHTML = html;
-};
-
-// ============================================================
-// INDICADORES / MÉTRICAS
-// ============================================================
-
-AppCore.actualizarIndicadores = function (items) {
-  const arr = items || [];
-
-  const articulos = arr.length;
-
-  let pares = 0;
-  let stockNegativo = 0;
-  let sinStock = 0;
-  let valorizadoTotal = 0;
-
-  arr.forEach((item) => {
-    let stockItem = 0;
-    (item.talles || []).forEach((t) => {
-      const s = Number(t.stock || 0);
-      stockItem += s;
-      if (s < 0) stockNegativo += 1;
+      valorizado += Number(it.valorizado || 0);
     });
-    if (stockItem === 0) sinStock += 1;
-    if (item.valorizado) valorizadoTotal += Number(item.valorizado || 0);
-    if (stockItem > 0) pares += stockItem;
-  });
 
-  if (this.els.metricArticulos)
-    this.els.metricArticulos.textContent = this.formatNumber(articulos);
-  if (this.els.metricPares)
-    this.els.metricPares.textContent = this.formatNumber(pares);
-  if (this.els.metricAlertasNegativos)
-    this.els.metricAlertasNegativos.textContent =
-      this.formatNumber(stockNegativo);
-  if (this.els.metricAlertasCero)
-    this.els.metricAlertasCero.textContent = this.formatNumber(sinStock);
-  if (this.els.metricValorizado)
-    this.els.metricValorizado.textContent =
-      "$" + this.formatNumber(valorizadoTotal);
+    if (this.els.metricArticulos)
+      this.els.metricArticulos.textContent = this.formatNumber(totalArt);
+    if (this.els.metricPares)
+      this.els.metricPares.textContent = this.formatNumber(totalPares);
+    if (this.els.metricAlertasNegativos)
+      this.els.metricAlertasNegativos.textContent = negativos;
+    if (this.els.metricAlertasCero)
+      this.els.metricAlertasCero.textContent = ceros;
+    if (this.els.metricValorizado)
+      this.els.metricValorizado.textContent = "$ " + this.formatNumber(valorizado);
+  },
+
+  // ============================================================
+  // COPIAR RESULTADOS
+  // ============================================================
+
+  copiarResultados() {
+    const txt = this.els.resultsContainer?.innerText || "";
+    navigator.clipboard.writeText(txt);
+    this.showToast("Copiado");
+  },
+
+  // ============================================================
+  // LIMPIAR
+  // ============================================================
+
+  limpiarPantalla() {
+    if (this.els.searchInput) this.els.searchInput.value = "";
+    if (this.els.resultsContainer) this.els.resultsContainer.innerHTML = "";
+    this.setSearchStatus("Listo", "green");
+  },
+
+  // ============================================================
+  // STOP
+  // ============================================================
+
+  stopTodo() {
+    if (this.state.currentAbort) {
+      this.state.currentAbort.abort();
+      this.state.currentAbort = null;
+    }
+    window.speechSynthesis?.cancel();
+    this.setSearchStatus("Listo", "green");
+  },
+
+  // ============================================================
+  // INIT
+  // ============================================================
+
+  init() {
+    this.setSearchStatus("Activando servidor…", "orange");
+    this.warmUpLoop();
+  },
 };
 
-// ============================================================
-// COPIAR RESULTADOS
-// ============================================================
-
-AppCore.copiarResultados = function () {
-  if (!this.state.items.length) {
-    this.showToast("No hay resultados para copiar");
-    return;
-  }
-
-  let txt = "";
-  this.state.items.forEach((item) => {
-    txt += `${item.codigo} — ${item.descripcion} — ${item.marca} — ${item.rubro}\n`;
-    (item.talles || []).forEach((t) => {
-      txt += `  Talle ${t.talle}: ${t.stock}\n`;
-    });
-    txt += "\n";
-  });
-
-  navigator.clipboard.writeText(txt);
-  this.showToast("Copiado");
-};
-
-// ============================================================
-// STOP TODO
-// ============================================================
-
-AppCore.stopTodo = function () {
-  if (this.state.currentAbort) this.state.currentAbort.abort();
-  try {
-    speechSynthesis.cancel();
-  } catch (_) {}
-  ORB.setError(false);
-  ORB.setLoading(false);
-  if (ORB.setSpeaking) ORB.setSpeaking(false);
-  ORB.setReady();
-  this.setSearchStatus("Listo", "blue");
-};
-
-// ============================================================
-// LIMPIAR PANTALLA
-// ============================================================
-
-AppCore.limpiarPantalla = function () {
-  this.state.items = [];
-  this.renderResultados([]);
-  window.actualizarDashboard?.([]);
-  this.actualizarIndicadores([]);
-
-  if (this.els.resultsStatus)
-    this.els.resultsStatus.textContent = "Sin resultados";
-
-  if (this.els.searchInput)
-    this.els.searchInput.value = "";
-
-  this.setOrbIdle();
-  this.setSearchStatus("Listo", "blue");
-};
-
-// ============================================================
-// EVENTOS DE UI (solo los que NO maneja UI ENGINE V4)
-// ============================================================
-
-AppCore.conectarEventosUI = function () {
-  // Filtros
-  this.els.btnAplicarFiltros?.addEventListener("click", () => {
-    this.buscarPorFiltros();
-  });
-
-  // Fuente de datos
-  this.els.fuenteDatosToggle?.addEventListener("click", () => {
-    this.els.fuenteDatosPanel?.classList.toggle("visible");
-  });
-
-  // Enter en input (fallback)
-  this.els.searchInput?.addEventListener("keydown", (e) => {
-    if (e.key === "Enter") this.buscar();
-  });
-};
-
-// ============================================================
-// INIT
-// ============================================================
-
-AppCore.init = function () {
-  this.setSearchStatus("Activando servidor…", "orange");
-  this.warmUpLoop();
-  this.conectarEventosUI();
-};
-
-// ============================================================
-// INSTANCIA GLOBAL
-// ============================================================
-
+// Exponer global
 window.appCore = AppCore;
-
-window.addEventListener("DOMContentLoaded", () => {
-  appCore.init();
-});
