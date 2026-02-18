@@ -237,6 +237,7 @@ function initUI(app) {
       autoList.innerHTML = "";
     }
   });
+
   // ============================================================
   // ORB
   // ============================================================
@@ -269,7 +270,6 @@ function initUI(app) {
       app.showToast("Modo administrador activado");
     });
   }
-
   // ------------------------------------------------------------
   // BOTONES DE ACCIÓN
   // ------------------------------------------------------------
@@ -291,8 +291,10 @@ function initUI(app) {
   });
 
   // ------------------------------------------------------------
-  // SCANNER
+  // SCANNER (NATIVO + WEB FALLBACK)
   // ------------------------------------------------------------
+  const isAndroidApp = !!(window.Android && typeof Android.abrirScanner === "function");
+
   function setScannerOverlay(active) {
     if (!scannerOverlay) return;
     if (active) {
@@ -320,165 +322,54 @@ function initUI(app) {
     }
   }
 
-  if (btnScanner1 && typeof window.startScannerInterno1 === "function") {
-    btnScanner1.addEventListener("click", () => {
+  // === NATIVO ===
+  function abrirScannerNativo() {
+    try {
+      Android.abrirScanner();
+    } catch (e) {
+      console.warn("Error al abrir scanner nativo:", e);
+    }
+  }
+
+  // === WEB ===
+  function abrirScannerWeb(tipo) {
+    if (tipo === 1 && typeof window.startScannerInterno1 === "function") {
       setScannerOverlay(true);
       window.startScannerInterno1(scannerCallback);
-    });
-  }
-
-  if (btnScanner2 && typeof window.startScannerInterno2 === "function") {
-    btnScanner2.addEventListener("click", () => {
+    } else if (tipo === 2 && typeof window.startScannerInterno2 === "function") {
       setScannerOverlay(true);
       window.startScannerInterno2(scannerCallback);
-    });
-  }
-
-  if (btnScannerExtPref && typeof window.startScannerExternoPreferido === "function") {
-    btnScannerExtPref.addEventListener("click", () => {
+    } else if (tipo === "pref" && typeof window.startScannerExternoPreferido === "function") {
       setScannerOverlay(true);
       window.startScannerExternoPreferido(scannerCallback);
-    });
-  }
-
-  if (btnScannerExtSel && typeof window.startScannerExternoSelector === "function") {
-    btnScannerExtSel.addEventListener("click", () => {
+    } else if (tipo === "sel" && typeof window.startScannerExternoSelector === "function") {
       setScannerOverlay(true);
       window.startScannerExternoSelector(scannerCallback);
-    });
+    } else {
+      app.showToast("Scanner no disponible");
+    }
   }
 
-  // ------------------------------------------------------------
-  // FILTROS
-  // ------------------------------------------------------------
-  btnFiltros?.addEventListener("click", () => {
-    els.filtrosPanel?.classList.toggle("visible");
+  // === BOTONES ===
+  btnScanner1?.addEventListener("click", () => {
+    if (isAndroidApp) abrirScannerNativo();
+    else abrirScannerWeb(1);
   });
 
-  els.btnAplicarFiltros?.addEventListener("click", () => {
-    ORB.setLoading?.(true);
-    app.buscarPorFiltros();
-    setTimeout(() => {
-      app.setOrbIdle?.();
-    }, 600);
+  btnScanner2?.addEventListener("click", () => {
+    if (isAndroidApp) abrirScannerNativo();
+    else abrirScannerWeb(2);
   });
 
-  // ------------------------------------------------------------
-  // VISTAS
-  // ------------------------------------------------------------
-  function setVista(v) {
-    app.state.vistaActual = v;
-
-    btnVistaTabla?.classList.toggle("active", v === "tabla");
-    btnVistaTarjetas?.classList.toggle("active", v === "tarjeta");
-    btnVistaArticulo?.classList.toggle("active", v === "articulo");
-
-    vistaTabla?.classList.toggle("active", v === "tabla");
-    vistaTarjeta?.classList.toggle("active", v === "tarjeta");
-    vistaArticulo?.classList.toggle("active", v === "articulo");
-
-    if (autoList) autoList.innerHTML = "";
-    app.renderResultados(app.state.items);
-  }
-
-  btnVistaTabla?.addEventListener("click", () => setVista("tabla"));
-  btnVistaTarjetas?.addEventListener("click", () => setVista("tarjeta"));
-  btnVistaArticulo?.addEventListener("click", () => setVista("articulo"));
-
-  setVista(app.state.vistaActual || "tarjeta");
-
-  // ------------------------------------------------------------
-  // PANEL ADMIN
-  // ------------------------------------------------------------
-  adminGuardar?.addEventListener("click", () => {
-    const modo = document.getElementById("admin-modo-defecto").value;
-    localStorage.setItem("modoDefecto", modo);
-
-    app.showToast("Configuración guardada");
-
-    adminPanel.classList.remove("visible");
-    adminPanel.classList.add("hidden");
+  btnScannerExtPref?.addEventListener("click", () => {
+    if (isAndroidApp) abrirScannerNativo();
+    else abrirScannerWeb("pref");
   });
 
-  adminCerrar?.addEventListener("click", () => {
-    adminPanel.classList.remove("visible");
-    adminPanel.classList.add("hidden");
+  btnScannerExtSel?.addEventListener("click", () => {
+    if (isAndroidApp) abrirScannerNativo();
+    else abrirScannerWeb("sel");
   });
-
-  // ------------------------------------------------------------
-  // MÉTRICAS FILTRABLES
-  // ------------------------------------------------------------
-  const mArt = document.getElementById("metric-articulos");
-  const mUni = document.getElementById("metric-pares");
-  const mNeg = document.getElementById("metric-alertas-negativos");
-  const mCero = document.getElementById("metric-alertas-cero");
-  const mVal = document.getElementById("metric-valorizado");
-
-  function filtrarNegativos() {
-    const items = app.state.items.filter((it) =>
-      (it.talles || []).some((t) => Number(t.stock) < 0)
-    );
-    app.renderResultados(items);
-    app.actualizarIndicadores(items);
-    app.showToast("Mostrando artículos con stock negativo");
-  }
-
-  function filtrarSinStock() {
-    const items = app.state.items.filter((it) => {
-      const total = (it.talles || []).reduce((a, t) => a + Number(t.stock || 0), 0);
-      return total === 0;
-    });
-    app.renderResultados(items);
-    app.actualizarIndicadores(items);
-    app.showToast("Mostrando artículos sin stock");
-  }
-
-  function filtrarConStock() {
-    const items = app.state.items.filter((it) => {
-      const total = (it.talles || []).reduce((a, t) => a + Number(t.stock || 0), 0);
-      return total > 0;
-    });
-    app.renderResultados(items);
-    app.actualizarIndicadores(items);
-    app.showToast("Mostrando artículos con stock");
-  }
-
-  function ordenarPorValorizado() {
-    const items = [...app.state.items].sort(
-      (a, b) => Number(b.valorizado || 0) - Number(a.valorizado || 0)
-    );
-    app.renderResultados(items);
-    app.actualizarIndicadores(items);
-    app.showToast("Ordenado por valorizado");
-  }
-
-  function mostrarTodos() {
-    app.renderResultados(app.state.items);
-    app.actualizarIndicadores(app.state.items);
-    app.showToast("Mostrando todos los artículos");
-  }
-
-  mArt?.addEventListener("click", mostrarTodos);
-  mUni?.addEventListener("click", filtrarConStock);
-  mNeg?.addEventListener("click", filtrarNegativos);
-  mCero?.addEventListener("click", filtrarSinStock);
-  mVal?.addEventListener("click", ordenarPorValorizado);
-  // ------------------------------------------------------------
-  // MODO DÍA / NOCHE
-  // ------------------------------------------------------------
-  function aplicarModoDark(on) {
-    document.body.classList.toggle("light-mode", on);
-    localStorage.setItem("theme", on ? "light" : "dark");
-  }
-
-  const savedTheme = localStorage.getItem("theme") || "dark";
-  aplicarModoDark(savedTheme === "light");
-  if (toggleDark) toggleDark.checked = savedTheme === "light";
-
-  toggleDark?.addEventListener("change", () => {
-    aplicarModoDark(toggleDark.checked);
-  });
-
   // ------------------------------------------------------------
   // AYUDA
   // ------------------------------------------------------------
