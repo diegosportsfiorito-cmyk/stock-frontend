@@ -210,7 +210,6 @@
     }
 
     if (!multiMode) {
-      // MODO SIMPLE / COMPLETO → un solo código, cerrar y devolver al callback
       const input = document.getElementById("search-input");
       if (input) input.value = code;
 
@@ -222,7 +221,6 @@
       return;
     }
 
-    // MODO MULTI-SCAN
     if (!detectedCodes.includes(code)) {
       detectedCodes.push(code);
       updateControls();
@@ -318,24 +316,20 @@
       }
     };
 
-    // Tap en video → torch
     if (video) video.onclick = toggleTorch;
   }
 
   /* ============================================================
      EXPONER FUNCIONES GLOBALES
      ============================================================ */
-  // Interno 1 → MODO SIMPLE (artículo hasta separador)
   window.startScannerInterno1 = function (cb) {
     startScanner(cb, "simple");
   };
 
-  // Interno 2 → MODO COMPLETO (artículo+color+talle)
   window.startScannerInterno2 = function (cb) {
     startScanner(cb, "completo");
   };
 
-  // Externos → por defecto simple (podemos cambiar si querés)
   window.startScannerExternoPreferido = function (cb) {
     startScanner(cb, "simple");
   };
