@@ -117,7 +117,7 @@
             <button id="btn-scanner-externo-selector" class="scanner-button">🧭</button>
           </div>
 
-          <!-- SCANNER MODE (CORREGIDO) -->
+          <!-- SCANNER MODE (ID CORRECTO) -->
           <div class="scanner-mode-switch">
             <label class="orb-mode-switch">
               <span>Simple</span>
@@ -250,6 +250,7 @@
             <canvas id="stockChart"></canvas>
           </aside>
         </section>
+
         <!-- ========================================================= -->
         <!-- FUENTE DE DATOS                                           -->
         <!-- ========================================================= -->
@@ -406,12 +407,18 @@
       });
 
       /* ============================================================
-         SCANNER NATIVO ANDROID → REGLA SIMPLE DEFINIDA POR ALEJANDRO
+         SCANNER NATIVO ANDROID → RESPETA SIMPLE / COMPLETO
       ============================================================ */
       window.onScan = function(code) {
-        const separadores = /[\/\\! ]/;
-        const partes = code.split(separadores);
-        const limpio = partes[0];
+        let limpio = code;
+
+        // Solo recortar si el modo es SIMPLE
+        const modo = localStorage.getItem("scannerModo") || "simple";
+        if (modo !== "completo") {
+          const separadores = /[\/\\! ]/;
+          const partes = code.split(separadores);
+          limpio = partes[0];
+        }
 
         const input = document.getElementById("search-input");
         if (input) {
