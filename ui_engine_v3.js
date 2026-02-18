@@ -12,7 +12,7 @@ function initUI(app) {
   // ------------------------------------------------------------
   const orbCore = document.getElementById("orb-core");
   const micButton = document.getElementById("mic-button");
-  const dictadoAutoSwitch = document.getElementById("modo-voz-switch"); // dictado automático
+  const dictadoAutoSwitch = document.getElementById("modo-voz-switch");
   const voiceStatus = document.getElementById("voice-status");
   const helpButton = document.getElementById("help-button");
   const helpModal = document.getElementById("help-modal");
@@ -39,16 +39,13 @@ function initUI(app) {
   const adminCerrar = document.getElementById("admin-cerrar");
 
   const toggleDark = document.getElementById("toggle-dark");
-  // Fuente de datos: el toggle lo maneja AppCore; acá solo aseguramos estado inicial
   const fuentePanel = document.getElementById("fuente-datos-panel");
 
-  // Asegurar filtros cerrados al inicio
   els.filtrosPanel?.classList.remove("visible");
-  // Asegurar panel fuente de datos cerrado al inicio
   fuentePanel?.classList.remove("visible");
 
   // ------------------------------------------------------------
-  // BEEP (feedback sonoro)
+  // BEEP
   // ------------------------------------------------------------
   const AudioCtx = window.AudioContext || window.webkitAudioContext;
   let audioCtx = null;
@@ -70,7 +67,7 @@ function initUI(app) {
   }
 
   // ------------------------------------------------------------
-  // ESTADO DE VOZ (UI + ORB)
+  // ESTADO DE VOZ
   // ------------------------------------------------------------
   function setVoiceUIState(state) {
     if (!voiceStatus) return;
@@ -113,7 +110,7 @@ function initUI(app) {
   }
 
   // ------------------------------------------------------------
-  // DICTADO POR VOZ (manual)
+  // DICTADO MANUAL
   // ------------------------------------------------------------
   function startDictado() {
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition || null;
@@ -143,7 +140,6 @@ function initUI(app) {
 
       setTimeout(() => {
         app.setOrbIdle?.();
-        if (dictadoAutoSwitch?.checked) app.speakResultados?.();
       }, 600);
     };
 
@@ -160,7 +156,6 @@ function initUI(app) {
     rec.start();
   }
 
-  // Botón mic — siempre disponible
   micButton?.addEventListener("click", () => {
     startDictado();
   });
@@ -196,7 +191,6 @@ function initUI(app) {
     if (e.key === "Enter") {
       const val = e.target.value.trim().toLowerCase();
 
-      // Modo admin
       if (val === "admin") {
         adminPanel.classList.remove("hidden");
         adminPanel.classList.add("visible");
@@ -206,7 +200,6 @@ function initUI(app) {
         return;
       }
 
-      // Autocomplete
       if (autoList && autoList.children.length > 0) {
         const first = autoList.querySelector("li");
         if (first) {
@@ -220,7 +213,6 @@ function initUI(app) {
 
       setTimeout(() => {
         app.setOrbIdle?.();
-        if (dictadoAutoSwitch?.checked) app.speakResultados?.();
       }, 600);
     }
   });
@@ -235,7 +227,6 @@ function initUI(app) {
 
       setTimeout(() => {
         app.setOrbIdle?.();
-        if (dictadoAutoSwitch?.checked) app.speakResultados?.();
       }, 600);
     }
   });
@@ -246,14 +237,9 @@ function initUI(app) {
       autoList.innerHTML = "";
     }
   });
-
   // ============================================================
-  // PARTE 2 — ORB, Scanner, Filtros, Vistas, Admin, etc.
+  // ORB
   // ============================================================
-
-  // ------------------------------------------------------------
-  // ORB — botón de búsqueda
-  // ------------------------------------------------------------
   if (orbCore) {
     const isMobile = window.matchMedia("(max-width: 768px)").matches;
 
@@ -264,7 +250,6 @@ function initUI(app) {
         app.buscar();
         setTimeout(() => {
           app.setOrbIdle?.();
-          if (dictadoAutoSwitch?.checked) app.speakResultados?.();
         }, 600);
       });
     }
@@ -275,7 +260,6 @@ function initUI(app) {
       app.buscar();
       setTimeout(() => {
         app.setOrbIdle?.();
-        if (dictadoAutoSwitch?.checked) app.speakResultados?.();
       }, 600);
     });
 
@@ -332,7 +316,6 @@ function initUI(app) {
       app.buscar();
       setTimeout(() => {
         app.setOrbIdle?.();
-        if (dictadoAutoSwitch?.checked) app.speakResultados?.();
       }, 600);
     }
   }
@@ -377,12 +360,11 @@ function initUI(app) {
     app.buscarPorFiltros();
     setTimeout(() => {
       app.setOrbIdle?.();
-      if (dictadoAutoSwitch?.checked) app.speakResultados?.();
     }, 600);
   });
 
   // ------------------------------------------------------------
-  // VISTAS: TABLA / TARJETAS / ARTÍCULO
+  // VISTAS
   // ------------------------------------------------------------
   function setVista(v) {
     app.state.vistaActual = v;
@@ -481,7 +463,6 @@ function initUI(app) {
   mNeg?.addEventListener("click", filtrarNegativos);
   mCero?.addEventListener("click", filtrarSinStock);
   mVal?.addEventListener("click", ordenarPorValorizado);
-
   // ------------------------------------------------------------
   // MODO DÍA / NOCHE
   // ------------------------------------------------------------
@@ -517,8 +498,7 @@ function initUI(app) {
 
   // ------------------------------------------------------------
   // PANEL FUENTE DE DATOS
-  // (solo aseguramos que arranque cerrado; el toggle lo maneja AppCore)
-// ------------------------------------------------------------
+  // ------------------------------------------------------------
   fuentePanel?.classList.remove("visible");
 
   // ------------------------------------------------------------
