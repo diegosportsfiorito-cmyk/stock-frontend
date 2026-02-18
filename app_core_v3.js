@@ -508,7 +508,7 @@ const AppCore = {
     ORB.setLoading?.(true);
 
     try {
-      const res = await fetch(this.config.backendUrl + "/buscar", {
+      const res = await fetch(this.config.backendUrl + "/query", {
         method: "POST",
         body: JSON.stringify(parsed),
         headers: { "Content-Type": "application/json" },
@@ -579,7 +579,7 @@ const AppCore = {
     ORB.setLoading?.(true);
 
     try {
-      const res = await fetch(this.config.backendUrl + "/buscar", {
+      const res = await fetch(this.config.backendUrl + "/query", {
         method: "POST",
         body: JSON.stringify(payload),
         headers: { "Content-Type": "application/json" },
