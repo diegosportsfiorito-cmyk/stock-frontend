@@ -44,6 +44,14 @@ function initUI(app) {
   const fuenteToggle = document.getElementById("fuente-datos-toggle");
   const fuentePanel = document.getElementById("fuente-datos-panel");
 
+  // ------------------------------------------------------------
+  // DECLARACIÓN DE BOTONES DEL SCANNER (CORRECTO)
+  // ------------------------------------------------------------
+  const btnScanner1 = document.getElementById("btn-scanner-interno-1");
+  const btnScanner2 = document.getElementById("btn-scanner-interno-2");
+  const btnScannerExtPref = document.getElementById("btn-scanner-externo-preferido");
+  const btnScannerExtSel = document.getElementById("btn-scanner-externo-selector");
+
   els.filtrosPanel?.classList.remove("visible");
   fuentePanel?.classList.remove("visible");
 
@@ -273,10 +281,109 @@ function initUI(app) {
       app.showToast("Modo administrador activado");
     });
   }
+  // ============================================================
+  // SCANNER — NATIVO + WEB FALLBACK (COMPLETO Y CORREGIDO)
+  // ============================================================
 
-  // ------------------------------------------------------------
+  // SWITCH SIMPLE / COMPLETO
+  const modoScannerSwitch = document.getElementById("scanner-mode-switch");
+
+  function aplicarModoScanner(modo) {
+    const m = modo === "completo" ? "completo" : "simple";
+    window.setScannerDefaultMode?.(m);
+    localStorage.setItem("scannerModo", m);
+    app.showToast(`Scanner en modo ${m.toUpperCase()}`);
+  }
+
+  const savedScannerModo = localStorage.getItem("scannerModo") || "simple";
+  aplicarModoScanner(savedScannerModo);
+
+  if (modoScannerSwitch) {
+    modoScannerSwitch.checked = savedScannerModo === "completo";
+    modoScannerSwitch.addEventListener("change", (e) => {
+      aplicarModoScanner(e.target.checked ? "completo" : "simple");
+    });
+  }
+
+  // SCANNER NATIVO + FALLBACK
+  const isAndroidApp = !!(window.Android && typeof Android.abrirScanner === "function");
+
+  function setScannerOverlay(active) {
+    if (!scannerOverlay) return;
+    if (active) {
+      scannerOverlay.classList.remove("hidden");
+      document.body.classList.add("scanner-active");
+    } else {
+      scannerOverlay.classList.add("hidden");
+      document.body.classList.remove("scanner-active");
+    }
+  }
+
+  function scannerCallback() {
+    setScannerOverlay(false);
+    if (els.searchInput?.value.trim()) {
+      ORB.setLoading?.(true);
+      app.buscar();
+      setTimeout(() => {
+        app.setOrbIdle?.();
+      }, 600);
+    }
+  }
+
+  function abrirScannerNativo() {
+    try {
+      Android.abrirScanner();
+    } catch (e) {
+      console.warn("Error al abrir scanner nativo:", e);
+    }
+  }
+
+  function abrirScannerWeb(tipo) {
+    if (tipo === 1 && typeof window.startScannerInterno1 === "function") {
+      setScannerOverlay(true);
+      window.startScannerInterno1(scannerCallback);
+
+    } else if (tipo === 2 && typeof window.startScannerInterno2 === "function") {
+      setScannerOverlay(true);
+      window.startScannerInterno2(scannerCallback);
+
+    } else if (tipo === "pref" && typeof window.startScannerExternoPreferido === "function") {
+      setScannerOverlay(true);
+      window.startScannerExternoPreferido(scannerCallback);
+
+    } else if (tipo === "sel" && typeof window.startScannerExternoSelector === "function") {
+      setScannerOverlay(true);
+      window.startScannerExternoSelector(scannerCallback);
+
+    } else {
+      app.showToast("Scanner no disponible");
+    }
+  }
+
+  // BOTONES DEL SCANNER
+  btnScanner1?.addEventListener("click", () => {
+    if (isAndroidApp) abrirScannerNativo();
+    else abrirScannerWeb(1);
+  });
+
+  btnScanner2?.addEventListener("click", () => {
+    if (isAndroidApp) abrirScannerNativo();
+    else abrirScannerWeb(2);
+  });
+
+  btnScannerExtPref?.addEventListener("click", () => {
+    if (isAndroidApp) abrirScannerNativo();
+    else abrirScannerWeb("pref");
+  });
+
+  btnScannerExtSel?.addEventListener("click", () => {
+    if (isAndroidApp) abrirScannerNativo();
+    else abrirScannerWeb("sel");
+  });
+
+  // ============================================================
   // BOTONES DE ACCIÓN
-  // ------------------------------------------------------------
+  // ============================================================
   btnClear?.addEventListener("click", () => {
     app.limpiarPantalla();
     app.setOrbIdle?.();
@@ -294,9 +401,9 @@ function initUI(app) {
     beep(500);
   });
 
-  // ------------------------------------------------------------
+  // ============================================================
   // FILTROS
-  // ------------------------------------------------------------
+  // ============================================================
   btnFiltros?.addEventListener("click", () => {
     els.filtrosPanel?.classList.toggle("visible");
   });
@@ -309,9 +416,9 @@ function initUI(app) {
     }, 600);
   });
 
-  // ------------------------------------------------------------
+  // ============================================================
   // VISTAS
-  // ------------------------------------------------------------
+  // ============================================================
   function setVista(v) {
     app.state.vistaActual = v;
 
@@ -333,9 +440,9 @@ function initUI(app) {
 
   setVista(app.state.vistaActual || "tarjeta");
 
-  // ------------------------------------------------------------
+  // ============================================================
   // PANEL ADMIN
-  // ------------------------------------------------------------
+  // ============================================================
   adminGuardar?.addEventListener("click", () => {
     const modo = document.getElementById("admin-modo-defecto").value;
     const backend = document.getElementById("admin-backend-url").value;
@@ -354,9 +461,9 @@ function initUI(app) {
     adminPanel.classList.add("hidden");
   });
 
-  // ------------------------------------------------------------
+  // ============================================================
   // MÉTRICAS FILTRABLES
-  // ------------------------------------------------------------
+  // ============================================================
   const mArt = document.getElementById("metric-articulos");
   const mUni = document.getElementById("metric-pares");
   const mNeg = document.getElementById("metric-alertas-negativos");
@@ -413,9 +520,9 @@ function initUI(app) {
   mCero?.addEventListener("click", filtrarSinStock);
   mVal?.addEventListener("click", ordenarPorValorizado);
 
-  // ------------------------------------------------------------
+  // ============================================================
   // MODO DÍA / NOCHE
-  // ------------------------------------------------------------
+  // ============================================================
   function aplicarModoDark(on) {
     document.body.classList.toggle("light-mode", on);
     localStorage.setItem("theme", on ? "light" : "dark");
@@ -429,9 +536,9 @@ function initUI(app) {
     aplicarModoDark(toggleDark.checked);
   });
 
-  // ------------------------------------------------------------
+  // ============================================================
   // AYUDA
-  // ------------------------------------------------------------
+  // ============================================================
   helpModal?.classList.add("hidden");
 
   helpButton?.addEventListener("click", () => {
@@ -446,16 +553,16 @@ function initUI(app) {
     if (e.target === helpModal) helpModal.classList.add("hidden");
   });
 
-  // ------------------------------------------------------------
-  // FUENTE DE DATOS — TOGGLE (corregido, sin duplicados)
-  // ------------------------------------------------------------
+  // ============================================================
+  // FUENTE DE DATOS — TOGGLE
+  // ============================================================
   fuenteToggle?.addEventListener("click", () => {
     fuentePanel.classList.toggle("visible");
   });
 
-  // ------------------------------------------------------------
+  // ============================================================
   // ATAJOS DE TECLADO
-  // ------------------------------------------------------------
+  // ============================================================
   document.addEventListener("keydown", (e) => {
     const tag = (e.target && e.target.tagName) || "";
     const isInput = ["INPUT", "TEXTAREA"].includes(tag);
