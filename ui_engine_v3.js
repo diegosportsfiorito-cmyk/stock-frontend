@@ -270,6 +270,7 @@ function initUI(app) {
       app.showToast("Modo administrador activado");
     });
   }
+
   // ------------------------------------------------------------
   // BOTONES DE ACCIÓN
   // ------------------------------------------------------------
@@ -290,6 +291,27 @@ function initUI(app) {
     beep(500);
   });
 
+  // ------------------------------------------------------------
+  // SWITCH SIMPLE / COMPLETO
+  // ------------------------------------------------------------
+  const modoScannerSwitch = document.getElementById("scanner-mode-switch");
+
+  function aplicarModoScanner(modo) {
+    const m = modo === "completo" ? "completo" : "simple";
+    window.setScannerDefaultMode?.(m);
+    localStorage.setItem("scannerModo", m);
+    app.showToast(`Scanner en modo ${m.toUpperCase()}`);
+  }
+
+  const savedScannerModo = localStorage.getItem("scannerModo") || "simple";
+  aplicarModoScanner(savedScannerModo);
+
+  if (modoScannerSwitch) {
+    modoScannerSwitch.checked = savedScannerModo === "completo";
+    modoScannerSwitch.addEventListener("change", (e) => {
+      aplicarModoScanner(e.target.checked ? "completo" : "simple");
+    });
+  }
   // ------------------------------------------------------------
   // SCANNER (NATIVO + WEB FALLBACK)
   // ------------------------------------------------------------
@@ -322,7 +344,6 @@ function initUI(app) {
     }
   }
 
-  // === NATIVO ===
   function abrirScannerNativo() {
     try {
       Android.abrirScanner();
@@ -331,26 +352,28 @@ function initUI(app) {
     }
   }
 
-  // === WEB ===
   function abrirScannerWeb(tipo) {
     if (tipo === 1 && typeof window.startScannerInterno1 === "function") {
       setScannerOverlay(true);
       window.startScannerInterno1(scannerCallback);
+
     } else if (tipo === 2 && typeof window.startScannerInterno2 === "function") {
       setScannerOverlay(true);
       window.startScannerInterno2(scannerCallback);
+
     } else if (tipo === "pref" && typeof window.startScannerExternoPreferido === "function") {
       setScannerOverlay(true);
       window.startScannerExternoPreferido(scannerCallback);
+
     } else if (tipo === "sel" && typeof window.startScannerExternoSelector === "function") {
       setScannerOverlay(true);
       window.startScannerExternoSelector(scannerCallback);
+
     } else {
       app.showToast("Scanner no disponible");
     }
   }
 
-  // === BOTONES ===
   btnScanner1?.addEventListener("click", () => {
     if (isAndroidApp) abrirScannerNativo();
     else abrirScannerWeb(1);
@@ -370,6 +393,7 @@ function initUI(app) {
     if (isAndroidApp) abrirScannerNativo();
     else abrirScannerWeb("sel");
   });
+
   // ------------------------------------------------------------
   // FILTROS
   // ------------------------------------------------------------
@@ -485,6 +509,7 @@ function initUI(app) {
   mNeg?.addEventListener("click", filtrarNegativos);
   mCero?.addEventListener("click", filtrarSinStock);
   mVal?.addEventListener("click", ordenarPorValorizado);
+
   // ------------------------------------------------------------
   // MODO DÍA / NOCHE
   // ------------------------------------------------------------
