@@ -12,7 +12,17 @@
   let maxZoom = 1;
   let torchOn = false;
   let endCallback = null;
-  let scannerMode = "simple"; // "simple" | "completo"
+
+  // MODO DEL SCANNER: "simple" | "completo"
+  let scannerMode = "simple";
+
+  // MODO POR DEFECTO PARA EL BOTÓN “PREFERIDO”
+  let defaultScannerMode = "simple";
+
+  // Permitir que la UI cambie el modo por defecto
+  window.setScannerDefaultMode = function (mode) {
+    defaultScannerMode = mode === "completo" ? "completo" : "simple";
+  };
 
   const overlay = document.getElementById("scanner-overlay");
   const video = document.getElementById("scanner-video");
@@ -40,7 +50,7 @@
   }
 
   /* ============================================================
-     CREAR CONTROLES (inyectados dinámicamente)
+     CREAR CONTROLES
      ============================================================ */
   function createControls() {
     const controls = document.createElement("div");
@@ -81,7 +91,7 @@
   }
 
   /* ============================================================
-     OBTENER TRACK DE VIDEO ACTUAL
+     OBTENER TRACK DE VIDEO
      ============================================================ */
   function getVideoTrack() {
     if (!video || !video.srcObject) return null;
@@ -195,7 +205,7 @@
   }
 
   /* ============================================================
-     PROCESAR CÓDIGO DETECTADO (SIMPLE / COMPLETO)
+     PROCESAR CÓDIGO (SIMPLE / COMPLETO)
      ============================================================ */
   function handleDetected(rawCode) {
     if (!rawCode) return;
@@ -226,7 +236,6 @@
       updateControls();
     }
   }
-
   /* ============================================================
      INICIAR DECODIFICACIÓN ZXING
      ============================================================ */
@@ -254,12 +263,14 @@
   }
 
   /* ============================================================
-     INICIAR SCANNER (PÚBLICO)
+     INICIAR SCANNER
      ============================================================ */
   async function startScanner(callback, mode) {
     if (scanning) return;
 
     endCallback = typeof callback === "function" ? callback : null;
+
+    // Aplicar modo SIMPLE / COMPLETO
     scannerMode = mode === "completo" ? "completo" : "simple";
 
     overlay.classList.remove("hidden");
@@ -330,8 +341,9 @@
     startScanner(cb, "completo");
   };
 
+  // AHORA RESPETA EL SWITCH SIMPLE / COMPLETO
   window.startScannerExternoPreferido = function (cb) {
-    startScanner(cb, "simple");
+    startScanner(cb, defaultScannerMode);
   };
 
   window.startScannerExternoSelector = function (cb) {
