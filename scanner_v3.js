@@ -346,7 +346,9 @@
     startScanner(cb, defaultScannerMode);
   };
 
+  // ESTE ERA EL ERROR → SIEMPRE FORZABA SIMPLE
   window.startScannerExternoSelector = function (cb) {
-    startScanner(cb, "simple");
+    startScanner(cb, defaultScannerMode);
   };
+
 })();
