@@ -1,17 +1,18 @@
 /* ============================================================
    SCANNER V4 PRO — IA PRO ULTRA
-   scanner_v3.js (versión final)
+   scanner_v3.js (versión corregida)
    ============================================================ */
 
 (function () {
   let codeReader = null;
-  let currentStream = null;
   let scanning = false;
   let multiMode = false;
   let detectedCodes = [];
   let zoomLevel = 1;
   let maxZoom = 1;
   let torchOn = false;
+  let endCallback = null;
+  let scannerMode = "simple"; // "simple" | "completo"
 
   const overlay = document.getElementById("scanner-overlay");
   const video = document.getElementById("scanner-video");
@@ -55,7 +56,6 @@
 
     overlay.appendChild(controls);
 
-    // Contador (solo multi-scan)
     const counter = document.createElement("div");
     counter.className = "scanner-counter hidden";
     counter.id = "scn-counter";
@@ -67,8 +67,8 @@
      ============================================================ */
   function updateControls() {
     const btnMulti = document.getElementById("scn-multi");
-    const btnClose = document.getElementById("scn-close");
     const counter = document.getElementById("scn-counter");
+    if (!btnMulti || !counter) return;
 
     if (!multiMode) {
       btnMulti.textContent = "Multi-scan";
@@ -81,16 +81,24 @@
   }
 
   /* ============================================================
+     OBTENER TRACK DE VIDEO ACTUAL
+     ============================================================ */
+  function getVideoTrack() {
+    if (!video || !video.srcObject) return null;
+    const tracks = video.srcObject.getVideoTracks();
+    return tracks && tracks[0] ? tracks[0] : null;
+  }
+
+  /* ============================================================
      TORCH
      ============================================================ */
   async function toggleTorch() {
-    if (!currentStream) return;
+    const track = getVideoTrack();
+    if (!track) return;
 
-    const track = currentStream.getVideoTracks()[0];
-    const capabilities = track.getCapabilities();
-
+    const capabilities = track.getCapabilities ? track.getCapabilities() : {};
     if (!capabilities.torch) {
-      appCore.showToast("Linterna no disponible");
+      window.appCore?.showToast?.("Linterna no disponible");
       return;
     }
 
@@ -101,7 +109,7 @@
         advanced: [{ torch: torchOn }],
       });
     } catch (e) {
-      appCore.showToast("No se pudo activar la linterna");
+      window.appCore?.showToast?.("No se pudo activar la linterna");
     }
   }
 
@@ -109,18 +117,16 @@
      ZOOM
      ============================================================ */
   async function applyZoom() {
-    if (!currentStream) return;
+    const track = getVideoTrack();
+    if (!track) return;
 
-    const track = currentStream.getVideoTracks()[0];
-    const capabilities = track.getCapabilities();
-
+    const capabilities = track.getCapabilities ? track.getCapabilities() : {};
     if (!capabilities.zoom) {
-      appCore.showToast("Zoom no soportado");
+      window.appCore?.showToast?.("Zoom no soportado");
       return;
     }
 
     maxZoom = capabilities.zoom.max || 1;
-
     zoomLevel = Math.max(1, Math.min(zoomLevel, maxZoom));
 
     try {
@@ -137,7 +143,7 @@
      ============================================================ */
   async function startCamera() {
     try {
-      currentStream = await navigator.mediaDevices.getUserMedia({
+      const stream = await navigator.mediaDevices.getUserMedia({
         video: {
           facingMode: "environment",
           width: { ideal: 1280 },
@@ -147,12 +153,11 @@
         audio: false,
       });
 
-      video.srcObject = currentStream;
+      video.srcObject = stream;
       await video.play();
-
       return true;
     } catch (e) {
-      appCore.showToast("No se pudo acceder a la cámara");
+      window.appCore?.showToast?.("No se pudo acceder a la cámara");
       return false;
     }
   }
@@ -161,9 +166,10 @@
      DETENER CÁMARA
      ============================================================ */
   function stopCamera() {
-    if (currentStream) {
-      currentStream.getTracks().forEach((t) => t.stop());
-      currentStream = null;
+    if (video && video.srcObject) {
+      const tracks = video.srcObject.getTracks();
+      tracks.forEach((t) => t.stop());
+      video.srcObject = null;
     }
   }
 
@@ -174,23 +180,45 @@
     scanning = false;
     multiMode = false;
     detectedCodes = [];
+    torchOn = false;
+    zoomLevel = 1;
+
+    if (codeReader) {
+      try {
+        codeReader.reset();
+      } catch (_) {}
+    }
+
     stopCamera();
     overlay.classList.add("hidden");
     document.body.classList.remove("scanner-active");
   }
 
   /* ============================================================
-     PROCESAR CÓDIGO DETECTADO
+     PROCESAR CÓDIGO DETECTADO (SIMPLE / COMPLETO)
      ============================================================ */
-  function handleDetected(code) {
+  function handleDetected(rawCode) {
+    if (!rawCode) return;
     beep();
 
+    let code = rawCode;
+
+    if (scannerMode === "simple") {
+      const separadores = /[\/\\! ]/;
+      const partes = rawCode.split(separadores);
+      code = partes[0] || rawCode;
+    }
+
     if (!multiMode) {
-      // MODO SIMPLE
-      closeScanner();
+      // MODO SIMPLE / COMPLETO → un solo código, cerrar y devolver al callback
       const input = document.getElementById("search-input");
       if (input) input.value = code;
-      if (window.appCore?.buscar) appCore.buscar();
+
+      closeScanner();
+
+      if (typeof endCallback === "function") {
+        endCallback(code);
+      }
       return;
     }
 
@@ -216,22 +244,25 @@
         null,
         "scanner-video",
         (result, err) => {
-          if (result) {
+          if (result && scanning) {
             handleDetected(result.text);
           }
         }
       );
     } catch (e) {
       console.warn("ZXing error:", e);
-      appCore.showToast("Error iniciando scanner");
+      window.appCore?.showToast?.("Error iniciando scanner");
     }
   }
 
   /* ============================================================
      INICIAR SCANNER (PÚBLICO)
      ============================================================ */
-  async function startScanner(callback) {
+  async function startScanner(callback, mode) {
     if (scanning) return;
+
+    endCallback = typeof callback === "function" ? callback : null;
+    scannerMode = mode === "completo" ? "completo" : "simple";
 
     overlay.classList.remove("hidden");
     document.body.classList.add("scanner-active");
@@ -240,6 +271,8 @@
       createControls();
     }
 
+    multiMode = false;
+    detectedCodes = [];
     updateControls();
 
     const ok = await startCamera();
@@ -247,44 +280,67 @@
 
     startDecoding();
 
-    /* Eventos de controles */
-    document.getElementById("scn-torch").onclick = toggleTorch;
-    document.getElementById("scn-zoom-in").onclick = () => {
+    const btnTorch = document.getElementById("scn-torch");
+    const btnZoomIn = document.getElementById("scn-zoom-in");
+    const btnZoomOut = document.getElementById("scn-zoom-out");
+    const btnClose = document.getElementById("scn-close");
+    const btnMulti = document.getElementById("scn-multi");
+
+    if (btnTorch) btnTorch.onclick = toggleTorch;
+    if (btnZoomIn) btnZoomIn.onclick = () => {
       zoomLevel += 0.3;
       applyZoom();
     };
-    document.getElementById("scn-zoom-out").onclick = () => {
+    if (btnZoomOut) btnZoomOut.onclick = () => {
       zoomLevel -= 0.3;
       applyZoom();
     };
-
-    document.getElementById("scn-close").onclick = () => {
+    if (btnClose) btnClose.onclick = () => {
       closeScanner();
+      if (typeof endCallback === "function") {
+        endCallback(null);
+      }
     };
 
-    document.getElementById("scn-multi").onclick = () => {
+    if (btnMulti) btnMulti.onclick = () => {
       if (!multiMode) {
-        // Activar multi-scan
         multiMode = true;
         detectedCodes = [];
         updateControls();
       } else {
-        // Enviar todos → copiar al portapapeles
         const txt = detectedCodes.join("\n");
-        navigator.clipboard.writeText(txt);
-        appCore.showToast("Códigos copiados");
+        if (txt) {
+          navigator.clipboard.writeText(txt);
+          window.appCore?.showToast?.("Códigos copiados");
+        } else {
+          window.appCore?.showToast?.("No hay códigos para copiar");
+        }
       }
     };
 
     // Tap en video → torch
-    video.onclick = toggleTorch;
+    if (video) video.onclick = toggleTorch;
   }
 
   /* ============================================================
      EXPONER FUNCIONES GLOBALES
      ============================================================ */
-  window.startScannerInterno1 = startScanner;
-  window.startScannerInterno2 = startScanner;
-  window.startScannerExternoPreferido = startScanner;
-  window.startScannerExternoSelector = startScanner;
+  // Interno 1 → MODO SIMPLE (artículo hasta separador)
+  window.startScannerInterno1 = function (cb) {
+    startScanner(cb, "simple");
+  };
+
+  // Interno 2 → MODO COMPLETO (artículo+color+talle)
+  window.startScannerInterno2 = function (cb) {
+    startScanner(cb, "completo");
+  };
+
+  // Externos → por defecto simple (podemos cambiar si querés)
+  window.startScannerExternoPreferido = function (cb) {
+    startScanner(cb, "simple");
+  };
+
+  window.startScannerExternoSelector = function (cb) {
+    startScanner(cb, "simple");
+  };
 })();
