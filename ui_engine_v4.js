@@ -1,33 +1,18 @@
 // ============================================================
-// UI ENGINE V3 — Control total de UI + Layout móvil
+// UI ENGINE V4 — Control total de UI + Layout móvil
 // ============================================================
-// Controla:
-// - ORB (click/touch)
-// - Enter en PC y móvil
-// - Autocomplete
-// - Scanner
-// - Voz (micrófono, dictado, manos libres)
-// - Botones de acción (limpiar, copiar, stop)
-// - Filtros
-// - Vista tabla/tarjetas/artículo
-// - Panel admin
-// - Layout móvil (<768px)
-// - Modo día/noche persistente
-// - Métricas filtrables (UNIDADES, negativos, sin stock, valorizado)
+// Opción 1A + B + D: Dictado automático + ORB + Scanner + Vistas
 // ============================================================
 
 function initUI(app) {
   const els = app.els;
-  const safe = (el) => el !== null && el !== undefined;
 
   // ------------------------------------------------------------
   // ELEMENTOS BASE
   // ------------------------------------------------------------
   const orbCore = document.getElementById("orb-core");
-  const orb = document.getElementById("orb");
   const micButton = document.getElementById("mic-button");
-  const modoVozSwitch = document.getElementById("modo-voz-switch");
-  const modoManosLibresSwitch = document.getElementById("modo-manos-libres");
+  const dictadoAutoSwitch = document.getElementById("modo-voz-switch");
   const voiceStatus = document.getElementById("voice-status");
   const helpButton = document.getElementById("help-button");
   const helpModal = document.getElementById("help-modal");
@@ -54,11 +39,24 @@ function initUI(app) {
   const adminCerrar = document.getElementById("admin-cerrar");
 
   const toggleDark = document.getElementById("toggle-dark");
+
+  // PANEL FUENTE DE DATOS
   const fuenteToggle = document.getElementById("fuente-datos-toggle");
   const fuentePanel = document.getElementById("fuente-datos-panel");
 
   // ------------------------------------------------------------
-  // BEEP (feedback sonoro)
+  // BOTONES DEL SCANNER (alineados a tu HTML)
+  // ------------------------------------------------------------
+  const btnScannerInterno1 = document.getElementById("btn-scanner-interno-1");
+  const btnScannerInterno2 = document.getElementById("btn-scanner-interno-2");
+  const btnScannerExternoPreferido = document.getElementById("btn-scanner-externo-preferido");
+  const btnScannerExternoSelector = document.getElementById("btn-scanner-externo-selector");
+
+  els.filtrosPanel?.classList.remove("visible");
+  fuentePanel?.classList.remove("visible");
+
+  // ------------------------------------------------------------
+  // BEEP
   // ------------------------------------------------------------
   const AudioCtx = window.AudioContext || window.webkitAudioContext;
   let audioCtx = null;
@@ -80,7 +78,7 @@ function initUI(app) {
   }
 
   // ------------------------------------------------------------
-  // ESTADO DE VOZ (UI)
+  // ESTADO DE VOZ
   // ------------------------------------------------------------
   function setVoiceUIState(state) {
     if (!voiceStatus) return;
@@ -88,61 +86,42 @@ function initUI(app) {
     if (state === "off") {
       voiceStatus.textContent = "Dictado desactivado";
       voiceStatus.classList.remove("listening");
-      orbCore?.classList.remove("orb-listening");
+      ORB.setSpeaking?.(false);
     } else if (state === "ready") {
       voiceStatus.textContent = "Dictado listo";
       voiceStatus.classList.remove("listening");
-      orbCore?.classList.remove("orb-listening");
+      ORB.setSpeaking?.(false);
     } else if (state === "listening") {
       voiceStatus.textContent = "Escuchando…";
       voiceStatus.classList.add("listening");
-      orbCore?.classList.add("orb-listening");
+      ORB.setSpeaking?.(true);
     }
   }
 
-  // Estado inicial
-  if (modoVozSwitch?.checked) setVoiceUIState("ready");
-  else setVoiceUIState("off");
-
-  // ------------------------------------------------------------
-  // SWITCH: Dictado
-  // ------------------------------------------------------------
-  if (modoVozSwitch) {
-    const saved = localStorage.getItem("modoVoz");
-    if (saved === "on") {
-      modoVozSwitch.checked = true;
+  // Estado inicial dictado automático
+  if (dictadoAutoSwitch) {
+    const savedAuto = localStorage.getItem("dictadoAutomatico");
+    if (savedAuto === "on") {
+      dictadoAutoSwitch.checked = true;
       setVoiceUIState("ready");
+    } else {
+      dictadoAutoSwitch.checked = false;
+      setVoiceUIState("off");
     }
 
-    modoVozSwitch.addEventListener("change", (e) => {
+    dictadoAutoSwitch.addEventListener("change", (e) => {
       const on = e.target.checked;
-      localStorage.setItem("modoVoz", on ? "on" : "off");
+      localStorage.setItem("dictadoAutomatico", on ? "on" : "off");
       setVoiceUIState(on ? "ready" : "off");
       beep(on ? 1400 : 600);
-      app.showToast(on ? "Dictado activado" : "Dictado desactivado");
+      app.showToast(on ? "Dictado automático activado" : "Dictado automático desactivado");
     });
+  } else {
+    setVoiceUIState("off");
   }
 
   // ------------------------------------------------------------
-  // SWITCH: Manos libres
-  // ------------------------------------------------------------
-  if (modoManosLibresSwitch) {
-    const savedML = localStorage.getItem("manosLibres");
-    window.manosLibresActivo = savedML === "on";
-
-    modoManosLibresSwitch.checked = window.manosLibresActivo;
-
-    modoManosLibresSwitch.addEventListener("change", (e) => {
-      const on = e.target.checked;
-      window.manosLibresActivo = on;
-      localStorage.setItem("manosLibres", on ? "on" : "off");
-      beep(on ? 1200 : 500);
-      app.showToast(on ? "Manos libres activado" : "Manos libres desactivado");
-    });
-  }
-
-  // ------------------------------------------------------------
-  // DICTADO POR VOZ
+  // DICTADO MANUAL
   // ------------------------------------------------------------
   function startDictado() {
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition || null;
@@ -163,10 +142,16 @@ function initUI(app) {
     rec.onresult = (ev) => {
       let text = ev.results[0][0].transcript || "";
       text = text.replace(/[.。]+$/g, "").trim();
-      els.searchInput.value = text;
+      if (els.searchInput) els.searchInput.value = text;
       setVoiceUIState("ready");
-      autoList.innerHTML = "";
+      if (autoList) autoList.innerHTML = "";
+
+      ORB.setLoading?.(true);
       app.buscar();
+
+      setTimeout(() => {
+        app.setOrbIdle?.();
+      }, 600);
     };
 
     rec.onerror = () => {
@@ -175,23 +160,16 @@ function initUI(app) {
     };
 
     rec.onend = () => {
-      if (modoVozSwitch?.checked) setVoiceUIState("ready");
+      if (dictadoAutoSwitch?.checked) setVoiceUIState("ready");
       else setVoiceUIState("off");
     };
 
     rec.start();
   }
 
-  if (micButton) {
-    micButton.addEventListener("click", () => {
-      if (!modoVozSwitch?.checked) {
-        app.showToast("Activá el dictado para usar el micrófono");
-        beep(600);
-        return;
-      }
-      startDictado();
-    });
-  }
+  micButton?.addEventListener("click", () => {
+    startDictado();
+  });
 
   // ------------------------------------------------------------
   // AUTOCOMPLETE
@@ -204,8 +182,7 @@ function initUI(app) {
       return;
     }
 
-    const sugerencias =
-      app.getAutocompleteSuggestions?.(value) || [];
+    const sugerencias = app.getAutocompleteSuggestions?.(value) || [];
 
     if (!sugerencias.length) {
       autoList.innerHTML = "";
@@ -226,14 +203,15 @@ function initUI(app) {
       const val = e.target.value.trim().toLowerCase();
 
       if (val === "admin") {
-        adminPanel.style.display = "flex";
+        adminPanel.classList.remove("hidden");
+        adminPanel.classList.add("visible");
         e.target.value = "";
-        autoList.innerHTML = "";
+        if (autoList) autoList.innerHTML = "";
         app.showToast("Modo administrador activado");
         return;
       }
 
-      if (autoList.children.length > 0) {
+      if (autoList && autoList.children.length > 0) {
         const first = autoList.querySelector("li");
         if (first) {
           els.searchInput.value = first.dataset.value || first.textContent;
@@ -241,7 +219,12 @@ function initUI(app) {
         }
       }
 
+      ORB.setLoading?.(true);
       app.buscar();
+
+      setTimeout(() => {
+        app.setOrbIdle?.();
+      }, 600);
     }
   });
 
@@ -250,7 +233,12 @@ function initUI(app) {
     if (li.tagName === "LI") {
       els.searchInput.value = li.dataset.value || li.textContent;
       autoList.innerHTML = "";
+      ORB.setLoading?.(true);
       app.buscar();
+
+      setTimeout(() => {
+        app.setOrbIdle?.();
+      }, 600);
     }
   });
 
@@ -261,52 +249,45 @@ function initUI(app) {
     }
   });
 
-  // ------------------------------------------------------------
-  // ORB — botón de búsqueda
-  // ------------------------------------------------------------
-  if (orb) {
+  // ============================================================
+  // ORB
+  // ============================================================
+  if (orbCore) {
     const isMobile = window.matchMedia("(max-width: 768px)").matches;
 
     if (isMobile) {
-      orb.addEventListener("touchend", () => {
-        autoList.innerHTML = "";
+      orbCore.addEventListener("touchend", () => {
+        if (autoList) autoList.innerHTML = "";
+        ORB.setLoading?.(true);
         app.buscar();
-      });
-    } else {
-      orb.addEventListener("click", () => {
-        orb.classList.add("orb-pulse");
-        setTimeout(() => orb.classList.remove("orb-pulse"), 300);
-        autoList.innerHTML = "";
-        app.buscar();
+        setTimeout(() => {
+          app.setOrbIdle?.();
+        }, 600);
       });
     }
 
-    orb.addEventListener("dblclick", () => {
-      adminPanel.style.display = "flex";
+    orbCore.addEventListener("click", () => {
+      if (autoList) autoList.innerHTML = "";
+      ORB.setLoading?.(true);
+      app.buscar();
+      setTimeout(() => {
+        app.setOrbIdle?.();
+      }, 600);
+    });
+
+    orbCore.addEventListener("dblclick", () => {
+      adminPanel.classList.remove("hidden");
+      adminPanel.classList.add("visible");
       app.showToast("Modo administrador activado");
     });
   }
-  // ------------------------------------------------------------
-  // BOTONES DE ACCIÓN
-  // ------------------------------------------------------------
-  btnClear?.addEventListener("click", () => {
-    app.limpiarPantalla();
-    beep(800);
-  });
 
-  btnCopy?.addEventListener("click", () => {
-    app.copiarResultados();
-    beep(900);
-  });
+  // ============================================================
+  // SCANNER — NATIVO + WEB FALLBACK
+  // ============================================================
 
-  btnStop?.addEventListener("click", () => {
-    app.stopTodo();
-    beep(500);
-  });
+  const isAndroidApp = !!(window.Android && typeof Android.abrirScanner === "function");
 
-  // ------------------------------------------------------------
-  // SCANNER
-  // ------------------------------------------------------------
   function setScannerOverlay(active) {
     if (!scannerOverlay) return;
     if (active) {
@@ -318,56 +299,116 @@ function initUI(app) {
     }
   }
 
-  const btnScanner1 = document.getElementById("btn-scanner-interno-1");
-  const btnScanner2 = document.getElementById("btn-scanner-interno-2");
-  const btnScannerExtPref = document.getElementById("btn-scanner-externo-preferido");
-  const btnScannerExtSel = document.getElementById("btn-scanner-externo-selector");
-
   function scannerCallback() {
     setScannerOverlay(false);
-    if (els.searchInput?.value.trim()) app.buscar();
+    if (els.searchInput?.value.trim()) {
+      ORB.setLoading?.(true);
+      app.buscar();
+      setTimeout(() => {
+        app.setOrbIdle?.();
+      }, 600);
+    }
   }
 
-  if (btnScanner1 && typeof startScannerInterno1 === "function") {
-    btnScanner1.addEventListener("click", () => {
+  function abrirScannerNativo() {
+    try {
+      Android.abrirScanner();
+    } catch (e) {
+      console.warn("Error al abrir scanner nativo:", e);
+    }
+  }
+
+  function abrirScannerWebInterno() {
+    if (typeof window.startScannerInterno1 === "function") {
       setScannerOverlay(true);
-      startScannerInterno1(scannerCallback);
-    });
+      window.startScannerInterno1(scannerCallback);
+    } else {
+      app.showToast("Scanner interno no disponible");
+    }
   }
 
-  if (btnScanner2 && typeof startScannerInterno2 === "function") {
-    btnScanner2.addEventListener("click", () => {
+  function abrirScannerWebExternoPreferido() {
+    if (typeof window.startScannerExternoPreferido === "function") {
       setScannerOverlay(true);
-      startScannerInterno2(scannerCallback);
-    });
+      window.startScannerExternoPreferido(scannerCallback);
+    } else {
+      app.showToast("Scanner externo no disponible");
+    }
   }
 
-  if (btnScannerExtPref && typeof startScannerExternoPreferido === "function") {
-    btnScannerExtPref.addEventListener("click", () => {
+  function abrirScannerWebExternoSelector() {
+    if (typeof window.startScannerExternoSelector === "function") {
       setScannerOverlay(true);
-      startScannerExternoPreferido(scannerCallback);
-    });
+      window.startScannerExternoSelector(scannerCallback);
+    } else {
+      abrirScannerWebExternoPreferido();
+    }
   }
 
-  if (btnScannerExtSel && typeof startScannerExternoSelector === "function") {
-    btnScannerExtSel.addEventListener("click", () => {
-      setScannerOverlay(true);
-      startScannerExternoSelector(scannerCallback);
-    });
-  }
+  // Botones scanner internos
+  btnScannerInterno1?.addEventListener("click", () => {
+    if (isAndroidApp) abrirScannerNativo();
+    else abrirScannerWebInterno();
+  });
 
-  // ------------------------------------------------------------
-  // FILTROS (solo abren/cerran panel)
-  // ------------------------------------------------------------
+  btnScannerInterno2?.addEventListener("click", () => {
+    if (isAndroidApp) abrirScannerNativo();
+    else abrirScannerWebInterno();
+  });
+
+  // Botón scanner externo preferido
+  btnScannerExternoPreferido?.addEventListener("click", () => {
+    if (isAndroidApp) abrirScannerNativo();
+    else abrirScannerWebExternoPreferido();
+  });
+
+  // Botón scanner externo selector
+  btnScannerExternoSelector?.addEventListener("click", () => {
+    if (isAndroidApp) abrirScannerNativo();
+    else abrirScannerWebExternoSelector();
+  });
+
+  // ============================================================
+  // BOTONES DE ACCIÓN
+  // ============================================================
+
+  btnClear?.addEventListener("click", () => {
+    app.limpiarPantalla();
+    app.setOrbIdle?.();
+    beep(800);
+  });
+
+  btnCopy?.addEventListener("click", () => {
+    app.copiarResultados();
+    beep(900);
+  });
+
+  btnStop?.addEventListener("click", () => {
+    app.stopTodo();
+    app.setOrbIdle?.();
+    beep(500);
+  });
+
+  // ============================================================
+  // FILTROS
+  // ============================================================
+
   btnFiltros?.addEventListener("click", () => {
     els.filtrosPanel?.classList.toggle("visible");
   });
 
-  els.btnAplicarFiltros?.addEventListener("click", () => app.buscarPorFiltros());
+  els.btnAplicarFiltros?.addEventListener("click", () => {
+    ORB.setLoading?.(true);
+    app.buscarPorFiltros();
+    setTimeout(() => {
+      app.setOrbIdle?.();
+    }, 600);
+  });
 
-  // ------------------------------------------------------------
-  // VISTAS: TABLA / TARJETAS / ARTÍCULO
-  // ------------------------------------------------------------
+  // ============================================================
+  // VISTAS
+  // ============================================================
+
   function setVista(v) {
     app.state.vistaActual = v;
 
@@ -379,6 +420,7 @@ function initUI(app) {
     vistaTarjeta?.classList.toggle("active", v === "tarjeta");
     vistaArticulo?.classList.toggle("active", v === "articulo");
 
+    if (autoList) autoList.innerHTML = "";
     app.renderResultados(app.state.items);
   }
 
@@ -388,27 +430,34 @@ function initUI(app) {
 
   setVista(app.state.vistaActual || "tarjeta");
 
-  // ------------------------------------------------------------
+  // ============================================================
   // PANEL ADMIN
-  // ------------------------------------------------------------
+  // ============================================================
+
   adminGuardar?.addEventListener("click", () => {
     const modo = document.getElementById("admin-modo-defecto").value;
+    const backend = document.getElementById("admin-backend-url").value;
+
     localStorage.setItem("modoDefecto", modo);
-    if (window.setModoScanner) window.setModoScanner(modo);
+    localStorage.setItem("backendURL", backend);
 
     app.showToast("Configuración guardada");
-    adminPanel.style.display = "none";
+
+    adminPanel.classList.remove("visible");
+    adminPanel.classList.add("hidden");
   });
 
   adminCerrar?.addEventListener("click", () => {
-    adminPanel.style.display = "none";
+    adminPanel.classList.remove("visible");
+    adminPanel.classList.add("hidden");
   });
 
-  // ------------------------------------------------------------
-  // MÉTRICAS FILTRABLES (UNIDADES, NEGATIVOS, SIN STOCK, VALORIZADO)
-  // ------------------------------------------------------------
+  // ============================================================
+  // MÉTRICAS FILTRABLES
+  // ============================================================
+
   const mArt = document.getElementById("metric-articulos");
-  const mUni = document.getElementById("metric-pares"); // ahora UNIDADES
+  const mUni = document.getElementById("metric-pares");
   const mNeg = document.getElementById("metric-alertas-negativos");
   const mCero = document.getElementById("metric-alertas-cero");
   const mVal = document.getElementById("metric-valorizado");
@@ -463,9 +512,10 @@ function initUI(app) {
   mCero?.addEventListener("click", filtrarSinStock);
   mVal?.addEventListener("click", ordenarPorValorizado);
 
-  // ------------------------------------------------------------
+  // ============================================================
   // MODO DÍA / NOCHE
-  // ------------------------------------------------------------
+  // ============================================================
+
   function aplicarModoDark(on) {
     document.body.classList.toggle("light-mode", on);
     localStorage.setItem("theme", on ? "light" : "dark");
@@ -473,15 +523,16 @@ function initUI(app) {
 
   const savedTheme = localStorage.getItem("theme") || "dark";
   aplicarModoDark(savedTheme === "light");
-  toggleDark.checked = savedTheme === "light";
+  if (toggleDark) toggleDark.checked = savedTheme === "light";
 
   toggleDark?.addEventListener("change", () => {
     aplicarModoDark(toggleDark.checked);
   });
 
-  // ------------------------------------------------------------
+  // ============================================================
   // AYUDA
-  // ------------------------------------------------------------
+  // ============================================================
+
   helpModal?.classList.add("hidden");
 
   helpButton?.addEventListener("click", () => {
@@ -496,22 +547,23 @@ function initUI(app) {
     if (e.target === helpModal) helpModal.classList.add("hidden");
   });
 
-  // ------------------------------------------------------------
-  // PANEL FUENTE DE DATOS
-  // ------------------------------------------------------------
-  fuentePanel?.classList.remove("visible");
+  // ============================================================
+  // FUENTE DE DATOS — TOGGLE
+  // ============================================================
 
   fuenteToggle?.addEventListener("click", () => {
-    fuentePanel.classList.toggle("visible");
+    fuentePanel?.classList.toggle("visible");
   });
 
-  // ------------------------------------------------------------
+  // ============================================================
   // ATAJOS DE TECLADO
-  // ------------------------------------------------------------
+  // ============================================================
+
   document.addEventListener("keydown", (e) => {
     const tag = (e.target && e.target.tagName) || "";
     const isInput = ["INPUT", "TEXTAREA"].includes(tag);
 
+    // ESC limpia autocomplete o pantalla
     if (e.key === "Escape") {
       if (autoList?.innerHTML.trim()) {
         autoList.innerHTML = "";
@@ -521,12 +573,14 @@ function initUI(app) {
       return;
     }
 
+    // F2 = Scanner interno (usa el interno 1)
     if (e.key === "F2" && !isInput) {
-      btnScanner1?.click();
+      btnScannerInterno1?.click();
       e.preventDefault();
       return;
     }
 
+    // F3 = Dictado manual
     if (e.key === "F3" && !isInput) {
       micButton?.click();
       e.preventDefault();
