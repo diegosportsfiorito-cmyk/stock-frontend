@@ -1,14 +1,20 @@
 // ============================================================
-// APP CORE — Motor inteligente + warm-up + indicador visual
-// Versión corregida y optimizada 2026-02-10
+// APP CORE — Motor inteligente + warm-up + fuente de datos PRO
+// Versión unificada — modo B (resumen backend + fallback local)
 // ============================================================
 
 const AppCore = {
+  // ============================================================
+  // CONFIG
+  // ============================================================
   config: {
     backendUrl: "https://stock-backend-1-0upi.onrender.com",
     modoDefecto: localStorage.getItem("modoDefecto") || "simple",
   },
 
+  // ============================================================
+  // REFERENCIAS A ELEMENTOS
+  // ============================================================
   els: {
     searchInput: document.getElementById("search-input"),
     searchStatus: document.getElementById("search-status"),
@@ -36,6 +42,7 @@ const AppCore = {
 
     connectionDot: document.getElementById("connection-dot"),
 
+    // Fuente de datos
     fuenteDatosToggle: document.getElementById("fuente-datos-toggle"),
     fuenteDatosPanel: document.getElementById("fuente-datos-panel"),
     fuenteArchivo: document.getElementById("fuente-archivo"),
@@ -45,8 +52,14 @@ const AppCore = {
     fuenteArticulos: document.getElementById("fuente-articulos"),
     fuenteStockTotal: document.getElementById("fuente-stock-total"),
     fuenteStockNegativo: document.getElementById("fuente-stock-negativo"),
+
+    // (Opcional) gráfico de torta
+    chartContainer: document.getElementById("chart-container"),
   },
 
+  // ============================================================
+  // ESTADO
+  // ============================================================
   state: {
     items: [],
     catalogItems: [],
@@ -67,7 +80,6 @@ const AppCore = {
   // ============================================================
   // UTILIDADES
   // ============================================================
-
   normalizarCampo(v) {
     if (!v && v !== 0) return "—";
     const t = String(v).trim().toUpperCase();
@@ -116,10 +128,72 @@ const AppCore = {
     ORB.setLoading(false);
     ORB.setReady();
   },
+
+  // ============================================================
+  // RESUMEN LOCAL (FALLBACK)
+  // ============================================================
+  calcularResumenLocal(items) {
+    const resumen = {
+      archivo: "Desconocido (local)",
+      fecha: "Calculado localmente",
+      marcas: 0,
+      rubros: 0,
+      articulos: 0,
+      stock_total: 0,
+      stock_negativo: 0,
+    };
+
+    if (!items || !items.length) return resumen;
+
+    const marcasSet = new Set();
+    const rubrosSet = new Set();
+    let stockTotal = 0;
+    let stockNegativo = 0;
+
+    items.forEach((it) => {
+      if (it.marca) marcasSet.add(it.marca);
+      if (it.rubro) rubrosSet.add(it.rubro);
+
+      const sum = (it.talles || []).reduce(
+        (a, t) => a + Number(t.stock || 0),
+        0
+      );
+      stockTotal += sum;
+      if (sum < 0) stockNegativo++;
+    });
+
+    resumen.marcas = marcasSet.size;
+    resumen.rubros = rubrosSet.size;
+    resumen.articulos = items.length;
+    resumen.stock_total = stockTotal;
+    resumen.stock_negativo = stockNegativo;
+
+    return resumen;
+  },
+
+  actualizarPanelFuenteDatos() {
+    const r = this.state.resumenCatalogo;
+    if (!r) return;
+
+    if (this.els.fuenteArchivo)
+      this.els.fuenteArchivo.textContent = this.normalizarCampo(r.archivo);
+    if (this.els.fuenteFecha)
+      this.els.fuenteFecha.textContent = this.normalizarCampo(r.fecha);
+    if (this.els.fuenteMarcas)
+      this.els.fuenteMarcas.textContent = this.formatNumber(r.marcas);
+    if (this.els.fuenteRubros)
+      this.els.fuenteRubros.textContent = this.formatNumber(r.rubros);
+    if (this.els.fuenteArticulos)
+      this.els.fuenteArticulos.textContent = this.formatNumber(r.articulos);
+    if (this.els.fuenteStockTotal)
+      this.els.fuenteStockTotal.textContent = this.formatNumber(r.stock_total);
+    if (this.els.fuenteStockNegativo)
+      this.els.fuenteStockNegativo.textContent = this.formatNumber(r.stock_negativo);
+  },
+
   // ============================================================
   // PARSER INTELIGENTE
   // ============================================================
-
   interpretarQuery(raw) {
     const q = raw.trim();
     const qUpper = this.normalizarTexto(q);
@@ -239,7 +313,6 @@ const AppCore = {
   // ============================================================
   // RESPUESTA POR VOZ (RESUMEN + TOP ITEMS)
   // ============================================================
-
   speakResultados() {
     if (!("speechSynthesis" in window)) return;
 
@@ -288,9 +361,70 @@ const AppCore = {
   },
 
   // ============================================================
+  // WARM-UP + CARGA DE CATÁLOGO
+  // ============================================================
+  async pingBackend() {
+    try {
+      const res = await fetch(this.config.backendUrl + "/ping", {
+        method: "GET",
+      });
+      if (!res.ok) throw new Error("Ping failed");
+      this.setConnectionStatus(true);
+      return true;
+    } catch (e) {
+      this.setConnectionStatus(false);
+      return false;
+    }
+  },
+
+  async cargarCatalogo() {
+    try {
+      const res = await fetch(this.config.backendUrl + "/catalog", {
+        method: "GET",
+      });
+      if (!res.ok) throw new Error("Error en /catalog");
+
+      const data = await res.json();
+
+      this.state.catalogItems = data.items || [];
+
+      // Opción B: usar resumen del backend si existe, si no, calcular local
+      if (data.resumen) {
+        this.state.resumenCatalogo = data.resumen;
+      } else {
+        this.state.resumenCatalogo = this.calcularResumenLocal(this.state.catalogItems);
+      }
+
+      this.actualizarPanelFuenteDatos();
+      this.setConnectionStatus(true);
+      this.state.warmingUp = false;
+      this.setSearchStatus("Listo", "green");
+
+    } catch (e) {
+      this.state.warmingUp = false;
+      this.setConnectionStatus(false);
+      this.setSearchStatus("Error al cargar catálogo", "red");
+    }
+  },
+
+  async warmUpLoop() {
+    this.state.warmingUp = true;
+    this.setSearchStatus("Activando servidor…", "orange");
+
+    const ok = await this.pingBackend();
+    if (!ok) {
+      // Reintento suave
+      setTimeout(() => this.warmUpLoop(), 5000);
+      return;
+    }
+
+    await this.cargarCatalogo();
+    this.setOrbIdle();
+  },
+
+  // ============================================================
   // BÚSQUEDA PRINCIPAL
   // ============================================================
-
   async buscar() {
     const q = this.els.searchInput?.value.trim() || "";
     if (!q) {
@@ -330,6 +464,14 @@ const AppCore = {
       this.renderResultados(this.state.items);
       this.actualizarIndicadores(this.state.items);
 
+      // (Opcional) actualizar gráfico de torta y mostrarlo por defecto
+      if (this.els.chartContainer) {
+        this.els.chartContainer.classList.add("visible");
+        if (typeof this.actualizarGrafico === "function") {
+          this.actualizarGrafico(this.state.items);
+        }
+      }
+
       this.setSearchStatus("Listo", "green");
       this.setConnectionStatus(true);
 
@@ -352,7 +494,6 @@ const AppCore = {
   // ============================================================
   // BÚSQUEDA POR FILTROS
   // ============================================================
-
   async buscarPorFiltros() {
     const marca = this.els.filtroMarca?.value || "";
     const rubro = this.els.filtroRubro?.value || "";
@@ -400,6 +541,13 @@ const AppCore = {
       this.renderResultados(this.state.items);
       this.actualizarIndicadores(this.state.items);
 
+      if (this.els.chartContainer) {
+        this.els.chartContainer.classList.add("visible");
+        if (typeof this.actualizarGrafico === "function") {
+          this.actualizarGrafico(this.state.items);
+        }
+      }
+
       this.setSearchStatus("Listo", "green");
       this.setConnectionStatus(true);
 
@@ -418,10 +566,10 @@ const AppCore = {
       this.state.currentAbort = null;
     }
   },
+
   // ============================================================
   // RENDERIZADO DE RESULTADOS
   // ============================================================
-
   renderResultados(items) {
     if (!this.els.resultsContainer) return;
 
@@ -447,7 +595,6 @@ const AppCore = {
   // ============================================================
   // RENDER TABLA
   // ============================================================
-
   renderTabla(items) {
     this.els.resultsContainer.innerHTML = `
       <table class="tabla-stock">
@@ -489,7 +636,6 @@ const AppCore = {
   // ============================================================
   // RENDER TARJETAS
   // ============================================================
-
   renderTarjetas(items) {
     this.els.resultsContainer.innerHTML = items
       .map((it) => {
@@ -525,7 +671,6 @@ const AppCore = {
   // ============================================================
   // RENDER ARTÍCULO (vista detallada)
   // ============================================================
-
   renderArticulo(items) {
     const it = items[0];
     if (!it) {
@@ -566,7 +711,6 @@ const AppCore = {
   // ============================================================
   // INDICADORES
   // ============================================================
-
   actualizarIndicadores(items) {
     if (!items) return;
 
@@ -604,7 +748,6 @@ const AppCore = {
   // ============================================================
   // COPIAR RESULTADOS
   // ============================================================
-
   copiarResultados() {
     const txt = this.els.resultsContainer?.innerText || "";
     navigator.clipboard.writeText(txt);
@@ -614,7 +757,6 @@ const AppCore = {
   // ============================================================
   // LIMPIAR
   // ============================================================
-
   limpiarPantalla() {
     if (this.els.searchInput) this.els.searchInput.value = "";
     if (this.els.resultsContainer) this.els.resultsContainer.innerHTML = "";
@@ -624,7 +766,6 @@ const AppCore = {
   // ============================================================
   // STOP
   // ============================================================
-
   stopTodo() {
     if (this.state.currentAbort) {
       this.state.currentAbort.abort();
@@ -637,7 +778,6 @@ const AppCore = {
   // ============================================================
   // INIT
   // ============================================================
-
   init() {
     this.setSearchStatus("Activando servidor…", "orange");
     this.warmUpLoop();
