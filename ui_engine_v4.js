@@ -319,13 +319,14 @@ function initUI(app) {
   }
 
   function abrirScannerWebInterno() {
-    if (typeof window.startScannerInterno1 === "function") {
-      setScannerOverlay(true);
-      window.startScannerInterno1(scannerCallback);
-    } else {
-      app.showToast("Scanner interno no disponible");
-    }
+  if (typeof window.startScannerInterno1 === "function") {
+    const modo = localStorage.getItem("scannerModo") || "simple";
+    setScannerOverlay(true);
+    window.startScannerInterno1(scannerCallback, modo);
+  } else {
+    app.showToast("Scanner interno no disponible");
   }
+}
 
   function abrirScannerWebExternoPreferido() {
     if (typeof window.startScannerExternoPreferido === "function") {
