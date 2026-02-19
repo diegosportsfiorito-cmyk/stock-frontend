@@ -44,6 +44,9 @@ function initUI(app) {
   const fuenteToggle = document.getElementById("fuente-datos-toggle");
   const fuentePanel = document.getElementById("fuente-datos-panel");
 
+  // SWITCH MODO SCANNER (simple / completo)
+  const scannerModeSwitch = document.getElementById("scanner-mode-switch");
+
   // ------------------------------------------------------------
   // BOTONES DEL SCANNER (alineados a tu HTML)
   // ------------------------------------------------------------
@@ -288,6 +291,27 @@ function initUI(app) {
 
   const isAndroidApp = !!(window.Android && typeof Android.abrirScanner === "function");
 
+  // Inicializar modo scanner desde localStorage
+  (function initScannerMode() {
+    const saved = localStorage.getItem("scannerModo") || "simple";
+    if (scannerModeSwitch) {
+      scannerModeSwitch.checked = saved === "completo";
+    }
+  })();
+
+  if (scannerModeSwitch) {
+    scannerModeSwitch.addEventListener("change", (e) => {
+      const on = e.target.checked;
+      const modo = on ? "completo" : "simple";
+      localStorage.setItem("scannerModo", modo);
+      app.showToast(`Scanner en modo ${modo.toUpperCase()}`);
+    });
+  }
+
+  function getScannerMode() {
+    return localStorage.getItem("scannerModo") || "simple";
+  }
+
   function setScannerOverlay(active) {
     if (!scannerOverlay) return;
     if (active) {
@@ -320,8 +344,10 @@ function initUI(app) {
 
   function abrirScannerWebInterno() {
     if (typeof window.startScannerInterno1 === "function") {
+      const modo = getScannerMode(); // "simple" | "completo"
       setScannerOverlay(true);
-      window.startScannerInterno1(scannerCallback);
+      // Le pasamos el modo como segundo parámetro (scanner_v3.js lo puede usar)
+      window.startScannerInterno1(scannerCallback, modo);
     } else {
       app.showToast("Scanner interno no disponible");
     }
