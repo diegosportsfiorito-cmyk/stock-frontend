@@ -59,7 +59,7 @@ const AppCore = {
       talleDesde: null,
       talleHasta: null,
     },
-    vistaActual: "tarjeta", // tabla | tarjeta | articulo
+    vistaActual: "tarjeta",
     resumenCatalogo: null,
     retryTimeout: null,
     warmingUp: true,
@@ -148,71 +148,7 @@ const AppCore = {
   },
 
   // ============================================================
-  // UTILIDADES FONÉTICAS PARA VOZ
-  // ============================================================
-
-  normalizarFonetico(texto) {
-    if (!texto) return "";
-    let t = this.normalizarTexto(texto);
-
-    t = t.replace(/H/g, "");          // quitar H
-    t = t.replace(/[BV]/g, "B");      // B/V
-    t = t.replace(/[CKQ]/g, "K");     // C/K/Q -> K
-    t = t.replace(/(.)\1+/g, "$1");   // letras repetidas
-
-    return t;
-  },
-
-  distanciaLevenshtein(a, b) {
-    if (a === b) return 0;
-    if (!a) return b.length;
-    if (!b) return a.length;
-
-    const dp = Array.from({ length: a.length + 1 }, () =>
-      new Array(b.length + 1).fill(0)
-    );
-
-    for (let i = 0; i <= a.length; i++) dp[i][0] = i;
-    for (let j = 0; j <= b.length; j++) dp[0][j] = j;
-
-    for (let i = 1; i <= a.length; i++) {
-      for (let j = 1; j <= b.length; j++) {
-        const costo = a[i - 1] === b[j - 1] ? 0 : 1;
-        dp[i][j] = Math.min(
-          dp[i - 1][j] + 1,
-          dp[i][j - 1] + 1,
-          dp[i - 1][j - 1] + costo
-        );
-      }
-    }
-
-    return dp[a.length][b.length];
-  },
-
-  corregirMarcaPorVoz(qUpper, mapMarcas) {
-    const fonQ = this.normalizarFonetico(qUpper);
-    let mejorMarca = null;
-    let mejorDist = Infinity;
-
-    for (const [normMarca, marcaReal] of mapMarcas.entries()) {
-      const fonMarca = this.normalizarFonetico(normMarca);
-      const dist = this.distanciaLevenshtein(fonQ, fonMarca);
-      if (dist < mejorDist) {
-        mejorDist = dist;
-        mejorMarca = marcaReal;
-      }
-    }
-
-    // Umbral: hasta 2 cambios (TOPER→TOPPER, CAPA→KAPPA, HABIA→AVIA)
-    if (mejorDist <= 2) {
-      return mejorMarca;
-    }
-
-    return null;
-  },
-
-  // ============================================================
-  // AUTOCOMPLETE — INTELIGENTE
+  // AUTOCOMPLETE
   // ============================================================
 
   getAutocompleteSuggestions(term) {
@@ -319,234 +255,6 @@ const AppCore = {
 
     return final;
   },
-
-  // ============================================================
-  // WARM-UP + CARGA CATÁLOGO
-  // ============================================================
-
-  async pingBackend() {
-    this.setSearchStatus("Activando servidor…", "orange");
-    this.setConnectionStatus(false);
-
-    try {
-      const res = await fetch(this.config.backendUrl + "/ping");
-      if (!res.ok) throw new Error();
-
-      this.setSearchStatus("Conectado", "green");
-      this.setConnectionStatus(true);
-      this.state.warmingUp = false;
-      return true;
-    } catch {
-      this.setSearchStatus("Activando servidor…", "orange");
-      return false;
-    }
-  },
-
-  async warmUpLoop() {
-    const ok = await this.pingBackend();
-    if (!ok) {
-      setTimeout(() => this.warmUpLoop(), 2000);
-      return;
-    }
-    this.cargarCatalogo();
-  },
-
-  async cargarCatalogo() {
-    this.setSearchStatus("Cargando catálogo…", "blue");
-
-    try {
-      const res = await fetch(this.config.backendUrl + "/catalog");
-      if (!res.ok) throw new Error();
-
-      const data = await res.json();
-
-      this.state.catalogItems = data.items || [];
-
-      if (data.resumen) {
-        this.state.resumenCatalogo = data.resumen;
-      } else {
-        this.state.resumenCatalogo = this.calcularResumenLocal(this.state.catalogItems);
-      }
-
-      const r = this.state.resumenCatalogo || {};
-
-      if (this.els.fuenteArchivo)
-        this.els.fuenteArchivo.textContent = r.archivo || "—";
-      if (this.els.fuenteFecha)
-        this.els.fuenteFecha.textContent = r.fecha || "—";
-      if (this.els.fuenteMarcas)
-        this.els.fuenteMarcas.textContent = r.marcas ?? "—";
-      if (this.els.fuenteRubros)
-        this.els.fuenteRubros.textContent = r.rubros ?? "—";
-      if (this.els.fuenteArticulos)
-        this.els.fuenteArticulos.textContent = r.articulos ?? "—";
-      if (this.els.fuenteStockTotal)
-        this.els.fuenteStockTotal.textContent = r.stock_total ?? "—";
-      if (this.els.fuenteStockNegativo)
-        this.els.fuenteStockNegativo.textContent = r.stock_negativo ?? "—";
-
-      this.poblarFiltros();
-
-      this.setConnectionStatus(true);
-      this.setSearchStatus("Conectado", "green");
-    } catch {
-      this.setConnectionStatus(false);
-      this.setSearchStatus("Error de conexión", "red");
-
-      clearTimeout(this.state.retryTimeout);
-      this.state.retryTimeout = setTimeout(() => this.warmUpLoop(), 2000);
-    }
-  },
-
-  poblarFiltros() {
-    const marcas = new Set();
-    const rubros = new Set();
-
-    this.state.catalogItems.forEach((i) => {
-      if (i.marca) marcas.add(i.marca);
-      if (i.rubro) rubros.add(i.rubro);
-    });
-
-    if (this.els.filtroMarca)
-      this.els.filtroMarca.innerHTML =
-        `<option value="">Marca</option>` +
-        [...marcas].sort().map((m) => `<option>${m}</option>`).join("");
-
-    if (this.els.filtroRubro)
-      this.els.filtroRubro.innerHTML =
-        `<option value="">Rubro</option>` +
-        [...rubros].sort().map((r) => `<option>${r}</option>`).join("");
-  },
-
-  // ============================================================
-  // PARSER INTELIGENTE (con corrección de voz)
-  // ============================================================
-
-  interpretarQuery(raw) {
-    const q = raw.trim();
-    const qUpper = this.normalizarTexto(q);
-
-    const mapMarcas = new Map();
-    const mapRubros = new Map();
-
-    this.state.catalogItems.forEach((i) => {
-      if (i.marca) mapMarcas.set(this.normalizarTexto(i.marca), i.marca);
-      if (i.rubro) mapRubros.set(this.normalizarTexto(i.rubro), i.rubro);
-    });
-
-    const marcasNorm = [...mapMarcas.keys()];
-    const rubrosNorm = [...mapRubros.keys()];
-
-    let marca = null;
-    let rubro = null;
-
-    const tokens = qUpper.split(/\W+/).filter(Boolean);
-
-    for (const m of marcasNorm.sort((a, b) => b.length - a.length)) {
-      if (tokens.includes(m)) marca = mapMarcas.get(m);
-    }
-
-    for (const r of rubrosNorm.sort((a, b) => b.length - a.length)) {
-      if (tokens.includes(r)) rubro = mapRubros.get(r);
-    }
-
-    const matchRango = qUpper.match(/T?(\d+)\s*(?:A|-|\/)\s*T?(\d+)/);
-    if (matchRango) {
-      return {
-        filtros_globales: true,
-        marca,
-        rubro,
-        talleDesde: parseInt(matchRango[1]),
-        talleHasta: parseInt(matchRango[2]),
-        soloUltimo: false,
-        soloNegativo: false,
-        question: "",
-      };
-    }
-
-    const matchTalle = qUpper.match(/^T?(\d{1,3})$/);
-    if (matchTalle) {
-      const t = parseInt(matchTalle[1]);
-      return {
-        filtros_globales: true,
-        marca,
-        rubro,
-        talleDesde: t,
-        talleHasta: t,
-        soloUltimo: false,
-        soloNegativo: false,
-        question: "",
-      };
-    }
-
-    const matchPrecio = qUpper.match(/^(?:P|\$)?(\d{2,6})$/);
-    if (matchPrecio) {
-      return {
-        filtros_globales: false,
-        marca: null,
-        rubro: null,
-        talleDesde: null,
-        talleHasta: null,
-        soloUltimo: false,
-        soloNegativo: false,
-        question: matchPrecio[1],
-      };
-    }
-
-    if (/^\d[\d\- ]{6,14}\d$/.test(qUpper)) {
-      return {
-        filtros_globales: false,
-        marca: null,
-        rubro: null,
-        talleDesde: null,
-        talleHasta: null,
-        soloUltimo: false,
-        soloNegativo: false,
-        question: qUpper.replace(/[\s\-]/g, ""),
-      };
-    }
-
-    const esUltimo = /\bULTIM[OA]S?\b/.test(qUpper);
-    const esNegativo = /\bNEGATIV[OA]S?\b/.test(qUpper);
-
-    if (esUltimo || esNegativo) {
-      return {
-        filtros_globales: true,
-        marca,
-        rubro,
-        talleDesde: null,
-        talleHasta: null,
-        soloUltimo: esUltimo,
-        soloNegativo: esNegativo,
-        question: "",
-      };
-    }
-
-    const esMarcaExacta = marcasNorm.includes(qUpper);
-    const esRubroExacto = rubrosNorm.includes(qUpper);
-    let usarFiltros = esMarcaExacta || esRubroExacto;
-
-    // Corrección por voz: si es una sola palabra y no matchea, intentamos corregir a marca
-    if (!usarFiltros && tokens.length === 1 && marcasNorm.length) {
-      const marcaCorregida = this.corregirMarcaPorVoz(qUpper, mapMarcas);
-      if (marcaCorregida) {
-        marca = marcaCorregida;
-        usarFiltros = true;
-      }
-    }
-
-    return {
-      filtros_globales: usarFiltros,
-      marca: usarFiltros ? marca : null,
-      rubro: usarFiltros ? rubro : null,
-      talleDesde: null,
-      talleHasta: null,
-      soloUltimo: false,
-      soloNegativo: false,
-      question: usarFiltros ? "" : q,
-    };
-  },
-
   // ============================================================
   // BÚSQUEDA PRINCIPAL
   // ============================================================
@@ -803,6 +511,9 @@ const AppCore = {
       container.appendChild(div);
     });
   },
+  // ============================================================
+  // VISTA ARTÍCULO — OPCIÓN A (LISTA COMPLETA)
+  // ============================================================
 
   renderVistaArticulo(items) {
     const container = this.els.vistaArticulo;
@@ -813,74 +524,75 @@ const AppCore = {
       return;
     }
 
-    const base = items[0];
-    const talles = base.talles || [];
+    // Listado completo: un bloque por artículo
+    let html = "";
 
-    if (!talles.length) {
-      container.innerHTML = `
-        <div class="detalle-header">
-          <h2>${this.normalizarCampo(base.codigo)} — ${this.normalizarCampo(
-        base.descripcion
-      )}</h2>
-          <p>${this.normalizarCampo(base.marca)} / ${this.normalizarCampo(
-        base.rubro
-      )}</p>
-        </div>
-        <div class="results-empty">Este artículo no tiene talles detallados.</div>
-      `;
-      return;
-    }
+    items.forEach((base) => {
+      const talles = base.talles || [];
 
-    const rowsHtml = talles
-      .map((t) => {
+      // Si no tiene talles
+      if (!talles.length) {
+        html += `
+          <div class="detalle-header">
+            <h2>${this.normalizarCampo(base.codigo)} — ${this.normalizarCampo(base.descripcion)}</h2>
+            <p>${this.normalizarCampo(base.marca)} / ${this.normalizarCampo(base.rubro)}</p>
+          </div>
+          <div class="results-empty">Este artículo no tiene talles detallados.</div>
+          <hr style="opacity:0.25;margin:14px 0;">
+        `;
+        return;
+      }
+
+      // Filas de talles
+      const rowsHtml = talles
+        .map((t) => {
+          const stock = Number(t.stock || 0);
+          const precio = Number(base.precio || 0);
+          const total = stock * precio;
+          return `
+            <tr>
+              <td>${this.normalizarCampo(t.talle)}</td>
+              <td>${stock}</td>
+              <td>$${this.formatNumber(precio)}</td>
+              <td>$${this.formatNumber(total)}</td>
+            </tr>
+          `;
+        })
+        .join("");
+
+      const totalGeneral = talles.reduce((acc, t) => {
         const stock = Number(t.stock || 0);
         const precio = Number(base.precio || 0);
-        const total = stock * precio;
-        return `
-        <tr>
-          <td>${this.normalizarCampo(t.talle)}</td>
-          <td>${stock}</td>
-          <td>$${this.formatNumber(precio)}</td>
-          <td>$${this.formatNumber(total)}</td>
-        </tr>
+        return acc + stock * precio;
+      }, 0);
+
+      html += `
+        <div class="detalle-header">
+          <h2>${this.normalizarCampo(base.codigo)} — ${this.normalizarCampo(base.descripcion)}</h2>
+          <p>${this.normalizarCampo(base.marca)} / ${this.normalizarCampo(base.rubro)}</p>
+        </div>
+
+        <table class="tabla-talles">
+          <thead>
+            <tr>
+              <th>Talle</th>
+              <th>Cantidad</th>
+              <th>Precio</th>
+              <th>Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${rowsHtml}
+            <tr>
+              <td colspan="3" style="text-align:right;font-weight:bold;">Total general</td>
+              <td>$${this.formatNumber(totalGeneral)}</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <hr style="opacity:0.25;margin:14px 0;">
       `;
-      })
-      .join("");
-
-    const totalGeneral = talles.reduce((acc, t) => {
-      const stock = Number(t.stock || 0);
-      const precio = Number(base.precio || 0);
-      return acc + stock * precio;
-    }, 0);
-
-    const html = `
-      <div class="detalle-header">
-        <h2>${this.normalizarCampo(base.codigo)} — ${this.normalizarCampo(
-      base.descripcion
-    )}</h2>
-        <p>${this.normalizarCampo(base.marca)} / ${this.normalizarCampo(
-      base.rubro
-    )}</p>
-      </div>
-
-      <table class="tabla-talles">
-        <thead>
-          <tr>
-            <th>Talle</th>
-            <th>Cantidad</th>
-            <th>Precio</th>
-            <th>Total</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${rowsHtml}
-          <tr>
-            <td colspan="3" style="text-align:right;font-weight:bold;">Total general</td>
-            <td>$${this.formatNumber(totalGeneral)}</td>
-          </tr>
-        </tbody>
-      </table>
-    `;
+    });
 
     container.innerHTML = html;
   },
@@ -916,13 +628,11 @@ const AppCore = {
     if (this.els.metricPares)
       this.els.metricPares.textContent = this.formatNumber(pares);
     if (this.els.metricAlertasNegativos)
-      this.els.metricAlertasNegativos.textContent =
-        this.formatNumber(stockNegativo);
+      this.els.metricAlertasNegativos.textContent = this.formatNumber(stockNegativo);
     if (this.els.metricAlertasCero)
       this.els.metricAlertasCero.textContent = this.formatNumber(sinStock);
     if (this.els.metricValorizado)
-      this.els.metricValorizado.textContent =
-        "$" + this.formatNumber(valorizadoTotal);
+      this.els.metricValorizado.textContent = "$" + this.formatNumber(valorizadoTotal);
   },
 
   // ============================================================
@@ -1038,7 +748,7 @@ const AppCore = {
     const orb = document.getElementById("orb");
     orb?.addEventListener("click", () => this.buscar());
 
-    // Scanner interno (debajo del input)
+    // Scanner interno
     const btnScannerInterno = document.getElementById("btn-scanner");
     btnScannerInterno?.addEventListener("click", () => {
       if (window.startScannerInterno1) {
@@ -1051,7 +761,7 @@ const AppCore = {
       }
     });
 
-    // Scanner externo (debajo del input)
+    // Scanner externo
     const btnScannerExterno = document.getElementById("btn-scanner-externo");
     btnScannerExterno?.addEventListener("click", () => {
       if (window.startScannerExternoPreferido) {
