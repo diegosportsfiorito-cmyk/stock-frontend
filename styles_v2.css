@@ -1836,3 +1836,46 @@ body.light-mode .scanner-counter {
   color: #111;
   border-color: rgba(0, 0, 0, 0.2);
 }
+/* FIX 1 — scroll horizontal */
+.tabla-wrapper {
+  -webkit-overflow-scrolling: touch;
+}
+
+/* FIX 2 — vista artículo */
+.tabla-talles tr:nth-child(even) td {
+  background-color: rgba(255, 255, 255, 0.03);
+}
+
+/* FIX 3 — panel fuente de datos */
+#fuente-datos-panel.visible {
+  display: block !important;
+}
+
+/* FIX 4 — botones scanner nuevos */
+.scanner-buttons-row {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+  align-items: center;
+}
+
+.scanner-btn-main {
+  width: 44px;
+  height: 44px;
+  border-radius: 999px;
+  border: 1px solid rgba(31, 41, 55, 0.9);
+  background: radial-gradient(circle at 30% 20%, #020617, #020617);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.scanner-btn-main img {
+  width: 80%;
+  height: auto;
+}
+
+.scanner-btn-external img {
+  width: 55%;
+}
