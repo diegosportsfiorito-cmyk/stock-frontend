@@ -1,6 +1,6 @@
 /* ============================================================
    SCANNER V4 PRO — IA PRO ULTRA
-   scanner_v3.js (versión corregida)
+   scanner_v3.js (versión final — solo 2 scanners)
    ============================================================ */
 
 (function () {
@@ -15,14 +15,6 @@
 
   // MODO DEL SCANNER: "simple" | "completo"
   let scannerMode = "simple";
-
-  // MODO POR DEFECTO PARA EL BOTÓN “PREFERIDO”
-  let defaultScannerMode = "simple";
-
-  // Permitir que la UI cambie el modo por defecto
-  window.setScannerDefaultMode = function (mode) {
-    defaultScannerMode = mode === "completo" ? "completo" : "simple";
-  };
 
   const overlay = document.getElementById("scanner-overlay");
   const video = document.getElementById("scanner-video");
@@ -205,7 +197,7 @@
   }
 
   /* ============================================================
-     PROCESAR CÓDIGO (SIMPLE / COMPLETO)
+     PROCESAR CÓDIGO
      ============================================================ */
   function handleDetected(rawCode) {
     if (!rawCode) return;
@@ -236,6 +228,7 @@
       updateControls();
     }
   }
+
   /* ============================================================
      INICIAR DECODIFICACIÓN ZXING
      ============================================================ */
@@ -270,7 +263,6 @@
 
     endCallback = typeof callback === "function" ? callback : null;
 
-    // Aplicar modo SIMPLE / COMPLETO
     scannerMode = mode === "completo" ? "completo" : "simple";
 
     overlay.classList.remove("hidden");
@@ -296,59 +288,55 @@
     const btnMulti = document.getElementById("scn-multi");
 
     if (btnTorch) btnTorch.onclick = toggleTorch;
-    if (btnZoomIn) btnZoomIn.onclick = () => {
-      zoomLevel += 0.3;
-      applyZoom();
-    };
-    if (btnZoomOut) btnZoomOut.onclick = () => {
-      zoomLevel -= 0.3;
-      applyZoom();
-    };
-    if (btnClose) btnClose.onclick = () => {
-      closeScanner();
-      if (typeof endCallback === "function") {
-        endCallback(null);
-      }
-    };
-
-    if (btnMulti) btnMulti.onclick = () => {
-      if (!multiMode) {
-        multiMode = true;
-        detectedCodes = [];
-        updateControls();
-      } else {
-        const txt = detectedCodes.join("\n");
-        if (txt) {
-          navigator.clipboard.writeText(txt);
-          window.appCore?.showToast?.("Códigos copiados");
-        } else {
-          window.appCore?.showToast?.("No hay códigos para copiar");
+    if (btnZoomIn)
+      btnZoomIn.onclick = () => {
+        zoomLevel += 0.3;
+        applyZoom();
+      };
+    if (btnZoomOut)
+      btnZoomOut.onclick = () => {
+        zoomLevel -= 0.3;
+        applyZoom();
+      };
+    if (btnClose)
+      btnClose.onclick = () => {
+        closeScanner();
+        if (typeof endCallback === "function") {
+          endCallback(null);
         }
-      }
-    };
+      };
+
+    if (btnMulti)
+      btnMulti.onclick = () => {
+        if (!multiMode) {
+          multiMode = true;
+          detectedCodes = [];
+          updateControls();
+        } else {
+          const txt = detectedCodes.join("\n");
+          if (txt) {
+            navigator.clipboard.writeText(txt);
+            window.appCore?.showToast?.("Códigos copiados");
+          } else {
+            window.appCore?.showToast?.("No hay códigos para copiar");
+          }
+        }
+      };
 
     if (video) video.onclick = toggleTorch;
   }
 
   /* ============================================================
-     EXPONER FUNCIONES GLOBALES
+     EXPONER SOLO 2 FUNCIONES GLOBALES
      ============================================================ */
+
+  // Scanner interno — modo SIMPLE
   window.startScannerInterno1 = function (cb) {
     startScanner(cb, "simple");
   };
 
-  window.startScannerInterno2 = function (cb) {
+  // Scanner “externo” — modo COMPLETO (diferenciado)
+  window.startScannerExternoPreferido = function (cb) {
     startScanner(cb, "completo");
   };
-
-  // AHORA RESPETA EL SWITCH SIMPLE / COMPLETO
-  window.startScannerExternoPreferido = function (cb) {
-    startScanner(cb, defaultScannerMode);
-  };
-
-  // ESTE ERA EL ERROR → SIEMPRE FORZABA SIMPLE
-  window.startScannerExternoSelector = function (cb) {
-    startScanner(cb, defaultScannerMode);
-  };
-
 })();
