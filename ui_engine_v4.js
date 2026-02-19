@@ -300,7 +300,7 @@ function initUI(app) {
   }
 
   function scannerCallback() {
-    setScannerOverlay(false);
+    setTimeout(() => setScannerOverlay(false), 1500);
     if (els.searchInput?.value.trim()) {
       ORB.setLoading?.(true);
       app.buscar();
