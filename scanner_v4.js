@@ -263,6 +263,7 @@
 
     endCallback = typeof callback === "function" ? callback : null;
 
+    // "simple" | "completo"
     scannerMode = mode === "completo" ? "completo" : "simple";
 
     overlay.classList.remove("hidden");
@@ -330,12 +331,12 @@
      EXPONER SOLO 2 FUNCIONES GLOBALES
      ============================================================ */
 
-  // Scanner interno — modo SIMPLE
-  window.startScannerInterno1 = function (cb) {
-    startScanner(cb, "simple");
+  // Scanner interno — respeta modo SIMPLE / COMPLETO
+  window.startScannerInterno1 = function (cb, mode) {
+    startScanner(cb, mode === "completo" ? "completo" : "simple");
   };
 
-  // Scanner “externo” — modo COMPLETO (diferenciado)
+  // Scanner “externo” — modo COMPLETO (web ZXing por ahora)
   window.startScannerExternoPreferido = function (cb) {
     startScanner(cb, "completo");
   };
