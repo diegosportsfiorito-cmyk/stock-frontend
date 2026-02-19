@@ -1,7 +1,7 @@
 // ============================================================
 // APP CORE — Motor inteligente + warm-up + indicador visual
-// Versión corregida y optimizada 2026-02-10
-// (autocompletado + filtros + resumen híbrido + doble scanner)
+// Versión corregida y optimizada 2026-02-19
+// (autocompletado + filtros + resumen híbrido + voz + doble scanner)
 // ============================================================
 
 const AppCore = {
@@ -145,6 +145,70 @@ const AppCore = {
       stock_total: stockTotal,
       stock_negativo: stockNegativo,
     };
+  },
+
+  // ============================================================
+  // UTILIDADES FONÉTICAS PARA VOZ
+  // ============================================================
+
+  normalizarFonetico(texto) {
+    if (!texto) return "";
+    let t = this.normalizarTexto(texto);
+
+    t = t.replace(/H/g, "");          // quitar H
+    t = t.replace(/[BV]/g, "B");      // B/V
+    t = t.replace(/[CKQ]/g, "K");     // C/K/Q -> K
+    t = t.replace(/(.)\1+/g, "$1");   // letras repetidas
+
+    return t;
+  },
+
+  distanciaLevenshtein(a, b) {
+    if (a === b) return 0;
+    if (!a) return b.length;
+    if (!b) return a.length;
+
+    const dp = Array.from({ length: a.length + 1 }, () =>
+      new Array(b.length + 1).fill(0)
+    );
+
+    for (let i = 0; i <= a.length; i++) dp[i][0] = i;
+    for (let j = 0; j <= b.length; j++) dp[0][j] = j;
+
+    for (let i = 1; i <= a.length; i++) {
+      for (let j = 1; j <= b.length; j++) {
+        const costo = a[i - 1] === b[j - 1] ? 0 : 1;
+        dp[i][j] = Math.min(
+          dp[i - 1][j] + 1,
+          dp[i][j - 1] + 1,
+          dp[i - 1][j - 1] + costo
+        );
+      }
+    }
+
+    return dp[a.length][b.length];
+  },
+
+  corregirMarcaPorVoz(qUpper, mapMarcas) {
+    const fonQ = this.normalizarFonetico(qUpper);
+    let mejorMarca = null;
+    let mejorDist = Infinity;
+
+    for (const [normMarca, marcaReal] of mapMarcas.entries()) {
+      const fonMarca = this.normalizarFonetico(normMarca);
+      const dist = this.distanciaLevenshtein(fonQ, fonMarca);
+      if (dist < mejorDist) {
+        mejorDist = dist;
+        mejorMarca = marcaReal;
+      }
+    }
+
+    // Umbral: hasta 2 cambios (TOPER→TOPPER, CAPA→KAPPA, HABIA→AVIA)
+    if (mejorDist <= 2) {
+      return mejorMarca;
+    }
+
+    return null;
   },
 
   // ============================================================
@@ -355,7 +419,7 @@ const AppCore = {
   },
 
   // ============================================================
-  // PARSER INTELIGENTE
+  // PARSER INTELIGENTE (con corrección de voz)
   // ============================================================
 
   interpretarQuery(raw) {
@@ -460,7 +524,16 @@ const AppCore = {
 
     const esMarcaExacta = marcasNorm.includes(qUpper);
     const esRubroExacto = rubrosNorm.includes(qUpper);
-    const usarFiltros = esMarcaExacta || esRubroExacto;
+    let usarFiltros = esMarcaExacta || esRubroExacto;
+
+    // Corrección por voz: si es una sola palabra y no matchea, intentamos corregir a marca
+    if (!usarFiltros && tokens.length === 1 && marcasNorm.length) {
+      const marcaCorregida = this.corregirMarcaPorVoz(qUpper, mapMarcas);
+      if (marcaCorregida) {
+        marca = marcaCorregida;
+        usarFiltros = true;
+      }
+    }
 
     return {
       filtros_globales: usarFiltros,
@@ -656,7 +729,7 @@ const AppCore = {
     if (!container) return;
 
     let html = `
-      <div class="tabla-wrapper">
+      <div class="tabla-wrapper" style="overflow-x:auto;-webkit-overflow-scrolling:touch;">
       <table class="tabla-resultados">
         <thead>
           <tr>
@@ -774,6 +847,12 @@ const AppCore = {
       })
       .join("");
 
+    const totalGeneral = talles.reduce((acc, t) => {
+      const stock = Number(t.stock || 0);
+      const precio = Number(base.precio || 0);
+      return acc + stock * precio;
+    }, 0);
+
     const html = `
       <div class="detalle-header">
         <h2>${this.normalizarCampo(base.codigo)} — ${this.normalizarCampo(
@@ -795,6 +874,10 @@ const AppCore = {
         </thead>
         <tbody>
           ${rowsHtml}
+          <tr>
+            <td colspan="3" style="text-align:right;font-weight:bold;">Total general</td>
+            <td>$${this.formatNumber(totalGeneral)}</td>
+          </tr>
         </tbody>
       </table>
     `;
@@ -945,14 +1028,17 @@ const AppCore = {
     const btnStop = document.getElementById("btn-stop");
     btnStop?.addEventListener("click", () => this.stopTodo());
 
-    this.els.fuenteDatosToggle?.addEventListener("click", () => {
-      this.els.fuenteDatosPanel?.classList.toggle("visible");
+    const fuenteToggle = document.getElementById("fuente-datos-toggle");
+    const fuentePanel = document.getElementById("fuente-datos-panel");
+    fuenteToggle?.addEventListener("click", () => {
+      if (!fuentePanel) return;
+      fuentePanel.classList.toggle("visible");
     });
 
     const orb = document.getElementById("orb");
     orb?.addEventListener("click", () => this.buscar());
 
-    // Scanner interno (mismo botón de siempre)
+    // Scanner interno (debajo del input)
     const btnScannerInterno = document.getElementById("btn-scanner");
     btnScannerInterno?.addEventListener("click", () => {
       if (window.startScannerInterno1) {
@@ -965,7 +1051,7 @@ const AppCore = {
       }
     });
 
-    // Scanner externo (segundo botón, ícono 30% más chico)
+    // Scanner externo (debajo del input)
     const btnScannerExterno = document.getElementById("btn-scanner-externo");
     btnScannerExterno?.addEventListener("click", () => {
       if (window.startScannerExternoPreferido) {
