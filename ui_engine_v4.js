@@ -48,12 +48,10 @@ function initUI(app) {
   const scannerModeSwitch = document.getElementById("scanner-mode-switch");
 
   // ------------------------------------------------------------
-  // BOTONES DEL SCANNER (alineados a tu HTML)
+  // BOTONES DEL SCANNER (solo 2)
   // ------------------------------------------------------------
   const btnScannerInterno1 = document.getElementById("btn-scanner-interno-1");
-  const btnScannerInterno2 = document.getElementById("btn-scanner-interno-2");
   const btnScannerExternoPreferido = document.getElementById("btn-scanner-externo-preferido");
-  const btnScannerExternoSelector = document.getElementById("btn-scanner-externo-selector");
 
   els.filtrosPanel?.classList.remove("visible");
   fuentePanel?.classList.remove("visible");
@@ -289,8 +287,6 @@ function initUI(app) {
   // SCANNER — NATIVO + WEB FALLBACK
   // ============================================================
 
-  const isAndroidApp = !!(window.Android && typeof Android.abrirScanner === "function");
-
   // Inicializar modo scanner desde localStorage
   (function initScannerMode() {
     const saved = localStorage.getItem("scannerModo") || "simple";
@@ -334,70 +330,52 @@ function initUI(app) {
     }
   }
 
-  function abrirScannerNativo() {
-    try {
-      Android.abrirScanner();
-    } catch (e) {
-      console.warn("Error al abrir scanner nativo:", e);
-    }
+  // ------------------------------------------------------------
+  // SCANNER EXTERNO — Barcode Scanner+ con fallback
+  // ------------------------------------------------------------
+  function abrirBarcodeScannerPlus() {
+    const pkg = "com.pcmehanik.smarttoolbox";
+    const scheme = "smarttoolbox://scan";
+
+    // Intento abrir la app directamente
+    window.location.href = scheme;
+
+    // Si no abre → Play Store / App Store / alternativas
+    setTimeout(() => {
+      if (/Android/i.test(navigator.userAgent)) {
+        window.location.href =
+          "https://play.google.com/store/apps/details?id=" + pkg;
+      } else if (/iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+        window.location.href =
+          "https://apps.apple.com/us/app/qr-barcode-scanner/id1200318119";
+      } else {
+        alert("Instalá Barcode Scanner+ o un lector compatible para usar el scanner externo.");
+      }
+    }, 800);
   }
 
+  // ------------------------------------------------------------
+  // SCANNER INTERNO
+  // ------------------------------------------------------------
   function abrirScannerWebInterno() {
     if (typeof window.startScannerInterno1 === "function") {
       const modo = getScannerMode(); // "simple" | "completo"
       setScannerOverlay(true);
-      // Le pasamos el modo como segundo parámetro (scanner_v3.js lo puede usar)
       window.startScannerInterno1(scannerCallback, modo);
     } else {
       app.showToast("Scanner interno no disponible");
     }
   }
 
-  function abrirScannerWebExternoPreferido() {
-    if (typeof window.startScannerExternoPreferido === "function") {
-      setScannerOverlay(true);
-      window.startScannerExternoPreferido(scannerCallback);
-    } else {
-      app.showToast("Scanner externo no disponible");
-    }
-  }
-
-  function abrirScannerWebExternoSelector() {
-    if (typeof window.startScannerExternoSelector === "function") {
-      setScannerOverlay(true);
-      window.startScannerExternoSelector(scannerCallback);
-    } else {
-      abrirScannerWebExternoPreferido();
-    }
-  }
-
-  // Botones scanner internos
-  btnScannerInterno1?.addEventListener("click", () => {
-    if (isAndroidApp) abrirScannerNativo();
-    else abrirScannerWebInterno();
-  });
-
-  btnScannerInterno2?.addEventListener("click", () => {
-    if (isAndroidApp) abrirScannerNativo();
-    else abrirScannerWebInterno();
-  });
-
-  // Botón scanner externo preferido
-  btnScannerExternoPreferido?.addEventListener("click", () => {
-    if (isAndroidApp) abrirScannerNativo();
-    else abrirScannerWebExternoPreferido();
-  });
-
-  // Botón scanner externo selector
-  btnScannerExternoSelector?.addEventListener("click", () => {
-    if (isAndroidApp) abrirScannerNativo();
-    else abrirScannerWebExternoSelector();
-  });
+  // ------------------------------------------------------------
+  // BOTONES SCANNER
+  // ------------------------------------------------------------
+  btnScannerInterno1?.addEventListener("click", abrirScannerWebInterno);
+  btnScannerExternoPreferido?.addEventListener("click", abrirBarcodeScannerPlus);
 
   // ============================================================
   // BOTONES DE ACCIÓN
   // ============================================================
-
   btnClear?.addEventListener("click", () => {
     app.limpiarPantalla();
     app.setOrbIdle?.();
@@ -418,7 +396,6 @@ function initUI(app) {
   // ============================================================
   // FILTROS
   // ============================================================
-
   btnFiltros?.addEventListener("click", () => {
     els.filtrosPanel?.classList.toggle("visible");
   });
@@ -434,7 +411,6 @@ function initUI(app) {
   // ============================================================
   // VISTAS
   // ============================================================
-
   function setVista(v) {
     app.state.vistaActual = v;
 
@@ -459,7 +435,6 @@ function initUI(app) {
   // ============================================================
   // PANEL ADMIN
   // ============================================================
-
   adminGuardar?.addEventListener("click", () => {
     const modo = document.getElementById("admin-modo-defecto").value;
     const backend = document.getElementById("admin-backend-url").value;
@@ -481,7 +456,6 @@ function initUI(app) {
   // ============================================================
   // MÉTRICAS FILTRABLES
   // ============================================================
-
   const mArt = document.getElementById("metric-articulos");
   const mUni = document.getElementById("metric-pares");
   const mNeg = document.getElementById("metric-alertas-negativos");
@@ -541,79 +515,6 @@ function initUI(app) {
   // ============================================================
   // MODO DÍA / NOCHE
   // ============================================================
-
   function aplicarModoDark(on) {
     document.body.classList.toggle("light-mode", on);
-    localStorage.setItem("theme", on ? "light" : "dark");
-  }
-
-  const savedTheme = localStorage.getItem("theme") || "dark";
-  aplicarModoDark(savedTheme === "light");
-  if (toggleDark) toggleDark.checked = savedTheme === "light";
-
-  toggleDark?.addEventListener("change", () => {
-    aplicarModoDark(toggleDark.checked);
-  });
-
-  // ============================================================
-  // AYUDA
-  // ============================================================
-
-  helpModal?.classList.add("hidden");
-
-  helpButton?.addEventListener("click", () => {
-    helpModal.classList.remove("hidden");
-  });
-
-  helpClose?.addEventListener("click", () => {
-    helpModal.classList.add("hidden");
-  });
-
-  helpModal?.addEventListener("click", (e) => {
-    if (e.target === helpModal) helpModal.classList.add("hidden");
-  });
-
-  // ============================================================
-  // FUENTE DE DATOS — TOGGLE
-  // ============================================================
-
-  fuenteToggle?.addEventListener("click", () => {
-    fuentePanel?.classList.toggle("visible");
-  });
-
-  // ============================================================
-  // ATAJOS DE TECLADO
-  // ============================================================
-
-  document.addEventListener("keydown", (e) => {
-    const tag = (e.target && e.target.tagName) || "";
-    const isInput = ["INPUT", "TEXTAREA"].includes(tag);
-
-    // ESC limpia autocomplete o pantalla
-    if (e.key === "Escape") {
-      if (autoList?.innerHTML.trim()) {
-        autoList.innerHTML = "";
-        return;
-      }
-      app.limpiarPantalla();
-      return;
-    }
-
-    // F2 = Scanner interno (usa el interno 1)
-    if (e.key === "F2" && !isInput) {
-      btnScannerInterno1?.click();
-      e.preventDefault();
-      return;
-    }
-
-    // F3 = Dictado manual
-    if (e.key === "F3" && !isInput) {
-      micButton?.click();
-      e.preventDefault();
-      return;
-    }
-  });
-}
-
-// Exponer initUI
-window.initUI = initUI;
+    localStorage.set
