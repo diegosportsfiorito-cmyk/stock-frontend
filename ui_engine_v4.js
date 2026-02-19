@@ -553,8 +553,9 @@ function initUI(app) {
   // ============================================================
 
   fuenteToggle?.addEventListener("click", () => {
-    fuentePanel?.classList.toggle("visible");
-  });
+  fuentePanel.classList.toggle("visible");
+  fuentePanel.classList.toggle("hidden");
+});
 
   // ============================================================
   // ATAJOS DE TECLADO
