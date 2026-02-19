@@ -109,24 +109,19 @@
 
           <div id="voice-status" class="voice-status">Dictado desactivado</div>
 
-          <!-- SCANNER BUTTONS -->
-          <div class="scanner-buttons">
-            <button id="btn-scanner-interno-1" class="scanner-button">📷</button>
-            <button id="btn-scanner-interno-2" class="scanner-button">🎦</button>
-            <button id="btn-scanner-externo-preferido" class="scanner-button">📲</button>
-            <button id="btn-scanner-externo-selector" class="scanner-button">🧭</button>
-          </div>
+          <!-- ========================================================= -->
+          <!-- SCANNER BUTTONS (VERSIÓN FINAL — SOLO 2 BOTONES)          -->
+          <!-- ========================================================= -->
+          <div class="scanner-buttons-row">
+            <!-- Scanner interno (simple) -->
+            <button id="btn-scanner" class="scanner-btn-main">
+              <img src="icons/camera.svg" alt="Scanner interno" />
+            </button>
 
-          <!-- SCANNER MODE (ID CORRECTO) -->
-          <div class="scanner-mode-switch">
-            <label class="orb-mode-switch">
-              <span>Simple</span>
-              <label class="switch small">
-                <input id="scanner-mode-switch" type="checkbox" />
-                <span class="slider"></span>
-              </label>
-              <span>Completo</span>
-            </label>
+            <!-- Scanner externo (completo, 30% más chico) -->
+            <button id="btn-scanner-externo" class="scanner-btn-main scanner-btn-external">
+              <img src="icons/camera-alt.svg" alt="Scanner externo" />
+            </button>
           </div>
 
           <!-- FILTROS -->
@@ -412,7 +407,6 @@
       window.onScan = function(code) {
         let limpio = code;
 
-        // Solo recortar si el modo es SIMPLE
         const modo = localStorage.getItem("scannerModo") || "simple";
         if (modo !== "completo") {
           const separadores = /[\/\\! ]/;
