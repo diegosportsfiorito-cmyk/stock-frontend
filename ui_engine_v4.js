@@ -512,15 +512,14 @@ function initUI(app) {
   mCero?.addEventListener("click", filtrarSinStock);
   mVal?.addEventListener("click", ordenarPorValorizado);
 
-  // ============================================================
+    // ============================================================
   // MODO DÍA / NOCHE
   // ============================================================
   function aplicarModoDark(on) {
     document.body.classList.toggle("light-mode", on);
-        localStorage.setItem("modoDia", on ? "on" : "off");
+    localStorage.setItem("modoDia", on ? "on" : "off");
   }
 
-  // Estado inicial modo día/noche
   (function initModoDark() {
     const saved = localStorage.getItem("modoDia");
     const on = saved === "on";
@@ -578,4 +577,3 @@ function initUI(app) {
 // EXPONER FUNCIÓN GLOBAL
 // ============================================================
 window.initUI = initUI;
-
