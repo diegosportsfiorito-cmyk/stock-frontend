@@ -1,6 +1,6 @@
 /* ============================================================
    SCANNER V4 PRO — IA PRO ULTRA
-   scanner_v3.js (versión final — solo 2 scanners)
+   scanner_v4.js (versión final — solo 2 scanners)
    ============================================================ */
 
 (function () {
@@ -336,7 +336,7 @@
     startScanner(cb, mode === "completo" ? "completo" : "simple");
   };
 
-  // Scanner “externo” — modo COMPLETO (web ZXing por ahora)
+  // Scanner externo — modo COMPLETO (ZXing solo si se usa como fallback)
   window.startScannerExternoPreferido = function (cb) {
     startScanner(cb, "completo");
   };
