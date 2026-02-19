@@ -1836,3 +1836,86 @@ body.light-mode .scanner-counter {
   color: #111;
   border-color: rgba(0, 0, 0, 0.2);
 }
+/* ============================================================
+   FIX 1 — Scroll horizontal tabla (garantizado en todas las vistas)
+   ============================================================ */
+.tabla-wrapper {
+  width: 100%;
+  overflow-x: auto !important;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 8px;
+}
+
+/* ============================================================
+   FIX 2 — Vista artículo (filas por talle más claras y legibles)
+   ============================================================ */
+.tabla-talles {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+}
+
+.tabla-talles th,
+.tabla-talles td {
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  padding: 8px;
+  font-size: 0.85rem;
+}
+
+.tabla-talles th {
+  background: rgba(255, 255, 255, 0.08);
+  font-weight: 700;
+}
+
+.tabla-talles tr:nth-child(even) {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+/* ============================================================
+   FIX 3 — Panel “Fuente de datos” (desplegable estable)
+   ============================================================ */
+#fuente-datos-panel {
+  display: none;
+  margin-top: 10px;
+  padding: 12px;
+  background: rgba(15, 23, 42, 0.9);
+  border: 1px solid rgba(55, 65, 81, 0.9);
+  border-radius: 10px;
+  font-size: 0.85rem;
+}
+
+#fuente-datos-panel.visible {
+  display: block;
+}
+
+/* ============================================================
+   FIX 4 — Botones de scanner debajo del input (solo 2 botones)
+   ============================================================ */
+.scanner-buttons-row {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+  align-items: center;
+}
+
+.scanner-btn-main {
+  width: 44px;
+  height: 44px;
+  border-radius: 999px;
+  border: 1px solid rgba(31, 41, 55, 0.9);
+  background: radial-gradient(circle at 30% 20%, #020617, #020617);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.scanner-btn-main img {
+  width: 80%;
+  height: auto;
+}
+
+/* Scanner externo 30% más chico */
+.scanner-btn-external img {
+  width: 55%;
+}
