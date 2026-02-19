@@ -1,20 +1,15 @@
 // ============================================================
-// APP CORE — Motor inteligente + warm-up + fuente de datos PRO
-// Versión unificada — modo B (resumen backend + fallback local)
+// APP CORE — Motor inteligente + warm-up + indicador visual
+// Versión corregida y optimizada 2026-02-10
+// (autocompletado + filtros + resumen híbrido + doble scanner)
 // ============================================================
 
 const AppCore = {
-  // ============================================================
-  // CONFIG
-  // ============================================================
   config: {
     backendUrl: "https://stock-backend-1-0upi.onrender.com",
     modoDefecto: localStorage.getItem("modoDefecto") || "simple",
   },
 
-  // ============================================================
-  // REFERENCIAS A ELEMENTOS
-  // ============================================================
   els: {
     searchInput: document.getElementById("search-input"),
     searchStatus: document.getElementById("search-status"),
@@ -42,7 +37,6 @@ const AppCore = {
 
     connectionDot: document.getElementById("connection-dot"),
 
-    // Fuente de datos
     fuenteDatosToggle: document.getElementById("fuente-datos-toggle"),
     fuenteDatosPanel: document.getElementById("fuente-datos-panel"),
     fuenteArchivo: document.getElementById("fuente-archivo"),
@@ -52,14 +46,8 @@ const AppCore = {
     fuenteArticulos: document.getElementById("fuente-articulos"),
     fuenteStockTotal: document.getElementById("fuente-stock-total"),
     fuenteStockNegativo: document.getElementById("fuente-stock-negativo"),
-
-    // (Opcional) gráfico de torta
-    chartContainer: document.getElementById("chart-container"),
   },
 
-  // ============================================================
-  // ESTADO
-  // ============================================================
   state: {
     items: [],
     catalogItems: [],
@@ -71,7 +59,7 @@ const AppCore = {
       talleDesde: null,
       talleHasta: null,
     },
-    vistaActual: "tarjeta",
+    vistaActual: "tarjeta", // tabla | tarjeta | articulo
     resumenCatalogo: null,
     retryTimeout: null,
     warmingUp: true,
@@ -80,6 +68,7 @@ const AppCore = {
   // ============================================================
   // UTILIDADES
   // ============================================================
+
   normalizarCampo(v) {
     if (!v && v !== 0) return "—";
     const t = String(v).trim().toUpperCase();
@@ -124,76 +113,251 @@ const AppCore = {
 
   setOrbIdle() {
     if (!window.ORB) return;
-    ORB.setError(false);
-    ORB.setLoading(false);
-    ORB.setReady();
+    ORB.setError?.(false);
+    ORB.setLoading?.(false);
   },
 
-  // ============================================================
-  // RESUMEN LOCAL (FALLBACK)
-  // ============================================================
   calcularResumenLocal(items) {
-    const resumen = {
-      archivo: "Desconocido (local)",
-      fecha: "Calculado localmente",
-      marcas: 0,
-      rubros: 0,
-      articulos: 0,
-      stock_total: 0,
-      stock_negativo: 0,
-    };
-
-    if (!items || !items.length) return resumen;
-
-    const marcasSet = new Set();
-    const rubrosSet = new Set();
+    const arr = items || [];
+    const marcas = new Set();
+    const rubros = new Set();
     let stockTotal = 0;
     let stockNegativo = 0;
 
-    items.forEach((it) => {
-      if (it.marca) marcasSet.add(it.marca);
-      if (it.rubro) rubrosSet.add(it.rubro);
-
-      const sum = (it.talles || []).reduce(
-        (a, t) => a + Number(t.stock || 0),
-        0
-      );
+    arr.forEach((it) => {
+      if (it.marca) marcas.add(it.marca);
+      if (it.rubro) rubros.add(it.rubro);
+      let sum = 0;
+      (it.talles || []).forEach((t) => {
+        const s = Number(t.stock || 0);
+        sum += s;
+      });
       stockTotal += sum;
-      if (sum < 0) stockNegativo++;
+      if (sum < 0) stockNegativo += 1;
     });
 
-    resumen.marcas = marcasSet.size;
-    resumen.rubros = rubrosSet.size;
-    resumen.articulos = items.length;
-    resumen.stock_total = stockTotal;
-    resumen.stock_negativo = stockNegativo;
-
-    return resumen;
+    return {
+      archivo: "—",
+      fecha: "—",
+      marcas: marcas.size,
+      rubros: rubros.size,
+      articulos: arr.length,
+      stock_total: stockTotal,
+      stock_negativo: stockNegativo,
+    };
   },
 
-  actualizarPanelFuenteDatos() {
-    const r = this.state.resumenCatalogo;
-    if (!r) return;
+  // ============================================================
+  // AUTOCOMPLETE — INTELIGENTE
+  // ============================================================
 
-    if (this.els.fuenteArchivo)
-      this.els.fuenteArchivo.textContent = this.normalizarCampo(r.archivo);
-    if (this.els.fuenteFecha)
-      this.els.fuenteFecha.textContent = this.normalizarCampo(r.fecha);
-    if (this.els.fuenteMarcas)
-      this.els.fuenteMarcas.textContent = this.formatNumber(r.marcas);
-    if (this.els.fuenteRubros)
-      this.els.fuenteRubros.textContent = this.formatNumber(r.rubros);
-    if (this.els.fuenteArticulos)
-      this.els.fuenteArticulos.textContent = this.formatNumber(r.articulos);
-    if (this.els.fuenteStockTotal)
-      this.els.fuenteStockTotal.textContent = this.formatNumber(r.stock_total);
-    if (this.els.fuenteStockNegativo)
-      this.els.fuenteStockNegativo.textContent = this.formatNumber(r.stock_negativo);
+  getAutocompleteSuggestions(term) {
+    const q = this.normalizarTexto(term);
+    if (!q || !this.state.catalogItems.length) return [];
+
+    const exactArticulo = [];
+    const exactMarca = [];
+    const exactRubro = [];
+    const exactDescripcion = [];
+
+    const prefijoArticulo = [];
+    const prefijoMarca = [];
+    const prefijoRubro = [];
+    const prefijoDescripcion = [];
+
+    const parcialArticulo = [];
+    const parcialMarca = [];
+    const parcialRubro = [];
+    const parcialDescripcion = [];
+
+    const pushUnique = (arr, value) => {
+      if (!value) return;
+      if (!arr.includes(value)) arr.push(value);
+    };
+
+    this.state.catalogItems.forEach((item) => {
+      const descRaw = item.descripcion || "";
+      const marcaRaw = item.marca || "";
+      const rubroRaw = item.rubro || "";
+      const codigoRaw = item.codigo || "";
+
+      const descN = this.normalizarTexto(descRaw);
+      const marcaN = this.normalizarTexto(marcaRaw);
+      const rubroN = this.normalizarTexto(rubroRaw);
+      const codigoN = this.normalizarTexto(codigoRaw);
+
+      const startsWith = (txt) => txt && txt.startsWith(q);
+      const contains = (txt) => txt && txt.includes(q);
+
+      if (codigoN === q || descN === q) {
+        pushUnique(exactArticulo, descRaw || codigoRaw);
+      } else if (startsWith(codigoN) || startsWith(descN)) {
+        pushUnique(prefijoArticulo, descRaw || codigoRaw);
+      } else if (contains(codigoN) || contains(descN)) {
+        pushUnique(parcialArticulo, descRaw || codigoRaw);
+      }
+
+      if (marcaN) {
+        if (marcaN === q) {
+          pushUnique(exactMarca, marcaRaw);
+        } else if (startsWith(marcaN)) {
+          pushUnique(prefijoMarca, marcaRaw);
+        } else if (contains(marcaN)) {
+          pushUnique(parcialMarca, marcaRaw);
+        }
+      }
+
+      if (rubroN) {
+        if (rubroN === q) {
+          pushUnique(exactRubro, rubroRaw);
+        } else if (startsWith(rubroN)) {
+          pushUnique(prefijoRubro, rubroRaw);
+        } else if (contains(rubroN)) {
+          pushUnique(parcialRubro, rubroRaw);
+        }
+      }
+
+      if (descN) {
+        if (descN === q) {
+          pushUnique(exactDescripcion, descRaw);
+        } else if (startsWith(descN)) {
+          pushUnique(prefijoDescripcion, descRaw);
+        } else if (contains(descN)) {
+          pushUnique(parcialDescripcion, descRaw);
+        }
+      }
+    });
+
+    const ordered = [
+      ...exactArticulo,
+      ...exactMarca,
+      ...exactRubro,
+      ...exactDescripcion,
+      ...prefijoArticulo,
+      ...prefijoMarca,
+      ...prefijoRubro,
+      ...prefijoDescripcion,
+      ...parcialArticulo,
+      ...parcialMarca,
+      ...parcialRubro,
+      ...parcialDescripcion,
+    ];
+
+    const final = [];
+    const seen = new Set();
+    for (const v of ordered) {
+      if (!v) continue;
+      if (seen.has(v)) continue;
+      seen.add(v);
+      final.push(v);
+      if (final.length >= 12) break;
+    }
+
+    return final;
+  },
+
+  // ============================================================
+  // WARM-UP + CARGA CATÁLOGO
+  // ============================================================
+
+  async pingBackend() {
+    this.setSearchStatus("Activando servidor…", "orange");
+    this.setConnectionStatus(false);
+
+    try {
+      const res = await fetch(this.config.backendUrl + "/ping");
+      if (!res.ok) throw new Error();
+
+      this.setSearchStatus("Conectado", "green");
+      this.setConnectionStatus(true);
+      this.state.warmingUp = false;
+      return true;
+    } catch {
+      this.setSearchStatus("Activando servidor…", "orange");
+      return false;
+    }
+  },
+
+  async warmUpLoop() {
+    const ok = await this.pingBackend();
+    if (!ok) {
+      setTimeout(() => this.warmUpLoop(), 2000);
+      return;
+    }
+    this.cargarCatalogo();
+  },
+
+  async cargarCatalogo() {
+    this.setSearchStatus("Cargando catálogo…", "blue");
+
+    try {
+      const res = await fetch(this.config.backendUrl + "/catalog");
+      if (!res.ok) throw new Error();
+
+      const data = await res.json();
+
+      this.state.catalogItems = data.items || [];
+
+      if (data.resumen) {
+        this.state.resumenCatalogo = data.resumen;
+      } else {
+        this.state.resumenCatalogo = this.calcularResumenLocal(this.state.catalogItems);
+      }
+
+      const r = this.state.resumenCatalogo || {};
+
+      if (this.els.fuenteArchivo)
+        this.els.fuenteArchivo.textContent = r.archivo || "—";
+      if (this.els.fuenteFecha)
+        this.els.fuenteFecha.textContent = r.fecha || "—";
+      if (this.els.fuenteMarcas)
+        this.els.fuenteMarcas.textContent = r.marcas ?? "—";
+      if (this.els.fuenteRubros)
+        this.els.fuenteRubros.textContent = r.rubros ?? "—";
+      if (this.els.fuenteArticulos)
+        this.els.fuenteArticulos.textContent = r.articulos ?? "—";
+      if (this.els.fuenteStockTotal)
+        this.els.fuenteStockTotal.textContent = r.stock_total ?? "—";
+      if (this.els.fuenteStockNegativo)
+        this.els.fuenteStockNegativo.textContent = r.stock_negativo ?? "—";
+
+      this.poblarFiltros();
+
+      this.setConnectionStatus(true);
+      this.setSearchStatus("Conectado", "green");
+    } catch {
+      this.setConnectionStatus(false);
+      this.setSearchStatus("Error de conexión", "red");
+
+      clearTimeout(this.state.retryTimeout);
+      this.state.retryTimeout = setTimeout(() => this.warmUpLoop(), 2000);
+    }
+  },
+
+  poblarFiltros() {
+    const marcas = new Set();
+    const rubros = new Set();
+
+    this.state.catalogItems.forEach((i) => {
+      if (i.marca) marcas.add(i.marca);
+      if (i.rubro) rubros.add(i.rubro);
+    });
+
+    if (this.els.filtroMarca)
+      this.els.filtroMarca.innerHTML =
+        `<option value="">Marca</option>` +
+        [...marcas].sort().map((m) => `<option>${m}</option>`).join("");
+
+    if (this.els.filtroRubro)
+      this.els.filtroRubro.innerHTML =
+        `<option value="">Rubro</option>` +
+        [...rubros].sort().map((r) => `<option>${r}</option>`).join("");
   },
 
   // ============================================================
   // PARSER INTELIGENTE
   // ============================================================
+
   interpretarQuery(raw) {
     const q = raw.trim();
     const qUpper = this.normalizarTexto(q);
@@ -311,124 +475,15 @@ const AppCore = {
   },
 
   // ============================================================
-  // RESPUESTA POR VOZ (RESUMEN + TOP ITEMS)
-  // ============================================================
-  speakResultados() {
-    if (!("speechSynthesis" in window)) return;
-
-    const synth = window.speechSynthesis;
-    synth.cancel();
-
-    let texto = "";
-
-    if (!this.state.items || !this.state.items.length) {
-      texto = "No se encontraron resultados.";
-    } else {
-      const totalArticulos = this.state.items.length;
-      let totalUnidades = 0;
-
-      this.state.items.forEach((it) => {
-        const sum = (it.talles || []).reduce(
-          (a, t) => a + Number(t.stock || 0),
-          0
-        );
-        totalUnidades += sum;
-      });
-
-      texto = `Encontré ${totalArticulos} artículos, con un total de ${totalUnidades} unidades. `;
-
-      const top = this.state.items.slice(0, 5);
-      top.forEach((item) => {
-        texto += `${item.descripcion || "Artículo"} de marca ${
-          item.marca || "sin marca"
-        }, rubro ${item.rubro || "sin rubro"}. `;
-      });
-    }
-
-    const utter = new SpeechSynthesisUtterance(texto);
-    utter.lang = "es-AR";
-    utter.rate = 1;
-    utter.pitch = 1;
-
-    if (window.ORB?.setSpeaking) {
-      ORB.setSpeaking(true);
-      utter.onend = () => {
-        ORB.setSpeaking(false);
-      };
-    }
-
-    synth.speak(utter);
-  },
-
-  // ============================================================
-  // WARM-UP + CARGA DE CATÁLOGO
-  // ============================================================
-  async pingBackend() {
-    try {
-      const res = await fetch(this.config.backendUrl + "/ping", {
-        method: "GET",
-      });
-      if (!res.ok) throw new Error("Ping failed");
-      this.setConnectionStatus(true);
-      return true;
-    } catch (e) {
-      this.setConnectionStatus(false);
-      return false;
-    }
-  },
-
-  async cargarCatalogo() {
-    try {
-      const res = await fetch(this.config.backendUrl + "/catalog", {
-        method: "GET",
-      });
-      if (!res.ok) throw new Error("Error en /catalog");
-
-      const data = await res.json();
-
-      this.state.catalogItems = data.items || [];
-
-      // Opción B: usar resumen del backend si existe, si no, calcular local
-      if (data.resumen) {
-        this.state.resumenCatalogo = data.resumen;
-      } else {
-        this.state.resumenCatalogo = this.calcularResumenLocal(this.state.catalogItems);
-      }
-
-      this.actualizarPanelFuenteDatos();
-      this.setConnectionStatus(true);
-      this.state.warmingUp = false;
-      this.setSearchStatus("Listo", "green");
-
-    } catch (e) {
-      this.state.warmingUp = false;
-      this.setConnectionStatus(false);
-      this.setSearchStatus("Error al cargar catálogo", "red");
-    }
-  },
-
-  async warmUpLoop() {
-    this.state.warmingUp = true;
-    this.setSearchStatus("Activando servidor…", "orange");
-
-    const ok = await this.pingBackend();
-    if (!ok) {
-      // Reintento suave
-      setTimeout(() => this.warmUpLoop(), 5000);
-      return;
-    }
-
-    await this.cargarCatalogo();
-    this.setOrbIdle();
-  },
-
-  // ============================================================
   // BÚSQUEDA PRINCIPAL
   // ============================================================
+
   async buscar() {
-    const q = this.els.searchInput?.value.trim() || "";
+    const raw = this.els.searchInput?.value || "";
+    const q = raw.trim();
+
     if (!q) {
-      this.showToast("Ingresá un artículo, marca o rubro");
+      this.limpiarPantalla();
       return;
     }
 
@@ -436,353 +491,511 @@ const AppCore = {
 
     const parsed = this.interpretarQuery(q);
 
-    if (this.state.currentAbort) {
-      this.state.currentAbort.abort();
-      this.state.currentAbort = null;
-    }
+    const body = {
+      question: parsed.question || "",
+      filtros_globales: !!parsed.filtros_globales,
+      marca: parsed.marca || null,
+      rubro: parsed.rubro || null,
+      talleDesde: parsed.talleDesde || null,
+      talleHasta: parsed.talleHasta || null,
+      soloUltimo: parsed.soloUltimo || false,
+      soloNegativo: parsed.soloNegativo || false,
+      solo_stock: this.els.chkSoloStock?.checked || false,
+    };
 
-    const controller = new AbortController();
-    this.state.currentAbort = controller;
+    if (this.state.currentAbort) this.state.currentAbort.abort();
+    this.state.currentAbort = new AbortController();
 
     this.setSearchStatus("Buscando…", "blue");
+    ORB.setError?.(false);
     ORB.setLoading?.(true);
+    if (this.els.resultsStatus)
+      this.els.resultsStatus.textContent = "Buscando…";
 
     try {
       const res = await fetch(this.config.backendUrl + "/query", {
         method: "POST",
-        body: JSON.stringify(parsed),
         headers: { "Content-Type": "application/json" },
-        signal: controller.signal,
+        body: JSON.stringify(body),
+        signal: this.state.currentAbort.signal,
       });
 
-      if (!res.ok) throw new Error("Error en backend");
+      if (!res.ok) throw new Error();
 
       const data = await res.json();
-
       this.state.items = data.items || [];
 
       this.renderResultados(this.state.items);
+      window.actualizarDashboard?.(this.state.items);
       this.actualizarIndicadores(this.state.items);
 
-      // (Opcional) actualizar gráfico de torta y mostrarlo por defecto
-      if (this.els.chartContainer) {
-        this.els.chartContainer.classList.add("visible");
-        if (typeof this.actualizarGrafico === "function") {
-          this.actualizarGrafico(this.state.items);
-        }
-      }
-
-      this.setSearchStatus("Listo", "green");
       this.setConnectionStatus(true);
+      this.setOrbIdle();
 
-      this.speakResultados();
+      this.setSearchStatus("Conectado", "green");
+      if (this.els.resultsStatus)
+        this.els.resultsStatus.textContent = `${this.state.items.length} resultados`;
 
-    } catch (e) {
-      if (e.name === "AbortError") return;
+      if (window.ORB?.isVoiceMode?.()) {
+        this.speakResultados();
+      }
+    } catch (err) {
+      if (err.name !== "AbortError") {
+        this.setConnectionStatus(false);
+        ORB.setError?.(true);
 
-      this.setSearchStatus("Error", "red");
-      this.setConnectionStatus(false);
-      ORB.setError?.(true);
+        this.setSearchStatus("Error de conexión", "red");
+        if (this.els.resultsStatus)
+          this.els.resultsStatus.textContent = "Error de conexión";
 
-      this.showToast("Error de conexión");
+        clearTimeout(this.state.retryTimeout);
+        this.state.retryTimeout = setTimeout(() => this.warmUpLoop(), 2000);
+      }
     } finally {
       ORB.setLoading?.(false);
-      this.state.currentAbort = null;
     }
   },
 
   // ============================================================
   // BÚSQUEDA POR FILTROS
   // ============================================================
-  async buscarPorFiltros() {
-    const marca = this.els.filtroMarca?.value || "";
-    const rubro = this.els.filtroRubro?.value || "";
-    const talleDesde = this.els.filtroTalleDesde?.value || "";
-    const talleHasta = this.els.filtroTalleHasta?.value || "";
-    const soloStock = this.els.chkSoloStock?.checked || false;
 
-    const payload = {
+  actualizarFiltrosDesdeUI() {
+    this.state.filtros.marca = this.els.filtroMarca?.value || null;
+    this.state.filtros.rubro = this.els.filtroRubro?.value || null;
+    this.state.filtros.talleDesde = this.els.filtroTalleDesde?.value || null;
+    this.state.filtros.talleHasta = this.els.filtroTalleHasta?.value || null;
+  },
+
+  async buscarPorFiltros() {
+    this.actualizarFiltrosDesdeUI();
+
+    const body = {
+      question: "",
       filtros_globales: true,
-      marca: marca || null,
-      rubro: rubro || null,
-      talleDesde: talleDesde ? Number(talleDesde) : null,
-      talleHasta: talleHasta ? Number(talleHasta) : null,
+      marca: this.state.filtros.marca || null,
+      rubro: this.state.filtros.rubro || null,
+      talleDesde: this.state.filtros.talleDesde
+        ? parseInt(this.state.filtros.talleDesde)
+        : null,
+      talleHasta: this.state.filtros.talleHasta
+        ? parseInt(this.state.filtros.talleHasta)
+        : null,
       soloUltimo: false,
       soloNegativo: false,
-      soloStock,
-      question: "",
+      solo_stock: this.els.chkSoloStock?.checked || false,
     };
 
-    if (this.state.currentAbort) {
-      this.state.currentAbort.abort();
-      this.state.currentAbort = null;
-    }
+    if (this.state.currentAbort) this.state.currentAbort.abort();
+    this.state.currentAbort = new AbortController();
 
-    const controller = new AbortController();
-    this.state.currentAbort = controller;
-
-    this.setSearchStatus("Filtrando…", "blue");
+    this.setSearchStatus("Buscando…", "blue");
     ORB.setLoading?.(true);
+    if (this.els.resultsStatus)
+      this.els.resultsStatus.textContent = "Buscando…";
 
     try {
       const res = await fetch(this.config.backendUrl + "/query", {
         method: "POST",
-        body: JSON.stringify(payload),
         headers: { "Content-Type": "application/json" },
-        signal: controller.signal,
+        body: JSON.stringify(body),
+        signal: this.state.currentAbort.signal,
       });
 
-      if (!res.ok) throw new Error("Error en backend");
+      if (!res.ok) throw new Error();
 
       const data = await res.json();
-
       this.state.items = data.items || [];
 
       this.renderResultados(this.state.items);
+      window.actualizarDashboard?.(this.state.items);
       this.actualizarIndicadores(this.state.items);
 
-      if (this.els.chartContainer) {
-        this.els.chartContainer.classList.add("visible");
-        if (typeof this.actualizarGrafico === "function") {
-          this.actualizarGrafico(this.state.items);
-        }
-      }
-
-      this.setSearchStatus("Listo", "green");
       this.setConnectionStatus(true);
+      this.setOrbIdle();
 
-      this.speakResultados();
-
-    } catch (e) {
-      if (e.name === "AbortError") return;
-
-      this.setSearchStatus("Error", "red");
+      this.setSearchStatus("Conectado", "green");
+      if (this.els.resultsStatus)
+        this.els.resultsStatus.textContent = `${this.state.items.length} resultados`;
+    } catch {
       this.setConnectionStatus(false);
       ORB.setError?.(true);
-
-      this.showToast("Error de conexión");
+      this.setSearchStatus("Error de conexión", "red");
+      if (this.els.resultsStatus)
+        this.els.resultsStatus.textContent = "Error de conexión";
     } finally {
       ORB.setLoading?.(false);
-      this.state.currentAbort = null;
     }
   },
 
   // ============================================================
-  // RENDERIZADO DE RESULTADOS
+  // RENDER RESULTADOS (3 VISTAS)
   // ============================================================
-  renderResultados(items) {
-    if (!this.els.resultsContainer) return;
 
-    const vista = this.state.vistaActual;
+  renderResultados(items) {
+    const vTabla = this.els.vistaTabla;
+    const vTarjeta = this.els.vistaTarjeta;
+    const vArticulo = this.els.vistaArticulo;
+
+    if (!vTabla || !vTarjeta || !vArticulo) return;
 
     if (!items || !items.length) {
-      this.els.resultsContainer.innerHTML = `
-        <div class="no-results">
-          <p>No se encontraron resultados</p>
-        </div>`;
+      vTabla.innerHTML = '<div class="results-empty">Sin resultados.</div>';
+      vTarjeta.innerHTML = '<div class="results-empty">Sin resultados.</div>';
+      vArticulo.innerHTML = '<div class="results-empty">Sin resultados.</div>';
       return;
     }
 
-    if (vista === "tabla") {
-      this.renderTabla(items);
-    } else if (vista === "articulo") {
-      this.renderArticulo(items);
-    } else {
-      this.renderTarjetas(items);
-    }
+    this.renderVistaTabla(items);
+    this.renderVistaTarjeta(items);
+    this.renderVistaArticulo(items);
   },
 
-  // ============================================================
-  // RENDER TABLA
-  // ============================================================
-  renderTabla(items) {
-    this.els.resultsContainer.innerHTML = `
-      <table class="tabla-stock">
+  renderVistaTabla(items) {
+    const container = this.els.vistaTabla;
+    if (!container) return;
+
+    let html = `
+      <div class="tabla-wrapper">
+      <table class="tabla-resultados">
         <thead>
           <tr>
-            <th>Artículo</th>
+            <th>Código</th>
+            <th>Descripción</th>
             <th>Marca</th>
             <th>Rubro</th>
+            <th>Color</th>
+            <th>Precio</th>
             <th>Talles</th>
+            <th>Valorizado</th>
+          </tr>
+        </thead>
+        <tbody>
+    `;
+
+    items.forEach((item) => {
+      const talles = (item.talles || [])
+        .map((t) => `${this.normalizarCampo(t.talle)}: ${t.stock}`)
+        .join(" | ");
+
+      html += `
+        <tr>
+          <td>${this.normalizarCampo(item.codigo)}</td>
+          <td>${this.normalizarCampo(item.descripcion)}</td>
+          <td>${this.normalizarCampo(item.marca)}</td>
+          <td>${this.normalizarCampo(item.rubro)}</td>
+          <td>${this.normalizarCampo(item.color)}</td>
+          <td>$${this.formatNumber(item.precio)}</td>
+          <td>${talles}</td>
+          <td>$${this.formatNumber(item.valorizado)}</td>
+        </tr>
+      `;
+    });
+
+    html += "</tbody></table></div>";
+    container.innerHTML = html;
+  },
+
+  renderVistaTarjeta(items) {
+    const container = this.els.vistaTarjeta;
+    if (!container) return;
+    container.innerHTML = "";
+
+    items.forEach((item) => {
+      const div = document.createElement("div");
+      div.className = "result-item";
+
+      const talles = (item.talles || [])
+        .map((t) => `${this.normalizarCampo(t.talle)}: ${t.stock}`)
+        .join(" | ");
+
+      div.innerHTML = `
+        <div class="result-title">
+          ${this.normalizarCampo(item.codigo)} — ${this.normalizarCampo(
+        item.descripcion
+      )}
+        </div>
+        <div class="result-sub">
+          Marca: ${this.normalizarCampo(item.marca)} |
+          Rubro: ${this.normalizarCampo(item.rubro)} |
+          Color: ${this.normalizarCampo(item.color)}
+        </div>
+        <div class="result-precio">Precio: $${this.formatNumber(item.precio)}</div>
+        <div class="result-talles">${talles}</div>
+        <div class="result-sub">
+          Valorizado: $${this.formatNumber(item.valorizado)}
+        </div>
+      `;
+
+      container.appendChild(div);
+    });
+  },
+
+  renderVistaArticulo(items) {
+    const container = this.els.vistaArticulo;
+    if (!container) return;
+
+    if (!items.length) {
+      container.innerHTML = '<div class="results-empty">Sin resultados.</div>';
+      return;
+    }
+
+    const base = items[0];
+    const talles = base.talles || [];
+
+    if (!talles.length) {
+      container.innerHTML = `
+        <div class="detalle-header">
+          <h2>${this.normalizarCampo(base.codigo)} — ${this.normalizarCampo(
+        base.descripcion
+      )}</h2>
+          <p>${this.normalizarCampo(base.marca)} / ${this.normalizarCampo(
+        base.rubro
+      )}</p>
+        </div>
+        <div class="results-empty">Este artículo no tiene talles detallados.</div>
+      `;
+      return;
+    }
+
+    const rowsHtml = talles
+      .map((t) => {
+        const stock = Number(t.stock || 0);
+        const precio = Number(base.precio || 0);
+        const total = stock * precio;
+        return `
+        <tr>
+          <td>${this.normalizarCampo(t.talle)}</td>
+          <td>${stock}</td>
+          <td>$${this.formatNumber(precio)}</td>
+          <td>$${this.formatNumber(total)}</td>
+        </tr>
+      `;
+      })
+      .join("");
+
+    const html = `
+      <div class="detalle-header">
+        <h2>${this.normalizarCampo(base.codigo)} — ${this.normalizarCampo(
+      base.descripcion
+    )}</h2>
+        <p>${this.normalizarCampo(base.marca)} / ${this.normalizarCampo(
+      base.rubro
+    )}</p>
+      </div>
+
+      <table class="tabla-talles">
+        <thead>
+          <tr>
+            <th>Talle</th>
+            <th>Cantidad</th>
+            <th>Precio</th>
             <th>Total</th>
           </tr>
         </thead>
         <tbody>
-          ${items
-            .map((it) => {
-              const total = (it.talles || []).reduce(
-                (a, t) => a + Number(t.stock || 0),
-                0
-              );
-              const talles = (it.talles || [])
-                .map((t) => `${t.talle}: ${t.stock}`)
-                .join(" • ");
-
-              return `
-                <tr>
-                  <td>${it.descripcion || "—"}</td>
-                  <td>${it.marca || "—"}</td>
-                  <td>${it.rubro || "—"}</td>
-                  <td>${talles}</td>
-                  <td class="${total <= 0 ? "negativo" : ""}">${total}</td>
-                </tr>`;
-            })
-            .join("")}
+          ${rowsHtml}
         </tbody>
       </table>
     `;
+
+    container.innerHTML = html;
   },
 
   // ============================================================
-  // RENDER TARJETAS
+  // INDICADORES / MÉTRICAS
   // ============================================================
-  renderTarjetas(items) {
-    this.els.resultsContainer.innerHTML = items
-      .map((it) => {
-        const total = (it.talles || []).reduce(
-          (a, t) => a + Number(t.stock || 0),
-          0
-        );
 
-        const talles = (it.talles || [])
-          .map(
-            (t) =>
-              `<span class="talle ${t.stock <= 0 ? "neg" : ""}">
-                ${t.talle}: ${t.stock}
-              </span>`
-          )
-          .join("");
-
-        return `
-          <div class="card-item">
-            <h3>${it.descripcion || "—"}</h3>
-            <p class="marca">${it.marca || "—"}</p>
-            <p class="rubro">${it.rubro || "—"}</p>
-            <div class="talles">${talles}</div>
-            <div class="total ${total <= 0 ? "negativo" : ""}">
-              Total: ${total}
-            </div>
-          </div>
-        `;
-      })
-      .join("");
-  },
-
-  // ============================================================
-  // RENDER ARTÍCULO (vista detallada)
-  // ============================================================
-  renderArticulo(items) {
-    const it = items[0];
-    if (!it) {
-      this.els.resultsContainer.innerHTML = `<p>No hay artículo para mostrar</p>`;
-      return;
-    }
-
-    const total = (it.talles || []).reduce(
-      (a, t) => a + Number(t.stock || 0),
-      0
-    );
-
-    const talles = (it.talles || [])
-      .map(
-        (t) =>
-          `<div class="fila-talle ${t.stock <= 0 ? "neg" : ""}">
-            <span>${t.talle}</span>
-            <span>${t.stock}</span>
-          </div>`
-      )
-      .join("");
-
-    this.els.resultsContainer.innerHTML = `
-      <div class="articulo-detalle">
-        <h2>${it.descripcion || "—"}</h2>
-        <p><strong>Marca:</strong> ${it.marca || "—"}</p>
-        <p><strong>Rubro:</strong> ${it.rubro || "—"}</p>
-
-        <h3>Talles</h3>
-        <div class="talles-detalle">${talles}</div>
-
-        <h3>Total</h3>
-        <p class="total ${total <= 0 ? "negativo" : ""}">${total}</p>
-      </div>
-    `;
-  },
-
-  // ============================================================
-  // INDICADORES
-  // ============================================================
   actualizarIndicadores(items) {
-    if (!items) return;
+    const arr = items || [];
 
-    const totalArt = items.length;
-    let totalPares = 0;
-    let negativos = 0;
-    let ceros = 0;
-    let valorizado = 0;
+    const articulos = arr.length;
 
-    items.forEach((it) => {
-      const sum = (it.talles || []).reduce(
-        (a, t) => a + Number(t.stock || 0),
-        0
-      );
+    let pares = 0;
+    let stockNegativo = 0;
+    let sinStock = 0;
+    let valorizadoTotal = 0;
 
-      totalPares += sum;
-      if (sum < 0) negativos++;
-      if (sum === 0) ceros++;
-
-      valorizado += Number(it.valorizado || 0);
+    arr.forEach((item) => {
+      let stockItem = 0;
+      (item.talles || []).forEach((t) => {
+        const s = Number(t.stock || 0);
+        stockItem += s;
+        if (s < 0) stockNegativo += 1;
+      });
+      if (stockItem === 0) sinStock += 1;
+      if (item.valorizado) valorizadoTotal += Number(item.valorizado || 0);
+      if (stockItem > 0) pares += stockItem;
     });
 
     if (this.els.metricArticulos)
-      this.els.metricArticulos.textContent = this.formatNumber(totalArt);
+      this.els.metricArticulos.textContent = this.formatNumber(articulos);
     if (this.els.metricPares)
-      this.els.metricPares.textContent = this.formatNumber(totalPares);
+      this.els.metricPares.textContent = this.formatNumber(pares);
     if (this.els.metricAlertasNegativos)
-      this.els.metricAlertasNegativos.textContent = negativos;
+      this.els.metricAlertasNegativos.textContent =
+        this.formatNumber(stockNegativo);
     if (this.els.metricAlertasCero)
-      this.els.metricAlertasCero.textContent = ceros;
+      this.els.metricAlertasCero.textContent = this.formatNumber(sinStock);
     if (this.els.metricValorizado)
-      this.els.metricValorizado.textContent = "$ " + this.formatNumber(valorizado);
+      this.els.metricValorizado.textContent =
+        "$" + this.formatNumber(valorizadoTotal);
   },
 
   // ============================================================
   // COPIAR RESULTADOS
   // ============================================================
+
   copiarResultados() {
-    const txt = this.els.resultsContainer?.innerText || "";
+    if (!this.state.items.length) {
+      this.showToast("No hay resultados para copiar");
+      return;
+    }
+
+    let txt = "";
+    this.state.items.forEach((item) => {
+      txt += `${item.codigo} — ${item.descripcion} — ${item.marca} — ${item.rubro}\n`;
+      (item.talles || []).forEach((t) => {
+        txt += `  Talle ${t.talle}: ${t.stock}\n`;
+      });
+      txt += "\n";
+    });
+
     navigator.clipboard.writeText(txt);
     this.showToast("Copiado");
   },
 
   // ============================================================
-  // LIMPIAR
+  // STOP TODO
   // ============================================================
-  limpiarPantalla() {
-    if (this.els.searchInput) this.els.searchInput.value = "";
-    if (this.els.resultsContainer) this.els.resultsContainer.innerHTML = "";
-    this.setSearchStatus("Listo", "green");
+
+  stopTodo() {
+    if (this.state.currentAbort) this.state.currentAbort.abort();
+    try {
+      speechSynthesis.cancel();
+    } catch (_) {}
+    ORB.setError?.(false);
+    ORB.setLoading?.(false);
+    ORB.setSpeaking?.(false);
+    this.setSearchStatus("Listo", "blue");
   },
 
   // ============================================================
-  // STOP
+  // VOZ — LECTURA DE RESULTADOS
   // ============================================================
-  stopTodo() {
-    if (this.state.currentAbort) {
-      this.state.currentAbort.abort();
-      this.state.currentAbort = null;
-    }
-    window.speechSynthesis?.cancel();
-    this.setSearchStatus("Listo", "green");
+
+  speakResultados() {
+    if (!("speechSynthesis" in window)) return;
+    if (!this.state.items.length) return;
+
+    const top = this.state.items.slice(0, 5);
+    let text = "Resultados de stock. ";
+
+    top.forEach((item) => {
+      text += `${item.descripcion || "Artículo"} de marca ${
+        item.marca || "sin marca"
+      }, rubro ${item.rubro || "sin rubro"}. `;
+    });
+
+    const utter = new SpeechSynthesisUtterance(text);
+    utter.lang = "es-AR";
+    speechSynthesis.cancel();
+    speechSynthesis.speak(utter);
+  },
+
+  // ============================================================
+  // LIMPIAR PANTALLA
+  // ============================================================
+
+  limpiarPantalla() {
+    this.state.items = [];
+    this.renderResultados([]);
+    window.actualizarDashboard?.([]);
+    this.actualizarIndicadores([]);
+
+    if (this.els.resultsStatus)
+      this.els.resultsStatus.textContent = "Sin resultados";
+
+    if (this.els.searchInput)
+      this.els.searchInput.value = "";
+
+    this.setOrbIdle();
+    this.setSearchStatus("Listo", "blue");
+  },
+
+  // ============================================================
+  // EVENTOS DE UI
+  // ============================================================
+
+  conectarEventosUI() {
+    this.els.btnAplicarFiltros?.addEventListener("click", () => {
+      this.buscarPorFiltros();
+    });
+
+    this.els.searchInput?.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") this.buscar();
+    });
+
+    const btnCopiar = document.getElementById("btn-copiar");
+    btnCopiar?.addEventListener("click", () => this.copiarResultados());
+
+    const btnLimpiar = document.getElementById("btn-limpiar");
+    btnLimpiar?.addEventListener("click", () => this.limpiarPantalla());
+
+    const btnStop = document.getElementById("btn-stop");
+    btnStop?.addEventListener("click", () => this.stopTodo());
+
+    this.els.fuenteDatosToggle?.addEventListener("click", () => {
+      this.els.fuenteDatosPanel?.classList.toggle("visible");
+    });
+
+    const orb = document.getElementById("orb");
+    orb?.addEventListener("click", () => this.buscar());
+
+    // Scanner interno (mismo botón de siempre)
+    const btnScannerInterno = document.getElementById("btn-scanner");
+    btnScannerInterno?.addEventListener("click", () => {
+      if (window.startScannerInterno1) {
+        window.startScannerInterno1((code) => {
+          if (code) {
+            this.els.searchInput.value = code;
+            this.buscar();
+          }
+        });
+      }
+    });
+
+    // Scanner externo (segundo botón, ícono 30% más chico)
+    const btnScannerExterno = document.getElementById("btn-scanner-externo");
+    btnScannerExterno?.addEventListener("click", () => {
+      if (window.startScannerExternoPreferido) {
+        window.startScannerExternoPreferido((code) => {
+          if (code) {
+            this.els.searchInput.value = code;
+            this.buscar();
+          }
+        });
+      }
+    });
   },
 
   // ============================================================
   // INIT
   // ============================================================
+
   init() {
     this.setSearchStatus("Activando servidor…", "orange");
     this.warmUpLoop();
+    this.conectarEventosUI();
   },
 };
 
-// Exponer global
+// ============================================================
+// INSTANCIA GLOBAL
+// ============================================================
+
 window.appCore = AppCore;
+
+window.addEventListener("DOMContentLoaded", () => {
+  appCore.init();
+});
