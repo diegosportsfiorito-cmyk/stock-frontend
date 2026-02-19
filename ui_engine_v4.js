@@ -517,4 +517,65 @@ function initUI(app) {
   // ============================================================
   function aplicarModoDark(on) {
     document.body.classList.toggle("light-mode", on);
-    localStorage.set
+        localStorage.setItem("modoDia", on ? "on" : "off");
+  }
+
+  // Estado inicial modo día/noche
+  (function initModoDark() {
+    const saved = localStorage.getItem("modoDia");
+    const on = saved === "on";
+    if (toggleDark) toggleDark.checked = on;
+    aplicarModoDark(on);
+  })();
+
+  toggleDark?.addEventListener("change", (e) => {
+    const on = e.target.checked;
+    aplicarModoDark(on);
+    app.showToast(on ? "Modo día activado" : "Modo noche activado");
+  });
+
+  // ============================================================
+  // AYUDA
+  // ============================================================
+  helpButton?.addEventListener("click", () => {
+    helpModal.classList.remove("hidden");
+    helpModal.classList.add("visible");
+  });
+
+  helpClose?.addEventListener("click", () => {
+    helpModal.classList.remove("visible");
+    helpModal.classList.add("hidden");
+  });
+
+  // ============================================================
+  // FUENTE DE DATOS
+  // ============================================================
+  fuenteToggle?.addEventListener("click", () => {
+    fuentePanel.classList.toggle("visible");
+  });
+
+  // ============================================================
+  // ATAJOS DE TECLADO
+  // ============================================================
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") {
+      app.limpiarPantalla();
+      app.setOrbIdle?.();
+    }
+
+    if (e.key === "F2") {
+      abrirScannerWebInterno();
+    }
+
+    if (e.key === "F3") {
+      startDictado();
+    }
+  });
+
+} // ← cierre de initUI
+
+// ============================================================
+// EXPONER FUNCIÓN GLOBAL
+// ============================================================
+window.initUI = initUI;
+
