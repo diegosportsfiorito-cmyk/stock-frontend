@@ -45,10 +45,12 @@ function initUI(app) {
   const fuentePanel = document.getElementById("fuente-datos-panel");
 
   // ------------------------------------------------------------
-  // BOTONES DEL SCANNER (solo 2 botones reales)
+  // BOTONES DEL SCANNER (alineados a tu HTML)
   // ------------------------------------------------------------
-  const btnScannerInterno = document.getElementById("btn-scanner");
-  const btnScannerExterno = document.getElementById("btn-scanner-externo");
+  const btnScannerInterno1 = document.getElementById("btn-scanner-interno-1");
+  const btnScannerInterno2 = document.getElementById("btn-scanner-interno-2");
+  const btnScannerExternoPreferido = document.getElementById("btn-scanner-externo-preferido");
+  const btnScannerExternoSelector = document.getElementById("btn-scanner-externo-selector");
 
   els.filtrosPanel?.classList.remove("visible");
   fuentePanel?.classList.remove("visible");
@@ -316,30 +318,54 @@ function initUI(app) {
     }
   }
 
-  function abrirScannerWeb(tipo) {
-    if (tipo === "interno" && typeof window.startScannerInterno1 === "function") {
+  function abrirScannerWebInterno() {
+    if (typeof window.startScannerInterno1 === "function") {
       setScannerOverlay(true);
       window.startScannerInterno1(scannerCallback);
-
-    } else if (tipo === "externo" && typeof window.startScannerExternoPreferido === "function") {
-      setScannerOverlay(true);
-      window.startScannerExternoPreferido(scannerCallback);
-
     } else {
-      app.showToast("Scanner no disponible");
+      app.showToast("Scanner interno no disponible");
     }
   }
 
-  // Botón scanner interno
-  btnScannerInterno?.addEventListener("click", () => {
+  function abrirScannerWebExternoPreferido() {
+    if (typeof window.startScannerExternoPreferido === "function") {
+      setScannerOverlay(true);
+      window.startScannerExternoPreferido(scannerCallback);
+    } else {
+      app.showToast("Scanner externo no disponible");
+    }
+  }
+
+  function abrirScannerWebExternoSelector() {
+    if (typeof window.startScannerExternoSelector === "function") {
+      setScannerOverlay(true);
+      window.startScannerExternoSelector(scannerCallback);
+    } else {
+      abrirScannerWebExternoPreferido();
+    }
+  }
+
+  // Botones scanner internos
+  btnScannerInterno1?.addEventListener("click", () => {
     if (isAndroidApp) abrirScannerNativo();
-    else abrirScannerWeb("interno");
+    else abrirScannerWebInterno();
   });
 
-  // Botón scanner externo
-  btnScannerExterno?.addEventListener("click", () => {
+  btnScannerInterno2?.addEventListener("click", () => {
     if (isAndroidApp) abrirScannerNativo();
-    else abrirScannerWeb("externo");
+    else abrirScannerWebInterno();
+  });
+
+  // Botón scanner externo preferido
+  btnScannerExternoPreferido?.addEventListener("click", () => {
+    if (isAndroidApp) abrirScannerNativo();
+    else abrirScannerWebExternoPreferido();
+  });
+
+  // Botón scanner externo selector
+  btnScannerExternoSelector?.addEventListener("click", () => {
+    if (isAndroidApp) abrirScannerNativo();
+    else abrirScannerWebExternoSelector();
   });
 
   // ============================================================
@@ -526,7 +552,7 @@ function initUI(app) {
   // ============================================================
 
   fuenteToggle?.addEventListener("click", () => {
-    fuentePanel.classList.toggle("visible");
+    fuentePanel?.classList.toggle("visible");
   });
 
   // ============================================================
@@ -547,9 +573,9 @@ function initUI(app) {
       return;
     }
 
-    // F2 = Scanner interno
+    // F2 = Scanner interno (usa el interno 1)
     if (e.key === "F2" && !isInput) {
-      btnScannerInterno?.click();
+      btnScannerInterno1?.click();
       e.preventDefault();
       return;
     }
