@@ -9,7 +9,6 @@ function initUI(app) {
 
   // ============================================================
   // FALLBACK PARA SCANNER MODO (simple/completo)
-  // Funciona incluso si localStorage está bloqueado
   // ============================================================
 
   window.scannerModoFallback = "simple";
@@ -30,9 +29,10 @@ function initUI(app) {
     }
   }
 
-  // ------------------------------------------------------------
+  // ============================================================
   // ELEMENTOS BASE
-  // ------------------------------------------------------------
+  // ============================================================
+
   const orbCore = document.getElementById("orb-core");
   const micButton = document.getElementById("mic-button");
   const dictadoAutoSwitch = document.getElementById("modo-voz-switch");
@@ -67,12 +67,13 @@ function initUI(app) {
   const fuenteToggle = document.getElementById("fuente-datos-toggle");
   const fuentePanel = document.getElementById("fuente-datos-panel");
 
-  // SWITCH DEL SCANNER (visible para el usuario)
-  const scannerSwitch = document.getElementById("scanner-modo-switch");
+  // SWITCH DEL SCANNER (ID corregido)
+  const scannerSwitch = document.getElementById("scanner-mode-switch");
 
-  // ------------------------------------------------------------
+  // ============================================================
   // INICIALIZAR SWITCH DEL SCANNER
-  // ------------------------------------------------------------
+  // ============================================================
+
   if (scannerSwitch) {
     const modoActual = getScannerModo();
     scannerSwitch.checked = modoActual === "completo";
@@ -84,9 +85,10 @@ function initUI(app) {
     });
   }
 
-  // ------------------------------------------------------------
+  // ============================================================
   // BEEP
-  // ------------------------------------------------------------
+  // ============================================================
+
   const AudioCtx = window.AudioContext || window.webkitAudioContext;
   let audioCtx = null;
 
@@ -106,9 +108,10 @@ function initUI(app) {
     } catch (e) {}
   }
 
-  // ------------------------------------------------------------
+  // ============================================================
   // ESTADO DE VOZ
-  // ------------------------------------------------------------
+  // ============================================================
+
   function setVoiceUIState(state) {
     if (!voiceStatus) return;
 
@@ -127,9 +130,10 @@ function initUI(app) {
     }
   }
 
-  // ------------------------------------------------------------
+  // ============================================================
   // DICTADO AUTOMÁTICO
-  // ------------------------------------------------------------
+  // ============================================================
+
   if (dictadoAutoSwitch) {
     const savedAuto = localStorage.getItem("dictadoAutomatico");
     dictadoAutoSwitch.checked = savedAuto === "on";
@@ -144,9 +148,10 @@ function initUI(app) {
     });
   }
 
-  // ------------------------------------------------------------
+  // ============================================================
   // DICTADO MANUAL
-  // ------------------------------------------------------------
+  // ============================================================
+
   function startDictado() {
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition || null;
     if (!SR) {
@@ -193,9 +198,10 @@ function initUI(app) {
 
   micButton?.addEventListener("click", () => startDictado());
 
-  // ------------------------------------------------------------
+  // ============================================================
   // AUTOCOMPLETE
-  // ------------------------------------------------------------
+  // ============================================================
+
   function renderAutocomplete(term) {
     if (!autoList || !els.searchInput) return;
     const value = term.trim();
@@ -271,9 +277,10 @@ function initUI(app) {
     }
   });
 
-  // ------------------------------------------------------------
+  // ============================================================
   // ORB
-  // ------------------------------------------------------------
+  // ============================================================
+
   if (orbCore) {
     const isMobile = window.matchMedia("(max-width: 768px)").matches;
 
@@ -326,9 +333,7 @@ function initUI(app) {
     if (els.searchInput?.value.trim()) {
       ORB.setLoading?.(true);
       app.buscar();
-      setTimeout(() => {
-        app.setOrbIdle?.();
-      }, 600);
+      setTimeout(() => app.setOrbIdle?.(), 600);
     }
   }
 
@@ -423,9 +428,7 @@ function initUI(app) {
   els.btnAplicarFiltros?.addEventListener("click", () => {
     ORB.setLoading?.(true);
     app.buscarPorFiltros();
-    setTimeout(() => {
-      app.setOrbIdle?.();
-    }, 600);
+    setTimeout(() => app.setOrbIdle?.(), 600);
   });
 
   // ============================================================
@@ -571,10 +574,11 @@ function initUI(app) {
   });
 
   // ============================================================
-  // FUENTE DE DATOS — TOGGLE
+  // FUENTE DE DATOS — TOGGLE (blindado)
   // ============================================================
 
   fuenteToggle?.addEventListener("click", () => {
+    if (!fuentePanel) return;
     fuentePanel.classList.toggle("visible");
     fuentePanel.classList.toggle("hidden");
   });
@@ -597,7 +601,7 @@ function initUI(app) {
       return;
     }
 
-    // F2 = Scanner interno (usa el interno 1)
+    // F2 = Scanner interno
     if (e.key === "F2" && !isInput) {
       btnScannerInterno1?.click();
       e.preventDefault();
