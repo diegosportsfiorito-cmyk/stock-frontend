@@ -67,12 +67,20 @@ function initUI(app) {
   const fuenteToggle = document.getElementById("fuente-datos-toggle");
   const fuentePanel = document.getElementById("fuente-datos-panel");
 
-  // SWITCH DEL SCANNER (ID corregido)
-  const scannerSwitch = document.getElementById("scanner-mode-switch");
+  // ============================================================
+  // BOTONES DEL SCANNER (DECLARADOS CORRECTAMENTE)
+  // ============================================================
+
+  const btnScannerInterno1 = document.getElementById("btn-scanner-interno-1");
+  const btnScannerInterno2 = document.getElementById("btn-scanner-interno-2");
+  const btnScannerExternoPreferido = document.getElementById("btn-scanner-externo-preferido");
+  const btnScannerExternoSelector = document.getElementById("btn-scanner-externo-selector");
 
   // ============================================================
-  // INICIALIZAR SWITCH DEL SCANNER
+  // SWITCH DEL SCANNER (ID CORREGIDO)
   // ============================================================
+
+  const scannerSwitch = document.getElementById("scanner-mode-switch");
 
   if (scannerSwitch) {
     const modoActual = getScannerModo();
@@ -178,9 +186,7 @@ function initUI(app) {
       ORB.setLoading?.(true);
       app.buscar();
 
-      setTimeout(() => {
-        app.setOrbIdle?.();
-      }, 600);
+      setTimeout(() => app.setOrbIdle?.(), 600);
     };
 
     rec.onerror = () => {
@@ -250,9 +256,7 @@ function initUI(app) {
       ORB.setLoading?.(true);
       app.buscar();
 
-      setTimeout(() => {
-        app.setOrbIdle?.();
-      }, 600);
+      setTimeout(() => app.setOrbIdle?.(), 600);
     }
   });
 
@@ -264,9 +268,7 @@ function initUI(app) {
       ORB.setLoading?.(true);
       app.buscar();
 
-      setTimeout(() => {
-        app.setOrbIdle?.();
-      }, 600);
+      setTimeout(() => app.setOrbIdle?.(), 600);
     }
   });
 
@@ -289,9 +291,7 @@ function initUI(app) {
         if (autoList) autoList.innerHTML = "";
         ORB.setLoading?.(true);
         app.buscar();
-        setTimeout(() => {
-          app.setOrbIdle?.();
-        }, 600);
+        setTimeout(() => app.setOrbIdle?.(), 600);
       });
     }
 
@@ -299,9 +299,7 @@ function initUI(app) {
       if (autoList) autoList.innerHTML = "";
       ORB.setLoading?.(true);
       app.buscar();
-      setTimeout(() => {
-        app.setOrbIdle?.();
-      }, 600);
+      setTimeout(() => app.setOrbIdle?.(), 600);
     });
 
     orbCore.addEventListener("dblclick", () => {
@@ -311,7 +309,7 @@ function initUI(app) {
     });
   }
 
-    // ============================================================
+  // ============================================================
   // SCANNER — NATIVO + WEB FALLBACK
   // ============================================================
 
