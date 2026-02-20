@@ -33,6 +33,7 @@ const AppCore = {
     metricAlertasNegativos: document.getElementById("metric-alertas-negativos-value"),
     metricAlertasCero: document.getElementById("metric-alertas-cero-value"),
     metricValorizado: document.getElementById("metric-valorizado-value"),
+    metricUltimaUnidad: document.getElementById("metric-ultima-unidad-value"),
 
     connectionDot: document.getElementById("connection-dot"),
 
@@ -145,8 +146,9 @@ const AppCore = {
       stock_negativo: stockNegativo,
     };
   },
+
   // ============================================================
-  // AUTOCOMPLETE — Inteligente
+  // AUTOCOMPLETE
   // ============================================================
 
   getAutocompleteSuggestions(term) {
@@ -326,8 +328,10 @@ const AppCore = {
         `<option value="">Rubro</option>` +
         [...rubros].sort().map((r) => `<option>${r}</option>`).join("");
   },
+  },
+
   // ============================================================
-  // PARSER INTELIGENTE — Interpretación de la query
+  // PARSER INTELIGENTE
   // ============================================================
 
   interpretarQuery(raw) {
@@ -350,17 +354,14 @@ const AppCore = {
 
     const tokens = qUpper.split(/\W+/).filter(Boolean);
 
-    // Marca detectada por coincidencia exacta
     for (const m of marcasNorm.sort((a, b) => b.length - a.length)) {
       if (tokens.includes(m)) marca = mapMarcas.get(m);
     }
 
-    // Rubro detectado por coincidencia exacta
     for (const r of rubrosNorm.sort((a, b) => b.length - a.length)) {
       if (tokens.includes(r)) rubro = mapRubros.get(r);
     }
 
-    // Rango de talles: "38-42", "T38 a T42"
     const matchRango = qUpper.match(/T?(\d+)\s*(?:A|-|\/)\s*T?(\d+)/);
     if (matchRango) {
       return {
@@ -375,7 +376,6 @@ const AppCore = {
       };
     }
 
-    // Talle único: "T38"
     const matchTalle = qUpper.match(/^T?(\d{1,3})$/);
     if (matchTalle) {
       const t = parseInt(matchTalle[1]);
@@ -391,7 +391,6 @@ const AppCore = {
       };
     }
 
-    // Precio exacto
     const matchPrecio = qUpper.match(/^(?:P|\$)?(\d{2,6})$/);
     if (matchPrecio) {
       return {
@@ -406,7 +405,6 @@ const AppCore = {
       };
     }
 
-    // Código largo
     if (/^\d[\d\- ]{6,14}\d$/.test(qUpper)) {
       return {
         filtros_globales: false,
@@ -420,10 +418,7 @@ const AppCore = {
       };
     }
 
-    // Última unidad
     const esUltimo = /\bULTIM[OA]S?\b/.test(qUpper);
-
-    // Stock negativo
     const esNegativo = /\bNEGATIV[OA]S?\b/.test(qUpper);
 
     if (esUltimo || esNegativo) {
@@ -439,15 +434,13 @@ const AppCore = {
       };
     }
 
-    // Marca exacta
     const esMarcaExacta = marcasNorm.includes(qUpper);
     const esRubroExacto = rubrosNorm.includes(qUpper);
 
     let usarFiltros = esMarcaExacta || esRubroExacto;
 
-    // Corrección por voz (si es una sola palabra)
     if (!usarFiltros && tokens.length === 1 && marcasNorm.length) {
-      const marcaCorregida = this.corregirMarcaPorVoz(qUpper, mapMarcas);
+      const marcaCorregida = this.corregirMarcaPorVoz?.(qUpper, mapMarcas);
       if (marcaCorregida) {
         marca = marcaCorregida;
         usarFiltros = true;
@@ -495,7 +488,6 @@ const AppCore = {
       solo_stock: this.els.chkSoloStock?.checked || false,
     };
 
-    // Cancelar búsqueda anterior
     if (this.state.currentAbort) this.state.currentAbort.abort();
     this.state.currentAbort = new AbortController();
 
@@ -525,7 +517,6 @@ const AppCore = {
 
       this.setConnectionStatus(true);
       this.setOrbIdle();
-
       this.setSearchStatus("Conectado", "green");
 
       if (this.els.resultsStatus)
@@ -550,6 +541,8 @@ const AppCore = {
       ORB.setLoading?.(false);
     }
   },
+  },
+
   // ============================================================
   // BÚSQUEDA POR FILTROS
   // ============================================================
@@ -601,28 +594,6 @@ const AppCore = {
 
       let items = (await res.json()).items || [];
 
-      // ============================================================
-      // FILTRO NUEVO: unidades > / < / = X
-      // ============================================================
-      const condEl = document.getElementById("filtro-stock-cond");
-      const numEl = document.getElementById("filtro-stock-num");
-
-      if (condEl && numEl && numEl.value !== "") {
-        const cond = condEl.value;
-        const num = Number(numEl.value || 0);
-
-        items = items.filter((it) => {
-          const total = (it.talles || []).reduce(
-            (a, t) => a + Number(t.stock || 0),
-            0
-          );
-          if (cond === ">") return total > num;
-          if (cond === "<") return total < num;
-          if (cond === "=") return total === num;
-          return true;
-        });
-      }
-
       this.state.items = items;
 
       this.renderResultados(items);
@@ -671,7 +642,7 @@ const AppCore = {
   },
 
   // ============================================================
-  // VISTA TABLA — autoajustada + scroll horizontal
+  // VISTA TABLA
   // ============================================================
 
   renderVistaTabla(items) {
@@ -761,7 +732,7 @@ const AppCore = {
   },
 
   // ============================================================
-  // VISTA ARTÍCULO — detalle completo
+  // VISTA ARTÍCULO (DETALLE)
   // ============================================================
 
   renderVistaArticulo(items) {
@@ -846,6 +817,8 @@ const AppCore = {
 
     container.innerHTML = html;
   },
+  },
+
   // ============================================================
   // INDICADORES / MÉTRICAS
   // ============================================================
@@ -891,11 +864,8 @@ const AppCore = {
     if (this.els.metricValorizado)
       this.els.metricValorizado.textContent = "$" + this.formatNumber(valorizadoTotal);
 
-    // Métrica nueva: última unidad
-    const metricUltima = document.getElementById("metric-ultima-unidad-value");
-    if (metricUltima) {
-      metricUltima.textContent = this.formatNumber(ultimaUnidad);
-    }
+    if (this.els.metricUltimaUnidad)
+      this.els.metricUltimaUnidad.textContent = this.formatNumber(ultimaUnidad);
   },
 
   // ============================================================
@@ -982,6 +952,7 @@ const AppCore = {
     this.setOrbIdle();
     this.setSearchStatus("Listo", "blue");
   },
+  },
 
   // ============================================================
   // EVENTOS DE UI (solo los necesarios)
@@ -1009,32 +980,6 @@ const AppCore = {
     // Stop
     const btnStop = document.getElementById("btn-stop");
     btnStop?.addEventListener("click", () => this.stopTodo());
-
-    // Scanner interno (botón real)
-    const btnScannerInterno1 = document.getElementById("btn-scanner-interno-1");
-    btnScannerInterno1?.addEventListener("click", () => {
-      if (window.startScannerInterno1) {
-        window.startScannerInterno1((code) => {
-          if (code) {
-            this.els.searchInput.value = code;
-            this.buscar();
-          }
-        });
-      }
-    });
-
-    // Scanner externo preferido (botón real)
-    const btnScannerExternoPreferido = document.getElementById("btn-scanner-externo-preferido");
-    btnScannerExternoPreferido?.addEventListener("click", () => {
-      if (window.startScannerExternoPreferido) {
-        window.startScannerExternoPreferido((code) => {
-          if (code) {
-            this.els.searchInput.value = code;
-            this.buscar();
-          }
-        });
-      }
-    });
   },
 
   // ============================================================
