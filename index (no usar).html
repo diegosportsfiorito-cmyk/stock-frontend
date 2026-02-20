@@ -6,158 +6,16 @@
     <!-- ========================================================= -->
     <!-- BUILD VERSION IDENTIFIER                                 -->
     <!-- ========================================================= -->
-    <!-- BUILD VERSION: 2026-02-10_optimized_UI-V3 -->
-    <meta name="build-version" content="2026-02-10_optimized_UI-V3" />
-
+    <meta name="build-version" content="2026-02-10_optimized_UI-V4" />
     <title>STOCK IA PRO — Asistente inteligente</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
 
+    <!-- CSS UNIFICADO IA PRO -->
     <link rel="stylesheet" href="styles_v2.css?v=20260210" />
-    <link rel="stylesheet" href="orb_v2.css?v=20260210" />
-
-    <style>
-      @media (max-width: 900px) {
-        .main-row {
-          flex-direction: column;
-        }
-        .dashboard-card {
-          width: 100%;
-          margin-top: 20px;
-        }
-      }
-
-      @media (max-width: 600px) {
-        .metrics-row {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 8px;
-        }
-        .metric-card {
-          flex: 0 0 calc(50% - 8px);
-        }
-      }
-
-      .search-status {
-        margin-bottom: 6px;
-        font-weight: bold;
-        font-size: 14px;
-        text-align: left;
-        color: #0ea5e9;
-      }
-      .search-status.orange { color: #f59e0b; }
-      .search-status.green { color: #10b981; }
-      .search-status.red { color: #ef4444; }
-      .search-status.blue { color: #0ea5e9; }
-
-      .search-actions-row {
-        display: flex;
-        flex-direction: row;
-        gap: 10px;
-        margin-top: 10px;
-      }
-
-      .fuente-datos-panel {
-        display: none;
-      }
-      .fuente-datos-panel.visible {
-        display: block;
-      }
-
-      .orb-action-btn.stop {
-        background-color: #ffffff;
-        color: #c62828;
-        border: 1px solid #c62828;
-      }
-
-      .voice-row {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        margin-top: 8px;
-        flex-wrap: wrap;
-      }
-
-      .help-modal {
-        position: fixed;
-        inset: 0;
-        background: rgba(0, 0, 0, 0.55);
-        display: none;
-        align-items: center;
-        justify-content: center;
-        z-index: 999;
-      }
-      .help-modal.visible {
-        display: flex;
-      }
-      .help-modal-content {
-        background: #111827;
-        color: #e5e7eb;
-        padding: 20px;
-        border-radius: 12px;
-        max-width: 420px;
-        width: 90%;
-        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
-      }
-
-      .vista {
-        display: none;
-      }
-      .vista.active {
-        display: block;
-      }
-
-      .tabla-talles {
-        width: 100%;
-        border-collapse: collapse;
-        margin-top: 10px;
-      }
-      .tabla-talles th,
-      .tabla-talles td {
-        border: 1px solid #ddd;
-        padding: 8px;
-      }
-      .tabla-talles th {
-        background: #f4f4f4;
-        font-weight: bold;
-      }
-      .detalle-header {
-        margin-bottom: 12px;
-      }
-      .detalle-header h2 {
-        margin: 0;
-        font-size: 1.3rem;
-      }
-      .detalle-header p {
-        margin: 0;
-        color: #666;
-      }
-
-      /* Botones de tipo de gráfico */
-      .chart-type-row {
-        display: flex;
-        gap: 6px;
-        margin: 10px 0;
-        flex-wrap: wrap;
-      }
-      .chart-type-btn {
-        padding: 6px 10px;
-        font-size: 13px;
-        border-radius: 6px;
-        border: 1px solid #888;
-        background: #1f2937;
-        color: #e5e7eb;
-        cursor: pointer;
-      }
-      .chart-type-btn.active {
-        background: #2563eb;
-        border-color: #2563eb;
-        color: white;
-      }
-    </style>
 
     <script>
       console.log(
-        "%cBUILD VERSION: 2026-02-10_optimized_UI-V3",
+        "%cBUILD VERSION: 2026-02-10_optimized_UI-V4",
         "color:#4f8cff;font-size:14px;font-weight:bold"
       );
     </script>
@@ -165,12 +23,15 @@
 
   <body>
     <div id="build-version" style="display:none">
-      2026-02-10_optimized_UI-V3
+      2026-02-10_optimized_UI-V4
     </div>
 
     <div class="app-shell">
       <div class="app-container">
-        <!-- HEADER -->
+
+        <!-- ========================================================= -->
+        <!-- HEADER                                                    -->
+        <!-- ========================================================= -->
         <header class="app-header">
           <div class="branding">
             <div class="brand-orb-mini">IA</div>
@@ -201,7 +62,9 @@
           </div>
         </header>
 
-        <!-- SEARCH + ORB -->
+        <!-- ========================================================= -->
+        <!-- SEARCH + ORB                                              -->
+        <!-- ========================================================= -->
         <section class="search-card">
           <div id="search-status" class="search-status">Listo</div>
 
@@ -246,26 +109,25 @@
 
           <div id="voice-status" class="voice-status">Dictado desactivado</div>
 
-          <div class="scanner-row">
-            <div class="scanner-buttons">
-              <button id="btn-scanner-interno-1" class="scanner-big-btn">📷</button>
-              <button id="btn-scanner-interno-2" class="scanner-big-btn">🎦</button>
-              <button id="btn-scanner-externo-preferido" class="scanner-big-btn">📲</button>
-              <button id="btn-scanner-externo-selector" class="scanner-big-btn">🧭</button>
-            </div>
-
-            <div class="scanner-mode-switch">
-              <label class="orb-mode-switch">
-                <span>Simple</span>
-                <label class="switch small">
-                  <input id="modo-scanner-toggle" type="checkbox" />
-                  <span class="slider"></span>
-                </label>
-                <span>Completo</span>
-              </label>
-            </div>
+          <!-- SCANNER BUTTONS (solo 2) -->
+          <div class="scanner-buttons">
+            <button id="btn-scanner-interno-1" class="scanner-button">📷</button>
+            <button id="btn-scanner-externo-preferido" class="scanner-button">📲</button>
           </div>
 
+          <!-- SCANNER MODE -->
+          <div class="scanner-mode-switch">
+            <label class="orb-mode-switch">
+              <span>Simple</span>
+              <label class="switch small">
+                <input id="scanner-mode-switch" type="checkbox" />
+                <span class="slider"></span>
+              </label>
+              <span>Completo</span>
+            </label>
+          </div>
+
+          <!-- FILTROS -->
           <div class="search-filters-row">
             <label class="solo-stock">
               <span>Solo con stock</span>
@@ -278,11 +140,10 @@
             <button id="btn-filtros" class="btn-secondary">Filtros</button>
           </div>
 
+          <!-- ORB -->
           <div class="orb-zone">
             <div class="orb-actions-ring">
-              <div id="orb" class="orb-container">
-                <div id="orb-core" class="orb-ultra"></div>
-              </div>
+              <div id="orb-core" class="orb-ultra"></div>
             </div>
           </div>
 
@@ -313,6 +174,7 @@
               <div class="metric-value" id="metric-valorizado-value">$0</div>
             </div>
           </div>
+
           <!-- PANEL DE FILTROS -->
           <div id="filtros-panel" class="filtros-panel">
             <div class="filtros-row filtros-row-stack">
@@ -326,29 +188,19 @@
             </div>
 
             <div class="filtros-row filtros-row-stack">
-              <input
-                id="filtro-talle-desde"
-                type="number"
-                class="filtro-input"
-                placeholder="Talle desde"
-              />
-              <input
-                id="filtro-talle-hasta"
-                type="number"
-                class="filtro-input"
-                placeholder="Talle hasta"
-              />
+              <input id="filtro-talle-desde" type="number" class="filtro-input" placeholder="Talle desde" />
+              <input id="filtro-talle-hasta" type="number" class="filtro-input" placeholder="Talle hasta" />
             </div>
 
             <div class="filtros-row">
-              <button id="btn-aplicar-filtros" class="btn-secondary">
-                Aplicar filtros
-              </button>
+              <button id="btn-aplicar-filtros" class="btn-secondary">Aplicar filtros</button>
             </div>
           </div>
         </section>
 
-        <!-- MAIN ROW -->
+        <!-- ========================================================= -->
+        <!-- MAIN ROW                                                  -->
+        <!-- ========================================================= -->
         <section class="main-row">
           <div class="results-card">
             <div class="results-header">
@@ -364,6 +216,7 @@
             </div>
 
             <div id="results-status" class="results-status">Esperando consulta</div>
+
             <div id="results-container">
               <div id="vista-tabla" class="vista active"></div>
               <div id="vista-tarjeta" class="vista"></div>
@@ -375,19 +228,15 @@
           <aside class="dashboard-card">
             <div class="dashboard-header">
               <div class="dashboard-title">Visión rápida</div>
-              <div class="dashboard-subtitle">
-                Distribución por talle / marca / rubro
-              </div>
+              <div class="dashboard-subtitle">Distribución por talle / marca / rubro</div>
             </div>
 
-            <!-- AGRUPACIÓN -->
-            <select id="chart-mode" class="filtro-select">
+            <select id="chart-mode">
               <option value="talle">Por talle</option>
               <option value="marca">Por marca</option>
               <option value="rubro">Por rubro</option>
             </select>
 
-            <!-- TIPO DE GRÁFICO (OPCIÓN C) -->
             <div class="chart-type-row">
               <button class="chart-type-btn active" data-chart-type="pie">Torta</button>
               <button class="chart-type-btn" data-chart-type="bar">Barra</button>
@@ -400,11 +249,11 @@
           </aside>
         </section>
 
-        <!-- FUENTE DE DATOS -->
+        <!-- ========================================================= -->
+        <!-- FUENTE DE DATOS                                           -->
+        <!-- ========================================================= -->
         <section class="fuente-datos-wrapper">
-          <button id="fuente-datos-toggle" class="btn-secondary">
-            Fuente de datos
-          </button>
+          <button id="fuente-datos-toggle" class="btn-secondary">Fuente de datos</button>
 
           <div id="fuente-datos-panel" class="fuente-datos-panel">
             <div><strong>Archivo:</strong> <span id="fuente-archivo">—</span></div>
@@ -413,14 +262,13 @@
             <div><strong>Rubros:</strong> <span id="fuente-rubros">—</span></div>
             <div><strong>Artículos:</strong> <span id="fuente-articulos">—</span></div>
             <div><strong>Stock total:</strong> <span id="fuente-stock-total">—</span></div>
-            <div>
-              <strong>Stock negativo:</strong>
-              <span id="fuente-stock-negativo">—</span>
-            </div>
+            <div><strong>Stock negativo:</strong> <span id="fuente-stock-negativo">—</span></div>
           </div>
         </section>
 
-        <!-- FOOTER -->
+        <!-- ========================================================= -->
+        <!-- FOOTER                                                    -->
+        <!-- ========================================================= -->
         <footer class="app-footer">
           <div class="footer-logo">SCL</div>
           <div class="footer-text">Salas Creative Lab</div>
@@ -428,65 +276,68 @@
       </div>
     </div>
 
-    <!-- PANEL ADMIN -->
-    <div id="admin-panel">
-      <h2>Panel administrador</h2>
+    <!-- ========================================================= -->
+    <!-- PANEL ADMIN (V4 READY)                                    -->
+    <!-- ========================================================= -->
+    <div id="admin-panel" class="hidden">
+      <h2 class="admin-title">Panel administrador</h2>
 
-      <h3>Backend</h3>
-      <label>
-        URL backend
-        <input id="admin-backend-url" type="text" />
-      </label>
+      <div class="admin-group">
+        <label class="admin-label">URL backend</label>
+        <input id="admin-backend-url" type="text" class="admin-input" />
+      </div>
 
-      <label>
-        Modo por defecto
-        <select id="admin-modo-defecto">
+      <div class="admin-group">
+        <label class="admin-label">Modo por defecto</label>
+        <select id="admin-modo-defecto" class="admin-select">
           <option value="simple">Simple</option>
           <option value="completo">Completo</option>
         </select>
-      </label>
+      </div>
 
-      <h3>ORB — Apariencia</h3>
+      <div class="admin-divider"></div>
 
-      <label>
-        Color día
-        <input id="orb-color" type="color" />
-      </label>
+      <div class="admin-section-title">ORB — Apariencia</div>
 
-      <label>
-        Color noche
-        <input id="orb-color-dark" type="color" />
-      </label>
+      <div class="admin-group">
+        <label class="admin-label">Color día</label>
+        <input id="orb-color" type="color" class="admin-input" />
+      </div>
 
-      <label>
-        Tamaño ORB (px)
-        <input id="orb-size" type="range" min="80" max="200" />
-      </label>
+      <div class="admin-group">
+        <label class="admin-label">Color noche</label>
+        <input id="orb-color-dark" type="color" class="admin-input" />
+      </div>
 
-      <label>
-        Intensidad halo
-        <input id="orb-halo" type="range" min="0" max="120" />
-      </label>
+      <div class="admin-group">
+        <label class="admin-label">Tamaño ORB (px)</label>
+        <input id="orb-size" type="range" min="80" max="200" class="admin-slider" />
+      </div>
 
-      <label>
-        Modo visual
-        <select id="orb-mode">
+      <div class="admin-group">
+        <label class="admin-label">Intensidad halo</label>
+        <input id="orb-halo" type="range" min="0" max="120" class="admin-slider" />
+      </div>
+
+      <div class="admin-group">
+        <label class="admin-label">Modo visual</label>
+        <select id="orb-mode" class="admin-select">
           <option value="ultra">Ultra</option>
           <option value="3d">3D</option>
           <option value="classic">Classic</option>
         </select>
-      </label>
+      </div>
 
-      <label>
-        Presets
-        <select id="orb-presets">
+      <div class="admin-group">
+        <label class="admin-label">Presets</label>
+        <select id="orb-presets" class="admin-select">
           <option value="default">Default</option>
           <option value="plasma">Plasma</option>
           <option value="fuego">Fuego</option>
           <option value="neon">Neón</option>
           <option value="minimal">Minimal</option>
         </select>
-      </label>
+      </div>
 
       <button id="orb-reset">Reset ORB</button>
 
@@ -496,9 +347,16 @@
       </div>
     </div>
 
-    <div id="scanner-overlay" class="scanner-overlay hidden"></div>
+    <!-- ========================================================= -->
+    <!-- SCANNER OVERLAY                                            -->
+    <!-- ========================================================= -->
+    <div id="scanner-overlay" class="scanner-overlay hidden">
+      <video id="scanner-video" autoplay playsinline></video>
+    </div>
 
-    <!-- MODAL DE AYUDA -->
+    <!-- ========================================================= -->
+    <!-- MODAL DE AYUDA                                             -->
+    <!-- ========================================================= -->
     <div id="help-modal" class="help-modal hidden">
       <div class="help-modal-content">
         <h2>Ayuda rápida</h2>
@@ -510,21 +368,32 @@
           <li>Click en métricas para entender el stock global.</li>
           <li>Atajos: ESC limpia, F2 scanner, F3 voz.</li>
         </ul>
-        <button id="help-close">Cerrar</button>
+        <button id="help-close" class="help-close-btn">Cerrar</button>
       </div>
     </div>
 
     <div id="toast" class="toast"></div>
 
-    <!-- SCRIPTS -->
+    <!-- ========================================================= -->
+    <!-- SCRIPTS                                                    -->
+    <!-- ========================================================= -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://unpkg.com/@zxing/library@latest"></script>
 
-    <script src="app_core_v3.js?v=20260210"></script>
-    <script src="ui_engine_v3.js?v=20260210"></script>
+    <!-- Scanner primero, depende de ZXing -->
+    <script src="scanner_v4.js?v=20260210"></script>
+
+    <!-- Núcleo de la app -->
+    <script src="app_core_v4.js?v=20260210"></script>
+
+    <!-- UI (V4 dentro de ui_engine_v4.js) -->
+    <script src="ui_engine_v4.js?v=20260210"></script>
+
+    <!-- ORB -->
     <script src="orb_engine_v2.js?v=20260210"></script>
     <script src="orb_admin_engine.js?v=20260210"></script>
-    <script src="scanner_v3.js?v=20260210"></script>
+
+    <!-- Dashboard + Indicadores -->
     <script src="dashboard_engine.js?v=20260210"></script>
     <script src="indicators_engine.js?v=20260210"></script>
 
@@ -536,21 +405,22 @@
       });
 
       /* ============================================================
-         SCANNER NATIVO ANDROID → REGLA SIMPLE DEFINIDA POR ALEJANDRO
+         SCANNER NATIVO ANDROID → RESPETA SIMPLE / COMPLETO
       ============================================================ */
       window.onScan = function(code) {
-        console.log("SCAN RAW:", code);
+        let limpio = code;
 
-        const separadores = /[\/\\! ]/;
-        const partes = code.split(separadores);
-        const limpio = partes[0];
-
-        console.log("SCAN LIMPIO:", limpio);
+        // Solo recortar si el modo es SIMPLE
+        const modo = localStorage.getItem("scannerModo") || "simple";
+        if (modo !== "completo") {
+          const separadores = /[\/\\! ]/;
+          const partes = code.split(separadores);
+          limpio = partes[0];
+        }
 
         const input = document.getElementById("search-input");
         if (input) {
           input.value = limpio;
-
           if (window.appCore && appCore.buscar) {
             appCore.buscar();
           }
