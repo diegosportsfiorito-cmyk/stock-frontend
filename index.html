@@ -2,10 +2,6 @@
 <html lang="es">
   <head>
     <meta charset="UTF-8" />
-
-    <!-- ========================================================= -->
-    <!-- BUILD VERSION IDENTIFIER                                 -->
-    <!-- ========================================================= -->
     <meta name="build-version" content="2026-02-10_optimized_UI-V4" />
     <title>STOCK IA PRO — Asistente inteligente</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -29,9 +25,7 @@
     <div class="app-shell">
       <div class="app-container">
 
-        <!-- ========================================================= -->
-        <!-- HEADER                                                    -->
-        <!-- ========================================================= -->
+        <!-- HEADER -->
         <header class="app-header">
           <div class="branding">
             <div class="brand-orb-mini">IA</div>
@@ -62,9 +56,7 @@
           </div>
         </header>
 
-        <!-- ========================================================= -->
-        <!-- SEARCH + ORB                                              -->
-        <!-- ========================================================= -->
+        <!-- SEARCH + ORB -->
         <section class="search-card">
           <div id="search-status" class="search-status">Listo</div>
 
@@ -108,24 +100,6 @@
           </div>
 
           <div id="voice-status" class="voice-status">Dictado desactivado</div>
-
-          <!-- SCANNER BUTTONS (solo 2) -->
-          <div class="scanner-buttons">
-            <button id="btn-scanner-interno-1" class="scanner-button">📷</button>
-            <button id="btn-scanner-externo-preferido" class="scanner-button">📲</button>
-          </div>
-
-          <!-- SCANNER MODE -->
-          <div class="scanner-mode-switch">
-            <label class="orb-mode-switch">
-              <span>Simple</span>
-              <label class="switch small">
-                <input id="scanner-mode-switch" type="checkbox" />
-                <span class="slider"></span>
-              </label>
-              <span>Completo</span>
-            </label>
-          </div>
 
           <!-- FILTROS -->
           <div class="search-filters-row">
@@ -198,9 +172,7 @@
           </div>
         </section>
 
-        <!-- ========================================================= -->
-        <!-- MAIN ROW                                                  -->
-        <!-- ========================================================= -->
+        <!-- MAIN ROW -->
         <section class="main-row">
           <div class="results-card">
             <div class="results-header">
@@ -249,9 +221,7 @@
           </aside>
         </section>
 
-        <!-- ========================================================= -->
-        <!-- FUENTE DE DATOS                                           -->
-        <!-- ========================================================= -->
+        <!-- FUENTE DE DATOS -->
         <section class="fuente-datos-wrapper">
           <button id="fuente-datos-toggle" class="btn-secondary">Fuente de datos</button>
 
@@ -266,9 +236,7 @@
           </div>
         </section>
 
-        <!-- ========================================================= -->
-        <!-- FOOTER                                                    -->
-        <!-- ========================================================= -->
+        <!-- FOOTER -->
         <footer class="app-footer">
           <div class="footer-logo">SCL</div>
           <div class="footer-text">Salas Creative Lab</div>
@@ -276,10 +244,8 @@
       </div>
     </div>
 
-    <!-- ========================================================= -->
-    <!-- PANEL ADMIN (V4 READY)                                    -->
-    <!-- ========================================================= -->
-    <div id="admin-panel" class="hidden">
+    <!-- PANEL ADMIN -->
+    <div id="admin-panel">
       <h2 class="admin-title">Panel administrador</h2>
 
       <div class="admin-group">
@@ -347,16 +313,12 @@
       </div>
     </div>
 
-    <!-- ========================================================= -->
-    <!-- SCANNER OVERLAY                                            -->
-    <!-- ========================================================= -->
+    <!-- SCANNER OVERLAY -->
     <div id="scanner-overlay" class="scanner-overlay hidden">
       <video id="scanner-video" autoplay playsinline></video>
     </div>
 
-    <!-- ========================================================= -->
-    <!-- MODAL DE AYUDA                                             -->
-    <!-- ========================================================= -->
+    <!-- MODAL DE AYUDA -->
     <div id="help-modal" class="help-modal hidden">
       <div class="help-modal-content">
         <h2>Ayuda rápida</h2>
@@ -374,26 +336,15 @@
 
     <div id="toast" class="toast"></div>
 
-    <!-- ========================================================= -->
-    <!-- SCRIPTS                                                    -->
-    <!-- ========================================================= -->
+    <!-- SCRIPTS -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://unpkg.com/@zxing/library@latest"></script>
 
-    <!-- Scanner primero, depende de ZXing -->
     <script src="scanner_v4.js?v=20260210"></script>
-
-    <!-- Núcleo de la app -->
     <script src="app_core_v4.js?v=20260210"></script>
-
-    <!-- UI (V4 dentro de ui_engine_v4.js) -->
     <script src="ui_engine_v4.js?v=20260210"></script>
-
-    <!-- ORB -->
     <script src="orb_engine_v2.js?v=20260210"></script>
     <script src="orb_admin_engine.js?v=20260210"></script>
-
-    <!-- Dashboard + Indicadores -->
     <script src="dashboard_engine.js?v=20260210"></script>
     <script src="indicators_engine.js?v=20260210"></script>
 
@@ -404,14 +355,10 @@
         }
       });
 
-      /* ============================================================
-         SCANNER NATIVO ANDROID → RESPETA SIMPLE / COMPLETO
-      ============================================================ */
       window.onScan = function(code) {
         let limpio = code;
-
-        // Solo recortar si el modo es SIMPLE
         const modo = localStorage.getItem("scannerModo") || "simple";
+
         if (modo !== "completo") {
           const separadores = /[\/\\! ]/;
           const partes = code.split(separadores);
