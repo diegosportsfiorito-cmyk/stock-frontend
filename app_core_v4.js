@@ -328,7 +328,6 @@ const AppCore = {
         `<option value="">Rubro</option>` +
         [...rubros].sort().map((r) => `<option>${r}</option>`).join("");
   },
-  },
 
   // ============================================================
   // PARSER INTELIGENTE
@@ -541,8 +540,7 @@ const AppCore = {
       ORB.setLoading?.(false);
     }
   },
-  },
-
+  
   // ============================================================
   // BÚSQUEDA POR FILTROS
   // ============================================================
@@ -817,8 +815,7 @@ const AppCore = {
 
     container.innerHTML = html;
   },
-  },
-
+ 
   // ============================================================
   // INDICADORES / MÉTRICAS
   // ============================================================
@@ -952,8 +949,7 @@ const AppCore = {
     this.setOrbIdle();
     this.setSearchStatus("Listo", "blue");
   },
-  },
-
+  
   // ============================================================
   // EVENTOS DE UI (solo los necesarios)
   // ============================================================
