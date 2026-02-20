@@ -7,6 +7,29 @@
 function initUI(app) {
   const els = app.els;
 
+  // ============================================================
+  // FALLBACK PARA SCANNER MODO (simple/completo)
+  // Funciona incluso si localStorage está bloqueado
+  // ============================================================
+
+  window.scannerModoFallback = "simple";
+
+  function getScannerModo() {
+    try {
+      return localStorage.getItem("scannerModo") || window.scannerModoFallback;
+    } catch {
+      return window.scannerModoFallback;
+    }
+  }
+
+  function setScannerModo(modo) {
+    try {
+      localStorage.setItem("scannerModo", modo);
+    } catch {
+      window.scannerModoFallback = modo;
+    }
+  }
+
   // ------------------------------------------------------------
   // ELEMENTOS BASE
   // ------------------------------------------------------------
@@ -44,16 +67,22 @@ function initUI(app) {
   const fuenteToggle = document.getElementById("fuente-datos-toggle");
   const fuentePanel = document.getElementById("fuente-datos-panel");
 
-  // ------------------------------------------------------------
-  // BOTONES DEL SCANNER (alineados a tu HTML)
-  // ------------------------------------------------------------
-  const btnScannerInterno1 = document.getElementById("btn-scanner-interno-1");
-  const btnScannerInterno2 = document.getElementById("btn-scanner-interno-2");
-  const btnScannerExternoPreferido = document.getElementById("btn-scanner-externo-preferido");
-  const btnScannerExternoSelector = document.getElementById("btn-scanner-externo-selector");
+  // SWITCH DEL SCANNER (visible para el usuario)
+  const scannerSwitch = document.getElementById("scanner-modo-switch");
 
-  els.filtrosPanel?.classList.remove("visible");
-  fuentePanel?.classList.remove("visible");
+  // ------------------------------------------------------------
+  // INICIALIZAR SWITCH DEL SCANNER
+  // ------------------------------------------------------------
+  if (scannerSwitch) {
+    const modoActual = getScannerModo();
+    scannerSwitch.checked = modoActual === "completo";
+
+    scannerSwitch.addEventListener("change", () => {
+      const nuevoModo = scannerSwitch.checked ? "completo" : "simple";
+      setScannerModo(nuevoModo);
+      app.showToast(`Scanner en modo ${nuevoModo}`);
+    });
+  }
 
   // ------------------------------------------------------------
   // BEEP
@@ -98,16 +127,13 @@ function initUI(app) {
     }
   }
 
-  // Estado inicial dictado automático
+  // ------------------------------------------------------------
+  // DICTADO AUTOMÁTICO
+  // ------------------------------------------------------------
   if (dictadoAutoSwitch) {
     const savedAuto = localStorage.getItem("dictadoAutomatico");
-    if (savedAuto === "on") {
-      dictadoAutoSwitch.checked = true;
-      setVoiceUIState("ready");
-    } else {
-      dictadoAutoSwitch.checked = false;
-      setVoiceUIState("off");
-    }
+    dictadoAutoSwitch.checked = savedAuto === "on";
+    setVoiceUIState(savedAuto === "on" ? "ready" : "off");
 
     dictadoAutoSwitch.addEventListener("change", (e) => {
       const on = e.target.checked;
@@ -116,8 +142,6 @@ function initUI(app) {
       beep(on ? 1400 : 600);
       app.showToast(on ? "Dictado automático activado" : "Dictado automático desactivado");
     });
-  } else {
-    setVoiceUIState("off");
   }
 
   // ------------------------------------------------------------
@@ -167,9 +191,7 @@ function initUI(app) {
     rec.start();
   }
 
-  micButton?.addEventListener("click", () => {
-    startDictado();
-  });
+  micButton?.addEventListener("click", () => startDictado());
 
   // ------------------------------------------------------------
   // AUTOCOMPLETE
@@ -249,9 +271,9 @@ function initUI(app) {
     }
   });
 
-  // ============================================================
+  // ------------------------------------------------------------
   // ORB
-  // ============================================================
+  // ------------------------------------------------------------
   if (orbCore) {
     const isMobile = window.matchMedia("(max-width: 768px)").matches;
 
@@ -282,7 +304,7 @@ function initUI(app) {
     });
   }
 
-  // ============================================================
+    // ============================================================
   // SCANNER — NATIVO + WEB FALLBACK
   // ============================================================
 
@@ -319,14 +341,14 @@ function initUI(app) {
   }
 
   function abrirScannerWebInterno() {
-  if (typeof window.startScannerInterno1 === "function") {
-    const modo = localStorage.getItem("scannerModo") || "simple";
-    setScannerOverlay(true);
-    window.startScannerInterno1(scannerCallback, modo);
-  } else {
-    app.showToast("Scanner interno no disponible");
+    if (typeof window.startScannerInterno1 === "function") {
+      const modo = getScannerModo();
+      setScannerOverlay(true);
+      window.startScannerInterno1(scannerCallback, modo);
+    } else {
+      app.showToast("Scanner interno no disponible");
+    }
   }
-}
 
   function abrirScannerWebExternoPreferido() {
     if (typeof window.startScannerExternoPreferido === "function") {
@@ -553,9 +575,9 @@ function initUI(app) {
   // ============================================================
 
   fuenteToggle?.addEventListener("click", () => {
-  fuentePanel.classList.toggle("visible");
-  fuentePanel.classList.toggle("hidden");
-});
+    fuentePanel.classList.toggle("visible");
+    fuentePanel.classList.toggle("hidden");
+  });
 
   // ============================================================
   // ATAJOS DE TECLADO
