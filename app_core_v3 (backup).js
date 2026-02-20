@@ -319,7 +319,6 @@ const AppCore = {
 
     return final;
   },
-
   // ============================================================
   // WARM-UP + CARGA CATÁLOGO
   // ============================================================
@@ -700,7 +699,6 @@ const AppCore = {
       ORB.setLoading?.(false);
     }
   },
-
   // ============================================================
   // RENDER RESULTADOS (3 VISTAS)
   // ============================================================
@@ -804,6 +802,10 @@ const AppCore = {
     });
   },
 
+  // ============================================================
+  // VISTA ARTÍCULO — OPCIÓN A (LISTA COMPLETA)
+  // ============================================================
+
   renderVistaArticulo(items) {
     const container = this.els.vistaArticulo;
     if (!container) return;
@@ -813,74 +815,72 @@ const AppCore = {
       return;
     }
 
-    const base = items[0];
-    const talles = base.talles || [];
+    let html = "";
 
-    if (!talles.length) {
-      container.innerHTML = `
-        <div class="detalle-header">
-          <h2>${this.normalizarCampo(base.codigo)} — ${this.normalizarCampo(
-        base.descripcion
-      )}</h2>
-          <p>${this.normalizarCampo(base.marca)} / ${this.normalizarCampo(
-        base.rubro
-      )}</p>
-        </div>
-        <div class="results-empty">Este artículo no tiene talles detallados.</div>
-      `;
-      return;
-    }
+    items.forEach((base) => {
+      const talles = base.talles || [];
 
-    const rowsHtml = talles
-      .map((t) => {
+      if (!talles.length) {
+        html += `
+          <div class="detalle-header">
+            <h2>${this.normalizarCampo(base.codigo)} — ${this.normalizarCampo(base.descripcion)}</h2>
+            <p>${this.normalizarCampo(base.marca)} / ${this.normalizarCampo(base.rubro)}</p>
+          </div>
+          <div class="results-empty">Este artículo no tiene talles detallados.</div>
+          <hr style="opacity:0.25;margin:14px 0;">
+        `;
+        return;
+      }
+
+      const rowsHtml = talles
+        .map((t) => {
+          const stock = Number(t.stock || 0);
+          const precio = Number(base.precio || 0);
+          const total = stock * precio;
+          return `
+            <tr>
+              <td>${this.normalizarCampo(t.talle)}</td>
+              <td>${stock}</td>
+              <td>$${this.formatNumber(precio)}</td>
+              <td>$${this.formatNumber(total)}</td>
+            </tr>
+          `;
+        })
+        .join("");
+
+      const totalGeneral = talles.reduce((acc, t) => {
         const stock = Number(t.stock || 0);
         const precio = Number(base.precio || 0);
-        const total = stock * precio;
-        return `
-        <tr>
-          <td>${this.normalizarCampo(t.talle)}</td>
-          <td>${stock}</td>
-          <td>$${this.formatNumber(precio)}</td>
-          <td>$${this.formatNumber(total)}</td>
-        </tr>
+        return acc + stock * precio;
+      }, 0);
+
+      html += `
+        <div class="detalle-header">
+          <h2>${this.normalizarCampo(base.codigo)} — ${this.normalizarCampo(base.descripcion)}</h2>
+          <p>${this.normalizarCampo(base.marca)} / ${this.normalizarCampo(base.rubro)}</p>
+        </div>
+
+        <table class="tabla-talles">
+          <thead>
+            <tr>
+              <th>Talle</th>
+              <th>Cantidad</th>
+              <th>Precio</th>
+              <th>Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${rowsHtml}
+            <tr>
+              <td colspan="3" style="text-align:right;font-weight:bold;">Total general</td>
+              <td>$${this.formatNumber(totalGeneral)}</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <hr style="opacity:0.25;margin:14px 0;">
       `;
-      })
-      .join("");
-
-    const totalGeneral = talles.reduce((acc, t) => {
-      const stock = Number(t.stock || 0);
-      const precio = Number(base.precio || 0);
-      return acc + stock * precio;
-    }, 0);
-
-    const html = `
-      <div class="detalle-header">
-        <h2>${this.normalizarCampo(base.codigo)} — ${this.normalizarCampo(
-      base.descripcion
-    )}</h2>
-        <p>${this.normalizarCampo(base.marca)} / ${this.normalizarCampo(
-      base.rubro
-    )}</p>
-      </div>
-
-      <table class="tabla-talles">
-        <thead>
-          <tr>
-            <th>Talle</th>
-            <th>Cantidad</th>
-            <th>Precio</th>
-            <th>Total</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${rowsHtml}
-          <tr>
-            <td colspan="3" style="text-align:right;font-weight:bold;">Total general</td>
-            <td>$${this.formatNumber(totalGeneral)}</td>
-          </tr>
-        </tbody>
-      </table>
-    `;
+    });
 
     container.innerHTML = html;
   },
