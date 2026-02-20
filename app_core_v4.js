@@ -328,7 +328,6 @@ const AppCore = {
         `<option value="">Rubro</option>` +
         [...rubros].sort().map((r) => `<option>${r}</option>`).join("");
   },
-  },
 
   // ============================================================
   // PARSER INTELIGENTE
