@@ -2,25 +2,22 @@
 <html lang="es">
   <head>
     <meta charset="UTF-8" />
-    <meta name="build-version" content="2026-02-10_optimized_UI-V4" />
+    <meta name="build-version" content="2026-02-20_UI-V4_FINAL" />
     <title>STOCK IA PRO — Asistente inteligente</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <!-- CSS UNIFICADO IA PRO -->
-    <link rel="stylesheet" href="styles_v2.css?v=20260210" />
+    <link rel="stylesheet" href="styles_v2.css?v=20260220" />
 
     <script>
       console.log(
-        "%cBUILD VERSION: 2026-02-10_optimized_UI-V4",
+        "%cBUILD VERSION: 2026-02-20_UI-V4_FINAL",
         "color:#4f8cff;font-size:14px;font-weight:bold"
       );
     </script>
   </head>
 
   <body>
-    <div id="build-version" style="display:none">
-      2026-02-10_optimized_UI-V4
-    </div>
+    <div id="build-version" style="display:none">2026-02-20_UI-V4_FINAL</div>
 
     <div class="app-shell">
       <div class="app-container">
@@ -97,6 +94,15 @@
                 <span class="slider"></span>
               </label>
             </label>
+
+            <!-- SWITCH SCANNER -->
+            <label class="orb-mode-switch">
+              <span>Scanner avanzado</span>
+              <label class="switch small">
+                <input id="scanner-mode-switch" type="checkbox" />
+                <span class="slider"></span>
+              </label>
+            </label>
           </div>
 
           <div id="voice-status" class="voice-status">Dictado desactivado</div>
@@ -143,10 +149,9 @@
               <div class="metric-value" id="metric-alertas-cero-value">0</div>
             </div>
 
-            <!-- NUEVA MÉTRICA --> 
-            <div id="metric-ultima-unidad" class="metric-card"> 
+            <div id="metric-ultima-unidad" class="metric-card">
               <div class="metric-label">Última unidad</div>
-              <div class="metric-value" id="metric-ultima-unidad-value">0</div> 
+              <div class="metric-value" id="metric-ultima-unidad-value">0</div>
             </div>
 
             <div id="metric-valorizado" class="metric-card">
@@ -170,6 +175,12 @@
             <div class="filtros-row filtros-row-stack">
               <input id="filtro-talle-desde" type="number" class="filtro-input" placeholder="Talle desde" />
               <input id="filtro-talle-hasta" type="number" class="filtro-input" placeholder="Talle hasta" />
+            </div>
+
+            <!-- NUEVO FILTRO DE UNIDADES -->
+            <div class="filtros-row filtros-row-stack">
+              <input id="filtro-unidades-desde" type="number" class="filtro-input" placeholder="Unidades desde" />
+              <input id="filtro-unidades-hasta" type="number" class="filtro-input" placeholder="Unidades hasta" />
             </div>
 
             <div class="filtros-row">
@@ -225,6 +236,11 @@
 
             <canvas id="stockChart"></canvas>
           </aside>
+        </section>
+        <!-- SCANNER BUTTONS (solo 2, como antes) -->
+        <section class="scanner-buttons-wrapper">
+          <button id="btn-scanner-interno-1" class="btn-scanner">📷 Scanner interno</button>
+          <button id="btn-scanner-externo-preferido" class="btn-scanner">🔌 Scanner externo</button>
         </section>
 
         <!-- FUENTE DE DATOS -->
@@ -346,13 +362,13 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://unpkg.com/@zxing/library@latest"></script>
 
-    <script src="scanner_v4.js?v=20260210"></script>
-    <script src="app_core_v4.js?v=20260210"></script>
-    <script src="ui_engine_v4.js?v=20260210"></script>
-    <script src="orb_engine_v2.js?v=20260210"></script>
-    <script src="orb_admin_engine.js?v=20260210"></script>
-    <script src="dashboard_engine.js?v=20260210"></script>
-    <script src="indicators_engine.js?v=20260210"></script>
+    <script src="scanner_v4.js?v=20260220"></script>
+    <script src="app_core_v4.js?v=20260220"></script>
+    <script src="ui_engine_v4.js?v=20260220"></script>
+    <script src="orb_engine_v2.js?v=20260220"></script>
+    <script src="orb_admin_engine.js?v=20260220"></script>
+    <script src="dashboard_engine.js?v=20260220"></script>
+    <script src="indicators_engine.js?v=20260220"></script>
 
     <script>
       window.addEventListener("DOMContentLoaded", () => {
