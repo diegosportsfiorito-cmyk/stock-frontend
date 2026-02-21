@@ -68,17 +68,15 @@ function initUI(app) {
   const fuentePanel = document.getElementById("fuente-datos-panel");
 
   // ============================================================
-  // BOTONES DEL SCANNER
+  // BOTONES DEL SCANNER (solo 2, como en el HTML)
   // ============================================================
 
   const btnScannerInterno1 = document.getElementById("btn-scanner-interno-1");
-  const btnScannerInterno2 = document.getElementById("btn-scanner-interno-2");
   const btnScannerExternoPreferido = document.getElementById("btn-scanner-externo-preferido");
-  const btnScannerExternoSelector = document.getElementById("btn-scanner-externo-selector");
 
   // ============================================================
-  // SWITCH DEL SCANNER
-  // ============================================================
+  // SWITCH DEL SCANNER (Simple / Completo)
+// ============================================================
 
   const scannerSwitch = document.getElementById("scanner-mode-switch");
 
@@ -358,36 +356,16 @@ function initUI(app) {
     }
   }
 
-  function abrirScannerWebExternoSelector() {
-    if (typeof window.startScannerExternoSelector === "function") {
-      setScannerOverlay(true);
-      window.startScannerExternoSelector(scannerCallback);
-    } else {
-      abrirScannerWebExternoPreferido();
-    }
-  }
-
-  // Botones scanner internos
+  // Botón scanner interno
   btnScannerInterno1?.addEventListener("click", () => {
     if (isAndroidApp) abrirScannerNativo();
     else abrirScannerWebInterno();
   });
 
-  btnScannerInterno2?.addEventListener("click", () => {
-    if (isAndroidApp) abrirScannerNativo();
-    else abrirScannerWebInterno();
-  });
-
-  // Botón scanner externo preferido
+  // Botón scanner externo
   btnScannerExternoPreferido?.addEventListener("click", () => {
     if (isAndroidApp) abrirScannerNativo();
     else abrirScannerWebExternoPreferido();
-  });
-
-  // Botón scanner externo selector
-  btnScannerExternoSelector?.addEventListener("click", () => {
-    if (isAndroidApp) abrirScannerNativo();
-    else abrirScannerWebExternoSelector();
   });
 
   // ============================================================
