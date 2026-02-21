@@ -70,6 +70,24 @@
             </div>
           </div>
 
+          <!-- SCANNER BUTTONS (2 ICONOS ORIGINALES) -->
+          <div class="scanner-buttons">
+            <button id="btn-scanner-interno-1" class="scanner-button">📷</button>
+            <button id="btn-scanner-externo-preferido" class="scanner-button">📲</button>
+          </div>
+
+          <!-- SCANNER MODE -->
+          <div class="scanner-mode-switch">
+            <label class="orb-mode-switch">
+              <span>Simple</span>
+              <label class="switch small">
+                <input id="scanner-mode-switch" type="checkbox" />
+                <span class="slider"></span>
+              </label>
+              <span>Completo</span>
+            </label>
+          </div>
+
           <div class="search-actions-row">
             <button id="btn-limpiar" class="orb-action-btn">🧹</button>
             <button id="btn-copiar" class="orb-action-btn">📋</button>
@@ -91,15 +109,6 @@
               <span>Manos libres</span>
               <label class="switch small">
                 <input id="modo-manos-libres" type="checkbox" />
-                <span class="slider"></span>
-              </label>
-            </label>
-
-            <!-- SWITCH SCANNER -->
-            <label class="orb-mode-switch">
-              <span>Scanner avanzado</span>
-              <label class="switch small">
-                <input id="scanner-mode-switch" type="checkbox" />
                 <span class="slider"></span>
               </label>
             </label>
@@ -237,11 +246,10 @@
             <canvas id="stockChart"></canvas>
           </aside>
         </section>
-        <!-- SCANNER BUTTONS (solo 2, como antes) -->
-        <section class="scanner-buttons-wrapper">
-          <button id="btn-scanner-interno-1" class="btn-scanner">📷 Scanner interno</button>
-          <button id="btn-scanner-externo-preferido" class="btn-scanner">🔌 Scanner externo</button>
-        </section>
+        <!-- SCANNER OVERLAY -->
+        <div id="scanner-overlay" class="scanner-overlay hidden">
+          <video id="scanner-video" autoplay playsinline></video>
+        </div>
 
         <!-- FUENTE DE DATOS -->
         <section class="fuente-datos-wrapper">
@@ -333,11 +341,6 @@
         <button id="admin-guardar">Guardar</button>
         <button id="admin-cerrar">Cerrar</button>
       </div>
-    </div>
-
-    <!-- SCANNER OVERLAY -->
-    <div id="scanner-overlay" class="scanner-overlay hidden">
-      <video id="scanner-video" autoplay playsinline></video>
     </div>
 
     <!-- MODAL DE AYUDA -->
