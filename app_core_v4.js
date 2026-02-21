@@ -337,7 +337,6 @@ const AppCore = {
         `<option value="">Rubro</option>` +
         [...rubros].sort().map((r) => `<option>${r}</option>`).join("");
   },
-
   // ============================================================
   // PARSER INTELIGENTE — Versión final corregida
   // ============================================================
@@ -474,6 +473,7 @@ const AppCore = {
       question: usarFiltros ? "" : q,
     };
   },
+
   // ============================================================
   // BÚSQUEDA PRINCIPAL
   // ============================================================
@@ -631,7 +631,6 @@ const AppCore = {
       ORB.setLoading?.(false);
     }
   },
-
   // ============================================================
   // RENDER RESULTADOS (3 VISTAS)
   // ============================================================
@@ -880,6 +879,7 @@ const AppCore = {
     if (this.els.metricUltimaUnidad)
       this.els.metricUltimaUnidad.textContent = this.formatNumber(ultimaUnidad);
   },
+
   // ============================================================
   // COPIAR RESULTADOS
   // ============================================================
