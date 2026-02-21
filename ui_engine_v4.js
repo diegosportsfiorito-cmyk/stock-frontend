@@ -68,7 +68,7 @@ function initUI(app) {
   const fuentePanel = document.getElementById("fuente-datos-panel");
 
   // ============================================================
-  // BOTONES DEL SCANNER (DECLARADOS CORRECTAMENTE)
+  // BOTONES DEL SCANNER
   // ============================================================
 
   const btnScannerInterno1 = document.getElementById("btn-scanner-interno-1");
@@ -77,7 +77,7 @@ function initUI(app) {
   const btnScannerExternoSelector = document.getElementById("btn-scanner-externo-selector");
 
   // ============================================================
-  // SWITCH DEL SCANNER (ID CORREGIDO)
+  // SWITCH DEL SCANNER
   // ============================================================
 
   const scannerSwitch = document.getElementById("scanner-mode-switch");
@@ -185,7 +185,6 @@ function initUI(app) {
 
       ORB.setLoading?.(true);
       app.buscar();
-
       setTimeout(() => app.setOrbIdle?.(), 600);
     };
 
@@ -255,7 +254,6 @@ function initUI(app) {
 
       ORB.setLoading?.(true);
       app.buscar();
-
       setTimeout(() => app.setOrbIdle?.(), 600);
     }
   });
@@ -267,7 +265,6 @@ function initUI(app) {
       autoList.innerHTML = "";
       ORB.setLoading?.(true);
       app.buscar();
-
       setTimeout(() => app.setOrbIdle?.(), 600);
     }
   });
@@ -278,7 +275,6 @@ function initUI(app) {
       autoList.innerHTML = "";
     }
   });
-
   // ============================================================
   // ORB
   // ============================================================
@@ -477,7 +473,7 @@ function initUI(app) {
   });
 
   // ============================================================
-  // MÉTRICAS FILTRABLES
+  // MÉTRICAS FILTRABLES (incluye Última unidad)
   // ============================================================
 
   const mArt = document.getElementById("metric-articulos");
@@ -485,6 +481,13 @@ function initUI(app) {
   const mNeg = document.getElementById("metric-alertas-negativos");
   const mCero = document.getElementById("metric-alertas-cero");
   const mVal = document.getElementById("metric-valorizado");
+  const mUlt = document.getElementById("metric-ultima-unidad");
+
+  function mostrarTodos() {
+    app.renderResultados(app.state.items);
+    app.actualizarIndicadores(app.state.items);
+    app.showToast("Mostrando todos los artículos");
+  }
 
   function filtrarNegativos() {
     const items = app.state.items.filter((it) =>
@@ -515,6 +518,16 @@ function initUI(app) {
     app.showToast("Mostrando artículos con stock");
   }
 
+  function filtrarUltimaUnidad() {
+    const items = app.state.items.filter((it) => {
+      const total = (it.talles || []).reduce((a, t) => a + Number(t.stock || 0), 0);
+      return total === 1;
+    });
+    app.renderResultados(items);
+    app.actualizarIndicadores(items);
+    app.showToast("Mostrando artículos con última unidad");
+  }
+
   function ordenarPorValorizado() {
     const items = [...app.state.items].sort(
       (a, b) => Number(b.valorizado || 0) - Number(a.valorizado || 0)
@@ -524,17 +537,12 @@ function initUI(app) {
     app.showToast("Ordenado por valorizado");
   }
 
-  function mostrarTodos() {
-    app.renderResultados(app.state.items);
-    app.actualizarIndicadores(app.state.items);
-    app.showToast("Mostrando todos los artículos");
-  }
-
   mArt?.addEventListener("click", mostrarTodos);
   mUni?.addEventListener("click", filtrarConStock);
   mNeg?.addEventListener("click", filtrarNegativos);
   mCero?.addEventListener("click", filtrarSinStock);
   mVal?.addEventListener("click", ordenarPorValorizado);
+  mUlt?.addEventListener("click", filtrarUltimaUnidad);
 
   // ============================================================
   // MODO DÍA / NOCHE
@@ -572,7 +580,7 @@ function initUI(app) {
   });
 
   // ============================================================
-  // FUENTE DE DATOS — TOGGLE (blindado)
+  // FUENTE DE DATOS — TOGGLE
   // ============================================================
 
   fuenteToggle?.addEventListener("click", () => {
