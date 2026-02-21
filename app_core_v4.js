@@ -1,6 +1,6 @@
 // ============================================================
 // APP CORE — Motor inteligente + warm-up + indicador visual
-// Versión final corregida y optimizada 2026-02-20
+// Versión unificada y corregida 2026-02-20
 // ============================================================
 
 const AppCore = {
@@ -79,12 +79,21 @@ const AppCore = {
     return v
       .toString()
       .normalize("NFKD")
-      .replace(/\u00A0/g, " ")
+      .replace(/[\u00A0\u200B\u200C\u200D\uFEFF]/g, " ")
       .replace(/[\u0300-\u036f]/g, "")
       .replace(/-/g, " ")
       .replace(/\s+/g, " ")
       .trim()
       .toUpperCase();
+  },
+
+  limpiarInput(raw) {
+    if (!raw) return "";
+    return raw
+      .toString()
+      .replace(/[\u00A0\u200B\u200C\u200D\uFEFF]/g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
   },
 
   showToast(msg) {
@@ -329,172 +338,149 @@ const AppCore = {
         [...rubros].sort().map((r) => `<option>${r}</option>`).join("");
   },
 
-// ============================================================
-// PARSER INTELIGENTE — Versión final corregida
-// ============================================================
-
-interpretarQuery(raw) {
-  const q = raw.trim();
-  const qUpper = this.normalizarTexto(q);
-
-  // Mapas normalizados
-  const mapMarcas = new Map();
-  const mapRubros = new Map();
-
-  this.state.catalogItems.forEach((i) => {
-    if (i.marca) mapMarcas.set(this.normalizarTexto(i.marca), i.marca);
-    if (i.rubro) mapRubros.set(this.normalizarTexto(i.rubro), i.rubro);
-  });
-
-  const marcasNorm = [...mapMarcas.keys()];
-  const rubrosNorm = [...mapRubros.keys()];
-
-  let marca = null;
-  let rubro = null;
-
-  // Tokens normalizados
-  const tokens = qUpper.split(/\W+/).filter(Boolean);
-
-  // Detectar marca por tokens
-  for (const m of marcasNorm.sort((a, b) => b.length - a.length)) {
-    if (tokens.includes(m)) marca = mapMarcas.get(m);
-  }
-
-  // Detectar rubro por tokens
-  for (const r of rubrosNorm.sort((a, b) => b.length - a.length)) {
-    if (tokens.includes(r)) rubro = mapRubros.get(r);
-  }
-
   // ============================================================
-  // RANGO DE TALLES (ej: 38-42, 38 a 42, T38/42)
-  // ============================================================
-  const matchRango = qUpper.match(/T?(\d+)\s*(?:A|-|\/)\s*T?(\d+)/);
-  if (matchRango) {
-    return {
-      filtros_globales: true,
-      marca,
-      rubro,
-      talleDesde: parseInt(matchRango[1]),
-      talleHasta: parseInt(matchRango[2]),
-      soloUltimo: false,
-      soloNegativo: false,
-      question: "",
-    };
-  }
-
-  // ============================================================
-  // TALLE ÚNICO (ej: 40, T40)
-  // ============================================================
-  const matchTalle = qUpper.match(/^T?(\d{1,3})$/);
-  if (matchTalle) {
-    const t = parseInt(matchTalle[1]);
-    return {
-      filtros_globales: true,
-      marca,
-      rubro,
-      talleDesde: t,
-      talleHasta: t,
-      soloUltimo: false,
-      soloNegativo: false,
-      question: "",
-    };
-  }
-
-  // ============================================================
-  // PRECIO (ej: $50000, P50000)
-  // ============================================================
-  const matchPrecio = qUpper.match(/^(?:P|\$)?(\d{2,6})$/);
-  if (matchPrecio) {
-    return {
-      filtros_globales: false,
-      marca: null,
-      rubro: null,
-      talleDesde: null,
-      talleHasta: null,
-      soloUltimo: false,
-      soloNegativo: false,
-      question: matchPrecio[1],
-    };
-  }
-
-  // ============================================================
-  // CÓDIGO numérico largo (ej: 12345678)
-  // ============================================================
-  if (/^\d[\d\- ]{6,14}\d$/.test(qUpper)) {
-    return {
-      filtros_globales: false,
-      marca: null,
-      rubro: null,
-      talleDesde: null,
-      talleHasta: null,
-      soloUltimo: false,
-      soloNegativo: false,
-      question: qUpper.replace(/[\s\-]/g, ""),
-    };
-  }
-
-  // ============================================================
-  // ÚLTIMO / NEGATIVO
-  // ============================================================
-  const esUltimo = /\bULTIM[OA]S?\b/.test(qUpper);
-  const esNegativo = /\bNEGATIV[OA]S?\b/.test(qUpper);
-
-  if (esUltimo || esNegativo) {
-    return {
-      filtros_globales: true,
-      marca,
-      rubro,
-      talleDesde: null,
-      talleHasta: null,
-      soloUltimo: esUltimo,
-      soloNegativo: esNegativo,
-      question: "",
-    };
-  }
-
-  // ============================================================
-  // MARCA / RUBRO EXACTOS (CORREGIDO)
+  // PARSER INTELIGENTE — Versión final corregida
   // ============================================================
 
-  // Normalización profunda del input original
-  const qNorm = this.normalizarTexto(q);
+  interpretarQuery(raw) {
+    const q = this.limpiarInput(raw);
+    const qUpper = this.normalizarTexto(q);
 
-  const esMarcaExacta = marcasNorm.includes(qNorm);
-  const esRubroExacto = rubrosNorm.includes(qNorm);
+    const mapMarcas = new Map();
+    const mapRubros = new Map();
 
-  let usarFiltros = esMarcaExacta || esRubroExacto;
+    this.state.catalogItems.forEach((i) => {
+      if (i.marca) mapMarcas.set(this.normalizarTexto(i.marca), i.marca);
+      if (i.rubro) mapRubros.set(this.normalizarTexto(i.rubro), i.rubro);
+    });
 
-  // Corrección por voz (ej: "adidas" → "ADIDAS")
-  if (!usarFiltros && tokens.length === 1 && marcasNorm.length) {
-    const marcaCorregida = this.corregirMarcaPorVoz?.(qNorm, mapMarcas);
-    if (marcaCorregida) {
-      marca = marcaCorregida;
-      usarFiltros = true;
+    const marcasNorm = [...mapMarcas.keys()];
+    const rubrosNorm = [...mapRubros.keys()];
+
+    let marca = null;
+    let rubro = null;
+
+    const tokens = qUpper.split(/\W+/).filter(Boolean);
+
+    for (const m of marcasNorm.sort((a, b) => b.length - a.length)) {
+      if (tokens.includes(m)) marca = mapMarcas.get(m);
     }
-  }
 
-  // ============================================================
-  // RESULTADO FINAL
-  // ============================================================
-  return {
-    filtros_globales: usarFiltros,
-    marca: usarFiltros ? marca : null,
-    rubro: usarFiltros ? rubro : null,
-    talleDesde: null,
-    talleHasta: null,
-    soloUltimo: false,
-    soloNegativo: false,
-    question: usarFiltros ? "" : q,
-  };
-},
+    for (const r of rubrosNorm.sort((a, b) => b.length - a.length)) {
+      if (tokens.includes(r)) rubro = mapRubros.get(r);
+    }
 
+    // RANGO DE TALLES (ej: 38-42, 38 a 42, T38/42)
+    const matchRango = qUpper.match(/T?(\d+)\s*(?:A|-|\/)\s*T?(\d+)/);
+    if (matchRango) {
+      return {
+        filtros_globales: true,
+        marca,
+        rubro,
+        talleDesde: parseInt(matchRango[1]),
+        talleHasta: parseInt(matchRango[2]),
+        soloUltimo: false,
+        soloNegativo: false,
+        question: "",
+      };
+    }
+
+    // TALLE ÚNICO (ej: 40, T40)
+    const matchTalle = qUpper.match(/^T?(\d{1,3})$/);
+    if (matchTalle) {
+      const t = parseInt(matchTalle[1]);
+      return {
+        filtros_globales: true,
+        marca,
+        rubro,
+        talleDesde: t,
+        talleHasta: t,
+        soloUltimo: false,
+        soloNegativo: false,
+        question: "",
+      };
+    }
+
+    // PRECIO (ej: $50000, P50000)
+    const matchPrecio = qUpper.match(/^(?:P|\$)?(\d{2,6})$/);
+    if (matchPrecio) {
+      return {
+        filtros_globales: false,
+        marca: null,
+        rubro: null,
+        talleDesde: null,
+        talleHasta: null,
+        soloUltimo: false,
+        soloNegativo: false,
+        question: matchPrecio[1],
+      };
+    }
+
+    // CÓDIGO numérico largo (ej: 12345678)
+    if (/^\d[\d\- ]{6,14}\d$/.test(qUpper)) {
+      return {
+        filtros_globales: false,
+        marca: null,
+        rubro: null,
+        talleDesde: null,
+        talleHasta: null,
+        soloUltimo: false,
+        soloNegativo: false,
+        question: qUpper.replace(/[\s\-]/g, ""),
+      };
+    }
+
+    // ÚLTIMO / NEGATIVO
+    const esUltimo = /\bULTIM[OA]S?\b/.test(qUpper);
+    const esNegativo = /\bNEGATIV[OA]S?\b/.test(qUpper);
+
+    if (esUltimo || esNegativo) {
+      return {
+        filtros_globales: true,
+        marca,
+        rubro,
+        talleDesde: null,
+        talleHasta: null,
+        soloUltimo: esUltimo,
+        soloNegativo: esNegativo,
+        question: "",
+      };
+    }
+
+    // MARCA / RUBRO EXACTOS (normalización profunda)
+    const qNorm = this.normalizarTexto(q);
+    const esMarcaExacta = marcasNorm.includes(qNorm);
+    const esRubroExacto = rubrosNorm.includes(qNorm);
+
+    let usarFiltros = esMarcaExacta || esRubroExacto;
+
+    // Corrección por voz (ej: "adidas" → "ADIDAS")
+    if (!usarFiltros && tokens.length === 1 && marcasNorm.length) {
+      const marcaCorregida = this.corregirMarcaPorVoz?.(qNorm, mapMarcas);
+      if (marcaCorregida) {
+        marca = marcaCorregida;
+        usarFiltros = true;
+      }
+    }
+
+    return {
+      filtros_globales: usarFiltros,
+      marca: usarFiltros ? marca : null,
+      rubro: usarFiltros ? rubro : null,
+      talleDesde: null,
+      talleHasta: null,
+      soloUltimo: false,
+      soloNegativo: false,
+      question: usarFiltros ? "" : q,
+    };
+  },
   // ============================================================
   // BÚSQUEDA PRINCIPAL
   // ============================================================
 
   async buscar() {
     const raw = this.els.searchInput?.value || "";
-    const q = raw.trim();
+    const q = this.limpiarInput(raw);
 
     if (!q) {
       this.limpiarPantalla();
@@ -570,7 +556,7 @@ interpretarQuery(raw) {
       ORB.setLoading?.(false);
     }
   },
-  
+
   // ============================================================
   // BÚSQUEDA POR FILTROS
   // ============================================================
@@ -894,7 +880,6 @@ interpretarQuery(raw) {
     if (this.els.metricUltimaUnidad)
       this.els.metricUltimaUnidad.textContent = this.formatNumber(ultimaUnidad);
   },
-
   // ============================================================
   // COPIAR RESULTADOS
   // ============================================================
@@ -979,31 +964,26 @@ interpretarQuery(raw) {
     this.setOrbIdle();
     this.setSearchStatus("Listo", "blue");
   },
-  
+
   // ============================================================
   // EVENTOS DE UI (solo los necesarios)
   // ============================================================
 
   conectarEventosUI() {
-    // Aplicar filtros
     this.els.btnAplicarFiltros?.addEventListener("click", () => {
       this.buscarPorFiltros();
     });
 
-    // Enter en el input
     this.els.searchInput?.addEventListener("keydown", (e) => {
       if (e.key === "Enter") this.buscar();
     });
 
-    // Copiar
     const btnCopiar = document.getElementById("btn-copiar");
     btnCopiar?.addEventListener("click", () => this.copiarResultados());
 
-    // Limpiar
     const btnLimpiar = document.getElementById("btn-limpiar");
     btnLimpiar?.addEventListener("click", () => this.limpiarPantalla());
 
-    // Stop
     const btnStop = document.getElementById("btn-stop");
     btnStop?.addEventListener("click", () => this.stopTodo());
   },
